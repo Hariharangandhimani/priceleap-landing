@@ -130,7 +130,7 @@ const rule = [
 </script>
 
 <style>
-  .tour__tabs { margin-top: 44px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+  .tour__tabs { margin-top: 44px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 8px; }
   .tour__tab { position: relative; text-align: left; padding: 16px 18px 18px; border-radius: 14px; border: 1px solid var(--line-soft); background: transparent; cursor: pointer; overflow: hidden; transition: border-color .3s, background .3s; }
   .tour__tab[aria-selected="true"] { border-color: var(--green-dark); background: var(--surface); }
   .tour__tab-t { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: 16px; color: var(--text); }
@@ -157,7 +157,7 @@ const rule = [
   .tp-urls { min-height: 132px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 13px; line-height: 1.9; } .tp-urls > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .caret { display: inline-block; width: 8px; height: 15px; background: var(--green); vertical-align: -2px; animation: pl-blink 1s steps(1) infinite; }
   .tp-track { padding: 18px; border: 1px solid var(--line-soft); border-radius: 14px; background: var(--surface-2); } .tp-track > b { display: block; font-family: var(--font-display); font-size: 15px; color: var(--white); } .tp-track > small { display: block; margin-top: 4px; font-size: 12.5px; color: var(--muted); }
-  .tp-opts { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .tp-opts { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px; }
   .tp-opt { padding: 14px; border: 1px solid var(--line); border-radius: 12px; } .tp-opt > div { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--white); } .tp-opt .tag { margin-left: auto; }
   .tp-opt p { margin-top: 8px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
   .tp-opt.is-sel { border-color: var(--green-dark); background: rgba(24,229,99,.06); } .tp-opt.is-sel p { color: var(--text); }

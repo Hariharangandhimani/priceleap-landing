@@ -63,6 +63,6 @@ import SectionHeading from '@/components/ui/SectionHeading.astro';
   .cap__rec div { margin-top: 10px; display: flex; align-items: baseline; gap: 10px; } .cap__rec s { color: var(--dim); } .cap__rec b { font-size: 26px; font-weight: 400; color: var(--white); }
   .cap__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; font-size: 13px; color: var(--white); } .cap__grid div { padding: 12px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--surface-2); } .cap__grid small { display: block; margin-bottom: 4px; font-size: 10px; color: var(--muted); }
   .cap__alerts { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
-  .cap__alert { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--surface-2); } .cap__alert .mono { color: var(--muted); }
+  .cap__alert { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--surface-2); flex-wrap: wrap; } .cap__alert .mono { color: var(--muted); }
   .cap__alert--bad { border-color: #4A1410; background: #1A0908; color: var(--white); } .cap__alert--bad .mono { color: var(--red-soft); }
 </style>
