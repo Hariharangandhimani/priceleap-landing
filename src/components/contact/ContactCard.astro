@@ -1,0 +1,20 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+/** Contact method card. Put actions in the default slot. */
+interface Props { icon?: string; img?: string; title: string; text: string; tag?: string; tagTone?: 'green' | 'muted' }
+const { icon, img, title, text, tag, tagTone = 'green' } = Astro.props;
+---
+<div class="card card-hover cc">
+  <span class="icon-tile icon-tile--outline cc__ic">{img ? <img src={img} alt="" width="22" height="22" /> : <Icon name={icon!} />}</span>
+  <div><div class="cc__t"><h2>{title}</h2>{tag && <span class:list={['tag', { 'tag--green': tagTone === 'green' }]}>{tag}</span>}</div><p>{text}</p></div>
+  <div class="cc__actions"><slot /></div>
+</div>
+<style>
+  .cc { padding: 26px; display: flex; flex-direction: column; gap: 16px; }
+  .cc:hover { border-color: var(--green-dark); }
+  .cc__ic { width: 48px; height: 48px; border-radius: 13px; }
+  .cc__t { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; } h2 { font-size: 20px; font-weight: 600; }
+  p { margin-top: 6px; font-size: 15px; line-height: 1.55; color: var(--muted); }
+  .cc__actions { margin-top: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .cc__actions :global(> *) { flex: 1 1 auto; }
+</style>

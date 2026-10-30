@@ -1,0 +1,18 @@
+---
+interface Props { items: string[]; columns?: boolean; emphasizeFirst?: boolean }
+const { items, columns = false, emphasizeFirst = false } = Astro.props;
+---
+<ul class:list={['cl', { 'cl--cols': columns }]}>
+  {items.map((t, i) => (
+    <li class:list={{ strong: emphasizeFirst && i === 0 && t.startsWith('Everything') }}>
+      <span class="cl__tick" aria-hidden="true">✓</span>{t}
+    </li>
+  ))}
+</ul>
+<style>
+  .cl { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 11px; }
+  .cl--cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 10px 18px; }
+  li { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; color: var(--text); }
+  li.strong { color: var(--white); font-weight: 500; }
+  .cl__tick { width: 18px; height: 18px; flex: none; margin-top: 1px; border-radius: 50%; background: var(--green-deep); color: var(--green); font-size: 10px; font-weight: 700; display: grid; place-items: center; }
+</style>

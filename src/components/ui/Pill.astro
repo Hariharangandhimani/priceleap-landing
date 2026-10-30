@@ -1,0 +1,8 @@
+---
+interface Props { pulse?: boolean; color?: string }
+const { pulse = false, color } = Astro.props;
+---
+<p class="pill"><span class:list={['dot', { 'dot--pulse': pulse }]} style={color ? `background:${color}` : undefined}></span><slot /></p>
+<style>
+  .pill { display: inline-flex; align-items: center; gap: 10px; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--text); text-wrap: balance; }
+</style>

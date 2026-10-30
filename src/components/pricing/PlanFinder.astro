@@ -1,0 +1,76 @@
+---
+import { finderVolumes, finderCompetitors, freePlans, paidPlans, enterprisePlans } from '@/data/pricing';
+const plans = [freePlans[1], ...paidPlans, ...enterprisePlans].map((p: any) => ({ id: p.id, name: p.short ?? p.name, pm: p.pm, comp: p.comp, price: p.price, refresh: p.refresh }));
+---
+<section class="container pf-wrap" aria-label="Plan finder">
+  <div class="pf" data-finder>
+    <div class="pf__inputs">
+      <div class="eyebrow" style="font-size:11px">Find your plan in 10 seconds</div>
+      <label class="pf__field">
+        <span class="pf__row"><span class="pf__q">Products you want to track per month</span><output class="mono" data-vol-out>3,000</output></span>
+        <input type="range" min="0" max={finderVolumes.length - 1} step="1" value="6" data-vol />
+        <span class="pf__scale mono"><span>100</span><span>3K</span><span>30K</span><span>50K+</span></span>
+      </label>
+      <div class="pf__field">
+        <span class="pf__q">Competitors per product</span>
+        <div class="pf__comps" role="radiogroup">{finderCompetitors.map(([t, v], i) => <button type="button" role="radio" class="choice mono" aria-checked={i === 1 ? 'true' : 'false'} data-comp={v}>{t}</button>)}</div>
+      </div>
+    </div>
+    <div class="pf__result">
+      <div class="mono muted" style="font-size:11px;letter-spacing:.12em">WE RECOMMEND</div>
+      <div class="pf__name"><b data-rec-name>Growth</b><span class="mono" data-rec-price>$159 / mo</span></div>
+      <p data-rec-why></p>
+      <a class="pf__cta" href="#growth" data-rec-link>See Growth plan ↓</a>
+    </div>
+  </div>
+</section>
+<script type="application/json" id="finder-data" set:html={JSON.stringify({ plans, vols: finderVolumes })}></script>
+<script>
+  const root = document.querySelector<HTMLElement>('[data-finder]');
+  if (root) {
+    const { plans, vols } = JSON.parse(document.getElementById('finder-data')!.textContent || '{}');
+    const range = root.querySelector<HTMLInputElement>('[data-vol]')!;
+    let comp = 5;
+    const annual = () => document.documentElement.dataset.billing === 'annual';
+    const update = () => {
+      const i = Number(range.value), vol = vols[i];
+      root.querySelector('[data-vol-out]')!.textContent = i === vols.length - 1 ? '50,000+' : vol.toLocaleString('en-US');
+      const rec = plans.find((p: any) => p.pm >= vol && p.comp >= comp) ?? plans[plans.length - 1];
+      let price = 'Custom', why = '';
+      if (typeof rec.price === 'number') { price = '$' + Math.round(rec.price * (annual() ? 0.8 : 1)) + ' / mo'; why = 'Covers ' + rec.pm.toLocaleString('en-US') + ' products / mo and up to ' + rec.comp + ' competitors, with ' + rec.refresh + ' daily refresh.'; }
+      else if (rec.id === 'zero') { price = 'Free'; why = 'Your volume fits the free account. Start the 14-day trial — no card needed.'; }
+      else if (rec.id === 'enterprise') why = 'Up to 30,000 products / mo and 10 competitors, fully managed with a 99.95% uptime SLA.';
+      else why = 'Beyond 30,000 products or 10 competitors, the Price Engine gives you unlimited capacity inside your own stack.';
+      root.querySelector('[data-rec-name]')!.textContent = rec.name;
+      root.querySelector('[data-rec-price]')!.textContent = price;
+      root.querySelector('[data-rec-why]')!.textContent = why;
+      const link = root.querySelector<HTMLAnchorElement>('[data-rec-link]')!; link.href = '#' + rec.id; link.textContent = 'See ' + rec.name + ' plan ↓';
+      document.querySelectorAll<HTMLElement>('[data-plan]').forEach((el) => el.classList.toggle('is-rec', el.dataset.plan === rec.id));
+      document.querySelectorAll<HTMLElement>('[data-col]').forEach((el) => el.classList.toggle('is-rec', el.dataset.col === rec.id));
+    };
+    range.addEventListener('input', update);
+    root.querySelectorAll<HTMLButtonElement>('[data-comp]').forEach((b) => b.addEventListener('click', () => {
+      root.querySelectorAll('[data-comp]').forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+      comp = Number(b.dataset.comp); update();
+    }));
+    document.addEventListener('billing:change', update);
+    update();
+  }
+</script>
+<style>
+  .pf-wrap { padding-top: 40px; }
+  .pf { border: 1px solid var(--line); border-radius: 20px; background: var(--surface-3); display: flex; flex-wrap: wrap; overflow: hidden; }
+  .pf__inputs { flex: 1.4 1 420px; min-width: 0; padding: clamp(20px, 3vw, 28px); display: flex; flex-direction: column; gap: 22px; }
+  .pf__field { display: flex; flex-direction: column; gap: 12px; }
+  .pf__row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .pf__q { font-size: 15px; font-weight: 500; color: var(--white); }
+  output { font-size: 22px; color: var(--white); font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; height: 28px; accent-color: var(--green); cursor: pointer; }
+  .pf__scale { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--dim); }
+  .pf__comps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .pf__comps .choice { font-size: 13px; }
+  .pf__result { flex: 1 1 320px; min-width: 0; padding: clamp(20px, 3vw, 28px); border-left: 1px solid var(--line-soft); background: rgba(24,229,99,.04); display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+  .pf__name { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; } .pf__name b { font-family: var(--font-display); font-size: clamp(32px, 3.4vw, 42px); letter-spacing: -.03em; color: var(--green); } .pf__name span { font-size: 16px; color: var(--white); }
+  .pf__result p { font-size: 14.5px; line-height: 1.55; }
+  .pf__cta { align-self: flex-start; height: 46px; padding: 0 18px; border-radius: 11px; background: var(--green); color: var(--bg); font-family: var(--font-display); font-weight: 600; font-size: 14.5px; display: inline-flex; align-items: center; }
+  .pf__cta:hover { background: var(--green-hover); color: var(--bg); }
+</style>

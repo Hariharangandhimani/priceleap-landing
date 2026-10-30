@@ -1,0 +1,27 @@
+---
+import { pains } from '@/data/home';
+---
+<section class="container section problem">
+  <div class="problem__head" data-reveal>
+    <div class="eyebrow">The cost of bad data</div>
+    <h2 class="h2">Bad pricing data costs you margin every single day.</h2>
+    <p>Most pricing tools hand you a dashboard and hope for the best. Sound familiar?</p>
+  </div>
+  <div class="problem__list">
+    {pains.map((t, i) => (
+      <div class="problem__item" data-reveal style={`transition-delay:${i * 0.08}s`}><span class="mono">0{i + 1}</span><s>{t}</s></div>
+    ))}
+    <div class="problem__fix" data-reveal><span>✓</span><p>PriceLeap fixes the root cause: accurate data, refreshed in real time, turned into pricing moves you can trust.</p></div>
+  </div>
+</section>
+<style>
+  .problem { display: flex; flex-wrap: wrap; gap: clamp(40px, 6vw, 96px); }
+  .problem__head { flex: 1 1 420px; display: flex; flex-direction: column; gap: 16px; } .problem__head p { font-size: 18px; line-height: 1.6; }
+  .problem__list { flex: 1 1 460px; min-width: 0; display: flex; flex-direction: column; }
+  .problem__item { display: flex; align-items: center; gap: 18px; padding: 22px 0; border-bottom: 1px solid var(--line-soft); font-size: 18px; }
+  .problem__item span { width: 36px; height: 36px; flex: none; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; font-size: 12px; color: var(--muted); }
+  .problem__item s { text-decoration-color: rgba(255,82,71,.6); text-decoration-thickness: 1.5px; }
+  .problem__fix { margin-top: 28px; display: flex; gap: 16px; align-items: flex-start; padding: 22px; border: 1px solid var(--green-dark); border-radius: 16px; background: rgba(24,229,99,.05); }
+  .problem__fix span { width: 36px; height: 36px; flex: none; border-radius: 10px; background: var(--green); color: var(--bg); font-weight: 700; display: grid; place-items: center; }
+  .problem__fix p { font-size: 17px; line-height: 1.55; color: var(--white); text-wrap: pretty; }
+</style>

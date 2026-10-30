@@ -1,0 +1,204 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { tour } from '@/data/home';
+const urls = ['https://amazon.com/product/wh-anc-700', 'https://walmart.com/product/sonix-anc-700', 'https://target.com/product/wh-anc-700', 'https://bestbuy.com/product/anc-700'];
+const up = [22, 30, 18, 40, 28, 35, 20, 46, 32, 26, 38, 30, 44, 36];
+const dn = [34, 42, 30, 52, 46, 40, 36, 60, 48, 44, 58, 50, 66, 72];
+const signals = [
+  { kind: 'PRICE DROP', color: 'var(--green)', t: '09:42', msg: 'Retailer B cut 14 audio SKUs by an average of 3.1%' },
+  { kind: 'OUT OF STOCK', color: 'var(--amber)', t: '09:18', msg: 'D2C store C out of stock on Smart Fitness Watch 46mm' },
+  { kind: 'PROMOTION', color: 'var(--muted)', t: '08:55', msg: 'Marketplace D launched 20% off on speakers' },
+  { kind: 'MAP', color: 'var(--red)', t: '08:31', msg: 'Seller 2841 listed 8.0% below MAP on Marketplace A' },
+];
+const rule = [
+  ['Wireless ANC Headphones', '₹24,990', '₹24,790', '₹24,540'], ['True Wireless Earbuds Pro', '₹18,900', '₹18,690', '₹18,500'],
+  ['Smart Fitness Watch 46mm', '₹9,499', '₹9,690', '₹9,590'], ['Mechanical Keyboard TKL', '₹7,499', '₹7,290', '₹7,220'], ['4K Action Camera Pro', '₹21,990', '₹21,490', 'Hold · floor'],
+];
+---
+<section id="product" class="container section tour" data-tour>
+  <SectionHeading eyebrow="Inside PriceLeap" layout="split" lede="Add products, watch the market, set the rules, and ask the Agent when you need an answer fast.">From a list of URLs to a repriced catalog — in one workspace.</SectionHeading>
+
+  <div class="tour__tabs" role="tablist" aria-label="Product tour">
+    {tour.map((t, i) => (
+      <button role="tab" id={`tour-tab-${i}`} aria-controls={`tour-panel-${i}`} aria-selected={i === 0 ? 'true' : 'false'} data-tab={i} class="tour__tab">
+        <span class="tour__tab-t"><span class="mono">0{i + 1}</span>{t.title}</span>
+        <span class="tour__tab-d">{t.desc}</span>
+        <span class="tour__fill" aria-hidden="true"></span>
+      </button>
+    ))}
+  </div>
+
+  <div class="tour__window">
+    <div class="tour__bar"><img src="/assets/mark.png" alt="" width="16" height="15" /><b data-screen-title>{tour[0].screen}</b><span class="tour__sub" data-screen-sub>{tour[0].sub}</span><span class="mono dim tour__count" data-count>01 / 04</span></div>
+    <div class="tour__stage">
+      <div class="tour__panel" role="tabpanel" id="tour-panel-0" aria-labelledby="tour-tab-0" data-panel="0">
+        <div class="tp-tabs"><span class="is-active">Paste URLs</span><span>Upload file</span><span>Connect catalog</span></div>
+        <div class="tp-urls mono"><div class="dim">Paste multiple URLs (one per line):</div>{urls.map((u, i) => <div class="fx" data-at={i + 1}>{u}</div>)}<span class="caret"></span></div>
+        <div class="tp-track"><b>How should we track this group?</b><small>Pick once — you can flip individual products later from the dashboard.</small>
+          <div class="tp-opts">
+            <div class="tp-opt is-sel"><div><span class="radio"></span><b>Find &amp; monitor competitors</b><span class="tag tag--green">AI POWERED</span></div><p>AI discovers competing products and tracks pricing and strategy for the group.</p></div>
+            <div class="tp-opt"><div><span class="radio"></span><b>Track your product URLs</b><span class="tag">SAVE CREDITS</span></div><p>Monitor your own listings and assign competitor domains per product when you're ready.</p></div>
+          </div></div>
+        <div class="tp-foot"><span class="muted">Adding items to</span><span class="dp-chip">Audio · Headphones ▾</span><span class="mono tp-status fx" data-only="6"><i class="spin"></i>Matching products…</span><span class="mono accent fx" data-at="9">✓ 27 competitors found</span><span class="tp-cta">Find competitors →</span></div>
+      </div>
+
+      <div class="tour__panel" role="tabpanel" id="tour-panel-1" aria-labelledby="tour-tab-1" data-panel="1" hidden>
+        <div class="tp-split">
+          <div class="tp-card tp-chart">
+            <div class="tp-chart-head"><div><small class="mono muted">COMPETITOR PRICE MOVES · LAST 14 DAYS</small><b>2,418 changes</b></div><span class="mono"><i style="background:var(--red)"></i>Increased <i style="background:var(--green)"></i>Decreased</span></div>
+            <div class="tp-bars" data-at="1">{up.map((u, i) => <div style={`--u:${(u / 1.4).toFixed(0)}%;--d:${(dn[i] / 1.4 * 0.75).toFixed(0)}%;--delay:${i * 0.04}s`}><span></span><span></span></div>)}</div>
+            <div class="mono dim tp-axis"><span>15 OCT</span><span>22 OCT</span><span>TODAY</span></div>
+          </div>
+          <div class="tp-signals"><small class="mono muted">MARKET SIGNALS</small>
+            {signals.map((s, i) => <div class="tp-signal fx" data-at={i + 2}><span class="dot" style={`background:${s.color}`}></span><div><div class="mono dim"><span>{s.kind}</span><span>{s.t}</span></div><p>{s.msg}</p></div></div>)}
+          </div>
+        </div>
+      </div>
+
+      <div class="tour__panel" role="tabpanel" id="tour-panel-2" aria-labelledby="tour-tab-2" data-panel="2" hidden>
+        <div class="tp-split">
+          <div class="tp-card tp-rules"><small class="mono muted">RULE · AUDIO · HEADPHONES</small>
+            <div class="tp-field"><small>Strategy</small>Beat lowest competitor by <span class="mono accent">1%</span></div>
+            <div class="tp-2"><div class="tp-field"><small>Floor</small>Margin ≥ 18%</div><div class="tp-field"><small>Ceiling</small>MSRP</div></div>
+            <div class="tp-field tp-toggle"><div><small>Respect MAP</small>Never price below MAP</div><span class="switch"></span></div>
+            <div class="tp-field"><small>Notify</small>#pricing on Slack · changes &gt; 5%</div>
+          </div>
+          <div class="tp-card tp-preview">
+            <div class="tp-preview-head"><small class="mono muted">PREVIEW · 214 PRODUCTS</small><small class="mono accent fx" data-at="2">Margin held on every change</small></div>
+            <div class="tp-scroll"><div class="tp-rows">
+              <div class="tp-row mono dim"><span>PRODUCT</span><span>CURRENT</span><span>LOWEST</span><span>NEW PRICE</span></div>
+              {rule.map((r, i) => <div class:list={['tp-row', { hold: r[3].startsWith('Hold') }]} data-at={i + 2}><span>{r[0]}</span><span class="mono cur">{r[1]}</span><span class="mono muted">{r[2]}</span><span><i class="mono">{r[3]}</i></span></div>)}
+            </div></div>
+            <div class="tp-preview-foot"><span class="muted">All changes stay inside floor, ceiling and MAP.</span><span class="tp-cta">Apply to 214 products</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tour__panel" role="tabpanel" id="tour-panel-3" aria-labelledby="tour-tab-3" data-panel="3" hidden>
+        <div class="tp-chat">
+          <div class="tp-msg"><span class="tp-av"><img src="/assets/mark.png" alt="" width="15" height="14" /></span><div><div class="tp-bubble">I'm your PriceLeap Agent. I can monitor prices, analyse competitor movements, and set up alerts. What would you like to explore?</div>
+            <div class="tp-chips">{['Biggest price drops', 'Competitor out of stock', 'Set an alert', 'Weekly summary'].map((c) => <span>{c}</span>)}</div></div></div>
+          <div class="tp-user fx" data-at="1">Which SKUs did competitors undercut this week?</div>
+          <div class="tp-msg fx tp-typing" data-at="2"><span class="tp-av"><img src="/assets/mark.png" alt="" width="15" height="14" /></span><span class="tp-dots"><i></i><i></i><i></i></span></div>
+          <div class="tp-msg fx tp-answer" data-at="5"><span class="tp-av"><img src="/assets/mark.png" alt="" width="15" height="14" /></span><div class="tp-bubble"><p><b>3 SKUs</b> were undercut by more than 2%. Two can be matched without breaching your 18% margin floor.</p>
+            <div class="tp-ans mono">{[['TWS-PRO-2', 'Retailer B', '−2.4%', 'Match ₹18,680'], ['MKB-TKL-RGB', 'Retailer E', '−2.8%', 'Match ₹7,280'], ['AC-4K-PRO', 'Marketplace D', '−3.1%', 'Hold · floor']].map((r) => <div><span class="white">{r[0]}</span><span class="muted">{r[1]}</span><span style="color:var(--red-soft)">{r[2]}</span><span class:list={[r[3].startsWith('Hold') ? 'muted' : 'accent']}>{r[3]}</span></div>)}</div>
+            <div class="tp-chips"><span class="tp-cta">Apply 2 price changes</span><span>Alert me next time</span></div></div></div>
+          <div class="tp-input"><span>Ask about prices, competitors, alerts…</span><b>→</b></div>
+          <small class="dim tp-disclaimer">Agent may make mistakes · Always verify critical pricing decisions</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script type="application/json" id="tour-data" set:html={JSON.stringify(tour)}></script>
+
+<script>
+  import { createStepper } from '@/scripts/stepper';
+  import { prefersReducedMotion, whenInView } from '@/scripts/reveal';
+  const root = document.querySelector<HTMLElement>('[data-tour]');
+  if (root) {
+    const data = JSON.parse(document.getElementById('tour-data')!.textContent || '[]');
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+    const panels = [...root.querySelectorAll<HTMLElement>('[data-panel]')];
+    const reduced = prefersReducedMotion();
+    const DURATION = 7000;
+    let active = 0, auto = !reduced, visible = false, timer = 0;
+    const steppers = panels.map((p) => createStepper(p));
+    const show = (i: number, user = false) => {
+      active = i; if (user) auto = false;
+      tabs.forEach((t, k) => { t.setAttribute('aria-selected', String(k === i)); t.classList.remove('is-running'); });
+      panels.forEach((p, k) => (p.hidden = k !== i));
+      root.querySelector('[data-screen-title]')!.textContent = data[i].screen;
+      root.querySelector('[data-screen-sub]')!.textContent = data[i].sub;
+      root.querySelector('[data-count]')!.textContent = `0${i + 1} / 04`;
+      steppers.forEach((s) => s.stop());
+      if (reduced) { steppers[i].set(14); return; }
+      steppers[i].reset(); steppers[i].play();
+      if (auto && visible) requestAnimationFrame(() => requestAnimationFrame(() => tabs[i].classList.add('is-running')));
+    };
+    tabs.forEach((t, i) => t.addEventListener('click', () => { clearInterval(timer); show(i, true); }));
+    root.querySelector('[role="tablist"]')!.addEventListener('keydown', (e: Event) => {
+      const k = (e as KeyboardEvent).key; if (k !== 'ArrowRight' && k !== 'ArrowLeft') return;
+      const n = (active + (k === 'ArrowRight' ? 1 : 3)) % 4; clearInterval(timer); show(n, true); tabs[n].focus();
+    });
+    whenInView(root, (v) => {
+      const was = visible; visible = v;
+      if (v && !was && auto) { show(active); clearInterval(timer); timer = window.setInterval(() => auto && visible && show((active + 1) % 4), DURATION); }
+    });
+    show(0);
+  }
+</script>
+
+<style>
+  .tour__tabs { margin-top: 44px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+  .tour__tab { position: relative; text-align: left; padding: 16px 18px 18px; border-radius: 14px; border: 1px solid var(--line-soft); background: transparent; cursor: pointer; overflow: hidden; transition: border-color .3s, background .3s; }
+  .tour__tab[aria-selected="true"] { border-color: var(--green-dark); background: var(--surface); }
+  .tour__tab-t { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-weight: 600; font-size: 16px; color: var(--text); }
+  .tour__tab-t .mono { font-size: 11px; font-weight: 400; color: var(--dim); }
+  .tour__tab[aria-selected="true"] .tour__tab-t { color: var(--white); } .tour__tab[aria-selected="true"] .mono { color: var(--green); }
+  .tour__tab-d { display: block; margin-top: 6px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+  .tour__fill { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: var(--green); }
+  .tour__tab[aria-selected="true"] .tour__fill { width: 100%; }
+  .tour__tab.is-running .tour__fill { width: 0; animation: fill 7s linear forwards; }
+  @keyframes fill { to { width: 100%; } }
+  .tour__window { margin-top: 16px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface-3); overflow: hidden; box-shadow: 0 40px 100px -50px rgba(24,229,99,.25); }
+  .tour__bar { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line-soft); background: var(--surface-4); font-size: 13px; color: var(--white); }
+  .tour__bar b { font-weight: 500; }
+  .tour__sub { display: none; font-size: 12px; color: var(--dim); padding-left: 12px; border-left: 1px solid var(--line); } @media (min-width: 860px) { .tour__sub { display: inline; } }
+  .tour__count { margin-left: auto; font-size: 10px; letter-spacing: .08em; }
+  .dim { color: var(--dim); } .white { color: var(--white); }
+  .tour__stage { min-height: 460px; padding: clamp(16px, 2.4vw, 28px); }
+  .tour__panel { display: flex; flex-direction: column; gap: 16px; animation: pl-in .5s ease both; }
+  .tour__panel[hidden] { display: none; }
+  .fx { opacity: 0; transform: translateY(8px); transition: opacity .45s, transform .45s; } .fx.is-on { opacity: 1; transform: none; }
+  .fx:not(.is-on)[data-only], .tp-typing.fx:not(.is-on) { display: none; }
+  .tour__panel:has(.tp-answer.is-on) .tp-typing { display: none; }
+  .tp-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line-soft); flex-wrap: wrap; } .tp-tabs span { padding: 10px 14px; font-size: 13px; color: var(--muted); } .tp-tabs .is-active { color: var(--green); border-bottom: 2px solid var(--green); margin-bottom: -1px; }
+  .tp-urls { min-height: 132px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 13px; line-height: 1.9; } .tp-urls > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .caret { display: inline-block; width: 8px; height: 15px; background: var(--green); vertical-align: -2px; animation: pl-blink 1s steps(1) infinite; }
+  .tp-track { padding: 18px; border: 1px solid var(--line-soft); border-radius: 14px; background: var(--surface-2); } .tp-track > b { display: block; font-family: var(--font-display); font-size: 15px; color: var(--white); } .tp-track > small { display: block; margin-top: 4px; font-size: 12.5px; color: var(--muted); }
+  .tp-opts { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+  .tp-opt { padding: 14px; border: 1px solid var(--line); border-radius: 12px; } .tp-opt > div { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--white); } .tp-opt .tag { margin-left: auto; }
+  .tp-opt p { margin-top: 8px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+  .tp-opt.is-sel { border-color: var(--green-dark); background: rgba(24,229,99,.06); } .tp-opt.is-sel p { color: var(--text); }
+  .radio { width: 16px; height: 16px; flex: none; border-radius: 50%; border: 1.5px solid var(--dim); } .is-sel .radio { border: 5px solid var(--green); }
+  .tp-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; }
+  .dp-chip { height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; display: flex; align-items: center; color: var(--white); }
+  .tp-status { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--muted); }
+  .spin { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--muted); border-top-color: transparent; animation: pl-spin .8s linear infinite; }
+  .tp-cta { margin-left: auto; height: 38px; padding: 0 16px; border-radius: 10px; background: var(--green); color: var(--bg); font-family: var(--font-display); font-weight: 600; font-size: 13.5px; display: inline-flex; align-items: center; white-space: nowrap; }
+  .tp-split { display: flex; flex-wrap: wrap; gap: 16px; }
+  .tp-card { flex: 1 1 300px; min-width: 0; padding: 18px; border: 1px solid var(--line-soft); border-radius: 14px; background: var(--surface); display: flex; flex-direction: column; gap: 12px; }
+  .tp-chart { flex: 1.6 1 440px; } .tp-chart-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; } .tp-chart-head b { display: block; margin-top: 6px; font-family: var(--font-display); font-size: 24px; color: var(--white); }
+  .tp-chart-head .mono { display: flex; align-items: center; gap: 6px; font-size: 10.5px; } .tp-chart-head i { width: 8px; height: 8px; border-radius: 2px; margin-left: 8px; }
+  .tp-bars { margin-top: 10px; height: 200px; display: flex; align-items: flex-end; gap: clamp(4px, 1vw, 10px); border-bottom: 1px solid var(--line); }
+  .tp-bars > div { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; }
+  .tp-bars span { height: 0; transition: height .8s var(--ease); transition-delay: var(--delay); } .tp-bars span:first-child { background: var(--red); border-radius: 3px 3px 0 0; } .tp-bars span:last-child { background: var(--green); }
+  .tp-bars.is-on span:first-child { height: var(--u); } .tp-bars.is-on span:last-child { height: var(--d); }
+  .tp-axis { display: flex; justify-content: space-between; font-size: 10px; }
+  .tp-signals { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+  .tp-signal { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 12px; background: var(--surface); } .tp-signal .dot { width: 8px; height: 8px; margin-top: 5px; }
+  .tp-signal > div { flex: 1; } .tp-signal .mono { display: flex; justify-content: space-between; font-size: 9.5px; letter-spacing: .08em; } .tp-signal p { margin-top: 3px; font-size: 13px; line-height: 1.45; }
+  .tp-field { padding: 12px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px; color: var(--white); } .tp-field small { display: block; margin-bottom: 4px; font-size: 11px; color: var(--muted); }
+  .tp-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } .tp-toggle { display: flex; justify-content: space-between; align-items: center; }
+  .switch { position: relative; width: 34px; height: 20px; flex: none; border-radius: 999px; background: var(--green); } .switch::after { content: ''; position: absolute; right: 2px; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--bg); }
+  .tp-preview { flex: 1.5 1 420px; padding: 0; gap: 0; overflow: hidden; }
+  .tp-preview-head, .tp-preview-foot { padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; } .tp-preview-head { border-bottom: 1px solid var(--line-soft); } .tp-preview-foot { margin-top: auto; border-top: 1px solid var(--line-soft); font-size: 12.5px; }
+  .tp-scroll { overflow-x: auto; } .tp-rows { min-width: 440px; }
+  .tp-row { display: grid; grid-template-columns: minmax(0, 1.8fr) 1fr 1fr 1.1fr; gap: 10px; align-items: center; padding: 12px 16px; border-top: 1px solid var(--line-soft); font-size: 13px; color: var(--white); }
+  .tp-row:first-child { border-top: 0; font-size: 9.5px; letter-spacing: .1em; } .tp-row > span:not(:first-child) { text-align: right; } .tp-row > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tp-row i { font-style: normal; padding: 3px 8px; border-radius: 6px; color: var(--dim); transition: all .4s; }
+  .tp-row.is-on i { background: var(--green-deep); color: var(--green); } .tp-row.is-on:not(.hold) .cur { color: var(--dim); text-decoration: line-through; }
+  .tp-row.hold.is-on i { background: var(--line-soft); color: var(--text); }
+  .tp-chat { max-width: 760px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+  .tp-msg { display: flex; gap: 12px; align-items: flex-start; } .tp-msg > div { flex: 1; min-width: 0; }
+  .tp-av { width: 32px; height: 32px; flex: none; border-radius: 9px; border: 1px solid var(--green-dark); background: var(--green-deep); display: grid; place-items: center; }
+  .tp-bubble { padding: 14px 16px; border: 1px solid var(--line); border-radius: 4px 14px 14px 14px; background: var(--surface); font-size: 14px; line-height: 1.55; } .tp-bubble b { color: var(--white); font-weight: 500; }
+  .tp-chips { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; } .tp-chips span:not(.tp-cta) { height: 30px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 12.5px; display: inline-flex; align-items: center; }
+  .tp-chips .tp-cta { margin: 0; height: 30px; font-size: 12.5px; }
+  .tp-user { align-self: flex-end; max-width: 80%; padding: 12px 16px; border-radius: 14px 4px 14px 14px; background: var(--green); color: var(--bg); font-size: 14px; font-weight: 500; }
+  .tp-dots { display: flex; gap: 5px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 4px 14px 14px 14px; background: var(--surface); } .tp-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--text); animation: pl-dots 1.2s infinite; } .tp-dots i:nth-child(2) { animation-delay: .2s; } .tp-dots i:nth-child(3) { animation-delay: .4s; }
+  .tp-ans { margin-top: 12px; border: 1px solid var(--line-soft); border-radius: 10px; overflow: hidden; font-size: 11.5px; } .tp-ans > div { display: grid; grid-template-columns: minmax(0, 1.3fr) 1fr .8fr 1fr; gap: 10px; padding: 10px 12px; } .tp-ans > div + div { border-top: 1px solid var(--line-soft); } .tp-ans span:nth-child(n+3) { text-align: right; }
+  .tp-input { margin-top: 6px; display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 13.5px; color: var(--dim); } .tp-input span { flex: 1; } .tp-input b { width: 32px; height: 32px; border-radius: 8px; background: var(--green); color: var(--bg); display: grid; place-items: center; }
+  .tp-disclaimer { text-align: center; font-size: 11.5px; }
+</style>

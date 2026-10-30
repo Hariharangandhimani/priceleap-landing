@@ -1,0 +1,22 @@
+---
+/** Eyebrow + H2 + optional lede. Use slot for the title so you can add <span class="accent">. */
+interface Props { eyebrow?: string; lede?: string; layout?: 'stack' | 'split' | 'center'; class?: string }
+const { eyebrow, lede, layout = 'stack', class: cls = '' } = Astro.props;
+---
+<div class:list={['sh', `sh--${layout}`, cls]} data-reveal>
+  <div class="sh__main">
+    {eyebrow && <div class="eyebrow">{eyebrow}</div>}
+    <h2 class="h2"><slot /></h2>
+  </div>
+  {lede && <p class="sh__lede">{lede}</p>}
+</div>
+<style>
+  .sh { display: flex; flex-direction: column; gap: 18px; }
+  .sh__main { max-width: 720px; display: flex; flex-direction: column; gap: 16px; }
+  .sh__lede { font-size: 18px; line-height: 1.6; color: var(--muted); max-width: 420px; }
+  .sh--split { flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 20px 64px; }
+  .sh--split .sh__main { flex: 1 1 520px; }
+  .sh--split .sh__lede { flex: 0 1 360px; }
+  .sh--center { align-items: center; text-align: center; }
+  .sh--center .sh__lede { max-width: 560px; }
+</style>

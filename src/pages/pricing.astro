@@ -1,0 +1,46 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/ui/PageHero.astro';
+import BillingToggle from '@/components/pricing/BillingToggle.astro';
+import PlanFinder from '@/components/pricing/PlanFinder.astro';
+import FreePlanCard from '@/components/pricing/FreePlanCard.astro';
+import PlanCard from '@/components/pricing/PlanCard.astro';
+import EnterpriseCard from '@/components/pricing/EnterpriseCard.astro';
+import CompareTable from '@/components/pricing/CompareTable.astro';
+import CTABanner from '@/components/sections/CTABanner.astro';
+import { freePlans, paidPlans, enterprisePlans } from '@/data/pricing';
+---
+<BaseLayout title="Pricing | PriceLeap — pay for what you actually monitor" description="Simple, usage-based PriceLeap plans that scale with your catalog. Start free — no credit card required.">
+  <PageHero pill="Pricing" lede="Simple, usage-based plans that scale with your catalog. Start free — no credit card required.">
+    <span class="light">Pay for what you </span><span class="bold accent">actually monitor.</span>
+    <div slot="after" style="margin-top:12px"><BillingToggle /></div>
+  </PageHero>
+  <PlanFinder />
+
+  <section id="free" class="container group">
+    <div class="group__head"><h2>Start free — no commitment</h2><span>No credit card on either option</span></div>
+    <div class="grid grid--free">{freePlans.map((p) => <FreePlanCard plan={p} />)}</div>
+  </section>
+
+  <section class="container group">
+    <div class="group__head"><h2>Paid plans</h2></div>
+    <div class="grid grid--paid">{paidPlans.map((p) => <PlanCard plan={p} />)}</div>
+  </section>
+
+  <section class="container group">
+    <div class="group__head"><h2>For large-scale operations</h2><span>Fully managed · tailored to your stack</span></div>
+    <div class="grid grid--ent">{enterprisePlans.map((p) => <EnterpriseCard plan={p} />)}</div>
+  </section>
+
+  <CompareTable />
+  <CTABanner size="md" title="Not sure which plan fits?" text="Book a 15-minute demo and we'll size it on your real catalog." secondary={{ label: 'Start free', href: '#free' }} />
+</BaseLayout>
+<style>
+  .group { padding-top: 56px; scroll-margin-top: 80px; }
+  .group__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .group__head h2 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; } .group__head span { font-size: 13.5px; color: var(--muted); }
+  .grid { margin-top: 18px; display: grid; gap: 16px; align-items: stretch; }
+  .grid--free { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+  .grid--paid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+  .grid--ent { grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr)); }
+</style>

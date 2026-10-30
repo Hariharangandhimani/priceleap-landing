@@ -1,0 +1,24 @@
+---
+/** Native <details> accordion — accessible, zero JS. */
+interface Props { items: { q: string; a: string }[]; openFirst?: boolean }
+const { items, openFirst = true } = Astro.props;
+---
+<div class="acd">
+  {items.map((it, i) => (
+    <details open={openFirst && i === 0}>
+      <summary><span>{it.q}</span><i aria-hidden="true">+</i></summary>
+      <p>{it.a}</p>
+    </details>
+  ))}
+</div>
+<style>
+  .acd { display: flex; flex-direction: column; gap: 8px; }
+  details { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); overflow: hidden; transition: border-color .2s; }
+  details[open] { border-color: var(--green-dark); }
+  summary { min-height: 60px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; list-style: none; font-size: 16px; font-weight: 500; color: var(--white); }
+  summary::-webkit-details-marker { display: none; }
+  summary span { flex: 1; }
+  summary i { width: 28px; height: 28px; flex: none; border-radius: 8px; border: 1px solid var(--line); color: var(--green); font-style: normal; font-size: 16px; display: grid; place-items: center; transition: transform .25s; }
+  details[open] summary i { transform: rotate(45deg); }
+  p { padding: 0 20px 18px; font-size: 15px; line-height: 1.6; }
+</style>

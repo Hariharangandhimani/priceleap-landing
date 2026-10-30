@@ -1,0 +1,63 @@
+---
+import Logo from '@/components/ui/Logo.astro';
+import Button from '@/components/ui/Button.astro';
+import { mainNav, routes, site } from '@/data/site';
+interface Props { variant?: 'full' | 'minimal' }
+const { variant = 'full' } = Astro.props;
+---
+<header class="nav" data-nav>
+  <nav aria-label="Primary" class="container nav__bar">
+    <Logo />
+    {variant === 'full' && (
+      <ul class="nav__links">
+        {mainNav.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+      </ul>
+    )}
+    <div class="nav__actions">
+      <a class="nav__signin" href={site.signInUrl}>Sign in</a>
+      <Button href={routes.demo} size="sm" class="nav__cta">Book a demo</Button>
+      {variant === 'full' && (
+        <button class="nav__burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu" data-burger>
+          <span></span><span></span>
+        </button>
+      )}
+    </div>
+  </nav>
+  {variant === 'full' && (
+    <div id="mobile-menu" class="nav__menu" hidden>
+      {mainNav.map((l) => <a href={l.href}>{l.label}</a>)}
+      <Button href={routes.demo} size="lg">Book a demo</Button>
+    </div>
+  )}
+</header>
+
+<script>
+  const nav = document.querySelector<HTMLElement>('[data-nav]');
+  const burger = document.querySelector<HTMLButtonElement>('[data-burger]');
+  const menu = document.getElementById('mobile-menu');
+  const onScroll = () => nav?.classList.toggle('is-scrolled', scrollY > 8);
+  addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  burger?.addEventListener('click', () => {
+    const open = burger.getAttribute('aria-expanded') !== 'true';
+    burger.setAttribute('aria-expanded', String(open));
+    if (menu) menu.hidden = !open;
+  });
+  menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => { if (menu) menu.hidden = true; burger?.setAttribute('aria-expanded', 'false'); }));
+</script>
+
+<style>
+  .nav { position: sticky; top: 0; z-index: 50; background: rgba(10,10,10,.6); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid transparent; transition: background .3s, border-color .3s; }
+  .nav.is-scrolled { background: rgba(10,10,10,.85); border-color: var(--line-soft); }
+  .nav__bar { height: 68px; display: flex; align-items: center; gap: 36px; }
+  .nav__links { display: none; margin: 0; padding: 0; list-style: none; gap: 28px; font-size: 14px; font-weight: 500; white-space: nowrap; }
+  .nav__links a { color: var(--text); } .nav__links a:hover { color: var(--white); }
+  .nav__actions { margin-left: auto; display: flex; align-items: center; gap: 16px; white-space: nowrap; }
+  .nav__signin { color: var(--text); font-size: 14px; font-weight: 500; } .nav__signin:hover { color: var(--white); }
+  .nav__burger { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; }
+  .nav__burger span { width: 18px; height: 2px; border-radius: 2px; background: var(--white); }
+  .nav__menu { border-top: 1px solid var(--line-soft); padding: 12px var(--gutter) 24px; display: flex; flex-direction: column; background: var(--bg); }
+  .nav__menu a:not(.btn) { color: var(--white); font-size: 17px; padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
+  .nav__menu :global(.btn) { margin-top: 16px; }
+  @media (max-width: 1099px) { :global(.nav__cta) { display: none !important; } .nav__signin { display: none; } }
+  @media (min-width: 1100px) { .nav__links { display: flex; } .nav__burger, .nav__menu { display: none !important; } }
+</style>
