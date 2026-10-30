@@ -2,10 +2,11 @@
 import Logo from '@/components/ui/Logo.astro';
 import Button from '@/components/ui/Button.astro';
 import { mainNav, routes, site } from '@/data/site';
-interface Props { variant?: 'full' | 'minimal' }
-const { variant = 'full' } = Astro.props;
+interface Props { variant?: 'full' | 'minimal'; theme?: 'dark' | 'light' }
+const { variant = 'full', theme = 'dark' } = Astro.props;
+const isLight = theme === 'light';
 ---
-<header class="nav" data-nav>
+<header class:list={['nav', { 'nav--light': isLight }]} data-nav>
   <nav aria-label="Primary" class="container nav__bar">
     <Logo />
     {variant === 'full' && (
@@ -52,20 +53,34 @@ const { variant = 'full' } = Astro.props;
 </script>
 
 <style>
+  /* Dark nav (default) */
   .nav { position: sticky; top: 0; z-index: 50; background: rgba(10,10,10,.6); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid transparent; transition: background .3s, border-color .3s; }
-  .nav.is-scrolled { background: rgba(10,10,10,.85); border-color: var(--line-soft); }
+  .nav.is-scrolled { background: rgba(10,10,10,.85); border-color: #1C1C1C; }
   .nav__bar { height: 68px; display: flex; align-items: center; gap: clamp(16px, 3vw, 36px); }
   .nav__links { display: none; margin: 0; padding: 0; list-style: none; gap: 28px; font-size: 14px; font-weight: 500; white-space: nowrap; }
-  .nav__links a { color: var(--text); } .nav__links a:hover { color: var(--white); }
+  .nav__links a { color: #C4CBD6; } .nav__links a:hover { color: #FFFFFF; }
   .nav__actions { margin-left: auto; display: flex; align-items: center; gap: 12px; white-space: nowrap; flex-shrink: 0; }
-  .nav__signin { color: var(--text); font-size: 14px; font-weight: 500; } .nav__signin:hover { color: var(--white); }
-  .nav__burger { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; flex-shrink: 0; }
-  .nav__burger span { width: 18px; height: 2px; border-radius: 2px; background: var(--white); transition: transform .25s, opacity .25s; }
+  .nav__signin { color: #C4CBD6; font-size: 14px; font-weight: 500; } .nav__signin:hover { color: #FFFFFF; }
+  .nav__burger { width: 44px; height: 44px; border-radius: 10px; border: 1px solid #282828; background: #121212; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; flex-shrink: 0; }
+  .nav__burger span { width: 18px; height: 2px; border-radius: 2px; background: #FFFFFF; transition: transform .25s, opacity .25s; }
   .nav__burger[aria-expanded="true"] span:first-child { transform: translateY(3.5px) rotate(45deg); }
   .nav__burger[aria-expanded="true"] span:last-child  { transform: translateY(-3.5px) rotate(-45deg); }
-  .nav__menu { border-top: 1px solid var(--line-soft); padding: 8px var(--gutter) 24px; display: flex; flex-direction: column; background: var(--bg); }
-  .nav__menu a:not(.btn) { color: var(--white); font-size: 17px; padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
+  .nav__menu { border-top: 1px solid #1C1C1C; padding: 8px clamp(20px,3vw,24px) 24px; display: flex; flex-direction: column; background: #0A0A0A; }
+  .nav__menu a:not(.btn) { color: #FFFFFF; font-size: 17px; padding: 14px 0; border-bottom: 1px solid #1C1C1C; }
   .nav__menu :global(.btn) { margin-top: 16px; width: 100%; justify-content: center; }
+
+  /* Light nav override */
+  .nav--light { background: rgba(245,246,243,0); }
+  .nav--light.is-scrolled { background: rgba(245,246,243,0.92); border-color: #E3E6E1; }
+  .nav--light .nav__links a { color: #3D4450; } .nav--light .nav__links a:hover { color: #0A0A0A; }
+  .nav--light .nav__signin { color: #3D4450; } .nav--light .nav__signin:hover { color: #0A0A0A; }
+  .nav--light .nav__burger { border-color: #E3E6E1; background: #FFFFFF; }
+  .nav--light .nav__burger span { background: #0A0A0A; }
+  .nav--light .nav__menu { border-top-color: #ECEEEA; background: #FFFFFF; }
+  .nav--light .nav__menu a:not(.btn) { color: #0A0A0A; border-bottom-color: #ECEEEA; }
+  .nav--light :global(.nav__cta.btn--primary) { background: #18E563; color: #0A0A0A; }
+  .nav--light :global(.nav__cta.btn--primary:hover) { background: #4CEE87; }
+
   @media (max-width: 1099px) { :global(.nav__cta) { display: none !important; } .nav__signin { display: none; } }
   @media (min-width: 1100px) { .nav__links { display: flex; } .nav__burger, .nav__menu { display: none !important; } }
 </style>

@@ -1,0 +1,125 @@
+---
+const pains = [
+  { tag: 'STALE DATA', t: "Stale competitor prices you can't act on", fix: 'Refreshed as often as every [PLACEHOLDER]',
+    icon: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M12 7v5l3 2' },
+  { tag: 'BAD MATCHES', t: 'Wrong product matches skewing your view', fix: 'AI matching verified by human QC',
+    icon: 'M9 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10 M15 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10' },
+  { tag: 'MANUAL WORK', t: 'Manual price-checking across dozens of sites', fix: 'Every rival tracked automatically',
+    icon: 'M4 5h16v11H4z M9 20h6M12 16v4' },
+  { tag: 'MARGIN LEAK', t: 'Discounting that quietly gives away margin', fix: 'Floors, ceilings & MAP guardrails',
+    icon: 'M3 17l6-6 4 4 8-8 M15 7h6v6' },
+];
+const iconPaths = [
+  ['M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18', 'M12 7v5l3 2'],
+  ['M9 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10', 'M15 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10'],
+  ['M4 5h16v11H4z', 'M9 20h6M12 16v4'],
+  ['M3 17l6-6 4 4 8-8', 'M15 7h6v6'],
+];
+---
+<section class="lprob container section" data-lprob>
+  <div data-reveal class="lprob__left">
+    <div class="eyebrow-l">The cost of bad data</div>
+    <h2 class="h2-l" style="margin-top:16px">Bad pricing data costs you margin <span style="color:#C8362C">every single day.</span></h2>
+    <p class="lprob__sub">Most pricing tools hand you a dashboard and hope for the best. Sound familiar? Here's how PriceLeap closes each leak.</p>
+    <div class="lprob__meter">
+      <div class="lprob__meter-head"><span class="mono lprob__meter-label">MARGIN AT RISK</span><span class="mono lprob__meter-val" data-lrisk-val>HIGH</span></div>
+      <div class="lprob__bar-wrap"><div class="lprob__bar" data-lrisk-bar style="width:100%;background:#FF5247"></div></div>
+      <div class="lprob__meter-foot"><span>Leaks closed</span><span class="mono" data-lrisk-fixed>0 / 4</span></div>
+    </div>
+  </div>
+
+  <div class="lprob__right">
+    <div class="lprob__grid">
+      {pains.map((p, i) => (
+        <div class="lprob__card" data-lpain={i} data-reveal>
+          <div class="lprob__card-top">
+            <span class="lprob__ic" data-lic={i}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d={iconPaths[i][0]} /><path d={iconPaths[i][1]} />
+              </svg>
+            </span>
+            <span class="lprob__tag" data-ltag={i}>{p.tag}</span>
+          </div>
+          <div class="lprob__pain" data-lpaint={i}>{p.t}</div>
+          <div class="lprob__fix" data-lfix={i}>
+            <span class="lprob__fix-tick">✓</span>{p.fix}
+          </div>
+        </div>
+      ))}
+    </div>
+    <div class="lprob__resolve" data-lresolve data-reveal>
+      <span class="lprob__resolve-ic"><img src="/assets/mark.png" alt="" width="20" height="19" style="filter:brightness(0)" /></span>
+      <p>PriceLeap fixes the root cause: accurate data, refreshed in real time, turned into pricing moves you can trust.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-lprob]');
+  if (root) {
+    let step = -1;
+    const riskVals = ['HIGH', 'HIGH', 'REDUCING', 'REDUCING', 'PROTECTED'];
+    const riskWidths = ['100%', '78%', '56%', '34%', '12%'];
+    const riskColors = ['#FF5247', '#FF5247', '#F5A524', '#F5A524', '#18E563'];
+    const riskTextColors = ['#C8362C', '#C8362C', '#B7791F', '#B7791F', '#0B8F3C'];
+    const paint = () => {
+      const s = Math.max(0, Math.min(4, step));
+      const barEl = root.querySelector<HTMLElement>('[data-lrisk-bar]');
+      if (barEl) { barEl.style.width = riskWidths[s]; barEl.style.background = riskColors[s]; }
+      const valEl = root.querySelector<HTMLElement>('[data-lrisk-val]');
+      if (valEl) { valEl.textContent = riskVals[s]; valEl.style.color = riskTextColors[s]; }
+      const fixEl = root.querySelector<HTMLElement>('[data-lrisk-fixed]');
+      if (fixEl) fixEl.textContent = Math.max(0,s) + ' / 4';
+      for (let i = 0; i < 4; i++) {
+        const fixed = i < s, active = i === s;
+        const card = root.querySelector<HTMLElement>(`[data-lpain="${i}"]`);
+        if (!card) continue;
+        card.style.borderColor = active ? '#F5C2BC' : fixed ? '#9FDDB6' : '#E3E6E1';
+        card.style.background = active ? '#FFF7F6' : fixed ? '#F4FBF7' : '#FFFFFF';
+        card.style.boxShadow = active ? '0 18px 40px -20px rgba(200,54,44,.35)' : fixed ? '0 18px 40px -26px rgba(11,143,60,.35)' : '0 1px 2px rgba(10,10,10,.04)';
+        card.style.transform = active ? 'translateY(-4px)' : 'none';
+        const ic = root.querySelector<HTMLElement>(`[data-lic="${i}"]`);
+        if (ic) { ic.style.background = fixed ? '#E3F7EA' : active ? '#FDEEEC' : '#F4F6F2'; ic.style.color = fixed ? '#0B8F3C' : active ? '#C8362C' : '#7C8592'; }
+        const tag = root.querySelector<HTMLElement>(`[data-ltag="${i}"]`);
+        if (tag) { tag.textContent = fixed ? '✓ FIXED' : active ? '● ' + ['STALE DATA','BAD MATCHES','MANUAL WORK','MARGIN LEAK'][i] : ['STALE DATA','BAD MATCHES','MANUAL WORK','MARGIN LEAK'][i]; tag.style.background = fixed ? '#E3F7EA' : active ? '#FDEEEC' : '#F4F6F2'; tag.style.color = fixed ? '#0B8F3C' : active ? '#C8362C' : '#5F6876'; }
+        const pt = root.querySelector<HTMLElement>(`[data-lpaint="${i}"]`);
+        if (pt) { pt.style.color = fixed ? '#9AA2AD' : '#0A0A0A'; pt.style.textDecoration = fixed ? 'line-through' : 'none'; (pt.style as any).textDecorationColor = 'rgba(200,54,44,.55)'; }
+        const fx = root.querySelector<HTMLElement>(`[data-lfix="${i}"]`);
+        if (fx) { fx.style.opacity = fixed ? '1' : '0.35'; fx.style.color = fixed ? '#0A0A0A' : '#9AA2AD'; fx.style.borderTopColor = fixed ? '#9FDDB6' : '#E3E6E1'; }
+      }
+      const res = root.querySelector<HTMLElement>('[data-lresolve]');
+      if (res) { res.style.borderColor = s >= 4 ? '#18E563' : '#9FDDB6'; res.style.background = s >= 4 ? '#0A0A0A' : '#F4FBF7'; const p = res.querySelector('p'); if (p) p.style.color = s >= 4 ? '#FFFFFF' : '#0A0A0A'; }
+    };
+    if (!window.matchMedia('(prefers-reduced-motion:reduce)').matches) {
+      setInterval(() => { step = step >= 6 ? -1 : step + 1; paint(); }, 1600);
+    } else { step = 4; }
+    paint();
+  }
+</script>
+
+<style>
+  .lprob { display: flex; flex-wrap: wrap; gap: clamp(40px,6vw,88px); align-items: center; }
+  .lprob__left { flex: 1 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+  .lprob__sub { font-size: 18px; line-height: 1.6; color: #3D4450; max-width: 480px; text-wrap: pretty; }
+  .lprob__meter { max-width: 460px; padding: 20px; border: 1px solid #E3E6E1; border-radius: 18px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(10,10,10,.04), 0 18px 40px -24px rgba(10,10,10,.18); }
+  .lprob__meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .lprob__meter-label { font-size: 11px; letter-spacing: .1em; color: #5F6876; }
+  .lprob__meter-val { font-size: 12px; font-weight: 600; color: #C8362C; transition: color .5s; }
+  .lprob__bar-wrap { margin-top: 12px; height: 10px; border-radius: 5px; background: #ECEEEA; overflow: hidden; }
+  .lprob__bar { height: 100%; border-radius: 5px; transition: width .9s var(--ease), background .6s; }
+  .lprob__meter-foot { margin-top: 12px; display: flex; justify-content: space-between; font-size: 13px; color: #5F6876; }
+
+  .lprob__right { flex: 1.2 1 480px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+  .lprob__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,200px),1fr)); gap: 12px; }
+  .lprob__card { padding: 20px; border: 1px solid #E3E6E1; border-radius: 18px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(10,10,10,.04); display: flex; flex-direction: column; gap: 14px; transition: border-color .5s, background .5s, box-shadow .5s, transform .5s; }
+  .lprob__card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .lprob__ic { width: 40px; height: 40px; border-radius: 12px; background: #F4F6F2; color: #7C8592; display: flex; align-items: center; justify-content: center; flex: none; transition: all .5s; }
+  .lprob__tag { height: 24px; padding: 0 9px; border-radius: 999px; background: #F4F6F2; color: #5F6876; font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; display: flex; align-items: center; gap: 6px; transition: all .5s; white-space: nowrap; }
+  .lprob__pain { font-size: 16px; line-height: 1.4; font-weight: 500; color: #0A0A0A; transition: color .5s; }
+  .lprob__fix { display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px dashed #E3E6E1; font-size: 13.5px; color: #9AA2AD; transition: opacity .5s, color .5s; }
+  .lprob__fix-tick { width: 18px; height: 18px; flex: none; border-radius: 50%; background: #18E563; color: #0A0A0A; font-size: 10px; font-weight: 700; display: grid; place-items: center; }
+
+  .lprob__resolve { display: flex; gap: 16px; align-items: center; padding: 20px 22px; border: 1px solid #9FDDB6; border-radius: 18px; background: #F4FBF7; transition: all .6s; }
+  .lprob__resolve-ic { width: 40px; height: 40px; flex: none; border-radius: 12px; background: #18E563; display: flex; align-items: center; justify-content: center; }
+  .lprob__resolve p { margin: 0; font-size: 16px; line-height: 1.5; color: #0A0A0A; text-wrap: pretty; transition: color .6s; }
+</style>

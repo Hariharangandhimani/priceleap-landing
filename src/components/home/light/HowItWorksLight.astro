@@ -1,0 +1,64 @@
+---
+import { howSteps } from '@/data/home';
+import { routes } from '@/data/site';
+---
+<section id="how" class="container section lhow">
+  <div class="lhow__aside">
+    <div class="lhow__sticky">
+      <div class="eyebrow-l">How it works</div>
+      <h2 class="h2-l" style="margin-top:14px"><span style="font-weight:400">Live in days,</span><br /><span style="font-weight:700;color:#0B8F3C">not months.</span></h2>
+      <a href={routes.demo} class="lhow__cta">Book a demo</a>
+    </div>
+  </div>
+  <ol class="lhow__steps" data-lhow>
+    <div class="lhow__rail" aria-hidden="true"><i data-lhow-fill></i></div>
+    {howSteps.map((s, i) => (
+      <li class="lhow__step" data-lhow-step={i}>
+        <span class="lhow__num mono">0{i + 1}</span>
+        <h3>{s.title}</h3>
+        <p>{s.desc}</p>
+      </li>
+    ))}
+  </ol>
+</section>
+
+<script>
+  const list = document.querySelector<HTMLElement>('[data-lhow]');
+  const fill = document.querySelector<HTMLElement>('[data-lhow-fill]');
+  if (list && fill) {
+    const steps = [...list.querySelectorAll<HTMLElement>('[data-lhow-step]')];
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const r = list.getBoundingClientRect();
+      const p = Math.max(0, Math.min(1, (innerHeight * 0.55 - r.top) / r.height));
+      fill.style.height = (p * 100).toFixed(1) + '%';
+      const step = Math.min(3, Math.floor(p * 4.2) - (p === 0 ? 1 : 0));
+      steps.forEach((s, i) => s.classList.toggle('is-on', i <= step));
+    };
+    addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    update();
+  }
+</script>
+
+<style>
+  .lhow { display: flex; flex-wrap: wrap; gap: clamp(40px,6vw,96px); }
+  .lhow__aside { flex: 1 1 380px; }
+  .lhow__sticky { position: sticky; top: 120px; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+  .lhow__cta { margin-top: 16px; display: inline-flex; align-items: center; height: 48px; padding: 0 22px; border-radius: 12px; background: #18E563; color: #0A0A0A; font-family: var(--font-display); font-weight: 600; font-size: 15px; box-shadow: 0 10px 28px -10px rgba(24,229,99,.5); transition: background .2s; }
+  .lhow__cta:hover { background: #4CEE87; color: #0A0A0A; }
+  .lhow__steps { position: relative; flex: 1.4 1 480px; min-width: 0; margin: 0; padding: 0 0 0 56px; list-style: none; }
+  .lhow__rail { position: absolute; left: 19px; top: 20px; bottom: 20px; width: 2px; background: #E3E6E1; border-radius: 1px; }
+  .lhow__rail i { display: block; width: 100%; height: 0; background: #18E563; box-shadow: 0 0 10px rgba(24,229,99,.4); }
+  .lhow__step { position: relative; padding-bottom: clamp(48px,6vw,80px); }
+  .lhow__num { position: absolute; left: -56px; top: 0; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; background: #FFFFFF; color: #5F6876; border: 1px solid #E3E6E1; transition: all .4s; }
+  .lhow__step h3 { margin-top: 6px; font-size: clamp(22px,2.2vw,28px); font-weight: 600; letter-spacing: -.02em; color: #9AA2AD; transition: color .4s; }
+  .lhow__step p { margin-top: 10px; font-size: 17px; line-height: 1.6; color: #3D4450; max-width: 480px; }
+  .lhow__step.is-on .lhow__num { background: #18E563; color: #0A0A0A; border-color: #18E563; }
+  .lhow__step.is-on h3 { color: #0A0A0A; }
+  @media (max-width: 767px) {
+    .lhow__sticky { position: static; }
+    .lhow__steps { padding-left: 48px; }
+    .lhow__num { left: -48px; }
+  }
+</style>
