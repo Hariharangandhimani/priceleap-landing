@@ -83,6 +83,10 @@ const counts = integrationCats.map((_, i) => (i === 0 ? integrations.length : in
   .int__tabs button span { font-size: 10.5px; color: var(--dim); }
   .int__tabs button[aria-selected="true"] { border-color: var(--green-dark); background: rgba(24,229,99,.08); color: var(--white); }
   .int__req { margin-left: auto; font-size: 11px; } .dim { color: var(--dim); }
+  @media (max-width: 599px) {
+    .int__hub { max-width: 320px; }
+    .int__req { width: 100%; margin-left: 0; }
+  }
   .int__grid { padding: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 10px; }
   .int__tile { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--line-soft); border-radius: 14px; background: var(--surface); transition: border-color .2s, transform .2s, background .2s; }
   .int__tile[hidden] { display: none; } .int__tile.is-anim { animation: pl-in .45s ease both; }

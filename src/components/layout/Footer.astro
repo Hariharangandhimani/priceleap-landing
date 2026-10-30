@@ -29,13 +29,17 @@ const year = new Date().getFullYear();
 </footer>
 <style>
   .ft { border-top: 1px solid var(--line-soft); }
-  .ft__top { padding-block: 64px 48px; display: flex; flex-wrap: wrap; gap: 48px; }
-  .ft__brand { flex: 2 1 300px; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+  .ft__top { padding-block: 64px 48px; display: flex; flex-wrap: wrap; gap: 40px; }
+  .ft__brand { flex: 2 1 260px; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
   .ft__brand p { font-size: 14px; line-height: 1.65; color: var(--muted); max-width: 340px; }
-  .ft__col { flex: 1 1 160px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+  .ft__col { flex: 1 1 140px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
   .ft__col a { color: var(--text); } .ft__col a:hover { color: var(--white); }
   .ft__title { font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
   .ft__bottom { padding-block: 20px 32px; border-top: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--dim); }
   .ft__copy { display: flex; align-items: center; gap: 8px; } .ft__copy img { opacity: .6; }
   .ft__legal { display: flex; gap: 20px; } .ft__legal a { color: var(--dim); } .ft__legal a:hover { color: var(--text); }
+  @media (max-width: 479px) {
+    .ft__top { gap: 32px; padding-block: 48px 32px; }
+    .ft__bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
 </style>

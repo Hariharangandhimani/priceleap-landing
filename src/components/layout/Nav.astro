@@ -37,27 +37,35 @@ const { variant = 'full' } = Astro.props;
   const menu = document.getElementById('mobile-menu');
   const onScroll = () => nav?.classList.toggle('is-scrolled', scrollY > 8);
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  const close = () => { burger?.setAttribute('aria-expanded', 'false'); if (menu) menu.hidden = true; };
+  const open = () => { burger?.setAttribute('aria-expanded', 'true'); if (menu) menu.hidden = false; };
+
   burger?.addEventListener('click', () => {
-    const open = burger.getAttribute('aria-expanded') !== 'true';
-    burger.setAttribute('aria-expanded', String(open));
-    if (menu) menu.hidden = !open;
+    burger.getAttribute('aria-expanded') === 'true' ? close() : open();
   });
-  menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => { if (menu) menu.hidden = true; burger?.setAttribute('aria-expanded', 'false'); }));
+  menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
+  document.addEventListener('click', (e) => {
+    if (menu && !menu.hidden && !nav?.contains(e.target as Node)) close();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 </script>
 
 <style>
   .nav { position: sticky; top: 0; z-index: 50; background: rgba(10,10,10,.6); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid transparent; transition: background .3s, border-color .3s; }
   .nav.is-scrolled { background: rgba(10,10,10,.85); border-color: var(--line-soft); }
-  .nav__bar { height: 68px; display: flex; align-items: center; gap: 36px; }
+  .nav__bar { height: 68px; display: flex; align-items: center; gap: clamp(16px, 3vw, 36px); }
   .nav__links { display: none; margin: 0; padding: 0; list-style: none; gap: 28px; font-size: 14px; font-weight: 500; white-space: nowrap; }
   .nav__links a { color: var(--text); } .nav__links a:hover { color: var(--white); }
-  .nav__actions { margin-left: auto; display: flex; align-items: center; gap: 16px; white-space: nowrap; }
+  .nav__actions { margin-left: auto; display: flex; align-items: center; gap: 12px; white-space: nowrap; flex-shrink: 0; }
   .nav__signin { color: var(--text); font-size: 14px; font-weight: 500; } .nav__signin:hover { color: var(--white); }
-  .nav__burger { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; }
-  .nav__burger span { width: 18px; height: 2px; border-radius: 2px; background: var(--white); }
-  .nav__menu { border-top: 1px solid var(--line-soft); padding: 12px var(--gutter) 24px; display: flex; flex-direction: column; background: var(--bg); }
+  .nav__burger { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; flex-shrink: 0; }
+  .nav__burger span { width: 18px; height: 2px; border-radius: 2px; background: var(--white); transition: transform .25s, opacity .25s; }
+  .nav__burger[aria-expanded="true"] span:first-child { transform: translateY(3.5px) rotate(45deg); }
+  .nav__burger[aria-expanded="true"] span:last-child  { transform: translateY(-3.5px) rotate(-45deg); }
+  .nav__menu { border-top: 1px solid var(--line-soft); padding: 8px var(--gutter) 24px; display: flex; flex-direction: column; background: var(--bg); }
   .nav__menu a:not(.btn) { color: var(--white); font-size: 17px; padding: 14px 0; border-bottom: 1px solid var(--line-soft); }
-  .nav__menu :global(.btn) { margin-top: 16px; }
+  .nav__menu :global(.btn) { margin-top: 16px; width: 100%; justify-content: center; }
   @media (max-width: 1099px) { :global(.nav__cta) { display: none !important; } .nav__signin { display: none; } }
   @media (min-width: 1100px) { .nav__links { display: flex; } .nav__burger, .nav__menu { display: none !important; } }
 </style>
