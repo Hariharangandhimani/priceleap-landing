@@ -1,0 +1,64 @@
+---
+import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
+import AnnouncementBar from '@/components/layout/AnnouncementBar.astro';
+import HeroLight from '@/components/home/light/HeroLight.astro';
+import TrustLight from '@/components/home/light/TrustLight.astro';
+import ProblemLight from '@/components/home/light/ProblemLight.astro';
+import ProductTour from '@/components/home/ProductTour.astro';
+import CapabilitiesLight from '@/components/home/light/CapabilitiesLight.astro';
+import Accuracy from '@/components/home/Accuracy.astro';
+import HowItWorksLight from '@/components/home/light/HowItWorksLight.astro';
+import Integrations from '@/components/home/Integrations.astro';
+import ResultsLight from '@/components/home/light/ResultsLight.astro';
+import CTABanner from '@/components/sections/CTABanner.astro';
+---
+<LightBaseLayout title="Pricing Intelligence Software for E-commerce & Marketplaces | PriceLeap">
+  <AnnouncementBar slot="before-nav" href="#product">PriceLeap Agent answers pricing questions in plain English, right inside your dashboard.</AnnouncementBar>
+  <HeroLight />
+  <TrustLight />
+  <ProblemLight />
+
+  <!-- Dark band: Product Tour -->
+  <div class="dark-band">
+    <ProductTour />
+  </div>
+
+  <CapabilitiesLight />
+  <Accuracy />
+  <HowItWorksLight />
+
+  <!-- Dark band: Integrations -->
+  <div class="dark-band dark-band--int">
+    <Integrations />
+  </div>
+
+  <ResultsLight />
+  <CTABanner
+    title="See your real competitor data in a 15-minute demo."
+    text="We'll show PriceLeap running on your products and competitors — accuracy, pricing intelligence, and margin opportunities, live."
+  />
+</LightBaseLayout>
+
+<style>
+  /* Dark sections within the light page */
+  .dark-band {
+    margin-top: var(--section-y, clamp(96px,11vw,150px));
+    padding-bottom: clamp(96px,11vw,150px);
+    background: #0A0A0A;
+    overflow: hidden;
+    position: relative;
+  }
+  .dark-band::before {
+    content: '';
+    position: absolute;
+    left: 50%; top: -200px;
+    width: min(1100px, 95vw);
+    height: 460px;
+    transform: translateX(-50%);
+    background: radial-gradient(closest-side, rgba(24,229,99,.12), transparent);
+    pointer-events: none;
+  }
+  .dark-band--int { margin-top: 0; padding-bottom: 0; }
+  /* Override section padding for dark band children */
+  .dark-band :global(.section) { scroll-margin-top: 80px; }
+</style>

@@ -1,9 +1,9 @@
 ---
 import Logo from '@/components/ui/Logo.astro';
 import Button from '@/components/ui/Button.astro';
-import { footerNav, routes } from '@/data/site';
-interface Props { variant?: 'full' | 'minimal' }
-const { variant = 'full' } = Astro.props;
+import { footerNav, routes, site } from '@/data/site';
+interface Props { variant?: 'full' | 'minimal'; theme?: 'dark' | 'light' }
+const { variant = 'full', theme = 'dark' } = Astro.props;
 const year = new Date().getFullYear();
 ---
 <footer class="ft">

@@ -1,0 +1,367 @@
+---
+import { products, agentToasts } from '@/data/home';
+import { routes } from '@/data/site';
+---
+<section class="lhero" data-lhero>
+  <div class="lhero__grid" aria-hidden="true"></div>
+  <div class="lhero__glow" aria-hidden="true"></div>
+
+  <!-- Floating signal chips (desktop only) -->
+  <div class="lhero__chips" aria-hidden="true">
+    <span class="lchip lchip--1"><span class="ldot" style="background:#18E563"></span><span><span class="lchip__k">PRICE DROP</span><span class="lchip__v">Retailer B ▼ 2.4%</span></span></span>
+    <span class="lchip lchip--2"><span class="ldot" style="background:#F5A524"></span><span><span class="lchip__k">COMPETITOR OOS</span><span class="lchip__v">Smart Watch 46mm</span></span></span>
+    <span class="lchip lchip--3"><span class="ldot" style="background:#0B8F3C"></span><span><span class="lchip__k">AI MATCHED</span><span class="lchip__v">+27 competitors ✓</span></span></span>
+    <span class="lchip lchip--4"><span class="ldot" style="background:#FF5247"></span><span><span class="lchip__k">MAP ALERT</span><span class="lchip__v">Seller 2841 −8.0%</span></span></span>
+  </div>
+
+  <div class="container lhero__copy">
+    <p class="lhero__pill"><span class="ldot ldot--pulse"></span>Pricing Intelligence Software for E-commerce &amp; Marketplaces</p>
+    <h1 class="lhero__h1"><span class="lh1-light">Price with confidence on data you can </span><span class="lh1-bold">actually trust.</span></h1>
+    <p class="lhero__lede">PriceLeap gives e-commerce and marketplace teams real-time competitor price tracking, verified data accuracy, and dynamic pricing that protects every point of margin.</p>
+    <div class="lhero__ctas">
+      <a href={routes.demo} class="lbtn-primary">Book a demo</a>
+      <a href="#product" class="lbtn-secondary">See a sample of your competitor data <span class="lbtn-arrow">→</span></a>
+    </div>
+    <p class="lhero__live">
+      <span class="ldot ldot--pulse"></span>
+      <span><b class="mono" data-l-updated>34,18,220</b> prices refreshed today</span>
+    </p>
+  </div>
+
+  <!-- Dashboard preview -->
+  <div class="lhero__stage" data-ldash>
+    <div class="lhero__glow2" aria-hidden="true"></div>
+    <div class="ldp" role="img" aria-label="PriceLeap Price Intelligence dashboard preview" data-ltilt>
+      <!-- Chrome bar -->
+      <div class="ldp__chrome">
+        <span class="ldp__lights"><i></i><i></i><i></i></span>
+        <span class="ldp__url mono"><span class="ldp__dot"></span>app.priceleap.ai/price-intelligence</span>
+        <span style="width:46px"></span>
+      </div>
+      <div class="ldp__body">
+        <!-- Sidebar -->
+        <aside class="ldp__side">
+          <div class="ldp__brand"><img src="/assets/mark.png" alt="" width="18" height="17" /><span>Price<b style="color:#18E563">Leap</b></span></div>
+          <div class="ldp__ws"><span class="ldp__ws-av">AR</span>Acme Retail<span class="ldp__ws-ch">▾</span></div>
+          <div class="ldp__nav ldp__nav--act"><img src="/assets/icon-intel.png" alt="" width="13" height="13" />Price Intelligence</div>
+          <div class="ldp__nav"><img src="/assets/icon-reprice.png" alt="" width="13" height="13" style="opacity:.55;filter:grayscale(1)" />Decision Engine</div>
+          <div class="ldp__nav ldp__nav--sub">Product Groups</div>
+          <div class="ldp__nav ldp__nav--sub">Dynamic Pricing</div>
+          <div class="ldp__nav"><img src="/assets/icon-groups.png" alt="" width="13" height="13" style="opacity:.55;filter:grayscale(1)" />Reports</div>
+          <div class="ldp__sect mono">CONFIGURATION</div>
+          <div class="ldp__nav"><img src="/assets/icon-integrations.png" alt="" width="13" height="13" style="opacity:.55;filter:grayscale(1)" />Integrations</div>
+          <div class="ldp__nav"><img src="/assets/icon-workspaces.png" alt="" width="13" height="13" style="opacity:.55;filter:grayscale(1)" />Workspace</div>
+          <div class="ldp__plan"><span class="ldp__plan-tag">GROWTH</span><div class="ldp__plan-txt">12,480 of 15,000 SKUs</div><div class="ldp__plan-bar"><i style="width:83%"></i></div></div>
+        </aside>
+        <!-- Main -->
+        <div class="ldp__main">
+          <div class="ldp__top">
+            <div class="ldp__title-group">
+              <div class="ldp__pg-title">Price Intelligence</div>
+              <div class="ldp__pg-sub">Your market today across 12,480 products and 27 competitors</div>
+            </div>
+            <div class="ldp__topright">
+              <span class="ldp__live-chip mono"><span class="ldp__ldot"></span>LIVE · <span data-l-clock>--:--:--</span></span>
+              <span class="ldp__add-btn">+ Add products</span>
+            </div>
+          </div>
+
+          <!-- KPI cards -->
+          <div class="ldp__kpis">
+            <div class="ldp__kpi">
+              <div class="ldp__kpi-label">Your price index</div>
+              <div class="ldp__kpi-big mono" data-l-index>96.4</div>
+              <div class="ldp__index-bar">
+                <div class="ldp__index-track"><span class="ldp__index-dot" data-l-idot style="left:32%"></span></div>
+                <div class="ldp__index-axis mono"><span>CHEAPER</span><span>MARKET 100</span><span>PRICIER</span></div>
+              </div>
+              <div class="ldp__kpi-note" data-l-inote>You are 3.6% cheaper than the market on average.</div>
+            </div>
+            <div class="ldp__kpi">
+              <div class="ldp__kpi-label">Where you stand</div>
+              <div class="ldp__kpi-split"><span style="flex:34;background:#18E563"></span><span style="flex:51;background:#0E8F3D"></span><span style="flex:15;background:#FF5247"></span></div>
+              <div class="ldp__kpi-leg">
+                <div class="ldp__leg-row"><span class="ldp__leg-dot" style="background:#18E563"></span><span class="ldp__leg-l">Cheapest</span><span class="mono ldp__leg-v" data-l-cheap>4,208</span></div>
+                <div class="ldp__leg-row"><span class="ldp__leg-dot" style="background:#0E8F3D"></span><span class="ldp__leg-l">Competitive</span><span class="mono ldp__leg-v">6,394</span></div>
+                <div class="ldp__leg-row"><span class="ldp__leg-dot" style="background:#FF5247"></span><span class="ldp__leg-l" style="color:#C8362C">Priced above</span><span class="mono ldp__leg-v" style="color:#FF8078">1,878</span></div>
+              </div>
+            </div>
+            <div class="ldp__kpi ldp__kpi--green">
+              <div class="ldp__kpi-label">Margin you can win back</div>
+              <div class="ldp__kpi-margin mono">₹4.2L<span> / month</span></div>
+              <div class="ldp__kpi-note"><b>23 products</b> can be raised safely and stay the cheapest, inside your margin floor.</div>
+              <button class="ldp__apply-btn" data-lapply>Apply suggestions →</button>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="ldp__table">
+            <div class="ldp__tbar">
+              <span class="ldp__tbar-title">Products to act on</span>
+              <span class="mono ldp__tbar-sub">Prices update live as competitors move</span>
+              <span class="ldp__tbar-filters">
+                <span class="ldp__filter ldp__filter--on">All</span>
+                <span class="ldp__filter">Priced above</span>
+                <span class="ldp__filter">Opportunities</span>
+              </span>
+            </div>
+            <div class="ldp__scroll"><div class="ldp__grid">
+              <div class="ldp__row ldp__row--head mono"><span>PRODUCT</span><span class="r">YOUR PRICE</span><span class="r">LOWEST RIVAL</span><span>YOUR POSITION</span><span class="r">SUGGESTED</span><span class="r">ACTION</span></div>
+              {products.map((p, i) => (
+                <div class="ldp__row" data-lrow={i}>
+                  <div class="ldp__prod"><span class="ldp__thumb mono">{p.sku.slice(0,2)}</span><div><div class="ldp__name">{p.name}</div><div class="mono ldp__comps">{p.comps.length} competitors tracked</div></div></div>
+                  <div class="r mono ldp__price" data-l-price={i}>₹{p.ours.toLocaleString('en-IN')}</div>
+                  <div class="r mono ldp__low" data-l-low={i}>₹{Math.min(...p.comps).toLocaleString('en-IN')}</div>
+                  <div class="ldp__pos"><div class="ldp__pos-bar"><span class="ldp__pos-dot" data-lpos={i}></span></div><div class="ldp__pos-label" data-lposl={i}>—</div></div>
+                  <div class="r"><div class="mono ldp__sugg" data-lsugg={i}>—</div><div class="mono ldp__suggnote" data-lsuggnote={i}></div></div>
+                  <div class="r"><button class="ldp__act" data-lact={i}>Apply</button></div>
+                </div>
+              ))}
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="ldp__toast" data-l-toast>
+      <div class="ldp__toast-head">
+        <span class="ldp__toast-ic"><img src="/assets/mark.png" alt="" width="14" height="13" /></span>
+        <div><div class="ldp__toast-name">PriceLeap Agent</div><div class="mono ldp__toast-kind" data-l-tkind>{agentToasts[0].kind}</div></div>
+        <span class="mono ldp__toast-time">now</span>
+      </div>
+      <p class="ldp__toast-msg" data-l-tmsg>{agentToasts[0].msg}</p>
+      <div class="ldp__toast-actions"><span class="ldp__tbtn" data-l-tcta>{agentToasts[0].cta}</span><span class="ldp__tbtn ldp__tbtn--ghost">Dismiss</span></div>
+    </div>
+  </div>
+
+  <!-- 3 insight cards below dashboard -->
+  <div class="container lhero__cards">
+    <div class="lhero__card"><span class="lhero__card-n">1</span><div><div class="lhero__card-t">Know where you stand</div><p>Your price index compares you to the market. 100 is the market average; below 100 means you're cheaper.</p></div></div>
+    <div class="lhero__card"><span class="lhero__card-n">2</span><div><div class="lhero__card-t">See every competitor move</div><p>Price cuts, raises, stock-outs and promos are tracked live across every rival.</p></div></div>
+    <div class="lhero__card"><span class="lhero__card-n">3</span><div><div class="lhero__card-t">Act in one click</div><p>Suggested prices stay inside your margin floor and MAP. Click Apply and you're done.</p></div></div>
+  </div>
+</section>
+
+<script type="application/json" id="ldash-data" set:html={JSON.stringify({ products: products.map(p => ({ ...p })), toasts: agentToasts })}></script>
+<script>
+  const data = JSON.parse(document.getElementById('ldash-data')!.textContent || '{}');
+  const root = document.querySelector<HTMLElement>('[data-ldash]');
+  if (!root || !data.products) { /* nothing */ } else {
+    const rows = data.products.map((p: any) => ({ ...p, comps: [...p.comps], trend: Array.from({length:8},(_,k)=>Math.min(...p.comps)*(1+Math.sin(k*1.3+p.ours)*0.02)) }));
+    const fmt = (n: number) => '₹' + Math.round(n).toLocaleString('en-IN');
+    const p90 = (n: number) => Math.round(n/100)*100-10;
+    let toast = 0, toastOn = true, updated = 3418220, applied: Record<number,boolean> = {};
+    const $ = (s: string) => root.querySelector<HTMLElement>(s);
+    const $$ = (s: string) => [...root.querySelectorAll<HTMLElement>(s)];
+    const paintRow = (i: number) => {
+      const r = rows[i];
+      const low = Math.min(...r.comps), high = Math.max(...r.comps);
+      const lo = Math.min(low, r.ours), hi = Math.max(high, r.ours);
+      const pos = hi === lo ? 50 : ((r.ours - lo)/(hi - lo))*100;
+      const gap = (r.ours/low-1)*100, cheap = r.ours <= low;
+      const color = cheap ? '#18E563' : gap < 1.5 ? '#F5A524' : '#FF5247';
+      const dot = $(`[data-lpos="${i}"]`); if (dot) { dot.style.left = Math.max(4,Math.min(96,pos))+'%'; dot.style.borderColor = color; }
+      const pl = $(`[data-lposl="${i}"]`); if (pl) { pl.textContent = cheap ? 'Cheapest' : '+'+gap.toFixed(1)+'% vs lowest'; pl.style.color = color; }
+      const dyn = Math.min(r.msrp, Math.max(r.floor, r.map, p90(low*0.99)));
+      const d = dyn - r.ours;
+      const sg = $(`[data-lsugg="${i}"]`); if (sg) { sg.textContent = fmt(dyn); sg.style.color = d === 0 ? '#C4CBD6' : '#0B8F3C'; }
+      const sn = $(`[data-lsuggnote="${i}"]`); if (sn) sn.textContent = d === 0 ? 'Keep current price' : d < 0 ? 'Lower by '+fmt(-d)+' to win' : 'Raise by '+fmt(d)+' safely';
+      const btn = $(`[data-lact="${i}"]`); if (btn) { btn.textContent = d === 0 ? 'Optimal' : applied[i] ? 'Applied ✓' : 'Apply'; btn.style.background = d !== 0 && !applied[i] ? '#18E563' : 'transparent'; btn.style.color = d === 0 ? '#9AA2AD' : applied[i] ? '#0B8F3C' : '#0A0A0A'; btn.style.borderColor = d === 0 ? '#E3E6E1' : applied[i] ? '#7FD3A0' : '#18E563'; }
+      const ll = $(`[data-l-low="${i}"]`); if (ll) ll.textContent = fmt(low);
+      return cheap;
+    };
+    const paintAll = () => {
+      let cheap = 0;
+      rows.forEach((_:any, i:number) => { if(paintRow(i)) cheap++; });
+      const idx = rows.reduce((a:number,r:any) => a + r.ours/Math.min(...r.comps), 0)/rows.length*100;
+      $$('[data-l-index]').forEach(e => e.textContent = idx.toFixed(1));
+      $$('[data-l-inote]').forEach(e => e.textContent = idx < 100 ? `You are ${(100-idx).toFixed(1)}% cheaper than the market on average.` : `You are ${(idx-100).toFixed(1)}% above the market on average.`);
+      $$('[data-l-idot]').forEach(e => { e.style.left = Math.max(4,Math.min(96,(idx-90)/20*100)).toFixed(1)+'%'; });
+      $$('[data-l-cheap]').forEach(e => e.textContent = (4206+cheap).toLocaleString('en-IN'));
+      $$('[data-l-updated]').forEach(e => e.textContent = updated.toLocaleString('en-IN'));
+    };
+    $$('[data-lact]').forEach(btn => btn.addEventListener('click', () => {
+      const i = Number(btn.dataset.lact); applied[i] = !applied[i]; paintRow(i);
+    }));
+    $('[data-lapply]')?.addEventListener('click', () => {
+      const anyOn = Object.values(applied).some(Boolean);
+      rows.forEach((_:any, i:number) => { applied[i] = !anyOn; }); paintAll();
+      const btn = $('[data-lapply]')!; btn.textContent = !anyOn ? '✓ Suggestions applied' : 'Apply suggestions →';
+    });
+    const clockEl = $('[data-l-clock]');
+    const tick = () => { if (clockEl) clockEl.textContent = new Date().toTimeString().slice(0,8); };
+    tick(); setInterval(tick, 1000);
+    const tickDash = () => {
+      const i = Math.floor(Math.random()*rows.length), r = rows[i], j = Math.floor(Math.random()*r.comps.length);
+      r.comps[j] = p90(r.comps[j]*(0.965+Math.random()*0.06)); r.trend = [...r.trend.slice(1), Math.min(...r.comps)];
+      updated += 900 + Math.floor(Math.random()*700); paintAll();
+      const el = root.querySelector<HTMLElement>(`[data-lrow="${i}"]`); if (el) { el.style.background='rgba(24,229,99,.07)'; setTimeout(()=>{el.style.background='';},1100); }
+    };
+    if (!window.matchMedia('(prefers-reduced-motion:reduce)').matches) { setInterval(tickDash, 2300); }
+    const toastEl = $('[data-l-toast]');
+    const tickToast = () => {
+      if (!toastEl) return;
+      toastEl.classList.add('is-hidden');
+      setTimeout(() => {
+        toast = (toast+1) % data.toasts.length; const d = data.toasts[toast];
+        const kind = $('[data-l-tkind]'); if (kind) kind.textContent = d.kind;
+        const msg = $('[data-l-tmsg]'); if (msg) msg.textContent = d.msg;
+        const cta = $('[data-l-tcta]'); if (cta) cta.textContent = d.cta;
+        toastEl.classList.remove('is-hidden');
+      }, 450);
+    };
+    if (!window.matchMedia('(prefers-reduced-motion:reduce)').matches) setInterval(tickToast, 5200);
+    const tiltEl = root.querySelector<HTMLElement>('[data-ltilt]');
+    const applyTilt = () => {
+      if (!tiltEl || window.innerWidth < 860) { if(tiltEl) tiltEl.style.transform='none'; return; }
+      const p = Math.min(1, Math.max(0, scrollY/560));
+      tiltEl.style.transform = `perspective(2000px) rotateX(${((1-p)*10).toFixed(2)}deg) scale(${(0.96+p*0.04).toFixed(3)})`;
+    };
+    let raf = 0;
+    addEventListener('scroll', () => { if(!raf) raf = requestAnimationFrame(()=>{raf=0;applyTilt();}); }, {passive:true});
+    addEventListener('resize', applyTilt);
+    paintAll(); applyTilt();
+  }
+</script>
+
+<style>
+  .lhero { position: relative; padding: clamp(56px,8vw,96px) 0 0; }
+  .lhero__grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(10,10,10,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(10,10,10,.06) 1px, transparent 1px); background-size: 64px 64px; -webkit-mask-image: radial-gradient(ellipse 70% 50% at 50% 20%, #000 15%, transparent 72%); mask-image: radial-gradient(ellipse 70% 50% at 50% 20%, #000 15%, transparent 72%); pointer-events: none; }
+  .lhero__glow { position: absolute; left: 50%; top: -120px; width: min(900px,90vw); height: 420px; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(24,229,99,.13), transparent); pointer-events: none; }
+  .lhero__chips { position: absolute; inset: 0; max-width: 1440px; margin: 0 auto; pointer-events: none; display: none; }
+  @media (min-width: 1360px) { .lhero__chips { display: block; } }
+  .lchip { position: absolute; display: inline-flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid #E3E6E1; border-radius: 14px; background: rgba(255,255,255,.9); backdrop-filter: blur(8px); box-shadow: 0 18px 40px -20px rgba(10,10,10,.25); white-space: nowrap; }
+  .lchip--1 { left: 24px; top: 40px; animation: pl-float 6s ease-in-out 0s infinite; }
+  .lchip--2 { right: 24px; top: 96px; animation: pl-float 6s ease-in-out -1.5s infinite; }
+  .lchip--3 { left: 48px; top: 300px; animation: pl-float 6s ease-in-out -3s infinite; }
+  .lchip--4 { right: 56px; top: 340px; animation: pl-float 6s ease-in-out -4.5s infinite; }
+  .ldot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .ldot--pulse { animation: pl-pulse 1.8s ease-out infinite; background: #18E563; }
+  .lchip__k { display: block; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em; color: #7C8592; }
+  .lchip__v { display: block; font-size: 13px; font-weight: 500; color: #0A0A0A; margin-top: 2px; }
+
+  .lhero__copy { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .lhero__pill { display: inline-flex; align-items: center; gap: 10px; padding: 7px 14px; border: 1px solid #E3E6E1; border-radius: 999px; background: #FFFFFF; font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #3D4450; margin: 0; }
+  .lhero__h1 { margin: 28px 0 0; max-width: 1000px; font-family: var(--font-display); font-size: clamp(42px,6.6vw,92px); line-height: 1; letter-spacing: -.045em; color: #0A0A0A; text-wrap: balance; }
+  .lh1-light { font-weight: 400; }
+  .lh1-bold { font-weight: 700; color: #0B8F3C; }
+  .lhero__lede { margin: 26px 0 0; max-width: 640px; font-size: clamp(17px,1.5vw,19px); line-height: 1.6; color: #3D4450; }
+  .lhero__ctas { margin-top: 36px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .lbtn-primary { display: inline-flex; align-items: center; height: 52px; padding: 0 26px; border-radius: 12px; background: #18E563; color: #0A0A0A; font-family: var(--font-display); font-weight: 600; font-size: 16px; box-shadow: 0 10px 30px -10px rgba(24,229,99,.6); transition: background .2s, transform .2s; }
+  .lbtn-primary:hover { background: #4CEE87; color: #0A0A0A; transform: translateY(-1px); }
+  .lbtn-secondary { display: inline-flex; align-items: center; gap: 8px; height: 52px; padding: 0 22px; border-radius: 12px; border: 1px solid #E3E6E1; background: #FFFFFF; color: #0A0A0A; font-family: var(--font-display); font-weight: 500; font-size: 16px; transition: border-color .2s; }
+  .lbtn-secondary:hover { border-color: #B9C0C8; color: #0A0A0A; }
+  .lbtn-arrow { color: #0B8F3C; }
+  .lhero__live { margin: 28px 0 0; display: flex; align-items: center; gap: 12px; font-size: 14px; color: #5F6876; }
+  .lhero__live b { color: #0A0A0A; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  /* Dashboard stage */
+  .lhero__stage { position: relative; max-width: 1280px; margin: clamp(48px,7vw,80px) auto 0; padding-inline: clamp(20px,3vw,24px); overflow: hidden; }
+  .lhero__glow2 { position: absolute; left: 8%; right: 8%; top: 12%; bottom: -6%; background: radial-gradient(closest-side, rgba(24,229,99,.16), transparent); filter: blur(30px); pointer-events: none; }
+  .ldp { position: relative; border: 1px solid #282828; border-radius: 18px; background: #0D0D0D; box-shadow: 0 60px 120px -40px rgba(10,10,10,.5), inset 0 1px 0 rgba(255,255,255,.05); overflow: hidden; text-align: left; transform-origin: 50% 0; will-change: transform; }
+  .ldp__chrome { display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-bottom: 1px solid #1C1C1C; background: #080808; }
+  .ldp__lights { display: flex; gap: 6px; } .ldp__lights i { width: 10px; height: 10px; border-radius: 50%; background: #282828; }
+  .ldp__url { flex: 0 1 360px; margin: 0 auto; height: 26px; border-radius: 7px; background: #121212; border: 1px solid #1C1C1C; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11px; color: #8A94A6; overflow: hidden; white-space: nowrap; }
+  .ldp__dot { width: 6px; height: 6px; border-radius: 50%; background: #18E563; }
+  .ldp__body { display: flex; }
+  .ldp__side { width: 212px; flex: none; border-right: 1px solid #1C1C1C; background: #0A0A0A; padding: 16px 12px; display: none; flex-direction: column; gap: 4px; }
+  @media (min-width: 1100px) { .ldp__side { display: flex; } }
+  .ldp__brand { display: flex; align-items: center; gap: 8px; padding: 2px 8px 14px; font-family: var(--font-display); font-size: 15px; color: #FFFFFF; }
+  .ldp__ws { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid #1C1C1C; border-radius: 9px; margin-bottom: 10px; font-size: 12px; color: #FFFFFF; }
+  .ldp__ws-av { width: 22px; height: 22px; border-radius: 6px; background: #0A2E16; color: #18E563; font-size: 10px; font-weight: 600; display: grid; place-items: center; }
+  .ldp__ws-ch { margin-left: auto; font-size: 10px; color: #5A6373; }
+  .ldp__nav { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; color: #8A94A6; font-size: 12.5px; }
+  .ldp__nav--act { background: #161616; color: #FFFFFF; position: relative; }
+  .ldp__nav--act::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 2px; border-radius: 2px; background: #18E563; }
+  .ldp__nav--sub { padding: 6px 10px 6px 32px; font-size: 12px; }
+  .ldp__sect { padding: 14px 10px 6px; font-size: 9.5px; letter-spacing: .12em; color: #5A6373; }
+  .ldp__plan { margin-top: auto; padding: 12px; border: 1px solid #1C1C1C; border-radius: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .ldp__plan-tag { display: inline-block; padding: 2px 7px; border-radius: 999px; background: #0A2E16; color: #18E563; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .08em; }
+  .ldp__plan-txt { font-size: 11.5px; color: #C4CBD6; }
+  .ldp__plan-bar { height: 4px; border-radius: 2px; background: #1C1C1C; overflow: hidden; } .ldp__plan-bar i { display: block; height: 100%; background: #18E563; }
+  .ldp__main { flex: 1; min-width: 0; }
+  .ldp__top { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid #1C1C1C; flex-wrap: wrap; }
+  .ldp__title-group { min-width: 0; flex: 1; }
+  .ldp__pg-title { font-family: var(--font-display); font-size: 16px; font-weight: 600; color: #FFFFFF; letter-spacing: -.01em; }
+  .ldp__pg-sub { margin-top: 2px; font-size: 12px; color: #8A94A6; }
+  .ldp__topright { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ldp__live-chip { height: 30px; padding: 0 10px; border: 1px solid #1C1C1C; border-radius: 999px; display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #C4CBD6; background: #0A0A0A; }
+  .ldp__ldot { width: 6px; height: 6px; border-radius: 50%; background: #18E563; }
+  .ldp__add-btn { height: 30px; padding: 0 12px; border-radius: 8px; background: #18E563; color: #0A0A0A; font-size: 12px; font-weight: 600; display: flex; align-items: center; }
+
+  /* KPIs */
+  .ldp__kpis { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 16px 18px 6px; }
+  @media (min-width: 600px) { .ldp__kpis { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (min-width: 1100px) { .ldp__kpis { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+  .ldp__kpi { padding: 16px; border: 1px solid #1C1C1C; border-radius: 14px; background: #121212; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .ldp__kpi--green { border-color: #0E8F3D; background: linear-gradient(160deg, rgba(24,229,99,.12), #121212 70%); }
+  .ldp__kpi-label { font-size: 12px; font-weight: 500; color: #C4CBD6; }
+  .ldp__kpi-big { font-size: 32px; font-weight: 600; color: #FFFFFF; letter-spacing: -.03em; }
+  .ldp__kpi-note { font-size: 12px; line-height: 1.45; color: #8A94A6; } .ldp__kpi-note b { color: #FFFFFF; font-weight: 500; }
+  .ldp__kpi-margin { font-family: var(--font-display); font-size: 32px; font-weight: 600; color: #18E563; letter-spacing: -.03em; } .ldp__kpi-margin span { font-size: 13px; font-weight: 500; color: #8A94A6; letter-spacing: 0; }
+  .ldp__index-bar { display: flex; flex-direction: column; gap: 7px; }
+  .ldp__index-track { position: relative; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #18E563, #0E8F3D 45%, #3A3A3A 50%, #4A1410 60%, #FF5247); }
+  .ldp__index-dot { position: absolute; top: -4px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #FFFFFF; border: 3px solid #18E563; transition: left .8s var(--ease); }
+  .ldp__index-axis { display: flex; justify-content: space-between; font-size: 9.5px; color: #5A6373; }
+  .ldp__kpi-split { display: flex; height: 10px; gap: 3px; border-radius: 5px; overflow: hidden; }
+  .ldp__kpi-leg { display: flex; flex-direction: column; gap: 7px; font-size: 12px; }
+  .ldp__leg-row { display: flex; align-items: center; gap: 8px; }
+  .ldp__leg-dot { width: 8px; height: 8px; border-radius: 2px; flex: none; }
+  .ldp__leg-l { flex: 1; color: #C4CBD6; }
+  .ldp__leg-v { color: #FFFFFF; }
+  .ldp__apply-btn { margin-top: auto; height: 34px; padding: 0 12px; border: 1px solid #18E563; border-radius: 9px; background: #18E563; color: #0A0A0A; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .25s; }
+
+  /* Table */
+  .ldp__table { margin: 10px 18px 18px; border: 1px solid #1C1C1C; border-radius: 14px; background: #121212; overflow: hidden; }
+  .ldp__tbar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #1C1C1C; flex-wrap: wrap; }
+  .ldp__tbar-title { font-size: 13px; font-weight: 500; color: #FFFFFF; }
+  .ldp__tbar-sub { font-size: 10.5px; color: #5A6373; }
+  .ldp__tbar-filters { margin-left: auto; display: none; gap: 4px; }
+  @media (min-width: 860px) { .ldp__tbar-filters { display: flex; } }
+  .ldp__filter { height: 26px; padding: 0 10px; border-radius: 999px; font-size: 11px; display: flex; align-items: center; }
+  .ldp__filter--on { background: #1C1C1C; color: #FFFFFF; }
+  .ldp__filter:not(.ldp__filter--on) { border: 1px solid #282828; color: #C4CBD6; }
+  .ldp__scroll { overflow-x: auto; } .ldp__grid { min-width: 760px; }
+  .ldp__row { display: grid; grid-template-columns: minmax(0,2fr) .9fr 1.1fr 1.4fr 1.1fr 96px; gap: 14px; align-items: center; padding: 11px 16px; border-top: 1px solid #1C1C1C; font-size: 12.5px; transition: background .9s; }
+  .ldp__row--head { font-size: 9.5px; letter-spacing: .1em; color: #8A94A6; border-top: none; }
+  .ldp__prod { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .ldp__thumb { width: 32px; height: 32px; flex: none; border-radius: 8px; border: 1px solid #282828; background: repeating-linear-gradient(135deg, #141414 0 4px, #1A1A1A 4px 8px); display: grid; place-items: center; font-size: 8.5px; color: #5A6373; }
+  .ldp__name { font-size: 12.5px; font-weight: 500; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ldp__comps { font-size: 10px; color: #5A6373; margin-top: 1px; }
+  .ldp__price { color: #FFFFFF; }
+  .ldp__low { color: #C4CBD6; }
+  .ldp__pos-bar { position: relative; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #0E8F3D, #1C1C1C 55%, #4A1410); }
+  .ldp__pos-dot { position: absolute; top: -3px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #FFFFFF; border: 3px solid #18E563; transition: left .8s var(--ease); }
+  .ldp__pos-label { margin-top: 5px; font-size: 11px; }
+  .ldp__sugg { font-size: 12.5px; }
+  .ldp__suggnote { font-size: 10.5px; color: #8A94A6; }
+  .ldp__act { height: 30px; min-width: 80px; padding: 0 10px; border-radius: 8px; border: 1px solid #18E563; background: #18E563; color: #0A0A0A; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: all .25s; }
+  .r { text-align: right; justify-content: flex-end; }
+
+  /* Toast */
+  .ldp__toast { display: none; position: absolute; right: -12px; bottom: -28px; width: 320px; padding: 14px; border: 1px solid #282828; border-radius: 14px; background: rgba(18,18,18,.92); backdrop-filter: blur(12px); box-shadow: 0 30px 60px -20px rgba(0,0,0,.9); transition: opacity .45s, transform .45s; }
+  .ldp__toast.is-hidden { opacity: 0; transform: translateY(10px); }
+  @media (min-width: 860px) { .ldp__toast { display: block; } }
+  .ldp__toast-head { display: flex; align-items: center; gap: 10px; }
+  .ldp__toast-ic { width: 28px; height: 28px; flex: none; border-radius: 8px; border: 1px solid #0E8F3D; background: #0A2E16; display: grid; place-items: center; }
+  .ldp__toast-name { font-size: 12.5px; font-weight: 600; color: #FFFFFF; }
+  .ldp__toast-kind { font-size: 9.5px; letter-spacing: .08em; color: #18E563; }
+  .ldp__toast-time { margin-left: auto; font-size: 10px; color: #5A6373; }
+  .ldp__toast-msg { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: #C4CBD6; }
+  .ldp__toast-actions { margin-top: 10px; display: flex; gap: 6px; }
+  .ldp__tbtn { height: 26px; padding: 0 10px; border-radius: 7px; background: #18E563; color: #0A0A0A; font-size: 11.5px; font-weight: 600; display: flex; align-items: center; cursor: pointer; }
+  .ldp__tbtn--ghost { background: transparent; border: 1px solid #282828; color: #C4CBD6; font-weight: 400; }
+
+  /* 3 cards below dashboard */
+  .lhero__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%,260px),1fr)); gap: 12px; margin-top: clamp(40px,5vw,64px); padding-bottom: clamp(64px,8vw,96px); text-align: left; }
+  .lhero__card { display: flex; gap: 14px; align-items: flex-start; padding: 18px; border: 1px solid #E3E6E1; border-radius: 16px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(10,10,10,.04); }
+  .lhero__card-n { width: 28px; height: 28px; flex: none; border-radius: 50%; background: #18E563; color: #0A0A0A; font-family: var(--font-mono); font-size: 13px; font-weight: 700; display: grid; place-items: center; }
+  .lhero__card-t { font-family: var(--font-display); font-weight: 600; font-size: 16px; color: #0A0A0A; }
+  .lhero__card p { margin: 4px 0 0; font-size: 14px; line-height: 1.55; color: #5F6876; }
+
+  @media (max-width: 479px) {
+    .lhero__ctas { flex-direction: column; align-items: stretch; }
+    .lhero__ctas a { width: 100%; justify-content: center; text-align: center; }
+  }
+</style>
