@@ -1,0 +1,30 @@
+---
+import CheckList from '@/components/ui/CheckList.astro';
+interface Props { plan: { id: string; kicker: string; name: string; desc: string; price: string; priceNote: string; stats: string[][]; daily: string; cta: string; href: string; features: string[] } }
+const { plan: p } = Astro.props;
+---
+<article id={p.id} class="ec" data-plan={p.id}>
+  <div class="ec__glow" aria-hidden="true"></div>
+  <div class="ec__head">
+    <div class="ec__copy"><div class="ec__kicker"><span class="mono accent">{p.kicker}</span><span class="tag tag--solid ec__rec">RECOMMENDED</span></div><h3>{p.name}</h3><p>{p.desc}</p></div>
+    <div class="ec__price"><b>{p.price}</b><span>{p.priceNote}</span></div>
+  </div>
+  <div class="ec__stats">{p.stats.map(([v, l]) => <div><b class="mono accent">{v}</b><span>{l}</span></div>)}</div>
+  <CheckList items={p.features} columns />
+  <div class="ec__foot"><span class="mono">{p.daily}</span><a href={p.href}>{p.cta}</a></div>
+</article>
+<style>
+  .ec { position: relative; overflow: hidden; padding: clamp(22px, 3vw, 30px); border: 1px solid var(--line); border-radius: 22px; background: linear-gradient(160deg, #141414, var(--surface-3) 60%); display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 90px; transition: border-color .3s, box-shadow .3s; }
+  .ec.is-rec { border-color: var(--green); box-shadow: var(--glow); }
+  .ec__rec { display: none; } .ec.is-rec .ec__rec { display: inline-block; }
+  .ec__glow { position: absolute; right: -60px; top: -60px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(closest-side, rgba(24,229,99,.12), transparent); }
+  .ec > * { position: relative; }
+  .ec__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+  .ec__copy { flex: 1 1 260px; min-width: 0; } .ec__kicker { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } .ec__kicker .mono { font-size: 10.5px; letter-spacing: .1em; }
+  h3 { margin-top: 6px; font-size: 26px; font-weight: 600; letter-spacing: -.02em; } .ec__copy p { margin-top: 8px; font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+  .ec__price { text-align: right; flex: none; } .ec__price b { display: block; font-family: var(--font-display); font-size: 28px; color: var(--white); } .ec__price span { font-size: 12.5px; color: var(--muted); }
+  .ec__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--line-soft); border-radius: 12px; overflow: hidden; background: var(--line-soft); }
+  .ec__stats div { padding: 12px; background: var(--surface-2); } .ec__stats b { display: block; font-size: 20px; font-weight: 400; } .ec__stats span { font-size: 11.5px; color: var(--muted); }
+  .ec__foot { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--line-soft); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12px; }
+  .ec__foot a { height: 48px; padding: 0 20px; border-radius: 12px; background: var(--green); color: var(--bg); font-family: var(--font-display); font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; white-space: nowrap; } .ec__foot a:hover { background: var(--green-hover); color: var(--bg); }
+</style>

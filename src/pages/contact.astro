@@ -1,0 +1,54 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHero from '@/components/ui/PageHero.astro';
+import Button from '@/components/ui/Button.astro';
+import ContactCard from '@/components/contact/ContactCard.astro';
+import CopyEmail from '@/components/contact/CopyEmail.astro';
+import ContactForm from '@/components/contact/ContactForm.astro';
+import OfficeCard from '@/components/contact/OfficeCard.astro';
+import HoursCard from '@/components/contact/HoursCard.astro';
+import CTABanner from '@/components/sections/CTABanner.astro';
+import { site, routes } from '@/data/site';
+---
+<BaseLayout title="Contact PriceLeap | Sales, Enterprise & Support" description="Contact PriceLeap sales, enterprise and technical support teams. Headquartered in Manhattan, New York.">
+  <PageHero pill="Back Mon–Fri, 8am–6pm PT" lede="Questions about pricing intelligence, an enterprise rollout, or your account — pick the right team and we'll get back to you fast.">
+    <span class="light">Talk to the people </span><span class="bold accent">behind the prices.</span>
+  </PageHero>
+  <span hidden data-open-label="Team online now · replies in hours" data-closed-label="Back Mon–Fri, 8am–6pm PT" data-pill-sync></span>
+
+  <section class="container cards">
+    <ContactCard icon="mail" title="Email us" text="General and sales questions. We reply within one business day.">
+      <CopyEmail email={site.email} />
+    </ContactCard>
+    <ContactCard img="/assets/icon-workspaces.png" title="Enterprise sales" tag="50K+ SKUS" text="50K+ SKUs or complex multi-marketplace setups? Talk directly to our enterprise team.">
+      <Button href={routes.demo}>Talk to enterprise →</Button>
+      <Button variant="outline" data-pick-topic="1">Send a brief</Button>
+    </ContactCard>
+    <ContactCard icon="headset" title="Technical support" tag="PRIORITY" tagTone="muted" text="Existing customer? Your dedicated onboarding contact has priority access.">
+      <Button href={site.signInUrl} variant="outline">Sign in for support</Button>
+      <Button variant="outline" data-pick-topic="2">Open a ticket</Button>
+    </ContactCard>
+  </section>
+
+  <section class="container split">
+    <ContactForm />
+    <div class="split__side"><OfficeCard /><HoursCard /></div>
+  </section>
+
+  <CTABanner size="md" title="Rather see it than read about it?" text="Book a 15-minute demo on your own products and competitors." />
+</BaseLayout>
+<script>
+  document.querySelectorAll<HTMLElement>('[data-pick-topic]').forEach((b) => b.addEventListener('click', () => {
+    document.dispatchEvent(new CustomEvent('contact:topic', { detail: Number(b.dataset.pickTopic) }));
+    const t = document.getElementById('message'); if (t) scrollTo({ top: t.getBoundingClientRect().top + scrollY - 76, behavior: 'smooth' });
+  }));
+  // Sync hero pill text with live office status (set by HoursCard).
+  const sync = document.querySelector<HTMLElement>('[data-pill-sync]'); const pill = document.querySelector('.ph .pill');
+  const apply = () => { if (sync && pill) { const dot = pill.querySelector('.dot'); pill.textContent = sync.textContent || ''; if (dot) pill.prepend(dot); } };
+  apply(); setInterval(apply, 60000);
+</script>
+<style>
+  .cards { padding-top: clamp(40px, 6vw, 64px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+  .split { padding-top: clamp(56px, 7vw, 96px); display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; align-items: stretch; }
+  .split__side { display: grid; grid-template-rows: minmax(260px, 1fr) auto; gap: 16px; }
+</style>

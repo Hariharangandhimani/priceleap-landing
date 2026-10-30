@@ -1,0 +1,23 @@
+---
+/** Sets html[data-billing]; any element with data-monthly/data-annual swaps its text. Emits 'billing:change'. */
+---
+<div class="bt" role="radiogroup" aria-label="Billing period" data-billing-toggle>
+  <button type="button" role="radio" aria-checked="true" data-period="monthly">Monthly</button>
+  <button type="button" role="radio" aria-checked="false" data-period="annual">Annual<span class="mono">SAVE 20%</span></button>
+</div>
+<script>
+  const root = document.querySelector<HTMLElement>('[data-billing-toggle]');
+  const set = (p: string) => {
+    document.documentElement.dataset.billing = p;
+    root?.querySelectorAll('button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.period === p)));
+    document.querySelectorAll<HTMLElement>('[data-monthly]').forEach((el) => (el.textContent = p === 'annual' ? el.dataset.annual! : el.dataset.monthly!));
+    document.dispatchEvent(new CustomEvent('billing:change', { detail: p }));
+  };
+  root?.querySelectorAll<HTMLButtonElement>('button').forEach((b) => b.addEventListener('click', () => set(b.dataset.period!)));
+</script>
+<style>
+  .bt { display: inline-flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+  button { height: 40px; padding: 0 18px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all .2s; }
+  button[aria-checked="true"] { background: var(--line-soft); color: var(--white); }
+  span { padding: 2px 7px; border-radius: 6px; background: var(--green); color: var(--bg); font-size: 10.5px; font-weight: 600; }
+</style>

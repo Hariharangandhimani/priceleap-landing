@@ -1,0 +1,41 @@
+---
+import Logo from '@/components/ui/Logo.astro';
+import Button from '@/components/ui/Button.astro';
+import { footerNav, routes } from '@/data/site';
+interface Props { variant?: 'full' | 'minimal' }
+const { variant = 'full' } = Astro.props;
+const year = new Date().getFullYear();
+---
+<footer class="ft">
+  {variant === 'full' && (
+    <div class="container ft__top">
+      <div class="ft__brand">
+        <Logo size={19} />
+        <p>Pricing intelligence software for e-commerce and marketplaces — accurate competitor data, real-time tracking, and dynamic pricing that protects your margin.</p>
+        <Button href={routes.demo} variant="outline" size="sm">Book a demo</Button>
+      </div>
+      {footerNav.map((col) => (
+        <div class="ft__col">
+          <span class="ft__title">{col.title}</span>
+          {col.links.map((l) => <a href={l.href}>{l.label}</a>)}
+        </div>
+      ))}
+    </div>
+  )}
+  <div class="container ft__bottom">
+    <span class="ft__copy"><img src="/assets/mark.png" alt="" width="16" height="15" />© {year} PriceLeap, Inc. All rights reserved.</span>
+    <span class="ft__legal"><a href="#">Privacy</a><a href="#">Terms</a><a href={routes.contact}>Contact</a></span>
+  </div>
+</footer>
+<style>
+  .ft { border-top: 1px solid var(--line-soft); }
+  .ft__top { padding-block: 64px 48px; display: flex; flex-wrap: wrap; gap: 48px; }
+  .ft__brand { flex: 2 1 300px; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+  .ft__brand p { font-size: 14px; line-height: 1.65; color: var(--muted); max-width: 340px; }
+  .ft__col { flex: 1 1 160px; display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+  .ft__col a { color: var(--text); } .ft__col a:hover { color: var(--white); }
+  .ft__title { font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+  .ft__bottom { padding-block: 20px 32px; border-top: 1px solid var(--line-soft); display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--dim); }
+  .ft__copy { display: flex; align-items: center; gap: 8px; } .ft__copy img { opacity: .6; }
+  .ft__legal { display: flex; gap: 20px; } .ft__legal a { color: var(--dim); } .ft__legal a:hover { color: var(--text); }
+</style>

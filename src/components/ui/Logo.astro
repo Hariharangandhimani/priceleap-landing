@@ -1,0 +1,13 @@
+---
+interface Props { size?: number; href?: string }
+const { size = 20, href = '/' } = Astro.props;
+const mark = Math.round(size * 1.15);
+---
+<a href={href} class="logo" aria-label="PriceLeap home" style={`--s:${size}px`}>
+  <img src="/assets/mark.png" alt="" width={mark} height={mark - 1} />
+  <span><span class="light">Price</span><span class="bold accent">Leap</span></span>
+</a>
+<style>
+  .logo { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: var(--s); letter-spacing: -.02em; color: var(--white); }
+  .logo:hover { color: var(--white); }
+</style>

@@ -1,0 +1,76 @@
+---
+import { contactTopics } from '@/data/demo';
+/** Topic-routed contact form. Other components can preselect a topic: dispatch 'contact:topic' with detail = index. */
+---
+<div id="message" class="cf" data-contact-form>
+  <form novalidate data-cf-form>
+    <div><h2>Send us a message</h2><p class="muted" data-cf-note>{contactTopics[0].note}</p></div>
+    <div class="field"><span class="field__label">What can we help with?</span>
+      <div class="cf__topics" role="radiogroup">{contactTopics.map((t, i) => <button type="button" role="radio" class="choice" aria-checked={i === 0 ? 'true' : 'false'} data-topic={i}>{t.t}</button>)}</div></div>
+    <div class="cf__2">
+      <label class="field"><span class="field__label">Full name</span><input class="input" name="name" autocomplete="name" placeholder="Priya Sharma" required /></label>
+      <label class="field"><span class="field__label">Work email</span><input class="input" type="email" name="email" inputmode="email" autocomplete="email" placeholder="you@company.com" required /></label>
+    </div>
+    <label class="field"><span class="field__label">Company <span class="dim">optional</span></span><input class="input" name="company" autocomplete="organization" placeholder="Acme Retail" /></label>
+    <label class="field"><span class="field__label cf__lab"><span>Message</span><span class="mono dim" data-cf-count>0/1000</span></span><textarea class="input" name="msg" rows="5" maxlength="1000" placeholder={contactTopics[0].ph} required></textarea></label>
+    <span class="cf__err" data-cf-err></span>
+    <button type="submit" class="cf__cta"><i class="cf__spin"></i><span>Send message →</span></button>
+  </form>
+  <div class="cf__done" hidden data-cf-done>
+    <span class="cf__check">✓</span>
+    <h2>Message sent, <span data-cf-first>there</span>.</h2>
+    <p data-cf-sent></p>
+    <button type="button" class="cf__ghost" data-cf-reset>Send another message</button>
+  </div>
+</div>
+<script type="application/json" id="cf-topics" set:html={JSON.stringify(contactTopics)}></script>
+<script>
+  const root = document.querySelector<HTMLElement>('[data-contact-form]');
+  if (root) {
+    const topics = JSON.parse(document.getElementById('cf-topics')!.textContent || '[]');
+    const form = root.querySelector<HTMLFormElement>('[data-cf-form]')!, done = root.querySelector<HTMLElement>('[data-cf-done]')!;
+    const el = (n: string) => form.elements.namedItem(n) as HTMLInputElement;
+    let topic = 0;
+    const setTopic = (i: number) => {
+      topic = i;
+      root.querySelectorAll('[data-topic]').forEach((b) => b.setAttribute('aria-checked', String(Number((b as HTMLElement).dataset.topic) === i)));
+      root.querySelector('[data-cf-note]')!.textContent = topics[i].note; el('msg').placeholder = topics[i].ph;
+    };
+    root.querySelectorAll<HTMLButtonElement>('[data-topic]').forEach((b) => b.addEventListener('click', () => setTopic(Number(b.dataset.topic))));
+    document.addEventListener('contact:topic', (e) => { setTopic((e as CustomEvent).detail); form.hidden = false; done.hidden = true; });
+    el('msg').addEventListener('input', () => (root.querySelector('[data-cf-count]')!.textContent = el('msg').value.length + '/1000'));
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(el('email').value.trim());
+      const bad = { name: !el('name').value.trim(), email: !okEmail, msg: !el('msg').value.trim() };
+      Object.entries(bad).forEach(([k, v]) => el(k).setAttribute('aria-invalid', String(v)));
+      const err = root.querySelector('[data-cf-err]')!;
+      if (Object.values(bad).some(Boolean)) { err.textContent = 'Please add your name, a valid work email and a message.'; return; }
+      err.textContent = ''; form.classList.add('is-busy');
+      // TODO: POST to your backend / CRM, e.g. await fetch('/api/contact', { method: 'POST', body: new FormData(form) })
+      await new Promise((r) => setTimeout(r, 900));
+      form.classList.remove('is-busy');
+      root.querySelector('[data-cf-first]')!.textContent = el('name').value.trim().split(' ')[0];
+      root.querySelector('[data-cf-sent]')!.textContent = topics[topic].sent + ' A copy is on its way to ' + el('email').value + '.';
+      form.hidden = true; done.hidden = false;
+    });
+    root.querySelector('[data-cf-reset]')!.addEventListener('click', () => { el('msg').value = ''; form.hidden = false; done.hidden = true; });
+  }
+</script>
+<style>
+  .cf { border: 1px solid var(--line); border-radius: 22px; background: var(--surface); overflow: hidden; scroll-margin-top: 84px; }
+  form { padding: clamp(22px, 3vw, 32px); display: flex; flex-direction: column; gap: 18px; } form[hidden] { display: none; }
+  h2 { font-size: clamp(24px, 2.4vw, 30px); font-weight: 600; letter-spacing: -.02em; } form p.muted { margin-top: 6px; font-size: 14.5px; }
+  .cf__topics { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; } .cf__topics .choice { font-size: 13.5px; }
+  .cf__2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 14px; }
+  .dim { color: var(--dim); font-weight: 400; } .cf__lab { display: flex; justify-content: space-between; } .cf__lab .mono { font-size: 11px; }
+  .cf__err { min-height: 16px; font-size: 12.5px; color: var(--red-soft); }
+  .cf__cta { height: 54px; border: 0; border-radius: 12px; background: var(--green); color: var(--bg); font-family: var(--font-display); font-weight: 600; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 12px 30px -12px rgba(24,229,99,.7); transition: background .2s, transform .2s; }
+  .cf__cta:hover { background: var(--green-hover); transform: translateY(-1px); }
+  .cf__spin { display: none; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--bg); border-top-color: transparent; animation: pl-spin .7s linear infinite; }
+  .is-busy .cf__spin { display: block; } .is-busy .cf__cta { pointer-events: none; }
+  .cf__done { padding: clamp(32px, 5vw, 56px) clamp(22px, 3vw, 32px); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; animation: pl-in .4s ease both; } .cf__done[hidden] { display: none; }
+  .cf__done p { max-width: 380px; font-size: 15px; line-height: 1.55; }
+  .cf__check { width: 64px; height: 64px; border-radius: 50%; background: var(--green); color: var(--bg); display: grid; place-items: center; font-size: 28px; font-weight: 700; animation: pl-pop .5s ease both; box-shadow: 0 0 0 10px rgba(24,229,99,.1); }
+  .cf__ghost { margin-top: 8px; height: 44px; padding: 0 18px; border-radius: 11px; border: 1px solid var(--line); background: transparent; color: var(--text); font-size: 14px; cursor: pointer; }
+</style>

@@ -1,0 +1,31 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import AnnouncementBar from '@/components/layout/AnnouncementBar.astro';
+import Hero from '@/components/home/Hero.astro';
+import TrustStrip from '@/components/home/TrustStrip.astro';
+import Problem from '@/components/home/Problem.astro';
+import ProductTour from '@/components/home/ProductTour.astro';
+import Capabilities from '@/components/home/Capabilities.astro';
+import Accuracy from '@/components/home/Accuracy.astro';
+import HowItWorks from '@/components/home/HowItWorks.astro';
+import Integrations from '@/components/home/Integrations.astro';
+import Results from '@/components/home/Results.astro';
+import CTABanner from '@/components/sections/CTABanner.astro';
+---
+<BaseLayout>
+  <AnnouncementBar slot="before-nav" href="#product">PriceLeap Agent answers pricing questions in plain English, right inside your dashboard.</AnnouncementBar>
+  <Hero />
+  <TrustStrip />
+  <Problem />
+  <ProductTour />
+  <Capabilities />
+  <Accuracy />
+  <HowItWorks />
+  <Integrations />
+  <Results />
+  <CTABanner
+    id="demo"
+    title="See your real competitor data in a 15-minute demo."
+    text="We'll show PriceLeap running on your products and competitors — accuracy, pricing intelligence, and margin opportunities, live."
+  />
+</BaseLayout>

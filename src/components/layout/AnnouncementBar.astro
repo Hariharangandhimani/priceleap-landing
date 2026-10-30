@@ -1,0 +1,18 @@
+---
+interface Props { href: string; label?: string; cta?: string }
+const { href, label = 'NEW', cta = 'See it in action →' } = Astro.props;
+---
+<div class="ab">
+  <a href={href} class="container ab__inner">
+    <span class="ab__tag">{label}</span>
+    <span><slot /></span>
+    <span class="ab__cta">{cta}</span>
+  </a>
+</div>
+<style>
+  .ab { border-bottom: 1px solid var(--line-soft); }
+  .ab__inner { padding-block: 9px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--text); text-align: center; }
+  .ab__inner:hover { color: var(--white); }
+  .ab__tag { padding: 2px 7px; border-radius: 5px; background: var(--green); color: var(--bg); font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: .08em; }
+  .ab__cta { color: var(--white); font-weight: 500; }
+</style>

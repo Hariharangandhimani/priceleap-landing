@@ -1,0 +1,28 @@
+---
+import { office } from '@/data/demo';
+---
+<div class="oc" role="img" aria-label={`PriceLeap headquarters, ${office.address}`}>
+  <div class="oc__grid" aria-hidden="true"></div>
+  <div class="oc__road oc__road--h" aria-hidden="true"></div><div class="oc__road oc__road--v" aria-hidden="true"></div>
+  <div class="oc__water" aria-hidden="true"></div><div class="oc__shade" aria-hidden="true"></div>
+  <div class="oc__pin" aria-hidden="true"><span class="oc__drop"><i></i></span><span class="oc__ping"><i></i><b></b></span></div>
+  <span class="oc__coords mono">{office.coords}</span>
+  <div class="oc__info">
+    <div><div class="mono accent oc__k">HEADQUARTERS</div><div class="oc__city">{office.city}</div><div class="oc__addr">{office.address}</div></div>
+    <a href={office.maps} target="_blank" rel="noopener">Get directions ↗</a>
+  </div>
+</div>
+<style>
+  .oc { position: relative; min-height: 260px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface-3); overflow: hidden; }
+  .oc__grid { position: absolute; inset: -20%; background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size: 36px 36px; transform: rotate(-29deg); }
+  .oc__road { position: absolute; background: #161616; transform: rotate(-29deg); } .oc__road--h { left: -10%; right: -10%; top: 58%; height: 14px; } .oc__road--v { top: -10%; bottom: -10%; left: 46%; width: 10px; }
+  .oc__water { position: absolute; left: 0; bottom: 0; width: 34%; height: 46%; background: linear-gradient(135deg, #0A1A22, #0A1419); clip-path: polygon(0 30%, 60% 0, 100% 40%, 100% 100%, 0 100%); }
+  .oc__shade { position: absolute; inset: 0; background: radial-gradient(circle at 52% 48%, rgba(24,229,99,.14), transparent 40%), linear-gradient(180deg, transparent 55%, rgba(13,13,13,.95)); }
+  .oc__pin { position: absolute; left: 52%; top: 46%; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; }
+  .oc__drop { width: 44px; height: 44px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--green); box-shadow: 0 10px 30px rgba(24,229,99,.5); display: grid; place-items: center; } .oc__drop i { width: 16px; height: 16px; border-radius: 50%; background: var(--bg); }
+  .oc__ping { position: relative; margin-top: 8px; width: 18px; height: 18px; } .oc__ping i { position: absolute; inset: 0; border-radius: 50%; background: rgba(24,229,99,.6); animation: pl-ping 2s ease-out infinite; } .oc__ping b { position: absolute; inset: 6px; border-radius: 50%; background: var(--green); }
+  .oc__coords { position: absolute; left: 16px; top: 16px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(10,10,10,.8); font-size: 10.5px; letter-spacing: .08em; color: var(--text); }
+  .oc__info { position: absolute; left: 20px; right: 20px; bottom: 18px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .oc__k { font-size: 10.5px; letter-spacing: .12em; } .oc__city { margin-top: 6px; font-family: var(--font-display); font-weight: 600; font-size: 22px; color: var(--white); } .oc__addr { margin-top: 4px; font-size: 14px; }
+  .oc__info a { height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--line); background: rgba(18,18,18,.9); color: var(--white); font-size: 13px; display: flex; align-items: center; white-space: nowrap; } .oc__info a:hover { border-color: var(--green); }
+</style>

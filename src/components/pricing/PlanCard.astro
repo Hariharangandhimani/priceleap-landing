@@ -1,0 +1,45 @@
+---
+import CheckList from '@/components/ui/CheckList.astro';
+import { ANNUAL_DISCOUNT } from '@/data/pricing';
+/** Paid self-serve plan card. */
+interface Props { plan: { id: string; name: string; desc: string; price: number; pm: number; comp: number; refresh: string; daily: string; cta: string; href: string; features: string[]; popular?: boolean } }
+const { plan: p } = Astro.props;
+const annual = Math.round(p.price * (1 - ANNUAL_DISCOUNT));
+const annualNote = 'Billed $' + (annual * 12).toLocaleString('en-US') + ' yearly · save $' + (p.price - annual) * 12;
+---
+<article id={p.id} class:list={['pc', { 'pc--popular': p.popular }]} data-plan={p.id}>
+  <div class="pc__head"><h3>{p.name}</h3>{p.popular && <span class="tag tag--green">MOST POPULAR</span>}<span class="tag tag--solid pc__rec">RECOMMENDED</span></div>
+  <p class="pc__desc">{p.desc}</p>
+  <div>
+    <div class="pc__price"><span class="pc__cur">$</span><b data-monthly={String(p.price)} data-annual={String(annual)}>{p.price}</b><span class="pc__per">/ mo</span></div>
+    <div class="pc__bill"><span class="pc__bill-m">Billed monthly · cancel anytime</span><span class="pc__bill-a accent">{annualNote}</span></div>
+  </div>
+  <div class="pc__stats">
+    <div><b class="mono">{p.pm.toLocaleString('en-US')}</b><span>products / mo</span></div>
+    <div><b class="mono">{p.comp}</b><span>competitors</span></div>
+    <div><b class="mono">{p.refresh}</b><span>daily refresh</span></div>
+  </div>
+  <a class="pc__cta" href={p.href}>{p.cta}</a>
+  <div class="pc__features"><CheckList items={p.features} emphasizeFirst /></div>
+  <div class="pc__daily mono"><span class="dot" style="width:6px;height:6px"></span>{p.daily}</div>
+</article>
+<style>
+  .pc { position: relative; padding: 26px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface); display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 90px; transition: border-color .3s, box-shadow .3s, transform .3s; }
+  .pc:hover { transform: translateY(-3px); }
+  .pc--popular { border-color: var(--green-dark); background: linear-gradient(180deg, rgba(24,229,99,.07), var(--surface) 40%); box-shadow: 0 30px 80px -40px rgba(24,229,99,.35); }
+  .pc.is-rec { border-color: var(--green); box-shadow: var(--glow); }
+  .pc__rec { display: none; } .pc.is-rec .pc__rec { display: inline-block; }
+  .pc__head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; } h3 { font-size: 22px; font-weight: 600; }
+  .pc__desc { margin-top: -8px; font-size: 14.5px; line-height: 1.5; color: var(--muted); min-height: 44px; }
+  .pc__price { display: flex; align-items: flex-start; gap: 4px; color: var(--white); font-family: var(--font-display); }
+  .pc__cur { margin-top: 8px; font-size: 22px; } .pc__price b { font-size: 56px; line-height: 1; letter-spacing: -.04em; font-variant-numeric: tabular-nums; } .pc__per { align-self: flex-end; margin-bottom: 6px; font-size: 15px; color: var(--muted); font-family: var(--font-body); }
+  .pc__bill { margin-top: 6px; font-size: 12.5px; min-height: 18px; color: var(--dim); }
+  .pc__bill-a { display: none; } :global(html[data-billing="annual"]) .pc__bill-a { display: inline; } :global(html[data-billing="annual"]) .pc__bill-m { display: none; }
+  .pc__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--line-soft); border-radius: 12px; overflow: hidden; background: var(--line-soft); }
+  .pc__stats div { padding: 12px; background: var(--surface-2); } .pc__stats b { display: block; font-size: 18px; font-weight: 400; color: var(--white); } .pc__stats span { font-size: 11.5px; color: var(--muted); }
+  .pc__cta { height: 50px; border-radius: 12px; border: 1px solid var(--line); color: var(--white); font-family: var(--font-display); font-weight: 600; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+  .pc__cta:hover { border-color: var(--green); color: var(--white); }
+  .pc--popular .pc__cta, .pc.is-rec .pc__cta { background: var(--green); border-color: var(--green); color: var(--bg); }
+  .pc__features { padding-top: 18px; border-top: 1px solid var(--line-soft); }
+  .pc__daily { margin-top: auto; display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); font-size: 12px; }
+</style>

@@ -1,0 +1,68 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+---
+<section id="capabilities" class="container section">
+  <SectionHeading eyebrow="Core capabilities">Everything you need to monitor, decide, and win on price.</SectionHeading>
+  <div class="caps">
+    <article class="card card-hover cap cap--wide" data-reveal>
+      <div class="cap__head"><span class="icon-tile"><img src="/assets/icon-intel.png" alt="" width="22" height="22" /></span><div><h3 class="h3">Real-Time Competitor Price Tracking</h3><p>Track every competitor, marketplace, and SKU with prices refreshed as often as every [PLACEHOLDER] — so you act on what's true right now, not yesterday.</p></div></div>
+      <div class="cap__panel">{[['Marketplace A · Headphones', '₹25,490', 80], ['Retailer B · Headphones', '₹24,790', 40], ['D2C store C · Earbuds', '₹18,990', 95], ['Marketplace D · Speakers', '₹6,290', 60]].map(([n, p, f], i) => (
+        <div class="cap__track"><span>{n}</span><span class="cap__fresh"><i style={`--f:${f}%;animation-delay:${i * -1.1}s`}></i></span><span class="mono">{p}</span></div>
+      ))}</div>
+    </article>
+    <article class="card card-hover cap" data-reveal>
+      <span class="icon-tile"><img src="/assets/icon-groups.png" alt="" width="22" height="22" /></span>
+      <div><h3 class="h3">Pricing Intelligence &amp; Price Index</h3><p>See exactly where you stand with a live price index, positioning views, and SKU-level insight across your entire catalog.</p></div>
+      <div class="cap__index"><div><b class="mono" data-index>96.4</b><span class="mono accent">▼ 3.6% vs market</span></div><div class="cap__split"><i style="flex:34;background:var(--green)"></i><i style="flex:51;background:var(--green-dark)"></i><i style="flex:15;background:var(--red)"></i></div><div class="mono cap__legend"><span>CHEAPEST</span><span>COMPETITIVE</span><span>ABOVE</span></div></div>
+    </article>
+    <article class="card card-hover cap" data-reveal>
+      <span class="icon-tile"><img src="/assets/icon-workspaces.png" alt="" width="22" height="22" /></span>
+      <div><h3 class="h3">AI Product Matching + Human QC</h3><p>Our AI matches identical and similar products — even without barcodes — and every match passes human quality control. The result: [PLACEHOLDER]% verified accuracy.</p></div>
+      <div class="cap__flow mono">{['Match', 'Review', 'Verify'].map((s, i) => <span style={`animation-delay:${i * 1.1}s`}>{s}</span>)}</div>
+    </article>
+    <article class="card card-hover cap cap--wide" data-reveal>
+      <div class="cap__head"><span class="icon-tile"><img src="/assets/icon-reprice.png" alt="" width="22" height="22" /></span><div><h3 class="h3">Dynamic Pricing Software</h3><p>Set rules or let AI recommend the optimal price for every product, balancing competitiveness and margin automatically as the market moves.</p></div></div>
+      <div class="cap__rules">
+        <div class="cap__rule">{[['RULE', 'Beat lowest rival by 1%'], ['FLOOR', 'Margin ≥ 18%'], ['CEILING', 'MSRP']].map(([k, v]) => <div><span class="mono">{k}</span>{v}</div>)}</div>
+        <div class="cap__rec"><small class="mono accent">AI RECOMMENDATION</small><div class="mono"><s>₹24,990</s><b>₹24,540</b></div><small>Competitive and inside your floor</small></div>
+      </div>
+    </article>
+    <article class="card card-hover cap cap--half" data-reveal>
+      <span class="icon-tile"><img src="/assets/icon-integrations.png" alt="" width="22" height="22" /></span>
+      <div><h3 class="h3">Competitor &amp; Market Intelligence</h3><p>Go beyond price. Track assortment, promotions, stock availability, and new-product launches to understand every competitor's full strategy.</p></div>
+      <div class="cap__grid">{[['ASSORTMENT', '+12 new SKUs'], ['PROMOTIONS', '3 active campaigns'], ['STOCK', 'Rival out of stock'], ['LAUNCHES', 'New model detected']].map(([k, v]) => <div><small class="mono">{k}</small>{v}</div>)}</div>
+    </article>
+    <article class="card card-hover cap cap--half" data-reveal>
+      <span class="icon-tile mono" style="font-weight:700;font-size:13px">MAP</span>
+      <div><h3 class="h3">MAP &amp; Promotion Monitoring</h3><p>Protect your brand and channels with automated MAP compliance alerts and full visibility into competitor promotions.</p></div>
+      <div class="cap__alerts"><div class="cap__alert cap__alert--bad"><span>MAP violation · Seller 2841</span><span class="mono">−8.0% below MAP</span></div><div class="cap__alert"><span>Promotion detected · Marketplace</span><span class="mono">20% off</span></div></div>
+    </article>
+  </div>
+</section>
+<style>
+  .caps { margin-top: 48px; display: flex; flex-wrap: wrap; gap: 16px; }
+  .cap { flex: 1 1 340px; min-width: 0; padding: 28px; display: flex; flex-direction: column; gap: 28px; }
+  .cap--wide { flex: 1.6 1 520px; } .cap--half { flex: 1 1 420px; }
+  .cap p { margin-top: 8px; font-size: 15px; line-height: 1.6; max-width: 480px; }
+  .cap__head { display: flex; gap: 16px; align-items: flex-start; }
+  .cap > :last-child { margin-top: auto; }
+  .cap__panel { border: 1px solid var(--line-soft); border-radius: 14px; background: var(--surface-2); overflow: hidden; }
+  .cap__track { display: grid; grid-template-columns: minmax(0, 1fr) 72px 92px; gap: 12px; align-items: center; padding: 11px 16px; font-size: 13px; } .cap__track + .cap__track { border-top: 1px solid var(--line-soft); }
+  .cap__track span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .cap__track .mono { text-align: right; color: var(--white); }
+  .cap__fresh { height: 4px; border-radius: 2px; background: var(--line-soft); overflow: hidden; } .cap__fresh i { display: block; height: 100%; width: var(--f); background: var(--green); animation: fresh 4.4s linear infinite; }
+  @keyframes fresh { 0% { width: 100%; } 100% { width: 8%; } }
+  .cap__index b { font-size: 44px; font-weight: 500; letter-spacing: -.04em; color: var(--white); margin-right: 10px; } .cap__index span { font-size: 12px; }
+  .cap__split { margin-top: 14px; display: flex; height: 10px; gap: 3px; border-radius: 5px; overflow: hidden; }
+  .cap__legend { margin-top: 8px; display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+  .cap__flow { display: flex; gap: 8px; } .cap__flow span { flex: 1; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); font-size: 12px; display: grid; place-items: center; animation: flowstep 3.3s infinite; }
+  @keyframes flowstep { 0%, 33% { border-color: var(--green); color: var(--green); background: rgba(24,229,99,.1); } 34%, 100% { border-color: var(--green-dark); color: var(--green); background: var(--green-deep); } }
+  .cap__rules { display: flex; flex-wrap: wrap; gap: 12px; }
+  .cap__rule, .cap__rec { flex: 1 1 220px; padding: 16px; border-radius: 14px; }
+  .cap__rule { border: 1px solid var(--line-soft); background: var(--surface-2); display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--white); } .cap__rule span { display: inline-block; width: 60px; font-size: 10px; color: var(--muted); }
+  .cap__rec { border: 1px solid var(--green-dark); background: rgba(24,229,99,.05); } .cap__rec small { font-size: 10px; letter-spacing: .1em; } .cap__rec small:last-child { display: block; margin-top: 6px; font-size: 12px; letter-spacing: 0; color: var(--muted); }
+  .cap__rec div { margin-top: 10px; display: flex; align-items: baseline; gap: 10px; } .cap__rec s { color: var(--dim); } .cap__rec b { font-size: 26px; font-weight: 400; color: var(--white); }
+  .cap__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; font-size: 13px; color: var(--white); } .cap__grid div { padding: 12px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--surface-2); } .cap__grid small { display: block; margin-bottom: 4px; font-size: 10px; color: var(--muted); }
+  .cap__alerts { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+  .cap__alert { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--line-soft); border-radius: 10px; background: var(--surface-2); } .cap__alert .mono { color: var(--muted); }
+  .cap__alert--bad { border-color: #4A1410; background: #1A0908; color: var(--white); } .cap__alert--bad .mono { color: var(--red-soft); }
+</style>

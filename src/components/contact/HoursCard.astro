@@ -1,0 +1,47 @@
+---
+import Icon from '@/components/ui/Icon.astro';
+import { office } from '@/data/demo';
+const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+---
+<div class="card hc" data-hours data-tz={office.tz} data-open={office.open} data-close={office.close}>
+  <div class="hc__top">
+    <div class="hc__t"><span class="icon-tile icon-tile--outline"><Icon name="clock" size={20} /></span><div><b>Business hours</b><span>{office.hours}</span></div></div>
+    <span class="hc__status mono" data-hours-status><i></i><span>—</span></span>
+  </div>
+  <div class="hc__week">{days.map((d, i) => <div data-day={i}><span class="mono">{d}</span><i class:list={{ work: i < 5 }}></i></div>)}</div>
+  <div class="hc__sla"><span class="mono">24/7</span><span>Enterprise SLA customers receive 24/7 monitoring alerts.</span></div>
+</div>
+<script>
+  // Computes open/closed in the office timezone and shares it via html[data-office-open] for other components (e.g. hero pill).
+  const el = document.querySelector<HTMLElement>('[data-hours]');
+  const update = () => {
+    const tz = el?.dataset.tz || 'America/Los_Angeles';
+    const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short', hour: 'numeric', hour12: false }).formatToParts(new Date());
+    const di = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(p.find((x) => x.type === 'weekday')?.value || 'Mon');
+    const hr = parseInt(p.find((x) => x.type === 'hour')?.value || '12', 10) % 24;
+    const open = di < 5 && hr >= Number(el?.dataset.open ?? 8) && hr < Number(el?.dataset.close ?? 18);
+    document.documentElement.dataset.officeOpen = String(open);
+    if (el) {
+      el.querySelector('[data-hours-status] span')!.textContent = open ? 'OPEN NOW' : 'CLOSED';
+      el.querySelectorAll<HTMLElement>('[data-day]').forEach((d) => d.classList.toggle('is-today', Number(d.dataset.day) === di));
+    }
+    document.querySelectorAll<HTMLElement>('[data-open-label]').forEach((x) => (x.textContent = open ? x.dataset.openLabel! : x.dataset.closedLabel!));
+  };
+  update(); setInterval(update, 60000);
+</script>
+<style>
+  .hc { padding: 24px; }
+  .hc__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .hc__t { display: flex; align-items: center; gap: 12px; } .hc__t .icon-tile { width: 40px; height: 40px; }
+  .hc__t b { display: block; font-family: var(--font-display); font-weight: 600; font-size: 17px; color: var(--white); } .hc__t span { font-size: 14px; color: var(--muted); }
+  .hc__status { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid #4A3410; background: rgba(245,165,36,.06); font-size: 11px; letter-spacing: .06em; color: var(--amber); }
+  .hc__status i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  :global(html[data-office-open="true"]) .hc__status { border-color: var(--green-dark); background: var(--green-tint); color: var(--green); }
+  .hc__week { margin-top: 18px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+  .hc__week div { display: flex; flex-direction: column; align-items: center; gap: 6px; } .hc__week .mono { font-size: 10px; letter-spacing: .06em; color: var(--dim); }
+  .hc__week i { width: 100%; height: 8px; border-radius: 4px; background: var(--line-soft); } .hc__week i.work { background: var(--green-deep); }
+  .hc__week .is-today .mono { color: var(--white); } .hc__week .is-today i { background: var(--green-dark); }
+  :global(html[data-office-open="true"]) .hc__week .is-today i { background: var(--green); box-shadow: 0 0 12px rgba(24,229,99,.6); }
+  .hc__sla { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line-soft); display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; line-height: 1.5; }
+  .hc__sla .mono { flex: none; margin-top: 1px; padding: 1px 6px; border-radius: 5px; background: var(--green-deep); color: var(--green); font-size: 10px; }
+</style>

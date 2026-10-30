@@ -1,0 +1,98 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { integrations, integrationCats, orbitInner, orbitOuter, security } from '@/data/home';
+const ring = (logos: string[], rad: number) => logos.map((l, i) => {
+  const a = (i / logos.length) * Math.PI * 2 - Math.PI / 2;
+  return { l, x: (50 + rad * Math.cos(a)).toFixed(2), y: (50 + rad * Math.sin(a)).toFixed(2) };
+});
+const counts = integrationCats.map((_, i) => (i === 0 ? integrations.length : integrations.filter((x) => x.cat === i).length));
+---
+<section id="integrations" class="container section">
+  <div class="int__top">
+    <div class="int__copy" data-reveal>
+      <div class="eyebrow">Integrations &amp; security</div>
+      <h2 class="h2">Fits your stack. <span class="accent">Secures your data.</span></h2>
+      <p class="lede">Connect Shopify, marketplaces, and your BI tools, or pull live data via API. Enterprise-ready with SSO, role-based access, and ISO 27001-aligned security.</p>
+      <div class="int__kpis"><div><b>20+</b><span>native connectors</span></div><div><b>5 min</b><span>typical setup</span></div><div><b class="accent">API</b><span>REST &amp; webhooks</span></div></div>
+    </div>
+    <div class="int__hub" role="img" aria-label="PriceLeap connects to Shopify, Amazon, Slack, Snowflake, Salesforce and more" data-reveal>
+      <span class="int__ring int__ring--a"></span><span class="int__ring int__ring--b"></span><span class="int__halo"></span>
+      <span class="int__ripple"></span><span class="int__ripple" style="animation-delay:1.5s"></span>
+      <div class="int__orbit int__orbit--out">{ring(orbitOuter, 46).map((n) => <span class="int__node" style={`left:${n.x}%;top:${n.y}%`}><img src={`/assets/logos/${n.l}.svg`} alt="" width="24" height="24" /></span>)}</div>
+      <div class="int__orbit int__orbit--in">{ring(orbitInner, 30).map((n) => <span class="int__node int__node--lg" style={`left:${n.x}%;top:${n.y}%`}><img src={`/assets/logos/${n.l}.svg`} alt="" width="27" height="27" /></span>)}</div>
+      <span class="int__core"><img src="/assets/mark.png" alt="" width="42" height="40" /></span>
+    </div>
+  </div>
+
+  <div class="int__dir" data-reveal data-int>
+    <div class="int__dir-bar">
+      <div role="tablist" aria-label="Integration categories" class="int__tabs">
+        {integrationCats.map((c, i) => <button role="tab" aria-selected={i === 0 ? 'true' : 'false'} data-cat={i}>{c}<span class="mono">{counts[i]}</span></button>)}
+      </div>
+      <span class="mono dim int__req">Don't see yours? <a href="/contact">Request a connector →</a></span>
+    </div>
+    <div class="int__grid">
+      {integrations.map((it) => (
+        <div class:list={['int__tile', { 'is-connected': it.connected }]} data-tile-cat={it.cat}>
+          <span class="int__logo"><img src={`/assets/logos/${it.logo}.svg`} alt="" width="22" height="22" loading="lazy" /></span>
+          <div><div class="int__name">{it.name}</div><div class="int__meta"><span class="tag">{it.api}</span>{it.connected && <span class="mono accent">● CONNECTED</span>}</div></div>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div class="int__sec" data-reveal>
+    {security.map((s) => <div class="int__sec-item"><span class="icon-tile mono">{s.code}</span><div><b>{s.title}</b><span>{s.desc}</span></div></div>)}
+  </div>
+</section>
+<script>
+  const root = document.querySelector<HTMLElement>('[data-int]');
+  if (root) {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-cat]')];
+    const tiles = [...root.querySelectorAll<HTMLElement>('[data-tile-cat]')];
+    tabs.forEach((t) => t.addEventListener('click', () => {
+      const c = Number(t.dataset.cat);
+      tabs.forEach((x) => x.setAttribute('aria-selected', String(x === t)));
+      let k = 0;
+      tiles.forEach((el) => {
+        const show = c === 0 || Number(el.dataset.tileCat) === c;
+        el.hidden = !show;
+        if (show) { el.style.animationDelay = (k++ * 0.03).toFixed(2) + 's'; el.classList.remove('is-anim'); void el.offsetWidth; el.classList.add('is-anim'); }
+      });
+    }));
+  }
+</script>
+<style>
+  .int__top { display: flex; flex-wrap: wrap; align-items: center; gap: 40px clamp(40px, 6vw, 88px); }
+  .int__copy { flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 16px; } .int__copy .lede { max-width: 500px; margin-top: 4px; }
+  .int__kpis { margin-top: 12px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; max-width: 500px; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--line); }
+  .int__kpis div { padding: 16px; background: var(--surface); } .int__kpis b { display: block; font-family: var(--font-display); font-size: 26px; font-weight: 600; letter-spacing: -.02em; color: var(--white); } .int__kpis span { font-size: 12.5px; color: var(--muted); }
+  .int__hub { position: relative; flex: 1 1 420px; max-width: 480px; aspect-ratio: 1; margin-inline: auto; }
+  .int__ring { position: absolute; border-radius: 50%; border: 1px dashed var(--line); } .int__ring--a { inset: 4%; } .int__ring--b { inset: 20%; }
+  .int__halo { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(closest-side, rgba(24,229,99,.12), transparent 70%); }
+  .int__ripple { position: absolute; left: 35%; top: 35%; width: 30%; height: 30%; border-radius: 50%; border: 1px solid rgba(24,229,99,.5); animation: pl-ripple 3s ease-out infinite; }
+  .int__orbit { position: absolute; inset: 0; animation: pl-orbit 90s linear infinite reverse; } .int__orbit--in { animation-duration: 60s; animation-direction: normal; }
+  .int__node { position: absolute; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 15px; border: 1px solid var(--line); background: var(--surface); box-shadow: 0 10px 30px -10px rgba(0,0,0,.8); display: grid; place-items: center; animation: inherit; animation-direction: normal; }
+  .int__orbit--out .int__node { animation: pl-orbit 90s linear infinite; } .int__orbit--in .int__node { animation: pl-orbit 60s linear infinite reverse; }
+  .int__node--lg { width: 58px; height: 58px; margin: -29px 0 0 -29px; border-radius: 16px; }
+  .int__core { position: absolute; left: 50%; top: 50%; width: 96px; height: 96px; margin: -48px 0 0 -48px; border-radius: 26px; border: 1px solid var(--green-dark); background: var(--bg); box-shadow: 0 0 0 8px rgba(24,229,99,.06), 0 0 60px rgba(24,229,99,.35); display: grid; place-items: center; }
+  .int__dir { margin-top: 56px; border: 1px solid var(--line); border-radius: 22px; background: var(--surface-3); overflow: hidden; }
+  .int__dir-bar { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line-soft); background: var(--surface-4); flex-wrap: wrap; }
+  .int__tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  .int__tabs button { height: 32px; padding: 0 12px; border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--muted); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all .2s; }
+  .int__tabs button span { font-size: 10.5px; color: var(--dim); }
+  .int__tabs button[aria-selected="true"] { border-color: var(--green-dark); background: rgba(24,229,99,.08); color: var(--white); }
+  .int__req { margin-left: auto; font-size: 11px; } .dim { color: var(--dim); }
+  .int__grid { padding: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 10px; }
+  .int__tile { display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--line-soft); border-radius: 14px; background: var(--surface); transition: border-color .2s, transform .2s, background .2s; }
+  .int__tile[hidden] { display: none; } .int__tile.is-anim { animation: pl-in .45s ease both; }
+  .int__tile:hover { border-color: var(--green-dark); transform: translateY(-2px); background: #151515; } .int__tile.is-connected { border-color: var(--green-dark); }
+  .int__tile > div { min-width: 0; flex: 1; }
+  .int__logo { width: 42px; height: 42px; flex: none; border-radius: 11px; border: 1px solid var(--line-soft); background: var(--bg); display: grid; place-items: center; }
+  .int__name { font-size: 14px; font-weight: 500; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .int__meta { margin-top: 4px; display: flex; align-items: center; gap: 6px; font-size: 9.5px; } .int__meta .tag { font-size: 9.5px; padding: 1px 6px; }
+  .int__sec { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; }
+  .int__sec-item { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+  .int__sec-item .icon-tile { width: 40px; height: 40px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .int__sec-item b { display: block; font-family: var(--font-display); font-weight: 600; color: var(--white); } .int__sec-item span:not(.icon-tile) { font-size: 14px; color: var(--muted); }
+</style>

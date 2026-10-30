@@ -1,0 +1,23 @@
+---
+import Pill from './Pill.astro';
+/** Centered hero for inner pages. Title via default slot, extras via slot="after". */
+interface Props { pill?: string; pillColor?: string; lede?: string; align?: 'center' | 'left' }
+const { pill, pillColor, lede, align = 'center' } = Astro.props;
+---
+<section class:list={['ph', `ph--${align}`]}>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="container ph__inner">
+    {pill && <Pill pulse color={pillColor}>{pill}</Pill>}
+    <h1><slot /></h1>
+    {lede && <p class="lede">{lede}</p>}
+    <slot name="after" />
+  </div>
+</section>
+<style>
+  .ph { position: relative; }
+  .ph__inner { position: relative; padding-top: clamp(40px, 7vw, 88px); display: flex; flex-direction: column; gap: 20px; }
+  .ph--center .ph__inner { align-items: center; text-align: center; }
+  h1 { max-width: 840px; font-size: clamp(38px, 5.8vw, 76px); line-height: 1.02; letter-spacing: -.045em; text-wrap: balance; }
+  .lede { max-width: 560px; }
+</style>

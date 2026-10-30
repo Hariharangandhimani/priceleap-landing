@@ -1,0 +1,47 @@
+---
+import Button from '@/components/ui/Button.astro';
+import { howSteps } from '@/data/home';
+import { routes } from '@/data/site';
+---
+<section id="how" class="container section how">
+  <div class="how__aside"><div class="how__sticky">
+    <div class="eyebrow">How it works</div>
+    <h2 class="h2"><span class="light">Live in days,</span><br /><span class="bold accent">not months.</span></h2>
+    <Button href={routes.demo}>Book a demo</Button>
+  </div></div>
+  <ol class="how__steps" data-how>
+    <div class="how__rail" aria-hidden="true"><i data-how-fill></i></div>
+    {howSteps.map((s, i) => (
+      <li class="how__step" data-how-step={i}><span class="how__num mono">0{i + 1}</span><h3>{s.title}</h3><p>{s.desc}</p></li>
+    ))}
+  </ol>
+</section>
+<script>
+  const list = document.querySelector<HTMLElement>('[data-how]');
+  const fill = document.querySelector<HTMLElement>('[data-how-fill]');
+  if (list && fill) {
+    const steps = [...list.querySelectorAll<HTMLElement>('[data-how-step]')];
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const r = list.getBoundingClientRect();
+      const p = Math.max(0, Math.min(1, (innerHeight * 0.55 - r.top) / r.height));
+      fill.style.height = (p * 100).toFixed(1) + '%';
+      const step = Math.min(3, Math.floor(p * 4.2) - (p === 0 ? 1 : 0));
+      steps.forEach((s, i) => s.classList.toggle('is-on', i <= step));
+    };
+    addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(update); }, { passive: true });
+    update();
+  }
+</script>
+<style>
+  .how { display: flex; flex-wrap: wrap; gap: clamp(40px, 6vw, 96px); }
+  .how__aside { flex: 1 1 380px; } .how__sticky { position: sticky; top: 120px; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; } .how__sticky :global(.btn) { margin-top: 16px; }
+  .how__steps { position: relative; flex: 1.4 1 480px; min-width: 0; margin: 0; padding: 0 0 0 56px; list-style: none; }
+  .how__rail { position: absolute; left: 19px; top: 20px; bottom: 20px; width: 2px; background: var(--line-soft); border-radius: 1px; } .how__rail i { display: block; width: 100%; height: 0; background: var(--green); box-shadow: 0 0 12px rgba(24,229,99,.6); }
+  .how__step { position: relative; padding-bottom: clamp(48px, 6vw, 80px); }
+  .how__num { position: absolute; left: -56px; top: 0; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 14px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); transition: all .4s; }
+  .how__step h3 { margin-top: 6px; font-size: clamp(22px, 2.2vw, 28px); font-weight: 600; letter-spacing: -.02em; color: var(--muted); transition: color .4s; }
+  .how__step p { margin-top: 10px; font-size: 17px; line-height: 1.6; max-width: 480px; }
+  .how__step.is-on .how__num { background: var(--green); color: var(--bg); border-color: var(--green); } .how__step.is-on h3 { color: var(--white); }
+</style>

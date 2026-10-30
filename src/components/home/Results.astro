@@ -1,0 +1,48 @@
+---
+import SectionHeading from '@/components/ui/SectionHeading.astro';
+import { results } from '@/data/home';
+---
+<section id="results" class="container section">
+  <SectionHeading eyebrow="Results">Better data. Better pricing. Measurable results.</SectionHeading>
+  <div class="res" data-reveal>
+    {results.map((r) => (
+      <div class="card card-hover res__card">
+        <div class="mono res__label">{r.label}</div>
+        <div class:list={['res__num', { accent: r.accent }]}><b>{r.value}</b><span>{r.unit}</span></div>
+        <p>{r.desc}</p>
+        <div class="res__vis">
+          {r.kind === 'bars' ? (
+            <><div class="res__bars">{r.bars!.map((v, i) => <i style={`height:${v}%`} class:list={{ on: i >= 4 }}></i>)}</div><div class="mono res__axis"><span>BEFORE</span><span class="accent">WITH PRICELEAP</span></div></>
+          ) : (
+            <div class="res__cmp mono">{r.rows!.map(([k, w, v], i) => <div><span class:list={{ accent: i === 1 }}>{k}</span><i style={`width:${w}%`} class:list={{ on: i === 1 }}></i><span class:list={['r', { white: i === 1 }]}>{v}</span></div>)}<small>{r.caption}</small></div>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+  <p class="mono res__note">Illustrative figures — replace with verified customer results.</p>
+  <figure class="res__quote" data-reveal>
+    <blockquote><span class="accent">“</span>PriceLeap gave us competitor data we finally trust — and the pricing decisions to match. We stopped guessing and started winning on margin.<span class="accent">”</span></blockquote>
+    <figcaption><span class="res__photo mono">photo</span><div><b>[Name]</b><span>Head of Pricing, [Company]</span></div></figcaption>
+  </figure>
+</section>
+<style>
+  .res { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px; }
+  .res__card { padding: 26px; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .res__label { font-size: 11px; letter-spacing: .12em; color: var(--muted); }
+  .res__num { display: flex; align-items: baseline; gap: 6px; color: var(--white); } .res__num b { font-family: var(--font-display); font-weight: 600; font-size: clamp(44px, 5vw, 64px); line-height: 1; letter-spacing: -.045em; } .res__num span { font-family: var(--font-display); font-weight: 500; font-size: 22px; }
+  .res__num.accent { color: var(--green); }
+  .res__card p { font-size: 15px; line-height: 1.5; }
+  .res__vis { margin-top: auto; padding-top: 18px; border-top: 1px solid var(--line-soft); }
+  .res__bars { display: flex; align-items: flex-end; gap: 6px; height: 56px; } .res__bars i { flex: 1; border-radius: 4px 4px 1px 1px; background: var(--line); } .res__bars i.on { background: var(--green); }
+  .res__axis { margin-top: 8px; display: flex; justify-content: space-between; font-size: 10px; color: var(--dim); }
+  .res__cmp { display: flex; flex-direction: column; gap: 10px; font-size: 11px; color: var(--dim); }
+  .res__cmp > div { display: grid; grid-template-columns: 64px minmax(0, 1fr) 44px; gap: 10px; align-items: center; }
+  .res__cmp i { height: 8px; border-radius: 4px; background: var(--line); } .res__cmp i.on { background: var(--green); }
+  .r { text-align: right; color: var(--muted); } .white { color: var(--white) !important; }
+  .res__note { margin-top: 14px; font-size: 11px; color: var(--dim); }
+  .res__quote { margin: 56px 0 0; display: flex; flex-wrap: wrap; gap: 32px 64px; align-items: flex-end; }
+  blockquote { margin: 0; flex: 2 1 520px; font-family: var(--font-display); font-weight: 500; font-size: clamp(24px, 2.8vw, 36px); line-height: 1.28; letter-spacing: -.025em; color: var(--white); text-wrap: pretty; }
+  figcaption { flex: 1 1 240px; display: flex; align-items: center; gap: 14px; } figcaption b { display: block; color: var(--white); font-weight: 500; } figcaption span:not(.res__photo) { font-size: 14px; color: var(--muted); }
+  .res__photo { width: 52px; height: 52px; flex: none; border-radius: 50%; border: 1px dashed var(--line); display: grid; place-items: center; font-size: 9px; color: var(--dim); }
+</style>
