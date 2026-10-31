@@ -190,6 +190,8 @@ const feed = [
 @media (min-width: 860px) { .ltour__win-sub { display: inline; } }
 .ltour__win-count { margin-left: auto; font-size: 12px; color: var(--pl-faint); }
 .ltour__stage { padding: 28px; min-height: 320px; }
+/* CRITICAL: explicit display:none required — display:flex would override the hidden attr */
+.ltour__panel[hidden] { display: none !important; }
 .ltour__panel { display: flex; flex-direction: column; gap: 16px; animation: pl-fadeup .3s ease; }
 
 /* Tab 0 */

@@ -1,25 +1,19 @@
 ---
-import { badges } from '@/data/home';
+// Trust strip — clean full-width logo marquee, no sidebar text
 const certs = [
   { src: '/assets/badges/iso-9001.webp', alt: 'ISO 9001' },
   { src: '/assets/badges/cmmi.webp', alt: 'CMMI Level 3' },
   { src: '/assets/badges/iso-27001.avif', alt: 'ISO 27001' },
   { src: '/assets/badges/gdpr.webp', alt: 'GDPR' },
 ];
+// 4× loop for smooth infinite scroll
 const row = [...certs, ...certs, ...certs, ...certs];
 ---
 <section class="ltrust" aria-label="Trusted and certified">
-  <div class="ltrust__inner">
-    <div class="ltrust__label">
-      <span class="ltrust__check" aria-hidden="true">✓</span>
-      Trusted &amp; certified
-    </div>
-    <div class="ltrust__sub">Certified, compliant and partnered with the platforms enterprise teams rely on.</div>
-  </div>
-  <div class="ltrust__marquee" aria-hidden="true">
+  <div class="ltrust__marquee">
     <div class="ltrust__track">
       {row.map((c, i) => (
-        <div class="ltrust__cell">
+        <div class="ltrust__cell" aria-hidden={i >= certs.length ? 'true' : undefined}>
           <img src={c.src} alt={i < certs.length ? c.alt : ''} loading="lazy" />
         </div>
       ))}
@@ -28,16 +22,40 @@ const row = [...certs, ...certs, ...certs, ...certs];
 </section>
 
 <style>
-.ltrust { border-bottom: 1px solid var(--pl-line); display: grid; grid-template-columns: 280px minmax(0,1fr); }
-.ltrust__inner { padding: 22px 28px; display: flex; flex-direction: column; justify-content: center; gap: 8px; border-right: 1px solid var(--pl-line); background: var(--pl-surface-2); }
-.ltrust__label { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--pl-ink); }
-.ltrust__check { width: 16px; height: 16px; border-radius: 50%; background: var(--pl-accent); color: var(--pl-on-accent); font-size: 9px; display: flex; align-items: center; justify-content: center; flex: none; }
-.ltrust__sub { font-size: 13px; line-height: 1.5; color: var(--pl-muted); }
-.ltrust__marquee { overflow: hidden; -webkit-mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
-.ltrust__track { display: flex; width: max-content; animation: pl-marquee 28s linear infinite; }
+.ltrust {
+  border-bottom: 1px solid var(--pl-line);
+  background: #fff;
+  max-width: var(--pl-container);
+  margin: 0 auto;
+}
+.ltrust__marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.ltrust__track {
+  display: flex;
+  width: max-content;
+  animation: pl-marquee 28s linear infinite;
+}
 .ltrust__marquee:hover .ltrust__track { animation-play-state: paused; }
-.ltrust__cell { flex: none; width: 240px; height: 96px; border-right: 1px solid var(--pl-line); display: flex; align-items: center; justify-content: center; background: #fff; }
-.ltrust__cell img { max-height: 44px; max-width: 150px; object-fit: contain; filter: grayscale(1); opacity: .75; transition: filter .3s, opacity .3s; }
+.ltrust__cell {
+  flex: none;
+  width: 240px;
+  height: 96px;
+  border-right: 1px solid var(--pl-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+.ltrust__cell img {
+  max-height: 44px;
+  max-width: 150px;
+  object-fit: contain;
+  filter: grayscale(1);
+  opacity: .75;
+  transition: filter .3s, opacity .3s;
+}
 .ltrust__cell:hover img { filter: none; opacity: 1; }
-@media (max-width: 760px) { .ltrust { grid-template-columns: 1fr; } .ltrust__inner { border-right: none; border-bottom: 1px solid var(--pl-line); } }
 </style>

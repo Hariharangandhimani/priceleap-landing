@@ -92,10 +92,13 @@ const testimonials = [
       {testimonials.map((t, i) => (
         <figure class="lres__quote" data-ltq={i} hidden={i !== 0}>
           <div class="lres__quote-top">
-            <span class="lres__stars" aria-label="5 out of 5">★★★★★</span>
-            <span class="mono lres__qi">0{i+1} / 0{testimonials.length}</span>
+            <span class="lres__open-quote" aria-hidden="true">&ldquo;</span>
+            <span class="lres__stars-row">
+              <span class="lres__stars" aria-label="5 out of 5">★★★★★</span>
+              <span class="mono lres__qi">0{i+1} / 0{testimonials.length}</span>
+            </span>
           </div>
-          <blockquote>"{t.q}"</blockquote>
+          <blockquote>{t.q}</blockquote>
           <figcaption>{t.role} · {t.ind}</figcaption>
         </figure>
       ))}
@@ -169,11 +172,13 @@ const testimonials = [
 .lres__panel { background: #fff; padding: 40px 44px; min-height: 360px; display: flex; flex-direction: column; position: relative; overflow: hidden; }
 .lres__panel-grid { position: absolute; inset: 0; background-image: linear-gradient(#f1efea 1px,transparent 1px),linear-gradient(90deg,#f1efea 1px,transparent 1px); background-size: 44px 44px; -webkit-mask-image: linear-gradient(135deg,transparent 45%,#000); mask-image: linear-gradient(135deg,transparent 45%,#000); pointer-events: none; }
 .lres__quote { margin: 0; position: relative; display: flex; flex-direction: column; gap: 22px; flex: 1; animation: pl-fade .3s ease; }
-.lres__quote-top { display: flex; justify-content: space-between; align-items: center; }
+.lres__quote[hidden] { display: none !important; }
+.lres__quote-top { display: flex; flex-direction: column; gap: 12px; }
+.lres__open-quote { font-size: 64px; line-height: .6; color: var(--pl-accent); font-weight: 600; display: block; height: 30px; }
+.lres__stars-row { display: flex; justify-content: space-between; align-items: center; }
 .lres__stars { color: var(--pl-accent); letter-spacing: 2px; }
 .lres__qi { font-size: 11px; color: var(--pl-faint-2); }
-.lres__quote blockquote { margin: 0; font-size: 22px; line-height: 1.5; font-weight: 500; letter-spacing: -.01em; flex: 1; }
-.lres__quote blockquote::before { content: '"'; font-size: 64px; line-height: .6; color: var(--pl-accent); font-weight: 600; display: block; height: 30px; margin-bottom: 22px; }
+.lres__quote blockquote { margin: 0; font-size: 22px; line-height: 1.5; font-weight: 500; letter-spacing: -.01em; flex: 1; color: var(--pl-ink); }
 .lres__quote figcaption { font-size: 14px; color: var(--pl-muted); padding-top: 20px; border-top: 1px dashed var(--pl-line); }
 .lres__nav { position: relative; display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
 .lres__prev, .lres__next { width: 38px; height: 38px; border-radius: 11px; cursor: pointer; font-size: 14px; }

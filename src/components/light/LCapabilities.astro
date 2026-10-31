@@ -94,8 +94,25 @@ const caps = [
 
 <style>
 .lcap__head { text-align: center; margin-bottom: 52px; display: flex; flex-direction: column; align-items: center; gap: 0; }
-.lcap__grid { border-radius: 20px !important; display: flex !important; flex-wrap: wrap; gap: 0; background: var(--pl-line) !important; }
-.lcap__card { flex: 5 1 380px; min-width: 0; background: #fff !important; padding: 32px; display: flex; flex-direction: column; gap: 22px; }
+/* Container bg = line color (#e4e2dc). Cards use margin:0 1px 1px 0 so bg shows as 1px separators */
+.lcap__grid {
+  border: 1px solid #e4e2dc;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #e4e2dc;
+  display: flex;
+  flex-wrap: wrap;
+}
+.lcap__card {
+  flex: 5 1 380px;
+  min-width: 0;
+  background: #fff;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin: 0 1px 1px 0;
+}
 .lcap__card--wide { flex: 7 1 520px; }
 .lcap__ic { width: 46px; height: 46px; border-radius: 12px; border: 1px solid var(--pl-line-soft); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px -10px rgba(24,229,99,.5); }
 .lcap__shape { width: 18px; height: 18px; background: linear-gradient(135deg,#18E563,#0fb04b); }
