@@ -1,0 +1,217 @@
+---
+// Accuracy section — animated 4-stage match pipeline
+const stages = [
+  { n:'01', t:'AI matching', d:'Exact, similar, and white-label products — even without barcodes.', stat:'1,20,4860 matched' },
+  { n:'02', t:'Human quality control', d:'Every match reviewed by a trained QC analyst before it counts.', stat:'100% reviewed' },
+  { n:'03', t:'Anomaly detection', d:'Automated checks flag price and match outliers in real time.', stat:'312 outliers held' },
+  { n:'04', t:'Accuracy SLA', d:'A contractual guarantee — not a marketing number.', stat:'[PLACEHOLDER]% guaranteed' },
+];
+const checks = [
+  { t:'Brand & model', by:'AI' },
+  { t:'Variant & colour', by:'AI' },
+  { t:'Specs confirmed', by:'QC' },
+  { t:'Price within band', by:'AUTO' },
+];
+---
+<section id="accuracy" class="l-section lacc" data-lacc>
+  <div class="lacc__head" data-reveal>
+    <div class="l-eyebrow">
+      <span class="l-eyebrow__slash">//</span>
+      <span class="l-eyebrow__label"><span class="l-eyebrow__diamond"></span>Data accuracy</span>
+      <span class="l-eyebrow__slash">\\</span>
+    </div>
+    <h2 class="l-h2" style="max-width:900px">Real-time competitor data accuracy, <span class="l-grad">proven — not promised.</span></h2>
+    <p class="l-lead" style="max-width:640px">Everyone claims "99% accuracy." We show you how we get there — every match passes four checks before it reaches your dashboard.</p>
+  </div>
+
+  <!-- Pipeline card -->
+  <div class="lacc__card" data-reveal style="--i:1">
+    <div class="lacc__bar">
+      <span class="lacc__dot-live"></span>
+      <span class="mono lacc__bar-label">MATCH PIPELINE · LIVE</span>
+      <span class="mono lacc__bar-item" data-lacc-item>ITEM 1 OF 3 · WH-ANC-700</span>
+    </div>
+
+    <div class="lacc__pipe">
+      <!-- Progress line (desktop) -->
+      <div class="lacc__line" aria-hidden="true">
+        <div class="lacc__line-fill" data-lacc-fill></div>
+      </div>
+      <!-- Steps -->
+      <div class="lacc__steps">
+        {stages.map((s, i) => (
+          <div class="lacc__step" data-lacc-step={i}>
+            <div class="lacc__ic">
+              <span class="lacc__badge mono" data-lacc-badge={i}>0{i+1}</span>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                {i===0 && <><path d="M9 7a5 5 0 1 0 0 10"/><path d="M15 17a5 5 0 1 0 0-10"/></>}
+                {i===1 && <><path d="M12 4.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7"/><path d="M5 20c1.5-4 4-5.5 7-5.5s5.5 1.5 7 5.5"/></>}
+                {i===2 && <><path d="M3 13h4l2.5-6 3.5 11 2.5-7H21"/><path d="M3 21h18"/></>}
+                {i===3 && <><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2.2 2.2L15 10"/></>}
+              </svg>
+            </div>
+            <div class="lacc__step-pill mono" data-lacc-pill={i}><span class="lacc__pill-dot"></span>{s.stat}</div>
+            <h3 class="lacc__step-title">{s.t}</h3>
+            <p class="lacc__step-desc">{s.d}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Inspector + stats -->
+    <div class="lacc__bottom">
+      <div class="lacc__inspector">
+        <div class="lacc__insp-head">
+          <span class="mono lacc__insp-label">MATCH INSPECTOR</span>
+          <span class="mono lacc__insp-status" data-lacc-status><i class="lacc__spin"></i><span>AI matching</span></span>
+        </div>
+        <div class="lacc__pair">
+          <div class="lacc__prod"><div class="mono lacc__prod-lbl">YOUR PRODUCT</div><div class="lacc__prod-name" data-lacc-you>Wireless ANC Headphones</div><div class="mono lacc__prod-sku" data-lacc-sku>WH-ANC-700</div></div>
+          <span class="lacc__link" data-lacc-link>⇄</span>
+          <div class="lacc__prod lacc__prod--cand"><div class="mono lacc__prod-lbl" data-lacc-src>MARKETPLACE A</div><div class="lacc__prod-name" data-lacc-match>Sonix 700 ANC Over-Ear Headphones</div><div class="mono lacc__prod-sku"><span data-lacc-price>₹25,490</span> · <span data-lacc-kind>Exact match</span></div></div>
+        </div>
+        <div class="lacc__checks">
+          {checks.map((c, i) => (
+            <div class="lacc__check" data-lacc-check={i}>
+              <span class="lacc__tick" data-lacc-tick={i}>✓</span>
+              {c.t}<span class="mono lacc__check-by">{c.by}</span>
+            </div>
+          ))}
+        </div>
+        <div class="lacc__conf">
+          <div class="mono lacc__conf-row"><span>MATCH CONFIDENCE</span><span data-lacc-conf>72%</span></div>
+          <div class="lacc__confbar"><i data-lacc-confbar style="width:72%"></i></div>
+        </div>
+      </div>
+      <div class="lacc__stats">
+        <div><div class="mono lacc__stat-lbl">MATCHES VERIFIED</div><div class="mono lacc__stat-val" data-lacc-verified>12,04,860</div></div>
+        <div><div class="mono lacc__stat-lbl">HUMAN-REVIEWED</div><div class="mono lacc__stat-val">100%</div></div>
+        <div><div class="mono lacc__stat-lbl">OUTLIERS HELD TODAY</div><div class="mono lacc__stat-val" style="color:#e08a00" data-lacc-held>312</div></div>
+        <div><div class="mono lacc__stat-lbl">ACCURACY SLA</div><div class="mono lacc__stat-val">[PLACEHOLDER]%</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLA banner -->
+  <div class="lacc__sla" data-reveal style="--i:2">
+    <div class="lacc__sla-left">
+      <span class="lacc__sla-ic">✓</span>
+      <span class="lacc__sla-text">Fewer than [PLACEHOLDER] matches is a false positive — backed by our SLA.</span>
+    </div>
+    <a href="/book-a-demo" class="lacc__sla-link">Book a demo →</a>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-lacc]');
+  if (root) {
+    const items = [
+      { you:'Wireless ANC Headphones', sku:'WH-ANC-700', match:'Sonix 700 ANC Over-Ear Headphones, Black', src:'MARKETPLACE A', price:'₹25,490', kind:'Exact match', conf:[72,93.4,98.7,98.7,98.7] },
+      { you:'Smart Fitness Watch 46mm', sku:'SFW-46-BLK', match:'FitPro 46 mm Smartwatch — Midnight', src:'D2C STORE C', price:'₹9,990', kind:'Similar product', conf:[64,90.1,96.2,96.2,96.2] },
+      { you:'Portable Bluetooth Speaker', sku:'PBS-MINI-4', match:'Mini Boom 4 Wireless Speaker', src:'MARKETPLACE D', price:'₹6,290', kind:'White-label', conf:[58,88.6,95.4,95.4,95.4] },
+    ];
+    let st = 0, item = 0, verified = 1204860, held = 312, visible = false;
+    const $ = (s: string) => root.querySelector<HTMLElement>(s)!;
+    const $$ = (s: string) => [...root.querySelectorAll<HTMLElement>(s)];
+
+    const paint = () => {
+      const it = items[item];
+      $$('[data-lacc-step]').forEach(el => { const i = Number(el.dataset.laccStep); el.classList.toggle('is-done', i < st); el.classList.toggle('is-active', i === st); });
+      const fill = (Math.min(st,3)/3*100).toFixed(1)+'%';
+      const fl = $('[data-lacc-fill]'); if (fl) fl.style.width = fill;
+      const done = st >= 3;
+      root.classList.toggle('is-verified', done);
+      const s = $('[data-lacc-status] span'); if (s) s.textContent = ['AI matching','Human QC review','Anomaly check','Verified ✓','Verified ✓'][st];
+      const conf = $('[data-lacc-conf]'); if (conf) conf.textContent = it.conf[st]+'%';
+      const cb = $('[data-lacc-confbar]'); if (cb) cb.style.width = it.conf[st]+'%';
+      const lbl = $('[data-lacc-item]'); if (lbl) lbl.textContent = 'ITEM '+(item+1)+' OF 3 · '+it.sku;
+      const map: Record<string,string> = { you:it.you, sku:it.sku, match:it.match, src:it.src, price:it.price, kind:it.kind };
+      Object.entries(map).forEach(([k,v]) => { const el = $(`[data-lacc-${k}]`); if (el) el.textContent = v; });
+      $$('[data-lacc-check]').forEach(el => el.classList.toggle('is-on', st >= Number(el.dataset.laccCheck)));
+      const veEl = $('[data-lacc-verified]'); if (veEl) veEl.textContent = verified.toLocaleString('en-IN');
+      const heEl = $('[data-lacc-held]'); if (heEl) heEl.textContent = String(held);
+    };
+
+    if (!window.matchMedia('(prefers-reduced-motion:reduce)').matches) {
+      paint();
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(es => es.forEach(e => visible = e.isIntersecting), { threshold:0, rootMargin:'-30% 0px -30% 0px' }).observe(root);
+      }
+      setInterval(() => {
+        if (!visible) return;
+        if (st >= 4) { st=0; item=(item+1)%items.length; verified++; if (Math.random()<.4) held++; } else st++;
+        paint();
+      }, 1300);
+    } else { st=4; paint(); }
+  }
+</script>
+
+<style>
+.lacc__head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; }
+.lacc__card { margin-top: 52px; background: #fff; border: 1px solid var(--pl-line); border-radius: 22px; overflow: hidden; box-shadow: 0 30px 60px -40px rgba(23,22,26,.25); }
+.lacc__bar { display: flex; align-items: center; gap: 12px; padding: 14px 22px; border-bottom: 1px solid var(--pl-line-soft); background: var(--pl-surface-2); flex-wrap: wrap; }
+.lacc__dot-live { width: 7px; height: 7px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.6s infinite; flex: none; }
+.lacc__bar-label { font-size: 11px; letter-spacing: .1em; color: var(--pl-ink); }
+.lacc__bar-item { margin-left: auto; font-size: 11px; color: var(--pl-faint); }
+
+/* Pipeline */
+.lacc__pipe { position: relative; padding: clamp(28px,4vw,44px) clamp(16px,3vw,32px) clamp(20px,3vw,32px); }
+.lacc__line { display: none; position: absolute; left: calc(12.5% + 8px); right: calc(12.5% + 8px); top: calc(clamp(28px,4vw,44px) + 32px); height: 2px; background: var(--pl-line-soft); }
+@media (min-width: 860px) { .lacc__line { display: block; } }
+.lacc__line-fill { height: 100%; width: 0; background: linear-gradient(90deg,var(--pl-accent-ink),var(--pl-accent)); border-radius: 2px; transition: width 1.1s ease; }
+.lacc__steps { position: relative; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,210px),1fr)); gap: 28px 20px; }
+.lacc__step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; }
+.lacc__ic { position: relative; width: 64px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: var(--pl-surface-2); border: 1px solid var(--pl-line); color: var(--pl-faint); transition: all .45s; }
+.lacc__step.is-active .lacc__ic { background: var(--pl-accent-tint); border-color: var(--pl-accent); color: var(--pl-accent-ink); box-shadow: 0 0 0 6px rgba(24,229,99,.08); }
+.lacc__step.is-done .lacc__ic { background: var(--pl-accent-tint); border-color: var(--pl-accent-line); color: var(--pl-accent-ink); }
+.lacc__badge { position: absolute; top: -8px; right: -8px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--pl-surface-2); border: 1px solid var(--pl-line); font-size: 10px; font-weight: 600; color: var(--pl-faint); display: flex; align-items: center; justify-content: center; transition: all .45s; }
+.lacc__step.is-done .lacc__badge { background: var(--pl-accent); border-color: var(--pl-accent); color: var(--pl-on-accent); font-size: 0; }
+.lacc__step.is-done .lacc__badge::after { content: '✓'; font-size: 10px; }
+.lacc__step.is-active .lacc__badge { color: var(--pl-accent-ink); border-color: var(--pl-accent-line); }
+.lacc__step-pill { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--pl-line-soft); background: var(--pl-surface-2); font-size: 11px; color: var(--pl-faint); }
+.lacc__pill-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--pl-faint); flex: none; }
+.lacc__step.is-active .lacc__pill-dot { background: var(--pl-accent); }
+.lacc__step-title { font-size: 19px; font-weight: 600; color: var(--pl-faint); letter-spacing: -.01em; transition: color .45s; }
+.lacc__step.is-active .lacc__step-title, .lacc__step.is-done .lacc__step-title { color: var(--pl-ink); }
+.lacc__step-desc { font-size: 14.5px; line-height: 1.55; color: var(--pl-muted); max-width: 250px; text-wrap: pretty; }
+
+/* Bottom */
+.lacc__bottom { display: flex; flex-wrap: wrap; border-top: 1px solid var(--pl-line-soft); }
+.lacc__inspector { flex: 1.5 1 460px; min-width: 0; padding: clamp(18px,2.6vw,28px); border-right: 1px solid var(--pl-line-soft); display: flex; flex-direction: column; gap: 14px; }
+.lacc__insp-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.lacc__insp-label { font-size: 10.5px; letter-spacing: .12em; color: var(--pl-faint); }
+.lacc__insp-status { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: 999px; background: var(--pl-line-soft); font-size: 11px; letter-spacing: 0; color: var(--pl-ink-2); }
+.is-verified .lacc__insp-status { background: var(--pl-accent-tint); color: var(--pl-accent-ink); }
+.lacc__spin { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid currentColor; border-top-color: transparent; animation: pl-spin .8s linear infinite; }
+.is-verified .lacc__spin { display: none; }
+.lacc__pair { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 12px; align-items: center; }
+@media (max-width: 479px) { .lacc__pair { grid-template-columns: 1fr; } .lacc__link { justify-self: center; transform: rotate(90deg); } }
+.lacc__prod { border: 1px solid var(--pl-line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0; transition: border-color .4s; }
+.lacc__prod--cand { } .is-verified .lacc__prod--cand { border-color: var(--pl-accent-line); }
+.lacc__prod-lbl { font-size: 9.5px; letter-spacing: .1em; color: var(--pl-faint); }
+.lacc__prod-name { font-size: 14px; font-weight: 500; line-height: 1.35; color: var(--pl-ink); }
+.lacc__prod-sku { font-size: 11px; color: var(--pl-faint); }
+.lacc__link { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--pl-line); background: var(--pl-surface-2); color: var(--pl-faint); display: flex; align-items: center; justify-content: center; transition: all .4s; }
+.is-verified .lacc__link { border-color: var(--pl-accent-line); color: var(--pl-accent-ink); }
+.lacc__checks { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,200px),1fr)); gap: 8px; }
+.lacc__check { display: flex; align-items: center; gap: 10px; border: 1px solid var(--pl-line-soft); border-radius: 10px; padding: 10px 12px; font-size: 13px; color: var(--pl-faint); transition: color .35s; }
+.lacc__check.is-on { color: var(--pl-ink); }
+.lacc__tick { width: 18px; height: 18px; flex: none; border-radius: 50%; border: 1.5px solid var(--pl-line); font-size: 10px; font-weight: 700; color: transparent; display: flex; align-items: center; justify-content: center; transition: all .35s; }
+.lacc__check.is-on .lacc__tick { background: var(--pl-accent); border-color: var(--pl-accent); color: var(--pl-on-accent); }
+.lacc__check-by { margin-left: auto; font-size: 10px; color: var(--pl-faint-2); }
+.lacc__conf { }
+.lacc__conf-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--pl-ink); margin-bottom: 8px; }
+.lacc__confbar { height: 6px; border-radius: 3px; background: var(--pl-line-soft); overflow: hidden; } .lacc__confbar i { display: block; height: 100%; background: linear-gradient(90deg,var(--pl-accent-ink),var(--pl-accent)); transition: width .9s var(--pl-ease); }
+
+.lacc__stats { flex: 1 1 300px; min-width: 0; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.lacc__stats > div { padding: clamp(18px,2.6vw,28px); } .lacc__stats > div:nth-child(-n+2) { border-bottom: 1px solid var(--pl-line-soft); } .lacc__stats > div:nth-child(odd) { border-right: 1px solid var(--pl-line-soft); }
+.lacc__stat-lbl { font-size: 10px; letter-spacing: .1em; color: var(--pl-faint); }
+.lacc__stat-val { display: block; margin-top: 8px; font-size: clamp(20px,2vw,26px); font-weight: 400; font-variant-numeric: tabular-nums; }
+
+/* SLA banner */
+.lacc__sla { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; background: #fff; border: 1px solid var(--pl-accent-line); border-radius: 16px; padding: 18px 22px; box-shadow: 0 14px 30px -20px rgba(24,229,99,.5); }
+.lacc__sla-left { display: flex; align-items: center; gap: 16px; }
+.lacc__sla-ic { width: 44px; height: 44px; flex: none; border-radius: 12px; background: linear-gradient(135deg,#18E563,#0fb04b); color: var(--pl-on-accent); font-size: 18px; display: flex; align-items: center; justify-content: center; }
+.lacc__sla-text { font-size: 18px; font-weight: 500; }
+.lacc__sla-link { color: var(--pl-accent-ink); font-weight: 500; white-space: nowrap; }
+</style>
