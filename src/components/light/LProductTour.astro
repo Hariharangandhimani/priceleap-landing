@@ -81,7 +81,7 @@ const feed = [
       </div>
 
       <!-- Tab 1: Monitor the market -->
-      <div class="ltour__panel" data-lpanel="1" hidden>
+      <div class="ltour__panel is-hidden" data-lpanel="1">
         <div class="ltour__feed">
           {feed.map(f => (
             <div class="ltour__feed-row">
@@ -95,15 +95,16 @@ const feed = [
       </div>
 
       <!-- Tab 2: Dynamic pricing -->
-      <div class="ltour__panel" data-lpanel="2" hidden>
+      <div class="ltour__panel is-hidden" data-lpanel="2">
         <div class="ltour__rule-wrap">
           <div class="ltour__rule-card">
             <div class="mono ltour__rule-lbl">RULE SET · HEADPHONES</div>
+            <!-- Each key+value is a DIRECT child pair of the 2-col grid — no wrapper divs -->
             <div class="ltour__rule-rows">
-              <div><span class="mono ltour__rk">RULE</span><span>Beat lowest rival by 1%</span></div>
-              <div><span class="mono ltour__rk">FLOOR</span><span>Margin ≥ 18%</span></div>
-              <div><span class="mono ltour__rk">CEILING</span><span>MSRP</span></div>
-              <div><span class="mono ltour__rk">MAP</span><span>Never below ₹23,990</span></div>
+              <span class="mono ltour__rk">RULE</span><span>Beat lowest rival by 1%</span>
+              <span class="mono ltour__rk">FLOOR</span><span>Margin ≥ 18%</span>
+              <span class="mono ltour__rk">CEILING</span><span>MSRP</span>
+              <span class="mono ltour__rk">MAP</span><span>Never below ₹23,990</span>
             </div>
           </div>
           <div class="ltour__rec-card">
@@ -119,7 +120,7 @@ const feed = [
       </div>
 
       <!-- Tab 3: Ask the Agent -->
-      <div class="ltour__panel ltour__panel--chat" data-lpanel="3" hidden>
+      <div class="ltour__panel ltour__panel--chat is-hidden" data-lpanel="3">
         <div class="ltour__chat">
           <div class="ltour__msg-agent">
             <div class="mono ltour__agent-label">PRICELEAP AGENT</div>
@@ -154,7 +155,7 @@ const feed = [
         const on = k === i; b.setAttribute('aria-selected', String(on)); b.classList.toggle('ltour__tab--on', on);
         b.querySelector('.ltour__num')?.classList.toggle('ltour__num--on', on);
       });
-      root.querySelectorAll<HTMLElement>('[data-lpanel]').forEach(p => p.hidden = Number(p.dataset.lpanel) !== i);
+      root.querySelectorAll<HTMLElement>('[data-lpanel]').forEach(p => p.classList.toggle('is-hidden', Number(p.dataset.lpanel) !== i));
       const d = TAB_DATA[i];
       const t = root.querySelector('[data-ltour-title]'); if (t) t.textContent = d.title;
       const s = root.querySelector('[data-ltour-sub]'); if (s) s.textContent = d.sub;
@@ -190,8 +191,8 @@ const feed = [
 @media (min-width: 860px) { .ltour__win-sub { display: inline; } }
 .ltour__win-count { margin-left: auto; font-size: 12px; color: var(--pl-faint); }
 .ltour__stage { padding: 28px; min-height: 320px; }
-/* CRITICAL: explicit display:none required — display:flex would override the hidden attr */
-.ltour__panel[hidden] { display: none !important; }
+/* Class-based hide — more reliable than [hidden] attr vs CSS display conflict */
+.ltour__panel.is-hidden { display: none !important; }
 .ltour__panel { display: flex; flex-direction: column; gap: 16px; animation: pl-fadeup .3s ease; }
 
 /* Tab 0 */

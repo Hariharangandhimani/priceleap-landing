@@ -90,7 +90,7 @@ const testimonials = [
     <div class="lres__panel">
       <div class="lres__panel-grid" aria-hidden="true"></div>
       {testimonials.map((t, i) => (
-        <figure class="lres__quote" data-ltq={i} hidden={i !== 0}>
+        <figure class:list={['lres__quote', { 'is-hidden': i !== 0 }]} data-ltq={i}>
           <div class="lres__quote-top">
             <span class="lres__open-quote" aria-hidden="true">&ldquo;</span>
             <span class="lres__stars-row">
@@ -126,7 +126,7 @@ const testimonials = [
     const go = (i: number) => {
       cur = (i + total) % total;
       root.querySelectorAll('[data-lti]').forEach(b => { const on = Number((b as HTMLElement).dataset.lti) === cur; b.setAttribute('aria-pressed', String(on)); b.classList.toggle('is-on', on); });
-      root.querySelectorAll<HTMLElement>('[data-ltq]').forEach(q => q.hidden = Number(q.dataset.ltq) !== cur);
+      root.querySelectorAll<HTMLElement>('[data-ltq]').forEach(q => q.classList.toggle('is-hidden', Number(q.dataset.ltq) !== cur));
     };
     root.querySelectorAll<HTMLButtonElement>('[data-lti]').forEach(b => b.addEventListener('click', () => go(Number(b.dataset.lti))));
     root.querySelector('[data-ltprev]')?.addEventListener('click', () => go(cur - 1));
@@ -172,7 +172,7 @@ const testimonials = [
 .lres__panel { background: #fff; padding: 40px 44px; min-height: 360px; display: flex; flex-direction: column; position: relative; overflow: hidden; }
 .lres__panel-grid { position: absolute; inset: 0; background-image: linear-gradient(#f1efea 1px,transparent 1px),linear-gradient(90deg,#f1efea 1px,transparent 1px); background-size: 44px 44px; -webkit-mask-image: linear-gradient(135deg,transparent 45%,#000); mask-image: linear-gradient(135deg,transparent 45%,#000); pointer-events: none; }
 .lres__quote { margin: 0; position: relative; display: flex; flex-direction: column; gap: 22px; flex: 1; animation: pl-fade .3s ease; }
-.lres__quote[hidden] { display: none !important; }
+.lres__quote.is-hidden { display: none !important; }
 .lres__quote-top { display: flex; flex-direction: column; gap: 12px; }
 .lres__open-quote { font-size: 64px; line-height: .6; color: var(--pl-accent); font-weight: 600; display: block; height: 30px; }
 .lres__stars-row { display: flex; justify-content: space-between; align-items: center; }
