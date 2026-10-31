@@ -1,0 +1,600 @@
+---
+import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
+import LHeader from '@/components/light/LHeader.astro';
+
+const tokens = {
+  brand: [
+    { name: 'Velocity Green', hex: '#18E563', border: 'none', role: 'Primary accent, CTAs, live states' },
+    { name: 'Green Hover', hex: '#14d159', border: 'none', role: 'Button hover state' },
+    { name: 'Green Ink', hex: '#0a8f3c', border: 'none', role: 'Gradient text, accent ink' },
+    { name: 'Green Tint', hex: '#effdf4', border: '1px solid #b4f2c9', role: 'Accent backgrounds' },
+    { name: 'On Accent', hex: '#0b1f12', border: 'none', role: 'Text on green backgrounds' },
+    { name: 'Green Line', hex: '#b4f2c9', border: '1px solid #e4e2dc', role: 'Accent borders' },
+  ],
+  neutrals: [
+    { name: 'Ink', hex: '#17161a', border: 'none', role: 'Headings, primary text' },
+    { name: 'Ink 2', hex: '#3a3940', border: 'none', role: 'Body text on white' },
+    { name: 'Muted', hex: '#6b6a70', border: 'none', role: 'Secondary text, captions' },
+    { name: 'Faint', hex: '#8a8990', border: 'none', role: 'Placeholder, disabled' },
+    { name: 'Canvas', hex: '#f6f5f2', border: '1px solid #e4e2dc', role: 'Page background' },
+    { name: 'Surface', hex: '#ffffff', border: '1px solid #e4e2dc', role: 'Card backgrounds' },
+    { name: 'Surface 2', hex: '#fbfaf8', border: '1px solid #e4e2dc', role: 'Sidebar, header' },
+    { name: 'Line', hex: '#e4e2dc', border: '1px solid #d6d3cb', role: 'Borders, dividers' },
+  ],
+  semantic: [
+    { name: 'Danger', hex: '#e5484d', border: 'none', role: 'Error states, MAP alerts' },
+    { name: 'Danger Tint', hex: '#fff5f5', border: '1px solid #f5c2c4', role: 'Error backgrounds' },
+    { name: 'Warn', hex: '#e08a00', border: 'none', role: 'Out of stock, caution' },
+    { name: 'Warn Tint', hex: '#fff8ec', border: '1px solid #f5dcb0', role: 'Warning backgrounds' },
+  ],
+};
+
+const radii = [
+  { n: 'xs', v: '6px' }, { n: 'sm', v: '8px' }, { n: 'md', v: '12px' },
+  { n: 'lg', v: '16px' }, { n: 'xl', v: '20px' }, { n: '2xl', v: '24px' },
+];
+const spacing = [4,8,12,16,20,24,32,48,64,96];
+const shadows = [
+  { n: 'sm', v: '0 1px 2px rgba(0,0,0,.04)', use: 'Chips, inline elements' },
+  { n: 'md', v: '0 12px 26px -14px rgba(23,22,26,.35)', use: 'Cards, dropdowns' },
+  { n: 'lg', v: '0 30px 60px -30px rgba(23,22,26,.25)', use: 'Modals, mega menus' },
+  { n: 'accent', v: '0 14px 30px -12px rgba(24,229,99,.75)', use: 'CTA buttons' },
+];
+
+const sections = [
+  { id: 'foundations', n: '01', label: 'Foundations' },
+  { id: 'navigation',  n: '02', label: 'Navigation' },
+  { id: 'buttons',     n: '03', label: 'Buttons' },
+  { id: 'forms',       n: '04', label: 'Forms & Badges' },
+  { id: 'cards',       n: '05', label: 'Cards & Surfaces' },
+  { id: 'typography',  n: '06', label: 'Typography' },
+  { id: 'motion',      n: '07', label: 'Motion' },
+  { id: 'icons',       n: '08', label: 'Icons' },
+];
+---
+<LightBaseLayout title="PriceLeap Design System" description="Tokens, components, sections and motion patterns for the PriceLeap website.">
+  <LHeader />
+
+  <!-- Hero -->
+  <section class="ds-hero">
+    <div class="ds-hero__grid" aria-hidden="true"></div>
+    <div class="ds-hero__copy">
+      <span class="ds-hero__pill"><span class="ds-hero__dot"></span>PriceLeap Design System</span>
+      <h1 class="ds-hero__h1"><span style="font-weight:400">One system for every </span><b>PriceLeap page.</b></h1>
+      <p class="ds-hero__lead">Tokens, components, sections and motion patterns for the PriceLeap website. Every block maps to one Astro component built with plain CSS and vanilla JS.</p>
+      <div class="ds-hero__tags">
+        <span><span class="ds-tag-sq"></span>Velocity Green #18E563</span>
+        <span>Geist · Inter · Geist Mono</span>
+        <span>Radius 6 – 24px</span>
+        <span>Motion 150 – 700ms</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="ds-wrap">
+    <!-- Sticky sidebar -->
+    <aside class="ds-sidebar" aria-label="Design system sections">
+      <nav>
+        {sections.map(s => (
+          <a href={`#${s.id}`} class="ds-sidebar__link">
+            <span class="ds-sidebar__n mono">{s.n}</span>
+            {s.label}
+          </a>
+        ))}
+      </nav>
+      <div class="ds-sidebar__status">
+        <span class="ds-status-dot"></span>v2 · Oct 2026
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="ds-main">
+
+      <!-- ── 01 Foundations ── -->
+      <section id="foundations" class="ds-section" data-reveal>
+        <div class="ds-section-head">
+          <span class="ds-section-n mono">01</span>
+          <h2>Foundations</h2>
+        </div>
+        <p class="ds-section-desc">The base tokens every component uses. Green is a highlight (~10% of any screen); white, ink and soft greys carry the rest.</p>
+
+        <!-- Colors -->
+        <div class="ds-block">
+          <div class="ds-block-head"><h3>Color</h3><code>tokens.css / --pl-*</code></div>
+          {[
+            { label: 'Brand', swatches: tokens.brand },
+            { label: 'Neutrals', swatches: tokens.neutrals },
+            { label: 'Semantic', swatches: tokens.semantic },
+          ].map(group => (
+            <div class="ds-swatch-group">
+              <div class="mono ds-swatch-label">{group.label}</div>
+              <div class="ds-swatches">
+                {group.swatches.map(s => (
+                  <div class="ds-swatch">
+                    <span class="ds-swatch-color" style={`background:${s.hex};border:${s.border}`}></span>
+                    <div class="ds-swatch-name">{s.name}</div>
+                    <div class="mono ds-swatch-hex">{s.hex}</div>
+                    <div class="ds-swatch-role">{s.role}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <!-- Spacing + Radius + Elevation -->
+        <div class="ds-grid3">
+          <div class="ds-card">
+            <div class="ds-block-head"><h3>Spacing</h3><code>--pl-space-*</code></div>
+            <div class="ds-spacing-list">
+              {spacing.map(v => (
+                <div class="ds-spacing-row">
+                  <span class="mono ds-spacing-val">{v}px</span>
+                  <span class="ds-spacing-bar" style={`width:${Math.min(v * 1.8, 220)}px`}></span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div class="ds-card">
+            <div class="ds-block-head"><h3>Radius</h3><code>--pl-radius-*</code></div>
+            <div class="ds-radius-grid">
+              {radii.map(r => (
+                <div class="ds-radius-item">
+                  <span class="ds-radius-box" style={`border-radius:${r.v}`}></span>
+                  <span class="mono ds-radius-label">{r.n} · {r.v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div class="ds-card ds-card--tinted">
+            <div class="ds-block-head"><h3>Elevation</h3><code>--pl-shadow-*</code></div>
+            <div class="ds-shadow-list">
+              {shadows.map(s => (
+                <div class="ds-shadow-card" style={`box-shadow:${s.v}`}>
+                  <span class="ds-shadow-n mono">{s.n}</span>
+                  <span class="ds-shadow-use">{s.use}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 02 Navigation ── -->
+      <section id="navigation" class="ds-section" data-reveal>
+        <div class="ds-section-head">
+          <span class="ds-section-n mono">02</span>
+          <h2>Navigation</h2>
+        </div>
+        <p class="ds-section-desc">Sticky header with frosted glass backdrop, hover mega-menus on desktop, full-height tab-drawer on mobile.</p>
+        <div class="ds-card ds-nav-preview">
+          <div class="ds-np-bar">
+            <div class="ds-np-left">
+              <span class="ds-np-logo">Price<b style="color:#0a8f3c">Leap</b></span>
+              <div class="ds-np-links">
+                <span>Product <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+                <span>Solutions</span>
+                <span>Resources</span>
+                <span>Integrations</span>
+                <span>Pricing</span>
+              </div>
+            </div>
+            <div class="ds-np-right">
+              <span class="ds-np-signin">Sign in</span>
+              <span class="ds-np-cta">Book a demo</span>
+            </div>
+          </div>
+          <div class="ds-np-mega">
+            <div class="ds-np-top"><span class="mono" style="font-size:10px;letter-spacing:.14em;color:#8a8990">◆ PLATFORM</span><span class="mono" style="font-size:11px;color:#0a8f3c">Explore the platform →</span></div>
+            <div class="ds-np-body">
+              {['Price Intelligence','Decision Engine','Dynamic Pricing','PriceLeap Agent ✦','Product Matching','MAP Monitoring'].map((t, i) => (
+                <div class="ds-np-item">
+                  <span class="ds-np-ic"><span class={`mega__shape ${['sq','ci','di'][i%3]}`}></span></span>
+                  <div><div class="ds-np-it">{t}</div><div class="ds-np-id">Live competitor prices, index and positioning.</div></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div class="ds-np-note mono">Hover nav buttons to open · Keyboard: Escape to close · Mobile: burger → drawer</div>
+        </div>
+      </section>
+
+      <!-- ── 03 Buttons ── -->
+      <section id="buttons" class="ds-section" data-reveal>
+        <div class="ds-section-head">
+          <span class="ds-section-n mono">03</span>
+          <h2>Buttons</h2>
+        </div>
+        <p class="ds-section-desc">Four variants, three sizes. Scale 0.97 on active, double ring on focus, spinner on loading.</p>
+        <div class="ds-card">
+          <div class="ds-block-head"><h3>Variants</h3><code>variant: primary | secondary | ghost | link</code></div>
+          <div class="ds-btn-row">
+            <button class="ds-btn ds-btn--primary">Book a demo</button>
+            <button class="ds-btn ds-btn--dark">Start free trial</button>
+            <button class="ds-btn ds-btn--secondary">See sample data</button>
+            <button class="ds-btn ds-btn--ghost">Ghost</button>
+            <a href="#" class="ds-btn ds-btn--link">Learn more →</a>
+            <button class="ds-btn ds-btn--icon" aria-label="Next"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+          </div>
+          <div class="ds-block-head" style="margin-top:28px"><h3>Sizes</h3><code>sm: 36h · md: 44h · lg: 52h</code></div>
+          <div class="ds-btn-row">
+            <button class="ds-btn ds-btn--primary ds-btn--sm">Small</button>
+            <button class="ds-btn ds-btn--primary">Medium</button>
+            <button class="ds-btn ds-btn--primary ds-btn--lg">Large</button>
+          </div>
+          <div class="ds-block-head" style="margin-top:28px"><h3>States</h3></div>
+          <div class="ds-btn-states">
+            <div><button class="ds-btn ds-btn--primary">Default</button><span class="mono">#18E563</span></div>
+            <div><button class="ds-btn ds-btn--primary" style="background:#14d159;box-shadow:0 8px 20px -8px rgba(14,143,61,.55)">Hover</button><span class="mono">#14d159 + glow</span></div>
+            <div><button class="ds-btn ds-btn--primary" style="transform:scale(.97);background:#10b94f">Active</button><span class="mono">scale .97</span></div>
+            <div><button class="ds-btn ds-btn--primary" style="box-shadow:0 0 0 3px #fff,0 0 0 5px #0e8f3d">Focus</button><span class="mono">2px ring</span></div>
+            <div><button class="ds-btn ds-btn--primary" disabled style="background:#ebedeb;color:#8a94a6;box-shadow:none">Disabled</button><span class="mono">opacity</span></div>
+            <div><button class="ds-btn ds-btn--primary ds-btn--loading"><span class="ds-spin"></span>Loading</button><span class="mono">spinner 14px</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 04 Forms & Badges ── -->
+      <section id="forms" class="ds-section" data-reveal>
+        <div class="ds-section-head">
+          <span class="ds-section-n mono">04</span>
+          <h2>Forms &amp; Badges</h2>
+        </div>
+        <div class="ds-card">
+          <div class="ds-block-head"><h3>Inputs</h3><code>&lt;Input /&gt; &lt;Select /&gt;</code></div>
+          <div class="ds-inputs">
+            <label class="ds-field"><span>Work email</span><input class="ds-input" placeholder="you@company.com" /></label>
+            <label class="ds-field"><span>Focus state</span><span class="ds-input ds-input--focus">priya@velora.com<span class="ds-cursor"></span></span></label>
+            <label class="ds-field"><span>Error state</span><span class="ds-input ds-input--error">priya@</span><span class="ds-error">Enter a valid work email</span></label>
+          </div>
+          <div class="ds-block-head" style="margin-top:28px"><h3>Badges</h3></div>
+          <div class="ds-badges">
+            <span class="ds-badge ds-badge--neutral">Neutral</span>
+            <span class="ds-badge ds-badge--green">Verified</span>
+            <span class="ds-badge ds-badge--live"><span class="ds-live-dot"></span>LIVE</span>
+            <span class="ds-badge ds-badge--danger">Above market</span>
+            <span class="ds-badge ds-badge--warn">Pending QC</span>
+            <span class="ds-badge ds-badge--outline">Outline</span>
+            <span class="ds-badge ds-badge--solid">NEW</span>
+            <span class="ds-badge ds-badge--dark">BETA</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 05 Cards & Surfaces ── -->
+      <section id="cards" class="ds-section" data-reveal>
+        <div class="ds-section-head">
+          <span class="ds-section-n mono">05</span>
+          <h2>Cards &amp; Surfaces</h2>
+        </div>
+        <div class="ds-cards-grid">
+          <div class="ds-card ds-card--hover">
+            <div class="ds-ic ds-ic--sq"></div>
+            <h3>Default card</h3>
+            <p>White background, 1px #e4e2dc border, 16px radius. Hover: lift 3px + shadow.</p>
+          </div>
+          <div class="ds-card ds-card--accent">
+            <div class="ds-ic ds-ic--ci"></div>
+            <h3>Accent card</h3>
+            <p>1.5px green border, accent tint background, green glow shadow.</p>
+          </div>
+          <div class="ds-card ds-card--dark">
+            <div class="ds-ic ds-ic--di"></div>
+            <h3>Dark card</h3>
+            <p>Dark #0A0A0A background. Used for dark banded sections on homepage.</p>
+          </div>
+          <div class="ds-card ds-card--frame">
+            <div class="ds-frame-inner">
+              <span>Frame cell A</span>
+              <span>Frame cell B</span>
+              <span>Frame cell C · span-2</span>
+            </div>
+            <p style="font-size:13px;color:var(--pl-muted);margin-top:12px">.pl-frame — grid with 1px separator via background color</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 06 Typography ── -->
+      <section id="typography" class="ds-section" data-reveal>
+        <div class="ds-section-head">
+          <span class="ds-section-n mono">06</span>
+          <h2>Typography</h2>
+        </div>
+        <div class="ds-card">
+          {[
+            { label:'Display', spec:'Geist 500 · 44–84px · −3.5%', sample:'Know the price. Lead.', style:'font-size:clamp(40px,5vw,72px);line-height:1.02;letter-spacing:-.035em;font-weight:500' },
+            { label:'Heading 1', spec:'Geist 600 · 36–60px · −3.5%', sample:'Win on price', style:'font-size:clamp(34px,4vw,56px);line-height:1.07;letter-spacing:-.035em;font-weight:600' },
+            { label:'Heading 2', spec:'Geist 600 · 30–48px · −3%', sample:'Data you can actually trust', style:'font-size:clamp(28px,3.4vw,44px);line-height:1.08;letter-spacing:-.03em;font-weight:600' },
+            { label:'Heading 3', spec:'Geist 600 · 22px · −2%', sample:'Real-time competitor price tracking', style:'font-size:22px;line-height:1.3;letter-spacing:-.02em;font-weight:600' },
+            { label:'Body Large', spec:'Inter 400 · 18px · 1.6', sample:'PriceLeap gives e-commerce teams real-time competitor price tracking and verified data accuracy.', style:'font-size:18px;line-height:1.6;color:#6b6a70;font-family:Inter,sans-serif' },
+            { label:'Body', spec:'Inter 400 · 15px · 1.6', sample:'Set rules or let AI recommend the optimal price, balancing competitiveness and margin.', style:'font-size:15px;line-height:1.6;color:#6b6a70;font-family:Inter,sans-serif' },
+            { label:'Label / Mono', spec:'Geist Mono 500 · 11px · +10%', sample:'CORE CAPABILITIES  ·  ₹24,480  ▼ −2.0%', style:'font-family:Geist Mono,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#0a8f3c' },
+          ].map(t => (
+            <div class="ds-type-row">
+              <div class="ds-type-meta"><div class="mono" style="font-size:12px;color:#17161a">{t.label}</div><div class="mono ds-type-spec">{t.spec}</div></div>
+              <div class="ds-type-sample" style={t.style}>{t.sample}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <!-- ── 07 Motion ── -->
+      <section id="motion" class="ds-section" data-reveal>
+        <div class="ds-section-head">
+          <span class="ds-section-n mono">07</span>
+          <h2>Motion</h2>
+        </div>
+        <div class="ds-grid2">
+          <div class="ds-card">
+            <div class="ds-block-head"><h3>Duration tokens</h3><code>--pl-dur-*</code></div>
+            {[
+              ['--pl-dur-fast','150ms','Hover colour, press scale'],
+              ['--pl-dur','300ms','Cards, menus, toggles'],
+              ['--pl-dur-slow','500ms','Accordions, modals'],
+              ['--pl-dur-reveal','700ms','Scroll entrance, 80ms stagger'],
+              ['--pl-ease','cubic-bezier(.2,.8,.2,1)','All transitions'],
+            ].map(([k,v,u]) => (
+              <div class="ds-motion-row">
+                <span class="mono" style="color:#17161a;min-width:160px">{k}</span>
+                <span class="mono" style="color:#6b6a70;min-width:80px">{v}</span>
+                <span style="color:#3a3940;font-size:14px">{u}</span>
+              </div>
+            ))}
+            <p class="ds-motion-note">All motion disabled under prefers-reduced-motion. Reveal uses one IntersectionObserver, toggles .is-in class; never animates layout properties.</p>
+          </div>
+          <div class="ds-card ds-card--tinted">
+            <div class="ds-block-head"><h3>Entrance patterns</h3></div>
+            <div class="ds-anim-list">
+              <div class="ds-anim-row"><span style="animation:pl-fadeup .5s ease both">fadeup</span><code>opacity + translateY(14px)</code></div>
+              <div class="ds-anim-row"><span style="animation:pl-pop .4s ease both">pop</span><code>scale(.98) + fade</code></div>
+              <div class="ds-anim-row"><span style="animation:pl-fade .4s ease both">fade</span><code>opacity only</code></div>
+              <div class="ds-anim-row"><span class="ds-pulse-demo"></span><code>pl-pulse — live dot ring</code></div>
+              <div class="ds-anim-row"><span class="ds-marquee-demo"><span>pl-marquee — logo strip</span><span>pl-marquee — logo strip</span></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── 08 Icons ── -->
+      <section id="icons" class="ds-section" data-reveal>
+        <div class="ds-section-head">
+          <span class="ds-section-n mono">08</span>
+          <h2>Icons</h2>
+        </div>
+        <p class="ds-section-desc">Stroke icons — 1.8px weight, round caps. Used at 20–26px. Brand logos from /assets/logos/ at 22–26px.</p>
+        <div class="ds-card">
+          <div class="ds-block-head"><h3>UI icons (stroke, 22px)</h3></div>
+          <div class="ds-icon-grid">
+            {[
+              ['M9 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10 M15 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10','Match'],
+              ['M12 4.5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7 M5 20c1.5-4 4-5.5 7-5.5s5.5 1.5 7 5.5','Person'],
+              ['M3 13h4l2.5-6 3.5 11 2.5-7H21 M3 21h18','Activity'],
+              ['M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z M9 12l2.2 2.2L15 10','Shield'],
+              ['M5 5h14a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3z M4 7l8 6 8-6','Mail'],
+              ['M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18 M12 7v5l3 2','Clock'],
+              ['M3 12h4l3-8 4 16 3-8h4','Pulse'],
+              ['M5 12h14M13 6l6 6-6 6','Arrow'],
+              ['M4 7h10 M18 7h2 M4 17h4 M12 17h8 M16 5v4 M10 15v4','Sliders'],
+              ['M4 5h16v11H4z M9 20h6M12 16v4','Monitor'],
+            ].map(([paths, label]) => (
+              <div class="ds-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  {paths.split(' M').map((p, i) => <path d={i===0?p:'M'+p} />)}
+                </svg>
+                <span class="ds-icon-label">{label}</span>
+              </div>
+            ))}
+          </div>
+          <div class="ds-block-head" style="margin-top:28px"><h3>Brand logos (/assets/logos/)</h3></div>
+          <div class="ds-brand-grid">
+            {['shopify','amazon','flipkart','woocommerce','slack','snowflake','salesforce','googlesheets','databricks','microsoftexcel'].map(logo => (
+              <div class="ds-brand-item">
+                <img src={`/assets/logos/${logo}.svg`} alt={logo} width="28" height="28" loading="lazy" />
+                <span class="ds-icon-label">{logo}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer note -->
+  <footer class="ds-footer">
+    <span class="mono">PriceLeap Design System · v2 · Oct 2026</span>
+    <span>Every component: one <code>.astro</code> file, plain CSS, vanilla JS.</span>
+  </footer>
+</LightBaseLayout>
+
+<style>
+/* ── Page shell ── */
+.ds-hero { position: relative; padding: clamp(56px,7vw,96px) var(--pl-gutter) 24px; overflow: hidden; max-width: var(--pl-container); margin: 0 auto; }
+.ds-hero__grid { position: absolute; inset: 0 -56px; background-image: linear-gradient(#eef0ee 1px,transparent 1px),linear-gradient(90deg,#eef0ee 1px,transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 60% 80% at 70% 30%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 60% 80% at 70% 30%,#000 10%,transparent 70%); pointer-events: none; }
+.ds-hero__copy { position: relative; max-width: 820px; }
+.ds-hero__pill { display: inline-flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #0b7a34; }
+.ds-hero__dot { width: 7px; height: 7px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.8s ease-out infinite; flex: none; }
+.ds-hero__h1 { margin: 20px 0 0; font-family: var(--pl-font); font-size: clamp(40px,5.6vw,72px); line-height: 1; letter-spacing: -.045em; color: #0a0a0a; text-wrap: balance; }
+.ds-hero__lead { margin: 22px 0 0; max-width: 640px; font-size: 18px; line-height: 1.6; color: #3a414c; }
+.ds-hero__tags { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 8px; }
+.ds-hero__tags span { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid #e6e8e6; border-radius: 999px; background: #fff; font-size: 13px; color: #3a414c; }
+.ds-tag-sq { width: 10px; height: 10px; border-radius: 3px; background: #18E563; flex: none; }
+
+/* Layout */
+.ds-wrap { display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 0; max-width: var(--pl-container); margin: 0 auto; border-top: 1px solid var(--pl-line); }
+
+/* Sidebar */
+.ds-sidebar { padding: 32px 24px; border-right: 1px solid var(--pl-line); display: flex; flex-direction: column; gap: 0; }
+.ds-sidebar nav { position: sticky; top: 80px; display: flex; flex-direction: column; gap: 2px; }
+.ds-sidebar__link { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 14px; color: var(--pl-muted); transition: background var(--pl-dur-fast), color var(--pl-dur-fast); }
+.ds-sidebar__link:hover { background: var(--pl-hover); color: var(--pl-ink); }
+.ds-sidebar__n { font-size: 11px; width: 24px; }
+.ds-sidebar__status { margin-top: auto; padding-top: 32px; display: flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 11px; color: var(--pl-faint); }
+.ds-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.8s infinite; flex: none; }
+
+/* Main */
+.ds-main { padding: 0 clamp(24px,4vw,56px) 96px; }
+.ds-section { padding-top: 88px; }
+.ds-section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.ds-section-head h2 { margin: 0; font-size: clamp(28px,3vw,40px); font-weight: 600; letter-spacing: -.03em; }
+.ds-section-n { font-size: 12px; letter-spacing: .1em; color: #0b7a34; }
+.ds-section-desc { font-size: 17px; line-height: 1.6; color: #3a414c; max-width: 640px; margin: 0 0 40px; }
+
+/* Block */
+.ds-block { margin-bottom: 24px; }
+.ds-block-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.ds-block-head h3 { margin: 0; font-size: 17px; font-weight: 600; color: #0a0a0a; }
+.ds-block-head code { font-family: var(--pl-mono); font-size: 12px; color: #3a414c; background: #f4f5f4; border: 1px solid #e6e8e6; border-radius: 6px; padding: 3px 8px; }
+
+/* Card */
+.ds-card { border: 1px solid #e6e8e6; border-radius: 20px; background: #fff; padding: clamp(20px,3vw,32px); margin-bottom: 16px; }
+.ds-card--tinted { background: #f7f8f7; }
+.ds-card--accent { border-color: var(--pl-accent-line); box-shadow: 0 0 0 4px var(--pl-accent-tint); }
+.ds-card--dark { background: #0a0a0a; border-color: #282828; color: #fff; }
+.ds-card--dark h3 { color: #fff; }
+.ds-card--dark p { color: #8a8990; }
+.ds-card--hover { transition: transform .25s, box-shadow .25s; cursor: pointer; }
+.ds-card--hover:hover { transform: translateY(-3px); box-shadow: 0 20px 40px -24px rgba(23,22,26,.35); }
+
+/* Colors */
+.ds-swatch-group { margin-bottom: 28px; }
+.ds-swatch-label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #5a6373; margin-bottom: 12px; }
+.ds-swatches { display: grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap: 12px; }
+.ds-swatch { display: flex; flex-direction: column; gap: 10px; }
+.ds-swatch-color { height: 84px; border-radius: 12px; display: block; }
+.ds-swatch-name { font-size: 14px; font-weight: 500; color: #0a0a0a; }
+.ds-swatch-hex { font-family: var(--pl-mono); font-size: 12px; color: #5a6373; }
+.ds-swatch-role { font-size: 12px; line-height: 1.4; color: #5a6373; }
+
+/* Grids */
+.ds-grid3 { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 16px; margin-bottom: 16px; }
+.ds-grid2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,300px),1fr)); gap: 16px; margin-bottom: 16px; }
+.ds-cards-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 16px; }
+
+/* Spacing */
+.ds-spacing-list { display: flex; flex-direction: column; gap: 8px; }
+.ds-spacing-row { display: flex; align-items: center; gap: 12px; }
+.ds-spacing-val { font-size: 12px; color: #5a6373; min-width: 40px; }
+.ds-spacing-bar { height: 10px; border-radius: 3px; background: #18E563; flex: none; }
+
+/* Radius */
+.ds-radius-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.ds-radius-item { display: flex; flex-direction: column; gap: 8px; }
+.ds-radius-box { height: 64px; border: 1.5px solid #0a0a0a; background: #f4f5f4; display: block; }
+.ds-radius-label { font-family: var(--pl-mono); font-size: 12px; color: #5a6373; }
+
+/* Shadows */
+.ds-shadow-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ds-shadow-card { border-radius: 14px; background: #fff; padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; min-height: 80px; }
+.ds-shadow-n { font-family: var(--pl-mono); font-size: 12px; color: #0a0a0a; }
+.ds-shadow-use { font-size: 12px; color: #5a6373; }
+
+/* Nav preview */
+.ds-nav-preview { padding: 0; overflow: hidden; }
+.ds-np-bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #e6e8e6; background: rgba(246,245,242,.86); }
+.ds-np-left { display: flex; align-items: center; gap: 28px; }
+.ds-np-logo { font-family: var(--pl-font); font-size: 18px; font-weight: 600; letter-spacing: -.02em; color: #0a0a0a; }
+.ds-np-links { display: flex; gap: 2px; font-size: 14px; color: #4a4950; }
+.ds-np-links span { padding: 6px 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.ds-np-links span:first-child { background: #eceae4; color: #0a0a0a; }
+.ds-np-right { display: flex; align-items: center; gap: 10px; }
+.ds-np-signin { font-size: 14px; color: #3a414c; padding: 6px 8px; }
+.ds-np-cta { height: 36px; padding: 0 14px; border-radius: 9px; background: #18E563; color: #0b1f12; font-size: 13px; font-weight: 600; display: flex; align-items: center; }
+.ds-np-mega { border-bottom: 1px solid #e6e8e6; }
+.ds-np-top { background: #fbfaf8; padding: 10px 20px; display: flex; justify-content: space-between; border-bottom: 1px solid #e6e8e6; }
+.ds-np-body { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,200px),1fr)); gap: 1px; background: #e6e8e6; padding: 1px; max-height: 260px; overflow: hidden; }
+.ds-np-item { background: #fff; padding: 14px 16px; display: flex; align-items: flex-start; gap: 10px; }
+.ds-np-ic { width: 30px; height: 30px; flex: none; border-radius: 8px; border: 1px solid #e6e8e6; display: flex; align-items: center; justify-content: center; }
+.ds-np-it { font-size: 14px; font-weight: 500; color: #0a0a0a; }
+.ds-np-id { font-size: 12px; color: #6b6a70; margin-top: 2px; line-height: 1.4; }
+.ds-np-note { padding: 10px 20px; font-size: 12px; color: #8a8990; background: #f7f8f7; border-top: 1px solid #e6e8e6; }
+
+/* Buttons */
+.ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-weight: 600; font-size: 15px; padding: 0 22px; height: 48px; border-radius: 12px; border: none; cursor: pointer; transition: background .15s, transform .15s, box-shadow .15s; white-space: nowrap; }
+.ds-btn:active { transform: scale(.97); }
+.ds-btn--primary { background: #18E563; color: #0b1f12; } .ds-btn--primary:hover { background: #14d159; box-shadow: 0 8px 20px -8px rgba(14,143,61,.55); }
+.ds-btn--dark { background: #0a0a0a; color: #fff; } .ds-btn--dark:hover { background: #262a30; }
+.ds-btn--secondary { background: #fff; border: 1px solid #d5d9d5; color: #0a0a0a; } .ds-btn--secondary:hover { border-color: #0a0a0a; }
+.ds-btn--ghost { background: transparent; color: #0a0a0a; } .ds-btn--ghost:hover { background: #f4f5f4; }
+.ds-btn--link { background: none; color: #0b7a34; padding: 4px 0; height: auto; font-weight: 500; border-bottom: 1px solid #bff3d2; }
+.ds-btn--icon { background: #fff; border: 1px solid #d5d9d5; color: #0a0a0a; width: 48px; height: 48px; padding: 0; } .ds-btn--icon:hover { border-color: #0a0a0a; background: #f4f5f4; }
+.ds-btn--sm { height: 36px; padding: 0 14px; font-size: 13px; border-radius: 9px; }
+.ds-btn--lg { height: 52px; padding: 0 26px; font-size: 16px; border-radius: 13px; }
+.ds-btn--loading { pointer-events: none; }
+.ds-btn-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 8px; }
+.ds-btn-states { display: grid; grid-template-columns: repeat(auto-fill,minmax(120px,1fr)); gap: 16px; padding-top: 24px; border-top: 1px solid #eef0ee; }
+.ds-btn-states div { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.ds-btn-states span { font-family: var(--pl-mono); font-size: 11px; color: #5a6373; }
+.ds-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #0a2e16; border-top-color: transparent; animation: pl-spin .7s linear infinite; }
+
+/* Forms */
+.ds-inputs { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,200px),1fr)); gap: 20px; }
+.ds-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: #0a0a0a; }
+.ds-input { height: 46px; padding: 0 14px; border: 1px solid #d5d9d5; border-radius: 11px; background: #fff; color: #0a0a0a; font-size: 15px; outline: none; display: flex; align-items: center; }
+.ds-input--focus { border-color: #0e8f3d; box-shadow: 0 0 0 4px rgba(24,229,99,.18); }
+.ds-input--error { border-color: #e5483f; }
+.ds-cursor { width: 1px; height: 18px; background: #0a0a0a; margin-left: 1px; animation: pl-blink 1s steps(1) infinite; }
+.ds-error { font-size: 12px; color: #c9372e; }
+.ds-badges { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding-top: 24px; border-top: 1px solid #eef0ee; }
+.ds-badge { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+.ds-badge--neutral { background: #f4f5f4; color: #3a414c; }
+.ds-badge--green { background: #e8fcef; color: #0b7a34; }
+.ds-badge--live { border: 1px solid #bff3d2; background: #fff; font-family: var(--pl-mono); font-size: 11px; letter-spacing: .06em; color: #0b7a34; }
+.ds-live-dot { width: 6px; height: 6px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.8s ease-out infinite; }
+.ds-badge--danger { background: #fdeceb; color: #c9372e; }
+.ds-badge--warn { background: #fef4e2; color: #8a5a06; }
+.ds-badge--outline { border: 1px solid #d5d9d5; color: #3a414c; }
+.ds-badge--solid { background: #18E563; color: #0a0a0a; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .06em; padding: 0 7px; border-radius: 6px; }
+.ds-badge--dark { background: #0a0a0a; color: #fff; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .06em; padding: 0 7px; border-radius: 6px; }
+
+/* Cards section */
+.ds-ic { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+.ds-ic--sq { background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); } .ds-ic--sq::after { content: ''; width: 16px; height: 16px; background: var(--pl-accent); border-radius: 4px; }
+.ds-ic--ci { background: #fef4e2; border: 1px solid #f5dcb0; } .ds-ic--ci::after { content: ''; width: 16px; height: 16px; background: #e08a00; border-radius: 50%; }
+.ds-ic--di { background: var(--pl-danger-tint); border: 1px solid var(--pl-danger-line); } .ds-ic--di::after { content: ''; width: 14px; height: 14px; background: var(--pl-danger); border-radius: 2px; transform: rotate(45deg); }
+.ds-frame-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--pl-line); border-radius: 14px; overflow: hidden; }
+.ds-frame-inner span { background: var(--pl-surface-2); padding: 16px; font-size: 13px; color: var(--pl-muted); }
+.ds-frame-inner span:last-child { grid-column: 1 / -1; }
+
+/* Typography */
+.ds-type-row { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: baseline; padding: 22px clamp(20px,3vw,32px); border-bottom: 1px solid #eef0ee; }
+.ds-type-row:last-child { border-bottom: none; }
+.ds-type-meta { flex: 0 0 180px; }
+.ds-type-spec { font-size: 11px; color: #5a6373; margin-top: 2px; }
+.ds-type-sample { flex: 1 1 360px; min-width: 0; color: #0a0a0a; font-family: Geist, sans-serif; }
+
+/* Motion */
+.ds-motion-row { display: grid; grid-template-columns: 160px 80px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid #eef0ee; font-size: 14px; align-items: center; }
+.ds-motion-row:last-child { border-bottom: none; }
+.ds-motion-note { margin-top: 16px; font-size: 13px; line-height: 1.6; color: #5a6373; }
+.ds-anim-list { display: flex; flex-direction: column; gap: 20px; }
+.ds-anim-row { display: flex; align-items: center; gap: 20px; }
+.ds-anim-row span { font-size: 15px; font-weight: 500; color: #0a0a0a; min-width: 80px; }
+.ds-anim-row code { font-family: var(--pl-mono); font-size: 12px; color: #5a6373; }
+.ds-pulse-demo { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.8s ease-out infinite; }
+.ds-marquee-demo { display: flex; overflow: hidden; width: 80px; -webkit-mask-image: linear-gradient(90deg,transparent,#000 20%,#000 80%,transparent); mask-image: linear-gradient(90deg,transparent,#000 20%,#000 80%,transparent); font-size: 13px; color: #3a414c; }
+.ds-marquee-demo span { white-space: nowrap; animation: pl-marquee 4s linear infinite; padding-right: 32px; }
+
+/* Icons */
+.ds-icon-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(80px,1fr)); gap: 16px; }
+.ds-icon { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; border: 1px solid #e6e8e6; border-radius: 12px; transition: background var(--pl-dur-fast); cursor: default; }
+.ds-icon:hover { background: var(--pl-hover); }
+.ds-icon-label { font-family: var(--pl-mono); font-size: 10px; letter-spacing: .04em; color: #5a6373; text-align: center; }
+.ds-brand-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(100px,1fr)); gap: 12px; margin-top: 16px; }
+.ds-brand-item { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; border: 1px solid #e6e8e6; border-radius: 12px; transition: background var(--pl-dur-fast); }
+.ds-brand-item:hover { background: var(--pl-hover); }
+.ds-brand-item img { width: 28px; height: 28px; object-fit: contain; }
+
+/* Footer */
+.ds-footer { max-width: var(--pl-container); margin: 0 auto; padding: 24px var(--pl-gutter); border-top: 1px solid var(--pl-line); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--pl-faint); }
+.ds-footer code { font-family: var(--pl-mono); font-size: 12px; background: #f4f5f4; border: 1px solid #e6e8e6; border-radius: 5px; padding: 1px 6px; }
+
+/* Responsive */
+@media (max-width: 860px) {
+  .ds-wrap { grid-template-columns: 1fr; }
+  .ds-sidebar { display: none; }
+  .ds-motion-row { grid-template-columns: 140px 1fr; }
+  .ds-type-meta { flex: 0 0 100%; }
+}
+@media (max-width: 540px) { .ds-shadow-list { grid-template-columns: 1fr; } }
+</style>
