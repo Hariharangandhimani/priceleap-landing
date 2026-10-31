@@ -1,0 +1,75 @@
+---
+// Hero section — dot grid bg, gradient heading, live counter, stacked CTA buttons
+---
+<section class="lhero" data-reveal>
+  <div class="lhero__dots" aria-hidden="true"></div>
+  <div class="lhero__glow" aria-hidden="true"></div>
+
+  <div class="lhero__copy">
+    <!-- Pill -->
+    <div class="lhero__pill">
+      Pricing intelligence for e-commerce &amp; marketplaces
+      <span class="lhero__pill-ic" aria-hidden="true">›</span>
+    </div>
+
+    <!-- Heading -->
+    <h1 class="lhero__h1">
+      Price with confidence on data you can <span class="l-grad">actually trust.</span>
+    </h1>
+
+    <!-- Lead -->
+    <p class="lhero__lead">
+      PriceLeap gives e-commerce and marketplace teams real-time competitor price tracking,
+      verified data accuracy, and dynamic pricing that protects
+      <mark class="lhero__mark">every point of margin.</mark>
+    </p>
+
+    <!-- CTAs -->
+    <div class="lhero__ctas">
+      <a href="/book-a-demo" class="pl-btn pl-btn--primary pl-btn--lg">Book a demo</a>
+      <a href="#product" class="lhero__sec-cta">
+        <span class="lhero__avatars" aria-hidden="true">
+          <span>₹</span><span>%</span><span>↗</span>
+        </span>
+        See a sample of your competitor data <span class="lhero__sec-arrow">›</span>
+      </a>
+    </div>
+
+    <!-- Live counter -->
+    <div class="lhero__live">
+      <span class="pl-dot pl-dot--live" aria-hidden="true"></span>
+      <span><b class="mono" data-l-count>34,18,220</b> prices refreshed today</span>
+    </div>
+  </div>
+</section>
+
+<style>
+.lhero { position: relative; padding: 96px var(--pl-gutter) 72px; text-align: center; overflow: hidden; border-bottom: 1px solid var(--pl-line); }
+.lhero__dots { position: absolute; inset: 0; background-image: radial-gradient(#d6d3cb 1px, transparent 1px); background-size: 22px 22px; -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000, transparent 70%); mask-image: radial-gradient(ellipse at 50% 40%, #000, transparent 70%); opacity: .7; pointer-events: none; }
+.lhero__glow { position: absolute; left: 50%; top: -180px; width: 720px; height: 420px; transform: translateX(-50%); background: radial-gradient(closest-side, rgba(24,229,99,.12), rgba(15,176,75,.08), transparent); pointer-events: none; }
+
+.lhero__copy { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0; }
+.lhero__pill { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--pl-line); border-radius: 999px; padding: 6px 8px 6px 14px; font-size: 13px; color: var(--pl-ink-2); box-shadow: var(--pl-shadow-sm); }
+.lhero__pill-ic { width: 20px; height: 20px; border-radius: 50%; background: var(--pl-accent); color: var(--pl-on-accent); display: flex; align-items: center; justify-content: center; font-size: 11px; }
+
+.lhero__h1 { margin: 28px 0 0; font-size: var(--pl-fs-display); line-height: 1.02; letter-spacing: -.035em; font-weight: 500; max-width: 980px; text-wrap: balance; color: var(--pl-ink); }
+.lhero__lead { margin: 26px 0 0; font-size: 19px; line-height: 1.6; color: #55545b; max-width: 680px; text-wrap: pretty; }
+.lhero__mark { background: #eceae4; color: var(--pl-ink); padding: 1px 8px; border-radius: 6px; }
+
+.lhero__ctas { display: flex; gap: 12px; margin-top: 36px; flex-wrap: wrap; justify-content: center; }
+.lhero__sec-cta { display: inline-flex; align-items: center; gap: 12px; background: #fff; border: 1px solid var(--pl-line); color: var(--pl-ink); font-weight: 500; font-size: 16px; padding: 8px 18px 8px 8px; border-radius: 14px; transition: border-color var(--pl-dur-fast); }
+.lhero__sec-cta:hover { border-color: #c9c7c0; color: var(--pl-ink); }
+.lhero__sec-arrow { color: var(--pl-faint-2); }
+.lhero__avatars { display: flex; }
+.lhero__avatars span { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-family: var(--pl-mono); font-size: 10px; font-weight: 600; color: #fff; }
+.lhero__avatars span:nth-child(1) { background: #12c455; }
+.lhero__avatars span:nth-child(2) { background: #0fb04b; margin-left: -8px; }
+.lhero__avatars span:nth-child(3) { background: #18E563; color: var(--pl-on-accent); margin-left: -8px; }
+
+.lhero__live { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #6b6a70; margin-top: 28px; }
+
+@media (max-width: 479px) {
+  .lhero__ctas { flex-direction: column; align-items: stretch; }
+  .lhero__ctas a { justify-content: center; }
+}
+</style>

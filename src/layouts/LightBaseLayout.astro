@@ -1,7 +1,6 @@
 ---
 import '@/styles/global.css';
-import Nav from '@/components/layout/Nav.astro';
-import Footer from '@/components/layout/Footer.astro';
+import '@/styles/light.css';
 import { site } from '@/data/site';
 
 interface Props {
@@ -20,120 +19,23 @@ const { title = site.title, description = site.description } = Astro.props;
     <link rel="icon" href="/assets/mark.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <slot name="head" />
   </head>
   <body>
-    <slot name="before-nav" />
-    <Nav theme="light" />
-    <main><slot /></main>
-    <Footer theme="light" />
+    <slot name="before-header" />
+    <div class="pl-page-wrap pl-page-rails">
+      <slot />
+    </div>
     <script>
-      import { initReveal } from '@/scripts/reveal';
-      initReveal();
+      // Scroll reveal
+      const io = 'IntersectionObserver' in window
+        ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('is-in'); io!.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' })
+        : null;
+      document.querySelectorAll('[data-reveal]').forEach(el => io ? io.observe(el) : el.classList.add('is-in'));
+      // Sticky header scroll state
+      const hdr = document.querySelector<HTMLElement>('[data-lhdr]');
+      if (hdr) addEventListener('scroll', () => hdr.classList.toggle('scrolled', scrollY > 4), { passive: true });
     </script>
   </body>
 </html>
-
-<!-- is:global → applies to ALL elements on the light page, including slotted children -->
-<style is:global>
-  /* ── Light page body override ── */
-  body {
-    background: #F5F6F3 !important;
-    color: #3D4450 !important;
-  }
-  h1, h2, h3, h4 { color: #0A0A0A; }
-  a { color: #0B8F3C; }
-  a:hover { color: #0A0A0A; }
-
-  /* ── Light CSS tokens (supplement global.css dark tokens) ── */
-  :root {
-    --lbg: #F5F6F3;
-    --lsurface: #FFFFFF;
-    --lsurface-2: #F4F6F2;
-    --lline: #E3E6E1;
-    --lline-soft: #ECEEEA;
-    --ltext: #3D4450;
-    --lmuted: #5F6876;
-    --ldim: #9AA2AD;
-    --lheading: #0A0A0A;
-    --lgreen: #0B8F3C;
-    --lcard-shadow: 0 1px 2px rgba(10,10,10,.04), 0 18px 40px -24px rgba(10,10,10,.18);
-  }
-
-  /* ── Light utility classes (used by all light page components) ── */
-  .eyebrow-l {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: #0B8F3C;
-  }
-  .h2-l {
-    margin: 0;
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: clamp(34px, 4.4vw, 56px);
-    line-height: 1.05;
-    letter-spacing: -.035em;
-    color: #0A0A0A;
-    text-wrap: balance;
-  }
-  .h3-l {
-    margin: 0;
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 20px;
-    letter-spacing: -.01em;
-    color: #0A0A0A;
-  }
-  .lcard {
-    border: 1px solid #E3E6E1;
-    border-radius: 20px;
-    background: #FFFFFF;
-    box-shadow: var(--lcard-shadow);
-    transition: border-color .3s, transform .3s;
-  }
-  .lcard:hover { border-color: #B9C0C8; transform: translateY(-2px); }
-  .licon {
-    width: 48px;
-    height: 48px;
-    flex: none;
-    border-radius: 13px;
-    background: #0A0A0A;
-    color: #18E563;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 10px 24px -12px rgba(10,10,10,.5), inset 0 0 0 1px rgba(24,229,99,.25);
-  }
-
-  /* ── Dark section wrappers inside the light page ── */
-  .dark-band {
-    margin-top: var(--section-y);
-    padding-bottom: var(--section-y);
-    background: #0A0A0A;
-    overflow: hidden;
-    position: relative;
-  }
-  .dark-band::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: -200px;
-    width: min(1100px, 95vw);
-    height: 460px;
-    transform: translateX(-50%);
-    background: radial-gradient(closest-side, rgba(24,229,99,.12), transparent);
-    pointer-events: none;
-  }
-  .dark-band--int { margin-top: 0; padding-bottom: 0; }
-
-  /* ── Light-page-specific keyframes ── */
-  @keyframes pl-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-  @keyframes fresh-l  { 0% { width: 100%; } 100% { width: 8%; } }
-  @keyframes flowstep-l {
-    0%, 33% { border-color: #18E563; color: #0B8F3C; background: rgba(24,229,99,.14); }
-    34%, 100% { border-color: #7FD3A0; color: #0B8F3C; background: #E3F7EA; }
-  }
-</style>

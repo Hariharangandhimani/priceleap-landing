@@ -1,0 +1,308 @@
+---
+// Light header — full mega-nav on desktop, tab-based drawer on mobile
+const menus = [
+  { key: 'product', label: 'Product', eyebrow: 'PLATFORM', all: 'Explore the platform',
+    items: [
+      { t: 'Price Intelligence', d: 'Live competitor prices, index and positioning.', shape: 'sq' },
+      { t: 'Decision Engine', d: 'Rules with floors, ceilings and MAP built in.', shape: 'ci' },
+      { t: 'Dynamic Pricing', d: 'AI price recommendations inside your margin.', shape: 'di' },
+      { t: 'PriceLeap Agent', d: 'Plain-English answers on prices and rivals.', shape: 'sq', tag: 'NEW' },
+      { t: 'Product Matching', d: 'AI matching plus human QC on every SKU.', shape: 'ci' },
+      { t: 'MAP Monitoring', d: 'Violation alerts and promotion tracking.', shape: 'di' },
+    ],
+    links: ['Data accuracy', 'Security', 'Changelog'],
+    feat: { tag: 'PRICE INDEX · LIVE', stat: '105.4', bar: 72, sub: '▼ 3.6% vs market', title: 'See where you stand on every SKU', cta: 'See a sample of your data' },
+  },
+  { key: 'solutions', label: 'Solutions', eyebrow: 'BY TEAM & INDUSTRY', all: 'All solutions',
+    items: [
+      { t: 'E-commerce brands', d: 'Protect price position across every channel.', shape: 'sq' },
+      { t: 'Marketplace sellers', d: 'Win the Buy Box without racing to the bottom.', shape: 'ci' },
+      { t: 'Retailers', d: 'Monitor thousands of SKUs against every rival.', shape: 'di' },
+      { t: 'D2C stores', d: 'Stay competitive without giving away margin.', shape: 'sq' },
+      { t: 'Consumer electronics', d: 'Track fast-moving prices and launches.', shape: 'ci' },
+      { t: 'Automotive parts', d: 'Match parts by fitment, brand and condition.', shape: 'di' },
+    ],
+    links: ['Pricing teams', 'Category managers', 'Marketplace ops'],
+    feat: { tag: 'CUSTOMER RESULT', stat: '28%→90%+', bar: 90, sub: 'BUY BOX WIN RATE · 6 WEEKS', title: 'Consumer electronics seller', cta: 'Read customer stories' },
+  },
+  { key: 'resources', label: 'Resources', eyebrow: 'LEARN', all: 'Resource center',
+    items: [
+      { t: 'How it works', d: 'From catalog upload to live pricing in days.', shape: 'sq' },
+      { t: 'Data accuracy', d: 'How every match is verified before it counts.', shape: 'ci' },
+      { t: 'Integrations', d: '20+ connectors, REST API and webhooks.', shape: 'di' },
+      { t: 'API docs', d: 'Pull live competitor data into your stack.', shape: 'sq' },
+      { t: 'Customer stories', d: 'Results from pricing teams like yours.', shape: 'ci' },
+      { t: 'Blog', d: 'Pricing strategy, marketplaces and MAP.', shape: 'di' },
+    ],
+    links: ['Help center', 'Status', 'Contact sales'],
+    feat: { tag: 'GUIDE', stat: 'Live in days', bar: 40, sub: 'TYPICAL SETUP · 5 MIN', title: "The pricing team's setup guide", cta: 'Read the guide' },
+  },
+];
+const direct = [
+  { label: 'Integrations', href: '#integrations' },
+  { label: 'Pricing', href: '/pricing' },
+];
+---
+
+<header class="lhdr" data-lhdr>
+  <span class="lhdr__bg" aria-hidden="true"></span>
+
+  <div class="lhdr__bar pl-container">
+    <!-- Logo -->
+    <a href="/light" class="lhdr__logo" aria-label="PriceLeap home">
+      <span class="lhdr__bars" aria-hidden="true">
+        <i class="b1"></i><i class="b2"></i>
+        <span class="b3w"><i class="b3d"></i><i class="b3b"></i></span>
+      </span>
+      <span>Price<span class="l-grad">Leap</span></span>
+    </a>
+
+    <!-- Desktop nav -->
+    <nav class="lhdr__nav" aria-label="Main">
+      {menus.map(m => (
+        <button class="lhdr__nl" aria-expanded="false" aria-controls={`mega-${m.key}`} data-lmenu={m.key}>
+          {m.label}<span class="lhdr__caret" aria-hidden="true">▾</span>
+        </button>
+      ))}
+      {direct.map(d => <a class="lhdr__nl" href={d.href}>{d.label}</a>)}
+    </nav>
+
+    <!-- Actions -->
+    <div class="lhdr__actions">
+      <a class="lhdr__signin" href="https://app.priceleap.ai">Sign in</a>
+      <a class="pl-btn pl-btn--primary pl-btn--sm" href="/book-a-demo">Book a demo</a>
+      <button class="lhdr__burger" aria-label="Menu" aria-expanded="false" aria-controls="lmob-nav" data-lburger>
+        <i></i><i></i><i></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mega menus -->
+  {menus.map(m => (
+    <div class="lmega" id={`mega-${m.key}`} data-lmega={m.key} hidden>
+      <div class="lmega__frame l-frame">
+        <div class="lmega__top">
+          <span class="lmega__ey"><span class="lmega__dia"></span>{m.eyebrow}</span>
+          <a href="#" class="lmega__all">{m.all} →</a>
+        </div>
+        <div class="lmega__body">
+          <div class="lmega__items">
+            {m.items.map((it, i) => (
+              <a href="#" class="lmega__item">
+                <span class="lmega__item-top">
+                  <span class="lmega__ic"><span class={`lmega__shape ${it.shape}`}></span></span>
+                  <span class="lmega__no">0{i+1}</span>
+                </span>
+                <span class="lmega__it">
+                  {it.t}
+                  {it.tag && <span class="pl-badge pl-badge--solid">{it.tag}</span>}
+                </span>
+                <span class="lmega__id">{it.d}</span>
+                <span class="lmega__go">Open →</span>
+              </a>
+            ))}
+          </div>
+          <div class="lmega__feat">
+            <span class="pl-label" style="color:var(--pl-faint)">// FEATURED</span>
+            <div class="lmega__fcard">
+              <div class="lmega__fcard-top">
+                <span class="pl-label" style="color:var(--pl-accent-ink)">{m.feat.tag}</span>
+                <span class="pl-dot pl-dot--live"></span>
+              </div>
+              <div class="lmega__fstat">{m.feat.stat}</div>
+              <div class="lmega__fbar"><i style={`width:${m.feat.bar}%`}></i></div>
+              <span class="pl-label">{m.feat.sub}</span>
+            </div>
+            <strong class="lmega__ftitle">{m.feat.title}</strong>
+            <a href="/book-a-demo" class="pl-btn pl-btn--primary pl-btn--sm">{m.feat.cta}</a>
+          </div>
+        </div>
+        <div class="lmega__links">
+          {m.links.map(l => (
+            <a href="#">
+              <span class="pl-dot"></span>{l}<span class="lmega__arrow">↗</span>
+            </a>
+          ))}
+          <span class="lmega__status"><span class="pl-dot pl-dot--live"></span>All systems operational</span>
+        </div>
+      </div>
+    </div>
+  ))}
+
+  <!-- Mobile drawer -->
+  <div class="lmob" id="lmob-nav" data-lmob hidden>
+    <div class="lmob__inner">
+      <!-- Tab switcher -->
+      <div class="lmob__tabs" role="tablist">
+        {menus.map((m, i) => (
+          <button role="tab" aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`lmob-panel-${m.key}`} data-ltab={m.key}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {menus.map((m, i) => (
+        <div class="lmob__panel l-frame" id={`lmob-panel-${m.key}`} role="tabpanel" hidden={i !== 0}>
+          {m.items.map(it => (
+            <a href="#" class="lmob__row">
+              <span class="lmob__ic"><span class={`lmega__shape ${it.shape}`}></span></span>
+              <span><b>{it.t}</b><small>{it.d}</small></span>
+              <span aria-hidden="true">›</span>
+            </a>
+          ))}
+        </div>
+      ))}
+
+      <div class="l-frame lmob__direct">
+        {direct.map(d => <a href={d.href} class="lmob__row">{d.label}<span>↗</span></a>)}
+      </div>
+    </div>
+
+    <div class="lmob__foot">
+      <a href="https://app.priceleap.ai" class="pl-btn pl-btn--secondary">Sign in</a>
+      <a href="/book-a-demo" class="pl-btn pl-btn--primary">Book a demo</a>
+    </div>
+  </div>
+</header>
+
+<script>
+  const hdr  = document.querySelector<HTMLElement>('.lhdr')!;
+  const burger = hdr.querySelector<HTMLButtonElement>('[data-lburger]')!;
+  const mob  = document.getElementById('lmob-nav')!;
+  let openMenu: string | null = null;
+
+  // Mega menus
+  const showMega = (key: string | null) => {
+    openMenu = key;
+    hdr.querySelectorAll<HTMLElement>('[data-lmega]').forEach(p => p.hidden = p.dataset.lmega !== key);
+    hdr.querySelectorAll<HTMLButtonElement>('[data-lmenu]').forEach(b => {
+      const on = b.dataset.lmenu === key;
+      b.setAttribute('aria-expanded', String(on));
+      b.classList.toggle('is-open', on);
+    });
+  };
+  hdr.querySelectorAll<HTMLButtonElement>('[data-lmenu]').forEach(b => {
+    b.addEventListener('mouseenter', () => matchMedia('(hover:hover)').matches && showMega(b.dataset.lmenu!));
+    b.addEventListener('click', () => showMega(openMenu === b.dataset.lmenu ? null : b.dataset.lmenu!));
+  });
+  hdr.addEventListener('mouseleave', () => showMega(null));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { showMega(null); toggleMob(false); } });
+  document.addEventListener('click', e => {
+    if (!hdr.contains(e.target as Node)) showMega(null);
+  });
+
+  // Mobile drawer
+  const toggleMob = (force?: boolean) => {
+    const open = force ?? mob.hidden;
+    mob.hidden = !open;
+    burger.setAttribute('aria-expanded', String(open));
+    document.body.style.overflow = open ? 'hidden' : '';
+    burger.classList.toggle('is-open', open);
+  };
+  burger.addEventListener('click', () => toggleMob());
+
+  // Mobile tabs
+  hdr.querySelectorAll<HTMLButtonElement>('[data-ltab]').forEach(t =>
+    t.addEventListener('click', () => {
+      hdr.querySelectorAll('[data-ltab]').forEach(x => x.setAttribute('aria-selected', String(x === t)));
+      hdr.querySelectorAll<HTMLElement>('[id^="lmob-panel-"]').forEach(p => p.hidden = p.id !== `lmob-panel-${t.dataset.ltab}`);
+    })
+  );
+
+  // Close mobile on nav link click
+  mob.querySelectorAll('a').forEach(a => a.addEventListener('click', () => toggleMob(false)));
+</script>
+
+<style>
+/* ── Header shell ── */
+.lhdr { position: sticky; top: 0; z-index: 50; border-bottom: 1px solid var(--pl-line); isolation: isolate; }
+.lhdr__bg { position: absolute; inset: 0; z-index: -1; background: rgba(246,245,242,.86); backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px); }
+.lhdr__bar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 14px; padding-bottom: 14px; }
+
+/* Logo */
+.lhdr__logo { display: flex; align-items: center; gap: 9px; flex: none; font-size: 21px; font-weight: 600; letter-spacing: -.02em; color: var(--pl-ink); }
+.lhdr__bars { display: flex; align-items: flex-end; gap: 3px; height: 22px; }
+.lhdr__bars i, .lhdr__bars .b3w i { display: block; border-radius: 2px; }
+.b1 { width: 5px; height: 8px; background: #18E563; }
+.b2 { width: 5px; height: 13px; background: #12c455; }
+.b3w { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.b3d { width: 5px; height: 5px; border-radius: 50% !important; background: #0fb04b; }
+.b3b { width: 5px; height: 13px; background: #0fb04b; }
+
+/* Desktop nav links */
+.lhdr__nav { display: flex; gap: 2px; }
+.lhdr__nl { font: inherit; font-size: 15px; border: none; background: none; color: #4a4950; padding: 8px 12px; border-radius: 9px; cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none; transition: background var(--pl-dur-fast), color var(--pl-dur-fast); white-space: nowrap; }
+.lhdr__nl:hover, .lhdr__nl.is-open { background: var(--pl-hover); color: var(--pl-ink); }
+.lhdr__caret { font-size: 9px; color: var(--pl-faint-2); transition: transform .2s; }
+.lhdr__nl.is-open .lhdr__caret { transform: rotate(180deg); }
+
+/* Actions */
+.lhdr__actions { display: flex; align-items: center; gap: 10px; flex: none; }
+.lhdr__signin { font-size: 15px; padding: 8px 10px; color: var(--pl-ink); }
+.lhdr__burger { display: none; width: 44px; height: 44px; border-radius: 11px; border: 1px solid var(--pl-line); background: #fff; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; padding: 0; }
+.lhdr__burger i { display: block; width: 18px; height: 1.5px; background: var(--pl-ink); border-radius: 2px; transition: transform .25s, opacity .2s; }
+.lhdr__burger.is-open i:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+.lhdr__burger.is-open i:nth-child(2) { opacity: 0; }
+.lhdr__burger.is-open i:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+/* ── Mega menus ── */
+.lmega { position: absolute; left: 0; right: 0; top: 100%; padding: 10px 12px 0; animation: pl-pop .2s ease; }
+.lmega__frame { border-radius: 20px; box-shadow: 0 40px 80px -40px rgba(23,22,26,.35); }
+.lmega__top { background: var(--pl-surface-2) !important; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; }
+.lmega__ey { display: flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 11px; letter-spacing: .14em; color: var(--pl-ink); }
+.lmega__dia { width: 7px; height: 7px; background: var(--pl-accent); transform: rotate(45deg); }
+.lmega__all { font-family: var(--pl-mono); font-size: 11px; letter-spacing: .08em; color: var(--pl-accent-ink); }
+.lmega__body { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 1px; background: var(--pl-line) !important; }
+.lmega__items { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1px; background: var(--pl-line); }
+.lmega__item { background: #fff; padding: 18px 18px 20px; display: flex; flex-direction: column; gap: 14px; color: var(--pl-ink); position: relative; transition: background .2s; }
+.lmega__item::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: transparent; transition: background .2s; }
+.lmega__item:hover { background: var(--pl-surface-2); }
+.lmega__item:hover::before { background: var(--pl-accent); }
+.lmega__item-top { display: flex; justify-content: space-between; align-items: center; }
+.lmega__ic { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--pl-line-soft); background: #fff; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+.lmega__item:hover .lmega__ic { background: var(--pl-accent-tint); border-color: var(--pl-accent-line); }
+.lmega__shape { width: 11px; height: 11px; background: var(--pl-accent); }
+.lmega__shape.sq { border-radius: 4px; }
+.lmega__shape.ci { border-radius: 50%; }
+.lmega__shape.di { border-radius: 2px; transform: rotate(45deg); }
+.lmega__no { font-family: var(--pl-mono); font-size: 10px; color: var(--pl-faint-2); }
+.lmega__it { font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.lmega__id { font-size: 13px; line-height: 1.45; color: var(--pl-muted); margin-top: -8px; }
+.lmega__go { font-family: var(--pl-mono); font-size: 11px; color: var(--pl-accent-ink); opacity: 0; transition: opacity .2s; }
+.lmega__item:hover .lmega__go { opacity: 1; }
+.lmega__feat { background: #fff; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.lmega__fcard { border: 1px solid var(--pl-line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 16px 30px -22px rgba(23,22,26,.4); }
+.lmega__fcard-top { display: flex; justify-content: space-between; align-items: center; }
+.lmega__fstat { font-size: 28px; font-weight: 600; letter-spacing: -.03em; }
+.lmega__fbar { height: 5px; border-radius: 5px; background: var(--pl-line-soft); }
+.lmega__fbar i { display: block; height: 100%; border-radius: 5px; background: var(--pl-accent); }
+.lmega__ftitle { font-size: 16px; font-weight: 600; letter-spacing: -.01em; line-height: 1.3; }
+.lmega__links { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)) 320px; gap: 1px; background: var(--pl-line) !important; }
+.lmega__links > * { background: var(--pl-surface-2); padding: 12px 18px; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--pl-ink); }
+.lmega__links a:hover { color: var(--pl-accent-ink); }
+.lmega__arrow { margin-left: auto; color: var(--pl-faint-2); }
+.lmega__status { font-family: var(--pl-mono); font-size: 11px; color: var(--pl-faint); }
+
+/* ── Mobile drawer ── */
+.lmob { position: absolute; left: 0; right: 0; top: 100%; height: calc(100dvh - 100%); overflow-y: auto; background: var(--pl-canvas); border-top: 1px solid var(--pl-line); display: flex; flex-direction: column; }
+.lmob__inner { padding: 16px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.lmob__tabs { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; padding: 4px; border: 1px solid var(--pl-line); border-radius: 13px; background: #fff; }
+.lmob__tabs button { font: inherit; font-size: 14px; font-weight: 500; border: none; min-height: 42px; border-radius: 9px; background: none; color: #55545b; cursor: pointer; transition: all .2s; }
+.lmob__tabs [aria-selected="true"] { background: var(--pl-accent); color: var(--pl-on-accent); }
+.lmob__panel { grid-template-columns: 1fr; }
+.lmob__row { display: flex; align-items: center; gap: 12px; padding: 14px; min-height: 56px; color: var(--pl-ink); background: #fff; }
+.lmob__row > span:last-child { margin-left: auto; color: #c9c7c0; }
+.lmob__row b { display: block; font-size: 15px; font-weight: 500; }
+.lmob__row small { font-size: 12px; color: var(--pl-faint); }
+.lmob__ic { width: 36px; height: 36px; flex: none; border-radius: 10px; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); display: flex; align-items: center; justify-content: center; }
+.lmob__direct { grid-template-columns: 1fr 1fr; }
+.lmob__foot { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: sticky; bottom: 0; background: #fff; padding: 16px; border-top: 1px solid var(--pl-line); }
+
+/* ── Responsive ── */
+@media (max-width: 959px) {
+  .lhdr__nav, .lhdr__signin, .lmega { display: none !important; }
+  .lhdr__burger { display: flex; }
+}
+@media (min-width: 960px) { .lmob { display: none !important; } }
+@media (min-width: 640px) { .lmob__panel { grid-template-columns: 1fr 1fr; } }
+</style>

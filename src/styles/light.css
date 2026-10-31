@@ -1,0 +1,67 @@
+/* Light page — imports the design system and sets page-level defaults */
+@import './tokens.css';
+@import './animations.css';
+@import './primitives.css';
+
+/* Override global.css dark body for the light page */
+body { background: var(--pl-canvas) !important; color: var(--pl-ink) !important; }
+h1, h2, h3, h4 { color: var(--pl-ink); font-family: var(--pl-font); }
+a { color: var(--pl-ink); text-decoration: none; }
+a:hover { color: var(--pl-accent-ink); }
+
+/* Page wrapper rails */
+.pl-page-wrap { max-width: var(--pl-container); margin: 0 auto; position: relative; }
+.pl-page-rails::before, .pl-page-rails::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--pl-line); pointer-events: none; z-index: 2;
+}
+.pl-page-rails::before { left: 0; }
+.pl-page-rails::after  { right: 0; }
+
+/* Section standard */
+.l-section {
+  padding: var(--pl-space-24) var(--pl-gutter);
+  border-bottom: 1px solid var(--pl-line);
+  max-width: var(--pl-container);
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Eyebrow used across all sections */
+.l-eyebrow {
+  display: inline-flex; align-items: center; gap: 14px; font-size: 13px; color: var(--pl-ink);
+}
+.l-eyebrow__slash { color: var(--pl-line-strong); font-family: var(--pl-mono); }
+.l-eyebrow__label {
+  display: inline-flex; align-items: center; gap: 7px;
+  border-bottom: 1px solid var(--pl-line-strong); padding-bottom: 4px;
+}
+.l-eyebrow__diamond {
+  width: 7px; height: 7px; background: var(--pl-accent); transform: rotate(45deg); flex: none;
+}
+.l-eyebrow__diamond--red { background: var(--pl-danger); }
+
+/* Section headings */
+.l-h2 {
+  margin: 22px 0 0; font-size: clamp(34px,4.6vw,52px);
+  line-height: 1.08; letter-spacing: -.03em; font-weight: 500; text-wrap: balance;
+}
+.l-lead {
+  margin: 20px 0 0; font-size: 18px; line-height: 1.6;
+  color: var(--pl-muted); text-wrap: pretty;
+}
+
+/* Gradient text */
+.l-grad { background: var(--pl-grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* Frame grid (cards separated by lines) */
+.l-frame {
+  border: 1px solid var(--pl-line); border-radius: 20px;
+  overflow: hidden; background: var(--pl-line); display: grid; gap: 1px;
+}
+.l-frame > * { background: var(--pl-surface); }
+
+/* Responsive reveal */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+}

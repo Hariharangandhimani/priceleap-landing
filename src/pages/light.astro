@@ -1,40 +1,32 @@
 ---
 import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
-import AnnouncementBar from '@/components/layout/AnnouncementBar.astro';
-import HeroLight from '@/components/home/light/HeroLight.astro';
-import TrustLight from '@/components/home/light/TrustLight.astro';
-import ProblemLight from '@/components/home/light/ProblemLight.astro';
-import ProductTour from '@/components/home/ProductTour.astro';
-import CapabilitiesLight from '@/components/home/light/CapabilitiesLight.astro';
-import Accuracy from '@/components/home/Accuracy.astro';
-import HowItWorksLight from '@/components/home/light/HowItWorksLight.astro';
-import Integrations from '@/components/home/Integrations.astro';
-import ResultsLight from '@/components/home/light/ResultsLight.astro';
-import CTABanner from '@/components/sections/CTABanner.astro';
+import LAnnouncement from '@/components/light/LAnnouncement.astro';
+import LHeader from '@/components/light/LHeader.astro';
+import LHero from '@/components/light/LHero.astro';
+import LTrusted from '@/components/light/LTrusted.astro';
+import LProblem from '@/components/light/LProblem.astro';
+import LCapabilities from '@/components/light/LCapabilities.astro';
+import LResults from '@/components/light/LResults.astro';
+import LCTA from '@/components/light/LCTA.astro';
+import LFooter from '@/components/light/LFooter.astro';
 ---
-<LightBaseLayout title="Pricing Intelligence Software for E-commerce & Marketplaces | PriceLeap">
-  <AnnouncementBar slot="before-nav" href="#product">PriceLeap Agent answers pricing questions in plain English, right inside your dashboard.</AnnouncementBar>
-
-  <HeroLight />
-  <TrustLight />
-  <ProblemLight />
-
-  <div class="dark-band">
-    <ProductTour />
-  </div>
-
-  <CapabilitiesLight />
-  <Accuracy />
-  <HowItWorksLight />
-
-  <div class="dark-band dark-band--int">
-    <Integrations />
-  </div>
-
-  <ResultsLight />
-
-  <CTABanner
-    title="See your real competitor data in a 15-minute demo."
-    text="We'll show PriceLeap running on your products and competitors — accuracy, pricing intelligence, and margin opportunities, live."
+<LightBaseLayout
+  title="Pricing Intelligence Software for E-commerce & Marketplaces | PriceLeap"
+  description="PriceLeap gives e-commerce and marketplace teams real-time competitor price tracking, verified data accuracy, and dynamic pricing that protects every point of margin."
+>
+  <LAnnouncement
+    slot="before-header"
+    text="PriceLeap Agent answers pricing questions in plain English, right inside your dashboard."
+    cta="See it in action →"
+    href="#product"
   />
+
+  <LHeader />
+  <LHero />
+  <LTrusted />
+  <LProblem />
+  <LCapabilities />
+  <LResults />
+  <LCTA id="demo" />
+  <LFooter />
 </LightBaseLayout>

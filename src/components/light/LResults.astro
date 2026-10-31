@@ -1,0 +1,190 @@
+---
+const metrics = [
+  { label: 'SALES LIFT', value: '+12', unit: '%', accent: true,
+    desc: 'Average revenue growth on repriced SKUs in the first 90 days.',
+    bars: [34,38,36,40,56,70,84,100] },
+  { label: 'MARGIN GAIN', value: '+4.2', unit: 'pts', featured: true,
+    desc: 'Gross margin recovered by pricing above rivals where you can.',
+    rows: [{ l:'BEFORE',w:64,v:'21.4%' },{ l:'AFTER',w:78,v:'25.6%',accent:true }], caption: 'AVG. GROSS MARGIN' },
+  { label: 'TIME SAVED', value: '80', unit: '%',
+    desc: 'Less time spent on manual competitor price checks.',
+    rows: [{ l:'MANUAL',w:100,v:'20 h' },{ l:'AUTO',w:20,v:'4 h',accent:true }], caption: 'PRICE CHECKS PER WEEK' },
+];
+
+const testimonials = [
+  { ini:'DM', role:'Head of Pricing', ind:'Consumer Electronics', stat:'+28%',statL:'REVENUE · Q1',
+    q:'PriceLeap gave us competitor data we finally trust. We stopped guessing and started winning on margin.' },
+  { ini:'SR', role:'Category Manager', ind:'Marketplace Seller', stat:'90%',statL:'BUY BOX WIN RATE',
+    q:'The accuracy is genuinely different. Human QC on every match means we can actually automate without fear.' },
+  { ini:'AK', role:'VP Commerce', ind:'D2C Brand', stat:'80%',statL:'TIME SAVED',
+    q:'Setup took a week. Our pricing team now acts on live data instead of spreadsheets.' },
+];
+---
+<section id="results" class="l-section lres">
+  <!-- Heading -->
+  <div class="lres__head" data-reveal>
+    <div class="l-eyebrow">
+      <span class="l-eyebrow__slash">//</span>
+      <span class="l-eyebrow__label"><span class="l-eyebrow__diamond"></span>Results</span>
+      <span class="l-eyebrow__slash">\\</span>
+    </div>
+    <h2 class="l-h2">Better data. Better pricing. <span class="l-grad">Measurable results.</span></h2>
+  </div>
+
+  <!-- Metric cards -->
+  <div class="lres__cards" data-reveal style="--i:1">
+    {metrics.map(m => (
+      <div class:list={['lres__card', { 'lres__card--featured': m.featured }]}>
+        <div class="mono lres__label">{m.label}</div>
+        <div class:list={['lres__value', { 'lres__value--grad': m.accent }]}>
+          {m.accent ? <span class="l-grad">{m.value}</span> : m.value}
+          <span class="lres__unit">{m.unit}</span>
+        </div>
+        <p>{m.desc}</p>
+        <div class="lres__vis">
+          {m.bars && (
+            <div>
+              <div class="lres__bars">
+                {m.bars.map((h, i) => <span style={`height:${h}%`} class:list={['lres__bar', { 'lres__bar--on': i >= 4 }]}></span>)}
+              </div>
+              <div class="lres__axis mono"><span>BEFORE</span><span style="color:var(--pl-accent-ink)">WITH PRICELEAP</span></div>
+            </div>
+          )}
+          {m.rows && (
+            <div class="lres__rows mono">
+              {m.rows.map(r => (
+                <div class="lres__row">
+                  <span class:list={['lres__row-l', { 'lres__row-l--acc': r.accent }]}>{r.l}</span>
+                  <span class="lres__row-bar"><span style={`width:${r.w}%`} class:list={['lres__row-fill', { 'lres__row-fill--on': r.accent }]}></span></span>
+                  <span class:list={['lres__row-v', { 'lres__row-v--dark': r.accent }]}>{r.v}</span>
+                </div>
+              ))}
+              <span class="lres__caption">{m.caption}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+  <div class="mono lres__note">Illustrative figures — replace with verified customer results.</div>
+
+  <!-- Testimonials -->
+  <div class="lres__testi-head" data-reveal style="--i:2">
+    <div class="l-eyebrow">
+      <span class="l-eyebrow__slash">//</span>
+      <span class="l-eyebrow__label"><span class="l-eyebrow__diamond"></span>Testimonials</span>
+      <span class="l-eyebrow__slash">\\</span>
+    </div>
+    <h2 class="l-h2">Real results. <span class="l-grad">Real teams.</span></h2>
+  </div>
+
+  <div class="l-frame lres__testi" data-reveal style="--i:3" data-ltesti>
+    <div class="lres__sel">
+      {testimonials.map((t, i) => (
+        <button class:list={['lres__sel-btn', { 'is-on': i === 0 }]} data-lti={i} aria-pressed={i === 0 ? 'true' : 'false'}>
+          <span class="lres__av">{t.ini}</span>
+          <span><b>{t.role}</b><small>{t.ind}</small></span>
+        </button>
+      ))}
+    </div>
+    <div class="lres__panel">
+      <div class="lres__panel-grid" aria-hidden="true"></div>
+      {testimonials.map((t, i) => (
+        <figure class="lres__quote" data-ltq={i} hidden={i !== 0}>
+          <div class="lres__quote-top">
+            <span class="lres__stars" aria-label="5 out of 5">★★★★★</span>
+            <span class="mono lres__qi">0{i+1} / 0{testimonials.length}</span>
+          </div>
+          <blockquote>"{t.q}"</blockquote>
+          <figcaption>{t.role} · {t.ind}</figcaption>
+        </figure>
+      ))}
+      <div class="lres__nav">
+        <button class="lres__prev" data-ltprev aria-label="Previous">←</button>
+        <button class="lres__next" data-ltnext aria-label="Next">→</button>
+      </div>
+    </div>
+    <div class="lres__stats">
+      {testimonials.map((t, i) => (
+        <button class:list={['lres__stat', { 'is-on': i === 0 }]} data-lti={i} aria-pressed={i === 0 ? 'true' : 'false'}>
+          <b>{t.stat}</b>
+          <span class="mono">{t.statL}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-ltesti]');
+  if (root) {
+    let cur = 0;
+    const total = root.querySelectorAll<HTMLElement>('[data-ltq]').length;
+    const go = (i: number) => {
+      cur = (i + total) % total;
+      root.querySelectorAll('[data-lti]').forEach(b => { const on = Number((b as HTMLElement).dataset.lti) === cur; b.setAttribute('aria-pressed', String(on)); b.classList.toggle('is-on', on); });
+      root.querySelectorAll<HTMLElement>('[data-ltq]').forEach(q => q.hidden = Number(q.dataset.ltq) !== cur);
+    };
+    root.querySelectorAll<HTMLButtonElement>('[data-lti]').forEach(b => b.addEventListener('click', () => go(Number(b.dataset.lti))));
+    root.querySelector('[data-ltprev]')?.addEventListener('click', () => go(cur - 1));
+    root.querySelector('[data-ltnext]')?.addEventListener('click', () => go(cur + 1));
+  }
+</script>
+
+<style>
+.lres__head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; data-reveal: true; }
+.lres__cards { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 12px; margin-top: 52px; }
+.lres__card { background: #fff; border: 1px solid var(--pl-line); border-radius: 18px; padding: 28px; display: flex; flex-direction: column; gap: 0; }
+.lres__card--featured { border: 1.5px solid var(--pl-accent); box-shadow: 0 20px 40px -24px rgba(24,229,99,.55); }
+.lres__label { font-size: 11px; letter-spacing: .12em; color: var(--pl-faint); }
+.lres__value { margin-top: 16px; font-size: 72px; font-weight: 600; letter-spacing: -.05em; line-height: 1; display: flex; align-items: baseline; gap: 4px; }
+.lres__unit { font-size: 24px; letter-spacing: 0; margin-left: 6px; }
+.lres__card p { margin: 18px 0 0; font-size: 15px; line-height: 1.55; color: #55545b; }
+.lres__vis { border-top: 1px solid var(--pl-line-soft); margin-top: auto; padding-top: 20px; }
+.lres__bars { display: flex; align-items: flex-end; gap: 6px; height: 64px; }
+.lres__bar { flex: 1; border-radius: 4px; background: var(--pl-hover); }
+.lres__bar--on { background: linear-gradient(180deg,#18E563,#0fb04b); }
+.lres__axis { display: flex; justify-content: space-between; margin-top: 10px; font-size: 10px; letter-spacing: .08em; color: var(--pl-faint); }
+.lres__rows { display: flex; flex-direction: column; gap: 10px; font-size: 11px; }
+.lres__row { display: grid; grid-template-columns: 56px 1fr 48px; gap: 10px 12px; align-items: center; }
+.lres__row-l { color: var(--pl-faint); } .lres__row-l--acc { color: var(--pl-accent-ink); }
+.lres__row-bar { height: 6px; border-radius: 6px; background: var(--pl-line-soft); }
+.lres__row-fill { display: block; height: 100%; border-radius: 6px; background: #c9c7c0; }
+.lres__row-fill--on { background: linear-gradient(90deg,#18E563,#0fb04b); }
+.lres__row-v { text-align: right; color: var(--pl-faint); } .lres__row-v--dark { color: var(--pl-ink); }
+.lres__caption { grid-column: 1/-1; color: var(--pl-faint-2); font-size: 10px; }
+.lres__note { margin-top: 14px; font-size: 12px; color: var(--pl-faint-2); }
+
+/* Testimonials */
+.lres__testi-head { display: flex; flex-direction: column; align-items: center; text-align: center; margin-top: 96px; padding-top: 80px; border-top: 1px solid var(--pl-line); }
+.lres__testi { grid-template-columns: 300px minmax(0,1fr); border-radius: 22px !important; margin-top: 48px; }
+.lres__sel { display: flex; flex-direction: column; gap: 1px; background: var(--pl-line) !important; }
+.lres__sel-btn { flex: 1; font: inherit; text-align: left; border: none; background: var(--pl-surface-2); padding: 22px; position: relative; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: background .2s; }
+.lres__sel-btn::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; transition: background .2s; }
+.lres__sel-btn.is-on { background: #fff; } .lres__sel-btn.is-on::before { background: var(--pl-accent); }
+.lres__av { width: 44px; height: 44px; flex: none; border-radius: 12px; background: var(--pl-surface-2); border: 1px solid var(--pl-line); color: var(--pl-faint); font-family: var(--pl-mono); font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center; transition: all .3s; }
+.lres__sel-btn.is-on .lres__av { background: var(--pl-accent); border-color: var(--pl-accent); color: var(--pl-on-accent); }
+.lres__sel-btn b { display: block; font-size: 14px; font-weight: 600; }
+.lres__sel-btn small { display: block; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .1em; color: var(--pl-faint); text-transform: uppercase; }
+.lres__panel { background: #fff; padding: 40px 44px; min-height: 360px; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+.lres__panel-grid { position: absolute; inset: 0; background-image: linear-gradient(#f1efea 1px,transparent 1px),linear-gradient(90deg,#f1efea 1px,transparent 1px); background-size: 44px 44px; -webkit-mask-image: linear-gradient(135deg,transparent 45%,#000); mask-image: linear-gradient(135deg,transparent 45%,#000); pointer-events: none; }
+.lres__quote { margin: 0; position: relative; display: flex; flex-direction: column; gap: 22px; flex: 1; animation: pl-fade .3s ease; }
+.lres__quote-top { display: flex; justify-content: space-between; align-items: center; }
+.lres__stars { color: var(--pl-accent); letter-spacing: 2px; }
+.lres__qi { font-size: 11px; color: var(--pl-faint-2); }
+.lres__quote blockquote { margin: 0; font-size: 22px; line-height: 1.5; font-weight: 500; letter-spacing: -.01em; flex: 1; }
+.lres__quote blockquote::before { content: '"'; font-size: 64px; line-height: .6; color: var(--pl-accent); font-weight: 600; display: block; height: 30px; margin-bottom: 22px; }
+.lres__quote figcaption { font-size: 14px; color: var(--pl-muted); padding-top: 20px; border-top: 1px dashed var(--pl-line); }
+.lres__nav { position: relative; display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.lres__prev, .lres__next { width: 38px; height: 38px; border-radius: 11px; cursor: pointer; font-size: 14px; }
+.lres__prev { border: 1px solid var(--pl-line); background: #fff; color: var(--pl-ink-2); }
+.lres__next { border: none; background: var(--pl-accent); color: var(--pl-on-accent); }
+.lres__stats { grid-column: 1/-1; display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--pl-line) !important; }
+.lres__stat { font: inherit; border: none; background: #fff; padding: 22px 24px; text-align: left; cursor: pointer; display: flex; flex-direction: column; gap: 4px; transition: background .2s; }
+.lres__stat b { font-size: 30px; letter-spacing: -.03em; }
+.lres__stat span { font-size: 10px; letter-spacing: .12em; color: var(--pl-faint); }
+.lres__stat.is-on { background: var(--pl-accent-tint); } .lres__stat.is-on b { color: var(--pl-accent-ink); }
+
+@media (max-width: 900px) { .lres__testi { grid-template-columns: 1fr; } .lres__panel { padding: 28px 22px; } .lres__quote blockquote { font-size: 18px; } }
+@media (max-width: 640px) { .lres__stats { grid-template-columns: 1fr; } }
+</style>
