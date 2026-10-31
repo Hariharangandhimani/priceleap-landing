@@ -1,40 +1,40 @@
 ---
-// Integrations & security — animated SVG flow diagram + connector grid
+// Integrations & security — animated SVG flow diagram + connector grid with brand logos
 const cats = ['All','Ecommerce','ERP & CRM','Data & BI','Alerts'];
 const connectors = [
-  { m:'Sh', n:'Shopify', api:'ADMIN API', cat:1, on:true },
-  { m:'Am', n:'Amazon Seller Central', api:'SP-API', cat:1, on:false },
-  { m:'Fk', n:'Flipkart', api:'SELLER API', cat:1, on:false },
-  { m:'Wc', n:'WooCommerce', api:'REST API', cat:1, on:false },
-  { m:'Bc', n:'BigCommerce', api:'REST API', cat:1, on:false },
-  { m:'Eb', n:'eBay Seller Hub', api:'OAUTH 2.0', cat:1, on:false },
-  { m:'Wm', n:'Walmart Marketplace', api:'PARTNER API', cat:1, on:false },
-  { m:'Mg', n:'Magento', api:'REST API', cat:1, on:false },
-  { m:'Et', n:'Etsy', api:'OPEN API', cat:1, on:false },
-  { m:'Tg', n:'Target Plus', api:'PARTNER API', cat:1, on:false },
-  { m:'Sf', n:'Salesforce', api:'COMMERCE CLOUD', cat:2, on:false },
-  { m:'Or', n:'NetSuite', api:'SUITETALK', cat:2, on:false },
-  { m:'Sa', n:'SAP S/4HANA', api:'ODATA', cat:2, on:false },
-  { m:'D3', n:'Dynamics 365', api:'DATAVERSE', cat:2, on:false },
-  { m:'Sn', n:'Snowflake', api:'DATA SHARE', cat:3, on:false },
-  { m:'Db', n:'Databricks', api:'DELTA SHARE', cat:3, on:false },
-  { m:'Bq', n:'BigQuery', api:'EXPORT', cat:3, on:false },
-  { m:'Gs', n:'Google Sheets', api:'SHEETS API', cat:3, on:false },
-  { m:'Ex', n:'Microsoft Excel', api:'GRAPH API', cat:3, on:false },
-  { m:'Sl', n:'Slack', api:'OAUTH 2.0', cat:4, on:true },
-  { m:'Em', n:'Email alerts', api:'SMTP', cat:4, on:true },
+  { logo:'shopify',        n:'Shopify',              api:'ADMIN API',       cat:1, on:true  },
+  { logo:'amazon',         n:'Amazon Seller Central',api:'SP-API',          cat:1, on:false },
+  { logo:'flipkart',       n:'Flipkart',             api:'SELLER API',      cat:1, on:false },
+  { logo:'woocommerce',    n:'WooCommerce',          api:'REST API',        cat:1, on:false },
+  { logo:'bigcommerce',    n:'BigCommerce',          api:'REST API',        cat:1, on:false },
+  { logo:'ebay',           n:'eBay Seller Hub',      api:'OAUTH 2.0',       cat:1, on:false },
+  { logo:'walmart',        n:'Walmart Marketplace',  api:'PARTNER API',     cat:1, on:false },
+  { logo:'magento',        n:'Magento',              api:'REST API',        cat:1, on:false },
+  { logo:'etsy',           n:'Etsy',                 api:'OPEN API',        cat:1, on:false },
+  { logo:'target',         n:'Target Plus',          api:'PARTNER API',     cat:1, on:false },
+  { logo:'salesforce',     n:'Salesforce',           api:'COMMERCE CLOUD',  cat:2, on:false },
+  { logo:'oracle',         n:'NetSuite',             api:'SUITETALK',       cat:2, on:false },
+  { logo:'sap',            n:'SAP S/4HANA',          api:'ODATA',           cat:2, on:false },
+  { logo:'dynamics365',    n:'Dynamics 365',         api:'DATAVERSE',       cat:2, on:false },
+  { logo:'snowflake',      n:'Snowflake',            api:'DATA SHARE',      cat:3, on:false },
+  { logo:'databricks',     n:'Databricks',           api:'DELTA SHARE',     cat:3, on:false },
+  { logo:'googlebigquery', n:'BigQuery',             api:'EXPORT',          cat:3, on:false },
+  { logo:'googlesheets',   n:'Google Sheets',        api:'SHEETS API',      cat:3, on:false },
+  { logo:'microsoftexcel', n:'Microsoft Excel',      api:'GRAPH API',       cat:3, on:false },
+  { logo:'slack',          n:'Slack',                api:'OAUTH 2.0',       cat:4, on:true  },
+  { logo:'gmail',          n:'Email alerts',         api:'SMTP',            cat:4, on:true  },
 ];
 const inNodes = [
-  { initials:'Sh', label:'Shopify', pct:'15.91' },
-  { initials:'Am', label:'Amazon', pct:'38.64' },
-  { initials:'Fk', label:'Flipkart', pct:'61.36' },
-  { initials:'Mg', label:'Magento', pct:'84.09' },
+  { logo:'shopify',   label:'Shopify',  pct:'15.91' },
+  { logo:'amazon',    label:'Amazon',   pct:'38.64' },
+  { logo:'flipkart',  label:'Flipkart', pct:'61.36' },
+  { logo:'magento',   label:'Magento',  pct:'84.09' },
 ];
 const outNodes = [
-  { initials:'Sl', label:'Slack', pct:'15.91' },
-  { initials:'Sn', label:'Snowflake', pct:'38.64' },
-  { initials:'Sf', label:'Salesforce', pct:'61.36' },
-  { initials:'Gs', label:'Sheets', pct:'84.09' },
+  { logo:'slack',        label:'Slack',     pct:'15.91' },
+  { logo:'snowflake',    label:'Snowflake', pct:'38.64' },
+  { logo:'salesforce',   label:'Salesforce',pct:'61.36' },
+  { logo:'googlesheets', label:'Sheets',    pct:'84.09' },
 ];
 ---
 <section id="integrations" class="l-section lint">
@@ -77,18 +77,24 @@ const outNodes = [
         ))}
       </svg>
 
-      <!-- Source nodes (left) -->
-      {inNodes.map((n, i) => (
+      <!-- Source nodes (left) — brand logos -->
+      {inNodes.map((n) => (
         <div class="lint__node lint__node--in" style={`top:${n.pct}%`}>
-          <span class="lint__node-ic lint__node-ic--in">{n.initials}<span class="lint__node-dot lint__node-dot--in"></span></span>
+          <span class="lint__node-ic lint__node-ic--in">
+            <img src={`/assets/logos/${n.logo}.svg`} alt={n.label} width="26" height="26" class="lint__logo-img" loading="lazy" />
+            <span class="lint__node-dot lint__node-dot--in"></span>
+          </span>
           <span class="lint__node-label">{n.label}</span>
         </div>
       ))}
 
-      <!-- Destination nodes (right) -->
-      {outNodes.map((n, i) => (
+      <!-- Destination nodes (right) — brand logos -->
+      {outNodes.map((n) => (
         <div class="lint__node lint__node--out" style={`top:${n.pct}%`}>
-          <span class="lint__node-ic lint__node-ic--out">{n.initials}<span class="lint__node-dot lint__node-dot--out"></span></span>
+          <span class="lint__node-ic lint__node-ic--out">
+            <img src={`/assets/logos/${n.logo}.svg`} alt={n.label} width="26" height="26" class="lint__logo-img" loading="lazy" />
+            <span class="lint__node-dot lint__node-dot--out"></span>
+          </span>
           <span class="lint__node-label">{n.label}</span>
         </div>
       ))}
@@ -122,9 +128,11 @@ const outNodes = [
       <span class="mono lint__req">Don't see yours? <a href="/contact">Request a connector →</a></span>
     </div>
     <div class="lint__grid">
-      {connectors.map((c, i) => (
+      {connectors.map((c) => (
         <div class:list={['lint__tile', { 'lint__tile--on': c.on }]} data-ltile-cat={c.cat}>
-          <span class="lint__tile-ic mono">{c.m}</span>
+          <span class="lint__tile-ic">
+            <img src={`/assets/logos/${c.logo}.svg`} alt="" width="22" height="22" loading="lazy" class="lint__tile-logo" />
+          </span>
           <div class="lint__tile-body">
             <div class="lint__tile-name">{c.n}</div>
             <div class="lint__tile-meta">
@@ -144,7 +152,7 @@ const outNodes = [
     root.querySelectorAll<HTMLButtonElement>('[data-lcat]').forEach(b => b.addEventListener('click', () => {
       const cat = Number(b.dataset.lcat);
       root.querySelectorAll('[data-lcat]').forEach(x => { const on = x===b; x.setAttribute('aria-selected',String(on)); (x as HTMLElement).classList.toggle('lint__tab--on',on); });
-      root.querySelectorAll<HTMLElement>('[data-ltile-cat]').forEach(el => el.hidden = cat !== 0 && Number(el.dataset.ltileCat) !== cat);
+      root.querySelectorAll<HTMLElement>('[data-ltile-cat]').forEach(el => el.classList.toggle('is-hidden', cat !== 0 && Number(el.dataset.ltileCat) !== cat));
     }));
   }
 </script>
@@ -174,7 +182,9 @@ const outNodes = [
 .lint__node { position: absolute; display: flex; flex-direction: column; align-items: center; transform: translate(-50%,-50%); }
 .lint__node--in { left: 10%; }
 .lint__node--out { left: 90%; }
-.lint__node-ic { width: 56px; height: 56px; border-radius: 16px; border: 1px solid var(--pl-line); background: #fff; box-shadow: 0 12px 26px -14px rgba(23,22,26,.35); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #3a3940; position: relative; }
+.lint__node-ic { width: 56px; height: 56px; border-radius: 16px; border: 1px solid var(--pl-line); background: #fff; box-shadow: 0 12px 26px -14px rgba(23,22,26,.35); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #3a3940; position: relative; transition: transform .25s, box-shadow .25s; }
+.lint__node-ic:hover { transform: translateY(-2px); box-shadow: 0 18px 32px -14px rgba(23,22,26,.4); }
+.lint__logo-img { width: 26px; height: 26px; object-fit: contain; }
 .lint__node-dot { position: absolute; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; border: 1.5px solid #fff; }
 .lint__node-ic--in .lint__node-dot { right: -4px; background: #18E563; }
 .lint__node-ic--out .lint__node-dot { left: -4px; background: transparent; border-color: #0fb04b; }
@@ -204,9 +214,10 @@ const outNodes = [
 .lint__req a { color: #0a8f3c; }
 .lint__grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,240px),1fr)); gap: 10px; padding: 16px; }
 .lint__tile { display: flex; align-items: center; gap: 12px; border: 1px solid var(--pl-line-soft); background: var(--pl-surface-2); border-radius: 12px; padding: 14px; transition: border-color .2s; }
-.lint__tile[hidden] { display: none; }
+.lint__tile[hidden], .lint__tile.is-hidden { display: none; }
 .lint__tile--on { border-color: var(--pl-accent-line); background: var(--pl-accent-tint); }
-.lint__tile-ic { width: 40px; height: 40px; flex: none; border-radius: 10px; border: 1px solid var(--pl-line-soft); background: #fbfaf8; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #3a3940; }
+.lint__tile-ic { width: 40px; height: 40px; flex: none; border-radius: 10px; border: 1px solid var(--pl-line-soft); background: #fff; display: flex; align-items: center; justify-content: center; padding: 8px; transition: border-color .2s; }
+.lint__tile-logo { width: 22px; height: 22px; object-fit: contain; }
 .lint__tile-body { min-width: 0; }
 .lint__tile-name { font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lint__tile-meta { display: flex; gap: 8px; align-items: center; margin-top: 5px; }
