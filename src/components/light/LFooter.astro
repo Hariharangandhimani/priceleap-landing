@@ -1,0 +1,126 @@
+---
+const year = new Date().getFullYear();
+const cols = [
+  { title: 'PRODUCT', links: ['Price Intelligence','Decision Engine','Dynamic Pricing','PriceLeap Agent','Reports'] },
+  { title: 'SOLUTIONS', links: ['E-commerce brands','Marketplace sellers','Retailers','D2C stores','MAP monitoring'] },
+  { title: 'RESOURCES', links: ['How it works','Data accuracy','Integrations','API docs','Changelog'] },
+  { title: 'COMPANY', links: ['About','Customers','Careers','Contact','Book a demo'] },
+  { title: 'LEGAL', links: ['Privacy policy','Terms of service','Security','DPA','Cookie settings'] },
+];
+const badges = ['ISO 27001-aligned','SSO & SAML','Role-based access','GDPR ready','99.9% uptime SLA'];
+---
+<footer class="lft">
+  <div class="l-frame lft__frame">
+
+    <!-- Brand + newsletter row -->
+    <div class="lft__top">
+      <div class="lft__brand">
+        <div class="lft__brand-bg" aria-hidden="true"></div>
+        <a href="/light" class="lft__logo" aria-label="PriceLeap">
+          <span class="lhdr__bars" aria-hidden="true">
+            <i class="b1"></i><i class="b2"></i>
+            <span class="b3w"><i class="b3d"></i><i class="b3b"></i></span>
+          </span>
+          <span>Price<span class="l-grad">Leap</span></span>
+        </a>
+        <p>Pricing intelligence software for e-commerce and marketplace teams. Competitor price tracking, verified accuracy and dynamic pricing in one workspace.</p>
+        <div class="lft__status"><span class="pl-dot pl-dot--live"></span>All systems operational</div>
+      </div>
+
+      <div class="lft__nl">
+        <div>
+          <div class="lft__nl-title">Pricing insights, every other week.</div>
+          <div class="lft__nl-sub">Market moves, MAP trends and product updates. No spam.</div>
+        </div>
+        <div class="lft__nl-form">
+          <input type="email" class="lft__nl-input" placeholder="you@company.com" aria-label="Email address" />
+          <a href="/book-a-demo" class="pl-btn pl-btn--primary">Subscribe</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav columns -->
+    <div class="lft__nav">
+      {cols.map(col => (
+        <div class="lft__col">
+          <span class="pl-label">{col.title}</span>
+          {col.links.map(l => <a href="#">{l}</a>)}
+        </div>
+      ))}
+    </div>
+
+    <!-- Security badges -->
+    <div class="lft__badges">
+      {badges.map(b => (
+        <div class="lft__badge">
+          <span class="lft__badge-ic" aria-hidden="true">✓</span>{b}
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <!-- Wordmark -->
+  <div class="lft__wordmark" aria-hidden="true">PriceLeap</div>
+
+  <!-- Bottom bar -->
+  <div class="lft__bottom">
+    <span class="mono" style="font-size:12px">© {year} PriceLeap. All rights reserved.</span>
+    <span class="lft__social">
+      {['in','X','YT','GH'].map(s => <a href="#" class="lft__si" aria-label={s}>{s}</a>)}
+    </span>
+    <span class="mono" style="font-size:12px">Made for pricing teams · ₹ INR</span>
+  </div>
+</footer>
+
+<style>
+.lft { padding: 28px 28px 0; max-width: var(--pl-container); margin: 0 auto; }
+.lft__frame { border-radius: 22px !important; }
+
+/* Top row: brand + newsletter */
+.lft__top { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,300px),1fr)); gap: 1px; }
+.lft__brand { position: relative; padding: 32px 28px; display: flex; flex-direction: column; gap: 18px; overflow: hidden; }
+.lft__brand-bg { position: absolute; inset: 0; background-image: radial-gradient(var(--pl-line) 1px,transparent 1px); background-size: 18px 18px; -webkit-mask-image: linear-gradient(135deg,transparent 40%,#000); mask-image: linear-gradient(135deg,transparent 40%,#000); pointer-events: none; }
+.lft__logo { position: relative; display: flex; align-items: center; gap: 9px; font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: var(--pl-ink); }
+.lft__brand p { position: relative; margin: 0; font-size: 15px; line-height: 1.6; color: var(--pl-muted); max-width: 320px; }
+.lft__status { position: relative; display: flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 12px; color: var(--pl-ink-2); }
+
+.lft__nl { padding: 32px 28px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; }
+.lft__nl-title { font-size: 22px; font-weight: 500; letter-spacing: -.02em; line-height: 1.25; }
+.lft__nl-sub { font-size: 14px; color: var(--pl-muted); margin-top: 8px; }
+.lft__nl-form { display: flex; gap: 8px; flex-wrap: wrap; }
+.lft__nl-input { flex: 1; min-width: 180px; border: 1px solid var(--pl-line); border-radius: 12px; padding: 12px 14px; font: inherit; font-size: 14px; color: var(--pl-faint-2); background: var(--pl-surface-2); outline: none; }
+.lft__nl-input:focus { border-color: var(--pl-accent); box-shadow: 0 0 0 4px rgba(24,229,99,.14); color: var(--pl-ink); }
+
+/* Nav columns */
+.lft__nav { display: grid; grid-template-columns: repeat(auto-fit,minmax(170px,1fr)); gap: 1px; }
+.lft__col { padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; }
+.lft__col a { font-size: 14px; color: #3a3940; transition: color .2s; }
+.lft__col a:hover { color: var(--pl-accent-ink); }
+
+/* Security badges */
+.lft__badges { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 1px; }
+.lft__badge { background: var(--pl-surface-2) !important; padding: 14px 20px; display: flex; align-items: center; gap: 10px; font-family: var(--pl-mono); font-size: 12px; color: var(--pl-ink-2); }
+.lft__badge-ic { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--pl-accent); color: var(--pl-accent-ink); font-size: 9px; display: flex; align-items: center; justify-content: center; flex: none; }
+
+/* Wordmark */
+.lft__wordmark { overflow: hidden; margin-top: 28px; line-height: .78; text-align: center; font-size: clamp(80px,19vw,236px); font-weight: 600; letter-spacing: -.06em; background: linear-gradient(180deg,#e4e2dc 0%,#f6f5f2 92%); -webkit-background-clip: text; background-clip: text; color: transparent; user-select: none; }
+
+/* Bottom bar */
+.lft__bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--pl-line); padding: 20px 0 24px; font-size: 13px; color: var(--pl-faint); }
+.lft__social { display: flex; gap: 8px; }
+.lft__si { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--pl-line); background: #fff; display: flex; align-items: center; justify-content: center; font-family: var(--pl-mono); font-size: 11px; color: var(--pl-ink-2); }
+.lft__si:hover { border-color: var(--pl-accent); color: var(--pl-accent-ink); }
+
+/* Logo bar reuse */
+.lhdr__bars { display: flex; align-items: flex-end; gap: 3px; height: 22px; }
+.lhdr__bars i, .b3w i { display: block; border-radius: 2px; }
+.b1 { width: 5px; height: 8px; background: #18E563; }
+.b2 { width: 5px; height: 13px; background: #12c455; }
+.b3w { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.b3d { width: 5px; height: 5px; border-radius: 50% !important; background: #0fb04b; }
+.b3b { width: 5px; height: 13px; background: #0fb04b; }
+
+@media (max-width: 479px) {
+  .lft__bottom { flex-direction: column; align-items: flex-start; }
+}
+</style>

@@ -1,0 +1,17 @@
+---
+interface Props { text: string; cta?: string; href?: string }
+const { text, cta = 'Learn more →', href = '#' } = Astro.props;
+---
+<div class="lann">
+  <div class="lann__inner">
+    <span class="lann__tag">NEW</span>
+    <span>{text}</span>
+    {href && <a href={href} class="lann__cta">{cta}</a>}
+  </div>
+</div>
+<style>
+.lann { padding: 12px 12px 0; max-width: var(--pl-container); margin: 0 auto; }
+.lann__inner { background: var(--pl-on-accent); color: #fff; border-radius: 10px; padding: 10px 16px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; font-size: 14px; text-align: center; }
+.lann__tag { font-family: var(--pl-mono); font-size: 11px; letter-spacing: .08em; background: var(--pl-accent); color: var(--pl-on-accent); padding: 2px 7px; border-radius: 5px; font-weight: 500; flex: none; }
+.lann__cta { color: #fff; text-decoration: underline; text-underline-offset: 3px; font-weight: 500; white-space: nowrap; }
+</style>

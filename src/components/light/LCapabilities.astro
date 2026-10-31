@@ -1,0 +1,152 @@
+---
+const caps = [
+  { wide: true, shape: 'sq', title: 'Real-Time Competitor Price Tracking', body: 'Track every competitor, marketplace, and SKU with prices refreshed as often as every [PLACEHOLDER] — so you act on what\'s true right now, not yesterday.' },
+  { wide: false, shape: 'ci', title: 'Pricing Intelligence & Price Index', body: 'See exactly where you stand with a live price index, positioning views, and SKU-level insight across your entire catalog.' },
+  { wide: false, shape: 'di', title: 'AI Product Matching + Human QC', body: 'Our AI matches identical and similar products — even without barcodes — and every match passes human quality control. The result: [PLACEHOLDER]% verified accuracy.' },
+  { wide: true, shape: 'sq', title: 'Dynamic Pricing Software', body: 'Set rules or let AI recommend the optimal price for every product, balancing competitiveness and margin automatically as the market moves.' },
+  { wide: false, shape: 'ci', title: 'Competitor & Market Intelligence', body: 'Go beyond price. Track assortment, promotions, stock availability, and new-product launches to understand every competitor\'s full strategy.' },
+  { wide: false, shape: 'di-text', title: 'MAP & Promotion Monitoring', body: 'Protect your brand and channels with automated MAP compliance alerts and full visibility into competitor promotions.' },
+];
+---
+<section id="capabilities" class="l-section lcap">
+  <div class="lcap__head" data-reveal>
+    <div class="l-eyebrow">
+      <span class="l-eyebrow__slash">//</span>
+      <span class="l-eyebrow__label"><span class="l-eyebrow__diamond"></span>Core capabilities</span>
+      <span class="l-eyebrow__slash">\\</span>
+    </div>
+    <h2 class="l-h2" style="max-width:860px">Everything you need to monitor, decide, and <span class="l-grad">win on price.</span></h2>
+  </div>
+
+  <div class="lcap__grid l-frame" data-reveal style="--i:1">
+    {caps.map((c, i) => (
+      <div class:list={['lcap__card', { 'lcap__card--wide': c.wide }]}>
+        <div class="lcap__ic">
+          {c.shape === 'di-text'
+            ? <span class="lcap__map mono">MAP</span>
+            : <span class={`lcap__shape ${c.shape}`}></span>
+          }
+        </div>
+        <div>
+          <h3>{c.title}</h3>
+          <p>{c.body}</p>
+        </div>
+        <!-- Decorative data visuals per card -->
+        {i === 0 && (
+          <div class="lcap__track-wrap">
+            {[['Marketplace A · Headphones', '₹25,490', 80], ['Retailer B · Headphones', '₹24,790', 40], ['D2C store C · Earbuds', '₹18,990', 95], ['Marketplace D · Speakers', '₹6,290', 60]].map(([n, p, f]) => (
+              <div class="lcap__track">
+                <span class="lcap__track-name">{n}</span>
+                <span class="lcap__bar-wrap"><span class="lcap__bar" style={`width:${f}%`}></span></span>
+                <span class="mono lcap__track-p">{p}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {i === 1 && (
+          <div class="lcap__index">
+            <div class="lcap__index-row">
+              <span class="mono lcap__index-n">105.4</span>
+              <span class="mono lcap__index-delta">▼ 3.6% vs market</span>
+            </div>
+            <div class="lcap__splits"><span style="flex:3"></span><span style="flex:4.6;background:var(--pl-accent-line)"></span><span style="flex:1.4;background:var(--pl-danger)"></span></div>
+            <div class="lcap__legend mono"><span>CHEAPEST</span><span>COMPETITIVE</span><span>ABOVE</span></div>
+          </div>
+        )}
+        {i === 2 && (
+          <div class="lcap__flow">
+            <span class="lcap__flow-idle">Match</span>
+            <span class="lcap__flow-active">Review</span>
+            <span class="lcap__flow-done">Verify ✓</span>
+          </div>
+        )}
+        {i === 3 && (
+          <div class="lcap__rules">
+            <div class="lcap__rule-card">
+              {[['RULE','Beat lowest rival by 1%'],['FLOOR','Margin ≥ 18%'],['CEILING','MSRP']].map(([k,v]) => (
+                <div class="lcap__rule-row"><span class="mono lcap__rule-k">{k}</span><span>{v}</span></div>
+              ))}
+            </div>
+            <div class="lcap__rec">
+              <div class="mono lcap__rec-label">AI RECOMMENDATION</div>
+              <div class="lcap__rec-price mono"><s>₹24,990</s><b>₹24,540</b></div>
+              <div class="lcap__rec-note">Competitive and inside your floor</div>
+            </div>
+          </div>
+        )}
+        {i === 4 && (
+          <div class="lcap__intel">
+            {[['ASSORTMENT','+12 new SKUs'],['PROMOTIONS','3 active campaigns'],['STOCK','Rival out of stock'],['LAUNCHES','New model detected']].map(([k,v]) => (
+              <div class="lcap__intel-cell"><div class="mono lcap__intel-k">{k}</div><div>{v}</div></div>
+            ))}
+          </div>
+        )}
+        {i === 5 && (
+          <div class="lcap__alerts">
+            <div class="lcap__alert lcap__alert--bad"><span>MAP violation · Seller 2841</span><span class="mono">-8.0% below MAP</span></div>
+            <div class="lcap__alert"><span>Promotion detected · Marketplace</span><span class="mono">20% off</span></div>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+.lcap__head { text-align: center; margin-bottom: 52px; display: flex; flex-direction: column; align-items: center; gap: 0; }
+.lcap__grid { border-radius: 20px !important; display: flex !important; flex-wrap: wrap; gap: 0; background: var(--pl-line) !important; }
+.lcap__card { flex: 5 1 380px; min-width: 0; background: #fff !important; padding: 32px; display: flex; flex-direction: column; gap: 22px; }
+.lcap__card--wide { flex: 7 1 520px; }
+.lcap__ic { width: 46px; height: 46px; border-radius: 12px; border: 1px solid var(--pl-line-soft); display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px -10px rgba(24,229,99,.5); }
+.lcap__shape { width: 18px; height: 18px; background: linear-gradient(135deg,#18E563,#0fb04b); }
+.lcap__shape.sq { border-radius: 4px; }
+.lcap__shape.ci { border-radius: 50%; }
+.lcap__shape.di { border-radius: 2px; transform: rotate(45deg); }
+.lcap__map { font-size: 11px; font-weight: 600; color: #0fb04b; }
+.lcap__card h3 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -.01em; color: var(--pl-ink); }
+.lcap__card p  { margin: 10px 0 0; font-size: 15px; line-height: 1.6; color: var(--pl-muted); }
+.lcap__card > *:last-child { margin-top: auto; }
+
+/* Tracking */
+.lcap__track-wrap { border: 1px solid var(--pl-line-soft); border-radius: 12px; overflow: hidden; }
+.lcap__track { display: grid; grid-template-columns: minmax(0,1fr) 110px 80px; gap: 12px; align-items: center; padding: 12px 16px; font-size: 14px; border-top: 1px solid var(--pl-line-soft); }
+.lcap__track:first-child { border-top: none; }
+.lcap__track-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lcap__bar-wrap { height: 4px; border-radius: 4px; background: var(--pl-line-soft); overflow: hidden; }
+.lcap__bar { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg,#18E563,#0fb04b); }
+.lcap__track-p { text-align: right; }
+
+/* Index */
+.lcap__index-row { display: flex; align-items: baseline; gap: 12px; }
+.lcap__index-n { font-size: 56px; font-weight: 500; letter-spacing: -.04em; }
+.lcap__index-delta { font-size: 13px; color: var(--pl-accent-ink); }
+.lcap__splits { display: flex; gap: 4px; height: 8px; margin-top: 14px; }
+.lcap__splits span { flex: 3; border-radius: 4px; background: var(--pl-accent); }
+.lcap__legend { display: flex; justify-content: space-between; margin-top: 10px; font-size: 11px; letter-spacing: .08em; color: var(--pl-faint); }
+
+/* Flow */
+.lcap__flow { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; font-family: var(--pl-mono); font-size: 13px; text-align: center; }
+.lcap__flow span { border-radius: 10px; padding: 12px 0; }
+.lcap__flow-idle { border: 1px solid var(--pl-line-soft); color: var(--pl-muted); }
+.lcap__flow-active { border: 1.5px solid var(--pl-accent); color: var(--pl-accent-ink); background: var(--pl-accent-tint); }
+.lcap__flow-done { color: var(--pl-on-accent); background: linear-gradient(90deg,#18E563,#0fb04b); }
+
+/* Rules */
+.lcap__rules { display: flex; flex-wrap: wrap; gap: 10px; }
+.lcap__rule-card { flex: 1 1 220px; border: 1px solid var(--pl-line-soft); border-radius: 12px; padding: 16px 18px; display: grid; grid-template-columns: 76px 1fr; row-gap: 10px; font-size: 14px; }
+.lcap__rule-k { font-size: 11px; color: var(--pl-faint); }
+.lcap__rec { flex: 1 1 220px; border: 1.5px solid var(--pl-accent); background: var(--pl-accent-tint); border-radius: 12px; padding: 16px 18px; }
+.lcap__rec-label { font-size: 11px; letter-spacing: .1em; color: var(--pl-accent-ink); }
+.lcap__rec-price { display: flex; align-items: baseline; gap: 10px; margin-top: 8px; } .lcap__rec-price s { font-size: 13px; color: var(--pl-faint-2); } .lcap__rec-price b { font-size: 28px; font-weight: 500; }
+.lcap__rec-note { font-size: 13px; color: var(--pl-muted); margin-top: 4px; }
+
+/* Intel */
+.lcap__intel { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; font-size: 14px; }
+.lcap__intel-cell { border: 1px solid var(--pl-line-soft); border-radius: 10px; padding: 12px 14px; }
+.lcap__intel-k { font-size: 10px; letter-spacing: .1em; color: var(--pl-faint); margin-bottom: 4px; }
+
+/* Alerts */
+.lcap__alerts { display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.lcap__alert { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 1px solid var(--pl-line-soft); border-radius: 10px; padding: 13px 16px; flex-wrap: wrap; }
+.lcap__alert--bad { border-color: var(--pl-danger-line); background: var(--pl-danger-tint); } .lcap__alert--bad .mono { color: var(--pl-danger-ink); }
+</style>

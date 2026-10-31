@@ -1,0 +1,60 @@
+---
+const pains = [
+  { n: '01', tag: 'STALE',    t: "Stale competitor prices you can't act on" },
+  { n: '02', tag: 'MISMATCH', t: 'Wrong product matches skewing your view' },
+  { n: '03', tag: 'MANUAL',   t: 'Manual price-checking across dozens of sites' },
+  { n: '04', tag: 'LEAK',     t: 'Discounting that quietly gives away margin' },
+];
+---
+<section class="l-section lprob">
+  <div class="lprob__head" data-reveal>
+    <div>
+      <div class="l-eyebrow">
+        <span class="l-eyebrow__slash">//</span>
+        <span class="l-eyebrow__label"><span class="l-eyebrow__diamond l-eyebrow__diamond--red"></span>The cost of bad data</span>
+        <span class="l-eyebrow__slash">\\</span>
+      </div>
+      <h2 class="l-h2">Bad pricing data costs you margin <span style="color:var(--pl-danger)">every single day.</span></h2>
+    </div>
+    <p class="l-lead" style="max-width:460px">Most pricing tools hand you a dashboard and hope for the best. Sound familiar?</p>
+  </div>
+
+  <!-- Pain cards grid -->
+  <div class="lprob__grid l-frame" data-reveal style="--i:1">
+    {pains.map(p => (
+      <div class="lprob__card">
+        <div class="lprob__card-top">
+          <span class="mono lprob__no">{p.n}</span>
+          <span class="pl-badge pl-badge--danger">{p.tag}</span>
+        </div>
+        <div class="lprob__pain">
+          <span class="lprob__x" aria-hidden="true">×</span>
+          <span>{p.t}</span>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Fix banner -->
+  <div class="lprob__fix" data-reveal style="--i:2">
+    <span class="lprob__fix-ic" aria-hidden="true">✓</span>
+    <span class="lprob__fix-text">PriceLeap fixes the root cause: accurate data, refreshed in real time, turned into pricing moves you can trust.</span>
+    <a href="#how" class="lprob__fix-link">See how it works →</a>
+  </div>
+</section>
+
+<style>
+.lprob__head { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,420px),1fr)); gap: 48px; align-items: end; }
+.lprob__grid { grid-template-columns: repeat(auto-fit,minmax(min(100%,220px),1fr)); border-radius: 20px !important; margin-top: 48px; }
+.lprob__card { padding: 26px 24px 28px; display: flex; flex-direction: column; gap: 40px; min-height: 200px; }
+.lprob__card-top { display: flex; justify-content: space-between; align-items: center; }
+.lprob__no { font-size: 13px; color: var(--pl-faint-2); }
+.lprob__pain { display: flex; gap: 12px; align-items: flex-start; margin-top: auto; }
+.lprob__x { width: 20px; height: 20px; flex: none; margin-top: 3px; border-radius: 50%; border: 1.5px solid var(--pl-danger-line); color: var(--pl-danger); font-size: 11px; display: flex; align-items: center; justify-content: center; }
+.lprob__pain > span:last-child { font-size: 19px; font-weight: 500; line-height: 1.35; letter-spacing: -.01em; }
+
+.lprob__fix { margin-top: 12px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); border-radius: 16px; padding: 18px 22px; }
+.lprob__fix-ic { width: 40px; height: 40px; flex: none; border-radius: 11px; background: var(--pl-accent); color: var(--pl-on-accent); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; }
+.lprob__fix-text { flex: 1; min-width: 240px; font-size: 17px; line-height: 1.5; font-weight: 500; }
+.lprob__fix-link { color: var(--pl-accent-ink); font-weight: 500; white-space: nowrap; }
+</style>

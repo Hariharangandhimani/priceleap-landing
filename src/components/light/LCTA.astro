@@ -1,0 +1,37 @@
+---
+interface Props { id?: string }
+const { id = 'demo' } = Astro.props;
+---
+<section id={id} class="lcta">
+  <div class="lcta__inner" data-reveal>
+    <div class="lcta__dots" aria-hidden="true"></div>
+    <div class="lcta__frame" aria-hidden="true">
+      <i></i><i></i><i></i><i></i>
+    </div>
+    <div class="lcta__glow" aria-hidden="true"></div>
+    <div class="lcta__copy">
+      <h2>Price with confidence on data you can <span class="l-grad">actually trust.</span></h2>
+      <div class="lcta__btns">
+        <a href="/book-a-demo" class="pl-btn pl-btn--primary pl-btn--lg">Book a demo</a>
+        <a href="#product" class="pl-btn pl-btn--secondary pl-btn--lg">See a sample of your competitor data →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.lcta { padding: 28px; border-bottom: 1px solid var(--pl-line); max-width: var(--pl-container); margin: 0 auto; }
+.lcta__inner { position: relative; overflow: hidden; background: #fff; border: 1px solid var(--pl-line); border-radius: 24px; padding: clamp(72px,10vw,110px) 32px; text-align: center; }
+.lcta__dots { position: absolute; inset: 0; background-image: linear-gradient(#efede8 1px,transparent 1px),linear-gradient(90deg,#efede8 1px,transparent 1px); background-size: 40px 40px; background-position: center; -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 50%,#000 20%,transparent 75%); mask-image: radial-gradient(ellipse 60% 70% at 50% 50%,#000 20%,transparent 75%); pointer-events: none; }
+.lcta__frame { position: absolute; left: 50%; top: 50%; width: min(72%,760px); height: 62%; transform: translate(-50%,-50%); border: 1px solid var(--pl-line); border-radius: 4px; pointer-events: none; }
+.lcta__frame i { position: absolute; width: 14px; height: 14px; border: 0 solid var(--pl-accent); }
+.lcta__frame i:nth-child(1) { left: -1px; top: -1px; border-width: 1.5px 0 0 1.5px; }
+.lcta__frame i:nth-child(2) { right: -1px; top: -1px; border-width: 1.5px 1.5px 0 0; }
+.lcta__frame i:nth-child(3) { left: -1px; bottom: -1px; border-width: 0 0 1.5px 1.5px; }
+.lcta__frame i:nth-child(4) { right: -1px; bottom: -1px; border-width: 0 1.5px 1.5px 0; }
+.lcta__glow { position: absolute; left: 50%; bottom: -160px; width: 620px; height: 320px; transform: translateX(-50%); background: radial-gradient(closest-side,rgba(24,229,99,.14),transparent); pointer-events: none; }
+.lcta__copy { position: relative; display: flex; flex-direction: column; align-items: center; gap: 36px; }
+.lcta__copy h2 { margin: 0; font-size: clamp(32px,5vw,60px); line-height: 1.04; letter-spacing: -.035em; font-weight: 500; text-wrap: balance; }
+.lcta__btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+@media (max-width: 479px) { .lcta__btns { flex-direction: column; align-items: stretch; } }
+</style>
