@@ -1,0 +1,276 @@
+---
+// Product dashboard mock — KPI cards, agent toast, product table
+import { products } from '@/data/home';
+const prods = products.map(p => ({
+  ini: p.sku.slice(0,2), n: p.name, sku: p.sku,
+  price: '₹' + p.ours.toLocaleString('en-IN'),
+  gap: '+' + ((p.ours / Math.min(...p.comps) - 1) * 100).toFixed(1) + '%',
+  dyn: '₹' + (Math.min(p.msrp, Math.max(p.floor, p.map, Math.round(Math.min(...p.comps)*0.99/100)*100-10))).toLocaleString('en-IN'),
+  comp: p.comps.length,
+  map: '₹' + p.map.toLocaleString('en-IN'),
+  msrp: '₹' + p.msrp.toLocaleString('en-IN'),
+}));
+const velBars = [42,55,38,62,48,58,44,70,54,50,66,60,74,68,60,76];
+---
+<section id="product" class="ldash">
+  <div class="ldash__frame">
+    <!-- Chrome bar -->
+    <div class="ldash__chrome">
+      <div class="ldash__lights"><span></span><span></span><span></span></div>
+      <div class="ldash__url mono"><span class="ldash__dot"></span>app.priceleap.ai/price-intelligence</div>
+      <div style="width:42px"></div>
+    </div>
+
+    <div class="ldash__body">
+      <!-- Sidebar -->
+      <aside class="ldash__side">
+        <div class="ldash__ws"><span class="ldash__ws-av">AR</span>Acme Retail<span class="ldash__ws-ch">▾</span></div>
+        <div class="ldash__nav ldash__nav--on"><span class="ldash__sq ldash__sq--on"></span>Price Intelligence</div>
+        <div class="ldash__nav"><span class="ldash__sq"></span>Decision Engine</div>
+        <div class="ldash__sub">Product Groups</div>
+        <div class="ldash__sub">Dynamic Pricing</div>
+        <div class="ldash__nav"><span class="ldash__sq"></span>Reports</div>
+        <div class="ldash__sect mono">CONFIGURATION</div>
+        <div class="ldash__nav"><span class="ldash__sq"></span>Integrations</div>
+        <div class="ldash__nav"><span class="ldash__sq"></span>Workspace</div>
+        <div class="ldash__plan">
+          <span class="ldash__plan-tag mono">GROWTH</span>
+          <div class="ldash__plan-txt">12,480 of 15,000 SKUs</div>
+          <div class="ldash__plan-bar"><i style="width:83%"></i></div>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <div class="ldash__main">
+        <div class="ldash__topbar">
+          <span class="ldash__page-title">Price Intelligence</span>
+          <span class="ldash__page-sub">Monitor competitor prices and track your market position.</span>
+          <div class="ldash__topbar-actions">
+            <span class="ldash__chip">Agent</span>
+            <span class="ldash__chip ldash__chip--green">+ Add products</span>
+          </div>
+        </div>
+
+        <!-- KPI cards -->
+        <div class="ldash__kpis">
+          <div class="ldash__kpi">
+            <div class="mono ldash__kpi-lbl">CATALOG OVERVIEW</div>
+            <div class="ldash__kpi-row">
+              <div><div class="ldash__kpi-big">12,480</div><div class="ldash__kpi-sub">Active products</div></div>
+              <div class="ldash__ring">
+                <div class="ldash__ring-inner mono">105.4<span>INDEX</span></div>
+              </div>
+            </div>
+            <div class="mono ldash__kpi-foot">84 <b>BRANDS</b> · 23 <b>CATEGORIES</b></div>
+          </div>
+          <div class="ldash__kpi">
+            <div class="ldash__kpi-head"><div class="mono ldash__kpi-lbl">PRICE VELOCITY</div><span class="mono ldash__vel-badge">7d</span></div>
+            <div class="ldash__vel">
+              <div><div class="ldash__vel-n" style="color:#e5484d">146</div><div class="mono ldash__vel-l" style="color:#e5484d">UP</div></div>
+              <div><div class="ldash__vel-n" style="color:#0a8f3c">333</div><div class="mono ldash__vel-l">DOWN</div></div>
+              <div><div class="ldash__vel-n">109</div><div class="mono ldash__vel-l">MIXED</div></div>
+            </div>
+            <div class="ldash__sparkbars">
+              {velBars.map((h, i) => <span style={`height:${h}%;background:${i%3===1?'#e5484d':'#18E563'}`}></span>)}
+            </div>
+          </div>
+          <div class="ldash__kpi">
+            <div class="mono ldash__kpi-lbl">OUT OF STOCK</div>
+            <div class="ldash__oos-row"><span>Your store</span><span class="mono">0.1%</span></div>
+            <div><b class="ldash__oos-n">18</b> products</div>
+            <div class="ldash__oos-row" style="border-top:1px solid var(--pl-line-soft);margin-top:10px;padding-top:8px"><span>Competitors</span><span class="mono">4.9%</span></div>
+            <div><b class="ldash__oos-n" style="color:#e08a00">653</b> products</div>
+          </div>
+          <div class="ldash__kpi">
+            <div class="mono ldash__kpi-lbl">MARKET POSITION</div>
+            <div class="ldash__pos-row">
+              <div><div class="ldash__kpi-big" style="color:#0a8f3c">4,206</div><div class="mono ldash__kpi-sub" style="color:#0a8f3c">CHEAPEST</div></div>
+              <div class="ldash__pos-right">11,906 matched<br/>1,878 above</div>
+            </div>
+            <div class="ldash__pos-bar"><span style="flex:3;background:#18E563"></span><span style="flex:5;background:#b4f2c9"></span><span style="flex:1.4;background:#e5484d"></span></div>
+          </div>
+          <div class="ldash__kpi ldash__kpi--last">
+            <div class="mono ldash__kpi-lbl">FAILED FETCHES</div>
+            <div class="ldash__kpi-big">23</div>
+            <div class="ldash__kpi-sub">Retrying automatically</div>
+            <div class="ldash__fetch-bar"><i style="width:6%"></i></div>
+            <div class="mono ldash__fetch-note">0.2% of fetches</div>
+          </div>
+        </div>
+
+        <!-- Agent toast -->
+        <div class="ldash__agent">
+          <span class="ldash__agent-ic" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div class="ldash__agent-body">
+            <div class="ldash__agent-head">
+              <span class="ldash__agent-name">PriceLeap Agent</span>
+              <span class="mono ldash__agent-tag">PRICE DROP</span>
+              <span class="ldash__agent-time">now</span>
+            </div>
+            <div class="ldash__agent-msg">Retailer B cut True Wireless Earbuds Pro by 2.4%. Matching keeps you above your 18% floor.</div>
+          </div>
+          <div class="ldash__agent-btns">
+            <span class="ldash__agent-cta">Match price</span>
+            <span class="ldash__agent-dismiss">Dismiss</span>
+          </div>
+        </div>
+
+        <!-- Product table -->
+        <div class="ldash__table">
+          <div class="ldash__tbar">
+            <span class="ldash__tbar-title">Showing all products</span>
+            <span class="mono ldash__tbar-live"><span class="ldash__tdot"></span>LIVE</span>
+            <span class="ldash__filters">
+              <span>Stock status ▾</span><span>All brands ▾</span><span>All categories ▾</span><span>MAP ▾</span>
+            </span>
+          </div>
+          <div class="ldash__scroll">
+            <div class="ldash__grid">
+              <div class="ldash__row ldash__row--head mono">
+                <span>PRODUCT</span><span class="r">YOUR PRICE</span><span>POSITION VS MARKET</span><span>TREND</span><span class="r">DYNAMIC</span><span>RIVALS</span><span class="r">MAP / MSRP</span>
+              </div>
+              {prods.map(p => (
+                <div class="ldash__row">
+                  <div class="ldash__prod">
+                    <span class="mono ldash__thumb">{p.ini}</span>
+                    <div><div class="ldash__pname">{p.n}</div><div class="mono ldash__psku">{p.sku}</div></div>
+                  </div>
+                  <div class="r mono">{p.price}</div>
+                  <div>
+                    <div class="ldash__posbar"><span class="ldash__posdot" style="left:65%"></span></div>
+                    <div class="mono ldash__gapl" style="color:#e5484d">{p.gap} vs lowest</div>
+                  </div>
+                  <div class="ldash__spark"><svg viewBox="0 0 110 28" preserveAspectRatio="none" width="100%" height="28"><polyline points="0,22 15,18 30,20 45,12 60,16 75,8 90,12 110,6" fill="none" stroke="#18E563" stroke-width="1.6" vector-effect="non-scaling-stroke" /></svg></div>
+                  <div class="r"><div class="mono ldash__dyn">{p.dyn}</div><div class="mono ldash__save">▼ save</div></div>
+                  <div class="ldash__comps">
+                    <span class="ldash__avs"><i></i><i></i><i></i></span>
+                    <span>{p.comp}</span>
+                  </div>
+                  <div class="r mono ldash__mapmsrp">{p.map}<br />{p.msrp}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+@keyframes plpulse-l{0%{box-shadow:0 0 0 0 rgba(24,229,99,.5)}100%{box-shadow:0 0 0 8px rgba(24,229,99,0)}}
+
+.ldash { padding: var(--pl-space-24) var(--pl-gutter); border-bottom: 1px solid var(--pl-line); background: linear-gradient(#f6f5f2,#efeee9); max-width: var(--pl-container); margin: 0 auto; }
+.ldash__frame { background: #fff; border: 1px solid var(--pl-line); border-radius: 20px; box-shadow: 0 30px 60px -30px rgba(23,22,26,.25),0 0 0 6px rgba(255,255,255,.6); overflow: hidden; }
+
+/* Chrome */
+.ldash__chrome { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--pl-line-soft); background: var(--pl-surface-2); }
+.ldash__lights { display: flex; gap: 6px; flex: none; }
+.ldash__lights span { width: 10px; height: 10px; border-radius: 50%; background: var(--pl-line); }
+.ldash__url { flex: 1; max-width: 420px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 8px; background: #fff; border: 1px solid var(--pl-line-soft); border-radius: 8px; padding: 5px 12px; font-size: 12px; color: #55545b; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ldash__dot { width: 6px; height: 6px; border-radius: 50%; background: #18E563; flex: none; }
+
+/* Body layout */
+.ldash__body { display: flex; min-width: 0; }
+
+/* Sidebar */
+.ldash__side { width: 220px; flex: none; border-right: 1px solid var(--pl-line-soft); padding: 18px 14px; display: none; flex-direction: column; gap: 4px; background: var(--pl-surface-2); }
+@media (min-width: 1100px) { .ldash__side { display: flex; } }
+.ldash__ws { display: flex; align-items: center; gap: 10px; border: 1px solid var(--pl-line-soft); background: #fff; border-radius: 10px; padding: 8px 10px; margin-bottom: 12px; font-size: 14px; }
+.ldash__ws-av { width: 24px; height: 24px; border-radius: 6px; background: #dcfbe7; color: #0a8f3c; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex: none; }
+.ldash__ws-ch { margin-left: auto; color: var(--pl-faint-2); font-size: 10px; }
+.ldash__nav { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; font-size: 14px; color: #55545b; }
+.ldash__nav--on { background: #fff; border: 1px solid var(--pl-accent-line); font-weight: 500; }
+.ldash__sq { width: 8px; height: 8px; border-radius: 2px; border: 1.5px solid #b5b3ba; flex: none; }
+.ldash__sq--on { background: #18E563; border-color: #18E563; }
+.ldash__sub { padding: 6px 10px 6px 28px; font-size: 13px; color: #6b6a70; }
+.ldash__sect { padding: 16px 10px 6px; font-size: 10px; letter-spacing: .12em; color: var(--pl-faint-2); }
+.ldash__plan { margin-top: auto; border: 1px solid var(--pl-line-soft); background: #fff; border-radius: 10px; padding: 12px; }
+.ldash__plan-tag { font-size: 10px; letter-spacing: .1em; color: #0a8f3c; border: 1px solid var(--pl-accent-line); border-radius: 5px; padding: 2px 6px; }
+.ldash__plan-txt { font-size: 12px; margin: 10px 0 8px; color: #3a3940; }
+.ldash__plan-bar { height: 4px; border-radius: 4px; background: var(--pl-line-soft); }
+.ldash__plan-bar i { display: block; height: 100%; border-radius: 4px; background: #18E563; }
+
+/* Main */
+.ldash__main { flex: 1; min-width: 0; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.ldash__topbar { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; }
+.ldash__page-title { font-size: 15px; font-weight: 500; }
+.ldash__page-sub { font-size: 13px; color: var(--pl-faint); border-left: 1px solid var(--pl-line-soft); padding-left: 14px; display: none; }
+@media (min-width: 860px) { .ldash__page-sub { display: inline; } }
+.ldash__topbar-actions { margin-left: auto; display: flex; gap: 8px; }
+.ldash__chip { border: 1px solid var(--pl-line-soft); border-radius: 8px; padding: 6px 12px; font-size: 13px; }
+.ldash__chip--green { background: #18E563; color: #0b1f12; border-color: #18E563; font-weight: 500; }
+
+/* KPI grid */
+.ldash__kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%,200px),1fr)); gap: 10px; }
+.ldash__kpi { border: 1px solid var(--pl-line-soft); border-radius: 12px; padding: 14px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.ldash__kpi-lbl { font-size: 10px; letter-spacing: .12em; color: var(--pl-faint); }
+.ldash__kpi-head { display: flex; justify-content: space-between; align-items: center; }
+.ldash__kpi-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; }
+.ldash__kpi-big { font-size: 26px; font-weight: 600; letter-spacing: -.02em; color: var(--pl-ink); }
+.ldash__kpi-sub { font-size: 12px; color: var(--pl-faint); }
+.ldash__kpi-foot { font-size: 12px; border-top: 1px solid var(--pl-line-soft); padding-top: 10px; } .ldash__kpi-foot b { font-family: var(--pl-mono); font-size: 9px; color: var(--pl-faint); font-weight: 400; }
+.ldash__ring { width: 50px; height: 50px; flex: none; border-radius: 50%; background: conic-gradient(#18E563 0 78%, var(--pl-line-soft) 78% 100%); display: flex; align-items: center; justify-content: center; }
+.ldash__ring-inner { width: 40px; height: 40px; border-radius: 50%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: 500; } .ldash__ring-inner span { font-size: 7px; color: #0a8f3c; }
+.ldash__vel { display: flex; gap: 14px; }
+.ldash__vel-n { font-size: 22px; font-weight: 600; }
+.ldash__vel-l { font-size: 8px; letter-spacing: .06em; color: var(--pl-faint); }
+.ldash__vel-badge { font-size: 10px; border: 1px solid var(--pl-ink); border-radius: 5px; padding: 1px 5px; }
+.ldash__sparkbars { display: flex; align-items: flex-end; gap: 3px; height: 28px; }
+.ldash__sparkbars span { flex: 1; border-radius: 2px; }
+.ldash__oos-row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--pl-faint); }
+.ldash__oos-n { font-size: 20px; font-weight: 600; }
+.ldash__pos-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; }
+.ldash__pos-right { text-align: right; font-size: 11px; line-height: 1.5; color: #55545b; }
+.ldash__pos-bar { display: flex; gap: 3px; height: 6px; }
+.ldash__pos-bar span { border-radius: 3px; }
+.ldash__fetch-bar { height: 4px; border-radius: 4px; background: var(--pl-line-soft); } .ldash__fetch-bar i { display: block; height: 100%; border-radius: 4px; background: #e08a00; }
+.ldash__fetch-note { font-size: 10px; color: #e08a00; }
+.ldash__kpi--last { grid-column: auto; }
+
+/* Agent */
+.ldash__agent { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; border: 1px solid var(--pl-accent-line); background: var(--pl-accent-tint); border-radius: 12px; padding: 12px 14px; }
+.ldash__agent-ic { width: 32px; height: 32px; flex: none; border-radius: 9px; background: #18E563; display: flex; align-items: flex-end; justify-content: center; gap: 2px; padding-bottom: 9px; }
+.ldash__agent-ic i { width: 3px; border-radius: 1px; background: #0b1f12; }
+.ldash__agent-ic i:nth-child(1) { height: 5px; } .ldash__agent-ic i:nth-child(2) { height: 8px; } .ldash__agent-ic i:nth-child(3) { height: 11px; }
+.ldash__agent-body { flex: 1; min-width: 220px; }
+.ldash__agent-head { display: flex; align-items: center; gap: 8px; }
+.ldash__agent-name { font-size: 13px; font-weight: 600; }
+.ldash__agent-tag { font-size: 9px; letter-spacing: .1em; color: #0a8f3c; border: 1px solid var(--pl-accent-line); background: #fff; border-radius: 5px; padding: 1px 6px; }
+.ldash__agent-time { font-size: 11px; color: var(--pl-faint-2); }
+.ldash__agent-msg { font-size: 13px; line-height: 1.5; color: #3a3940; margin-top: 3px; }
+.ldash__agent-btns { display: flex; gap: 8px; }
+.ldash__agent-cta { background: #18E563; color: #0b1f12; font-size: 12px; font-weight: 500; padding: 7px 12px; border-radius: 8px; white-space: nowrap; cursor: pointer; }
+.ldash__agent-dismiss { border: 1px solid var(--pl-line-strong); background: #fff; font-size: 12px; padding: 7px 12px; border-radius: 8px; cursor: pointer; }
+
+/* Table */
+.ldash__table { border: 1px solid var(--pl-line-soft); border-radius: 12px; overflow: hidden; }
+.ldash__tbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border-bottom: 1px solid var(--pl-line-soft); }
+.ldash__tbar-title { font-size: 14px; font-weight: 500; }
+.ldash__tbar-live { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--pl-faint); }
+.ldash__tdot { width: 6px; height: 6px; border-radius: 50%; background: #18E563; animation: plpulse-l 1.6s infinite; }
+.ldash__filters { margin-left: auto; display: none; gap: 6px; flex-wrap: wrap; }
+@media (min-width: 860px) { .ldash__filters { display: flex; } }
+.ldash__filters span { border: 1px solid var(--pl-line-soft); border-radius: 7px; padding: 4px 10px; font-size: 12px; color: #55545b; }
+.ldash__scroll { overflow-x: auto; }
+.ldash__grid { min-width: 820px; }
+.ldash__row { display: grid; grid-template-columns: minmax(0,2.2fr) minmax(0,.9fr) minmax(0,1.5fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,.7fr) minmax(0,.8fr); gap: 12px; padding: 11px 14px; align-items: center; border-bottom: 1px solid #f3f1ec; font-size: 13px; }
+.ldash__row--head { font-family: var(--pl-mono); font-size: 10px; letter-spacing: .1em; color: var(--pl-faint); border-bottom: 1px solid var(--pl-line-soft); background: var(--pl-surface-2); }
+.ldash__prod { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.ldash__thumb { width: 30px; height: 30px; flex: none; border-radius: 7px; border: 1px solid var(--pl-line-soft); font-size: 9px; color: var(--pl-faint); display: flex; align-items: center; justify-content: center; }
+.ldash__pname { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ldash__psku { font-family: var(--pl-mono); font-size: 10px; color: var(--pl-faint); }
+.ldash__posbar { position: relative; height: 4px; border-radius: 4px; background: linear-gradient(90deg,#b4f2c9,#f5c2c4); }
+.ldash__posdot { position: absolute; top: -4px; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 3px solid #e5484d; margin-left: -6px; }
+.ldash__gapl { font-size: 10px; margin-top: 6px; }
+.ldash__dyn { color: #0a8f3c; font-weight: 500; }
+.ldash__save { font-size: 10px; color: var(--pl-faint); }
+.ldash__comps { display: flex; align-items: center; gap: 6px; }
+.ldash__avs { display: flex; }
+.ldash__avs i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; background: #d8d6cf; }
+.ldash__avs i:nth-child(2) { background: #c4c1b9; margin-left: -5px; }
+.ldash__avs i:nth-child(3) { background: #aeaba3; margin-left: -5px; }
+.ldash__mapmsrp { font-size: 11px; color: var(--pl-faint); line-height: 1.4; }
+.ldash__spark { overflow: hidden; }
+.r { text-align: right; justify-content: flex-end; }
+</style>

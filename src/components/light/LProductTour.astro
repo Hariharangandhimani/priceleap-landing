@@ -1,0 +1,246 @@
+---
+// Inside PriceLeap — 4-tab product tour
+const tabs = [
+  { n:'01', t:'Add products', d:'Paste URLs, upload a file, or connect your catalog.', title:'Add Products', sub:'AI tracks pricing, finds competitors and monitors their prices.' },
+  { n:'02', t:'Monitor the market', d:'Every price move, stock-out and promo, as it happens.', title:'Price Intelligence', sub:'Monitor competitor prices and track your market position.' },
+  { n:'03', t:'Dynamic pricing', d:'Rules with floors, ceilings and MAP built in.', title:'Dynamic Pricing', sub:'Set how prices adjust automatically and when to get notified.' },
+  { n:'04', t:'Ask the Agent', d:'Plain-English answers on prices, rivals and alerts.', title:'PriceLeap Agent', sub:'Online · grounded in your live catalog data' },
+];
+const feed = [
+  { time:'09:42', type:'PRICE DROP', color:'#0a8f3c', text:'Retailer B cut 14 audio SKUs by avg 3.1%', delta:'−3.1%' },
+  { time:'09:18', type:'OUT OF STOCK', color:'#e08a00', text:'D2C store C out of stock on Smart Fitness Watch 46mm', delta:'OOS' },
+  { time:'08:55', type:'PROMOTION', color:'#a09fa6', text:'Marketplace D launched 20% off campaign on speakers', delta:'20% off' },
+  { time:'08:31', type:'MAP ALERT', color:'#e5484d', text:'Seller 2841 listed 8.0% below MAP on Marketplace A', delta:'−8.0%' },
+  { time:'08:10', type:'PRICE RAISE', color:'#e5484d', text:'Competitor C raised prices on TWS earbuds by 2.2%', delta:'+2.2%' },
+];
+---
+<section class="ltour l-section" data-ltour>
+  <div class="ltour__head">
+    <div class="l-eyebrow">
+      <span class="l-eyebrow__slash">//</span>
+      <span class="l-eyebrow__label"><span class="l-eyebrow__diamond"></span>Inside PriceLeap</span>
+      <span class="l-eyebrow__slash">\\</span>
+    </div>
+    <h2 class="l-h2" style="max-width:880px">From a list of URLs to a repriced catalog <span class="l-grad">— in one workspace.</span></h2>
+    <p class="l-lead" style="max-width:620px">Add products, watch the market, set the rules, and ask the Agent when you need an answer fast.</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="ltour__tabs">
+    {tabs.map((t, i) => (
+      <button class:list={['ltour__tab', { 'ltour__tab--on': i === 0 }]} data-ltab={i} aria-selected={i === 0 ? 'true' : 'false'}>
+        <div class="ltour__tab-top">
+          <span class:list={['ltour__num mono', { 'ltour__num--on': i === 0 }]}>{t.n}</span>
+          <span class="ltour__tab-title">{t.t}</span>
+        </div>
+        <div class="ltour__tab-desc">{t.d}</div>
+        <span class="ltour__fill" aria-hidden="true"></span>
+      </button>
+    ))}
+  </div>
+
+  <!-- Panel -->
+  <div class="ltour__window">
+    <div class="ltour__winbar">
+      <span class="ltour__win-title" data-ltour-title>Add Products</span>
+      <span class="ltour__win-sub" data-ltour-sub>AI tracks pricing, finds competitors and monitors their prices.</span>
+      <span class="mono ltour__win-count" data-ltour-count>01 / 04</span>
+    </div>
+
+    <div class="ltour__stage">
+
+      <!-- Tab 0: Add products -->
+      <div class="ltour__panel" data-lpanel="0">
+        <div class="ltour__subtabs">
+          <span class="ltour__subtab ltour__subtab--on">Paste URLs</span>
+          <span class="ltour__subtab">Upload file</span>
+          <span class="ltour__subtab">Connect catalog</span>
+        </div>
+        <div class="ltour__urls mono">
+          <div class="ltour__urls-hint">Paste multiple URLs (one per line):</div>
+          <div>https://amazon.com/product/wh-anc-700</div>
+          <div>https://walmart.com/product/sonix-anc-700</div>
+          <div>https://target.com/product/wh-anc-700</div>
+          <div>https://bestbuy.com/product/anc-700</div>
+          <span class="ltour__caret"></span>
+        </div>
+        <div class="ltour__track-opts">
+          <div class="ltour__track-title">How should we track this group?</div>
+          <div class="ltour__track-sub">Pick once — you can flip individual products later from the dashboard.</div>
+          <div class="ltour__opts">
+            <div class="ltour__opt ltour__opt--on">
+              <div class="ltour__opt-row"><span class="ltour__radio ltour__radio--on"></span><span>Find &amp; monitor competitors</span><span class="mono ltour__opt-tag">AI POWERED</span></div>
+              <p>AI discovers competing products and tracks pricing and strategy for the group.</p>
+            </div>
+            <div class="ltour__opt">
+              <div class="ltour__opt-row"><span class="ltour__radio"></span><span>Track your product URLs</span><span class="mono ltour__opt-tag ltour__opt-tag--muted">SAVE CREDITS</span></div>
+              <p>Monitor your own listings and assign competitor domains per product when you're ready.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 1: Monitor the market -->
+      <div class="ltour__panel" data-lpanel="1" hidden>
+        <div class="ltour__feed">
+          {feed.map(f => (
+            <div class="ltour__feed-row">
+              <span class="mono ltour__feed-time">{f.time}</span>
+              <span class="mono ltour__feed-type" style={`color:${f.color};border-color:${f.color}`}>{f.type}</span>
+              <span class="ltour__feed-text">{f.text}</span>
+              <span class="mono ltour__feed-delta" style={`color:${f.color}`}>{f.delta}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Tab 2: Dynamic pricing -->
+      <div class="ltour__panel" data-lpanel="2" hidden>
+        <div class="ltour__rule-wrap">
+          <div class="ltour__rule-card">
+            <div class="mono ltour__rule-lbl">RULE SET · HEADPHONES</div>
+            <div class="ltour__rule-rows">
+              <div><span class="mono ltour__rk">RULE</span><span>Beat lowest rival by 1%</span></div>
+              <div><span class="mono ltour__rk">FLOOR</span><span>Margin ≥ 18%</span></div>
+              <div><span class="mono ltour__rk">CEILING</span><span>MSRP</span></div>
+              <div><span class="mono ltour__rk">MAP</span><span>Never below ₹23,990</span></div>
+            </div>
+          </div>
+          <div class="ltour__rec-card">
+            <div class="mono ltour__rec-lbl">AI RECOMMENDATION</div>
+            <div class="ltour__rec-price mono"><s>₹24,990</s><b>₹24,540</b></div>
+            <div class="ltour__rec-note">Competitive and inside your floor</div>
+            <div class="ltour__rec-btns">
+              <span class="ltour__rec-apply">Apply price</span>
+              <span class="ltour__rec-edit">Edit rule</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Ask the Agent -->
+      <div class="ltour__panel ltour__panel--chat" data-lpanel="3" hidden>
+        <div class="ltour__chat">
+          <div class="ltour__msg-agent">
+            <div class="mono ltour__agent-label">PRICELEAP AGENT</div>
+            Two SKUs. True Wireless Earbuds Pro is 2.2% above the lowest rival after Retailer B's cut, and TWS-LITE is out of stock at Marketplace A, so you're the cheapest there already. Matching on TWS-PRO-2 keeps margin at 19.1%.
+            <div class="ltour__chat-btns">
+              <span class="ltour__chat-cta">Match TWS-PRO-2</span>
+              <span class="ltour__chat-ghost">Open report</span>
+            </div>
+          </div>
+          <div class="ltour__msg-user">Which earbuds are we losing the buy box on this week?</div>
+          <div class="ltour__chat-input">Ask about prices, rivals or alerts…<span class="ltour__chat-send">↑</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-ltour]');
+  if (root) {
+    const TAB_DATA = [
+      { title: 'Add Products', sub: 'AI tracks pricing, finds competitors and monitors their prices.', n: '01' },
+      { title: 'Price Intelligence', sub: 'Monitor competitor prices and track your market position.', n: '02' },
+      { title: 'Dynamic Pricing', sub: 'Set how prices adjust automatically and when to get notified.', n: '03' },
+      { title: 'PriceLeap Agent', sub: 'Online · grounded in your live catalog data', n: '04' },
+    ];
+    let cur = 0;
+    const go = (i: number) => {
+      cur = i;
+      root.querySelectorAll<HTMLElement>('[data-ltab]').forEach((b, k) => {
+        const on = k === i; b.setAttribute('aria-selected', String(on)); b.classList.toggle('ltour__tab--on', on);
+        b.querySelector('.ltour__num')?.classList.toggle('ltour__num--on', on);
+      });
+      root.querySelectorAll<HTMLElement>('[data-lpanel]').forEach(p => p.hidden = Number(p.dataset.lpanel) !== i);
+      const d = TAB_DATA[i];
+      const t = root.querySelector('[data-ltour-title]'); if (t) t.textContent = d.title;
+      const s = root.querySelector('[data-ltour-sub]'); if (s) s.textContent = d.sub;
+      const c = root.querySelector('[data-ltour-count]'); if (c) c.textContent = d.n + ' / 04';
+    };
+    root.querySelectorAll<HTMLButtonElement>('[data-ltab]').forEach((b, i) => b.addEventListener('click', () => go(i)));
+    // Auto-advance every 7s
+    let timer = setInterval(() => { if (!window.matchMedia('(prefers-reduced-motion:reduce)').matches) go((cur + 1) % 4); }, 7000);
+    root.querySelectorAll('[data-ltab]').forEach(b => b.addEventListener('click', () => { clearInterval(timer); }));
+  }
+</script>
+
+<style>
+@keyframes ltblink{50%{opacity:0}}
+
+.ltour__head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; }
+.ltour__tabs { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,200px),1fr)); gap: 12px; margin-top: 52px; }
+.ltour__tab { position: relative; text-align: left; font: inherit; background: #fff; border: 1px solid var(--pl-line); border-radius: 16px; padding: 20px 20px 22px; cursor: pointer; overflow: hidden; transition: border-color .3s, box-shadow .3s; display: flex; flex-direction: column; gap: 0; }
+.ltour__tab--on { border-color: var(--pl-accent); box-shadow: 0 8px 24px -12px rgba(24,229,99,.4); }
+.ltour__tab-top { display: flex; align-items: center; gap: 10px; }
+.ltour__num { font-size: 11px; color: var(--pl-faint-2); }
+.ltour__num--on { color: var(--pl-accent-ink); }
+.ltour__tab-title { font-size: 17px; font-weight: 500; color: var(--pl-ink); }
+.ltour__tab-desc { margin-top: 10px; font-size: 14px; line-height: 1.5; color: var(--pl-muted); }
+.ltour__fill { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: linear-gradient(90deg,#18E563,#0fb04b); }
+.ltour__tab--on .ltour__fill { width: 100%; transition: width 7s linear; }
+
+/* Window */
+.ltour__window { margin-top: 14px; background: #fff; border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; }
+.ltour__winbar { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--pl-line-soft); background: var(--pl-surface-2); }
+.ltour__win-title { font-size: 15px; font-weight: 500; }
+.ltour__win-sub { font-size: 13px; color: var(--pl-faint); border-left: 1px solid var(--pl-line); padding-left: 14px; display: none; }
+@media (min-width: 860px) { .ltour__win-sub { display: inline; } }
+.ltour__win-count { margin-left: auto; font-size: 12px; color: var(--pl-faint); }
+.ltour__stage { padding: 28px; min-height: 320px; }
+.ltour__panel { display: flex; flex-direction: column; gap: 16px; animation: pl-fadeup .3s ease; }
+
+/* Tab 0 */
+.ltour__subtabs { display: flex; gap: 28px; border-bottom: 1px solid var(--pl-line-soft); font-size: 15px; }
+.ltour__subtab { padding: 10px 2px; color: var(--pl-muted); }
+.ltour__subtab--on { color: var(--pl-accent-ink); border-bottom: 2px solid var(--pl-accent); margin-bottom: -1px; font-weight: 500; }
+.ltour__urls { background: var(--pl-surface-2); border: 1px solid var(--pl-line-soft); border-radius: 14px; padding: 20px 22px; font-size: 14px; line-height: 2; }
+.ltour__urls-hint { color: var(--pl-faint-2); }
+.ltour__caret { display: inline-block; width: 9px; height: 18px; background: #18E563; vertical-align: -2px; animation: ltblink 1s steps(1) infinite; margin-top: 4px; }
+.ltour__track-opts { border: 1px solid var(--pl-line-soft); border-radius: 14px; padding: 20px 22px; }
+.ltour__track-title { font-size: 16px; font-weight: 600; }
+.ltour__track-sub { font-size: 14px; color: var(--pl-muted); margin-top: 4px; }
+.ltour__opts { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)); gap: 12px; margin-top: 16px; }
+.ltour__opt { border: 1px solid var(--pl-line); border-radius: 12px; padding: 14px 16px; }
+.ltour__opt--on { border-color: var(--pl-accent); background: var(--pl-accent-tint); }
+.ltour__opt-row { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; }
+.ltour__opt p { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: var(--pl-muted); }
+.ltour__radio { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #c9c7c0; flex: none; }
+.ltour__radio--on { border: 5px solid #18E563; background: #fff; }
+.ltour__opt-tag { font-size: 10px; letter-spacing: .08em; margin-left: auto; border: 1px solid var(--pl-accent-line); color: var(--pl-accent-ink); background: #fff; border-radius: 5px; padding: 2px 6px; white-space: nowrap; }
+.ltour__opt-tag--muted { border-color: var(--pl-line-soft); color: var(--pl-faint); }
+
+/* Tab 1 */
+.ltour__feed { display: flex; flex-direction: column; gap: 10px; }
+.ltour__feed-row { display: grid; grid-template-columns: 52px 110px minmax(0,1fr) 60px; gap: 16px; align-items: center; border: 1px solid var(--pl-line-soft); border-radius: 12px; padding: 14px 18px; font-size: 14px; }
+.ltour__feed-time { font-size: 12px; color: var(--pl-faint); }
+.ltour__feed-type { font-size: 10px; letter-spacing: .08em; border: 1px solid; border-radius: 5px; padding: 3px 7px; justify-self: start; }
+.ltour__feed-delta { text-align: right; font-size: 13px; }
+
+/* Tab 2 */
+.ltour__rule-wrap { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,300px),1fr)); gap: 16px; }
+.ltour__rule-card { border: 1px solid var(--pl-line-soft); border-radius: 14px; padding: 22px; }
+.ltour__rule-lbl { font-size: 11px; letter-spacing: .12em; color: var(--pl-faint); }
+.ltour__rule-rows { display: grid; grid-template-columns: 90px 1fr; row-gap: 16px; margin-top: 20px; font-size: 15px; }
+.ltour__rk { font-size: 12px; color: var(--pl-faint); }
+.ltour__rec-card { border: 1.5px solid var(--pl-accent); background: var(--pl-accent-tint); border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 10px; }
+.ltour__rec-lbl { font-size: 11px; letter-spacing: .12em; color: var(--pl-accent-ink); }
+.ltour__rec-price { display: flex; align-items: baseline; gap: 12px; margin-top: 10px; } .ltour__rec-price s { font-size: 16px; color: var(--pl-faint-2); } .ltour__rec-price b { font-size: 40px; font-weight: 500; letter-spacing: -.02em; }
+.ltour__rec-note { font-size: 14px; color: var(--pl-muted); }
+.ltour__rec-btns { display: flex; gap: 8px; margin-top: 10px; }
+.ltour__rec-apply { background: #18E563; color: #0b1f12; font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: 9px; cursor: pointer; }
+.ltour__rec-edit { border: 1px solid var(--pl-line-soft); background: #fff; font-size: 13px; padding: 8px 14px; border-radius: 9px; cursor: pointer; }
+
+/* Tab 3 */
+.ltour__panel--chat .ltour__chat { max-width: 720px; display: flex; flex-direction: column; gap: 14px; }
+.ltour__msg-agent { background: #fff; border: 1px solid var(--pl-line-soft); border-radius: 14px 14px 14px 4px; padding: 16px 18px; font-size: 15px; line-height: 1.6; max-width: 600px; }
+.ltour__agent-label { font-size: 10px; letter-spacing: .12em; color: var(--pl-accent-ink); margin-bottom: 6px; }
+.ltour__chat-btns { display: flex; gap: 8px; margin-top: 12px; }
+.ltour__chat-cta { background: #18E563; color: #0b1f12; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.ltour__chat-ghost { border: 1px solid var(--pl-line-soft); font-size: 12px; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.ltour__msg-user { align-self: flex-end; background: #e3fbec; border: 1px solid var(--pl-accent-line); border-radius: 14px 14px 4px 14px; padding: 12px 16px; font-size: 15px; max-width: 80%; }
+.ltour__chat-input { display: flex; align-items: center; gap: 10px; border: 1px solid var(--pl-line-soft); border-radius: 12px; padding: 12px 16px; color: var(--pl-faint-2); font-size: 14px; }
+.ltour__chat-send { margin-left: auto; width: 28px; height: 28px; border-radius: 8px; background: #18E563; color: #0b1f12; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+</style>
