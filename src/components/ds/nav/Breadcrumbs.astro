@@ -1,0 +1,8 @@
+---
+interface Props { items: { label: string; href?: string }[]; variant?: 'text'|'chips'; schema?: boolean }
+const { items, variant='text', schema=true } = Astro.props; const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
+const ld = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.label, ...(it.href ? { item: site + it.href } : {}) })) };
+---
+<nav aria-label="Breadcrumb"><ol class={variant}>{items.map((it, i) => <><li>{it.href && i < items.length-1 ? <a href={it.href}>{it.label}</a> : <span aria-current="page">{it.label}</span>}</li>{i < items.length-1 && <li class="sep" aria-hidden="true">{variant==='chips' ? '›' : '/'}</li>}</>)}</ol></nav>
+{schema && <script type="application/ld+json" set:html={JSON.stringify(ld)} />}
+<style>ol{list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px}a{color:var(--pl-muted)}[aria-current]{font-weight:500}.sep{color:#c9c7c0}.chips{font-family:var(--pl-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;gap:6px}.chips li:not(.sep)>*{display:inline-block;border:1px solid var(--pl-line);background:var(--pl-surface-2);border-radius:6px;padding:3px 8px}.chips [aria-current]{border-color:var(--pl-accent-line);background:var(--pl-accent-tint);color:var(--pl-accent-ink)}</style>

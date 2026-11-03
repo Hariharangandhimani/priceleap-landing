@@ -1,0 +1,6 @@
+---
+interface Props { variant?: 'bar'|'ring' }
+const { variant='bar' } = Astro.props;
+---
+{variant==='bar' ? <div class="rp" role="progressbar" aria-label="Reading progress" aria-valuemin="0" aria-valuemax="100"></div> : <span class="ring" aria-hidden="true"><svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="22" /><circle cx="28" cy="28" r="22" class="v" /></svg></span>}
+<style>.rp{position:fixed;left:0;top:0;height:3px;width:calc(var(--pl-scroll,0) * 100%);background:var(--pl-accent);z-index:90}.ring svg{width:56px;height:56px;transform:rotate(-90deg)}circle{fill:none;stroke:var(--pl-line-soft);stroke-width:3}.v{stroke:var(--pl-accent);stroke-linecap:round;stroke-dasharray:138.2;stroke-dashoffset:calc(138.2 * (1 - var(--pl-scroll,0)))}</style>

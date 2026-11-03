@@ -1,0 +1,7 @@
+---
+interface Props { items: string[]; active?: string; variant?: 'pills'|'tags'; multi?: boolean; name?: string }
+const { items, active=items[0], variant='pills', multi=false, name='filter' } = Astro.props;
+---
+<div class={'fb ' + variant} role="group" aria-label="Filters" data-filterbar={name} data-multi={multi || undefined}>{items.map(i => <button type="button" class={variant==='pills' ? 'pl-chip' : 'tag'} aria-pressed={i===active ? 'true' : 'false'} data-value={i}>{variant==='tags' && '#'}{i}</button>)}</div>
+<script>document.querySelectorAll<HTMLElement>('[data-filterbar]').forEach(g => g.querySelectorAll<HTMLElement>('button').forEach(b => b.addEventListener('click', () => { if (g.dataset.multi) b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true')); else g.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); g.dispatchEvent(new CustomEvent('pl:filter', { bubbles: true, detail: [...g.querySelectorAll<HTMLElement>('[aria-pressed=true]')].map(x => x.dataset.value) })); })));</script>
+<style>.fb{display:flex;gap:8px;flex-wrap:wrap}.tag{font-family:var(--pl-mono);font-size:11px;cursor:pointer;border:1px solid var(--pl-line);background:#fff;color:#55545b;border-radius:7px;padding:4px 10px}.tag[aria-pressed=true]{background:var(--pl-accent-tint);border-color:var(--pl-accent-line);color:var(--pl-accent-ink)}</style>

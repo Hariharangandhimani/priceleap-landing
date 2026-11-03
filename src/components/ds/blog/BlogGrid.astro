@@ -1,0 +1,9 @@
+---
+import BlogCard from '@/components/ds/blog/BlogCard.astro';
+import FilterBar from '@/components/ds/nav/FilterBar.astro';
+interface Props { posts: any[]; categories?: string[]; min?: string }
+const { posts, categories, min='260px' } = Astro.props;
+---
+<div class="bg" data-bloggrid>{categories && <FilterBar items={['All', ...categories]} name="blog" />}<div class="grid" style={`--min:${min}`}>{posts.map(p => <div data-cat={p.category} data-reveal><BlogCard post={p} /></div>)}</div></div>
+<script>document.querySelectorAll<HTMLElement>('[data-bloggrid]').forEach(g => g.addEventListener('pl:filter', (e: any) => { const v = e.detail[0]; g.querySelectorAll<HTMLElement>('[data-cat]').forEach(c => c.hidden = v !== 'All' && c.dataset.cat !== v); }));</script>
+<style>.bg{display:flex;flex-direction:column;gap:18px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--min)),1fr));gap:12px}</style>

@@ -1,0 +1,10 @@
+---
+interface Props { eyebrow?: string; title: string; accent?: string; lead?: string; align?: 'center'|'split'|'left'; as?: 'h1'|'h2'|'h3' }
+const { eyebrow, title, accent, lead, align='center', as: H='h2' } = Astro.props;
+---
+<div class={'sh ' + align}>
+  <div class="main">{eyebrow && <span class="pl-eyebrow"><span class="pl-eyebrow__slash">//</span><span class="pl-eyebrow__label">{eyebrow}</span>{align==='center' && <span class="pl-eyebrow__slash">\\</span>}</span>}
+  <H class="pl-h2">{title} {accent && <span class="pl-grad">{accent}</span>}</H></div>
+  {lead && <p class="pl-lead">{lead}</p>}<slot />
+</div>
+<style>.sh{display:flex;flex-direction:column;gap:20px}.center{align-items:center;text-align:center}.center .pl-h2{max-width:880px}.center p{max-width:640px}.main{display:flex;flex-direction:column;gap:22px}.center .main{align-items:center}p{margin:0}.split{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:24px 48px;align-items:end}.split p{max-width:460px}</style>

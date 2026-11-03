@@ -1,0 +1,7 @@
+---
+interface Props { text: string; label?: string; code?: boolean }
+const { text, label='Copy', code=true } = Astro.props;
+---
+<div class="cp">{code && <code>{text}</code>}<button type="button" data-copy={text} data-label={label}>{label}</button></div>
+<script>document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach(b => b.addEventListener('click', async () => { try { await navigator.clipboard.writeText(b.dataset.copy!); } catch {} b.textContent = 'Copied ✓'; b.classList.add('ok'); setTimeout(() => { b.textContent = b.dataset.label!; b.classList.remove('ok'); }, 1600); }));</script>
+<style>.cp{display:flex;align-items:center;gap:8px;background:var(--pl-surface-2);border:1px solid var(--pl-line-soft);border-radius:11px;padding:6px 6px 6px 12px}code{flex:1;min-width:0;font-family:var(--pl-mono);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}button{font:inherit;cursor:pointer;border:1px solid var(--pl-line);background:#fff;border-radius:8px;padding:6px 10px;font-family:var(--pl-mono);font-size:11px}button.ok{background:var(--pl-accent-tint)}</style>

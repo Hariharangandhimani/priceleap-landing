@@ -1,0 +1,19 @@
+---
+import Input from '@/components/ds/ui/Input.astro';
+interface Props { action?: string; submitLabel?: string }
+const { action='/api/contact', submitLabel='Send message' } = Astro.props;
+---
+<form class="pl-card cf" action={action} method="post" novalidate data-validate>
+  <div class="fields"><Input label="Name" name="name" required placeholder="Ananya Rao" /><Input label="Work email" name="email" type="email" required placeholder="you@company.com" /><Input label="Message" name="message" textarea required placeholder="Tell us about your catalog…" /></div>
+  <button class="pl-btn pl-btn--primary" type="submit">{submitLabel}</button>
+  <div class="done" hidden role="status"><span>✓</span><strong>Thanks — message sent</strong><p>We'll reply within one business day.</p></div>
+</form>
+<script>
+const rules: Record<string, (v: string) => string> = { name: v => v.trim().length < 2 ? 'Please enter your name.' : '', email: v => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? '' : 'Enter a valid email address.', message: v => v.trim().length < 10 ? 'Tell us a little more (10+ characters).' : '', company: v => v.trim().length < 2 ? 'Company name is required.' : '' };
+document.querySelectorAll<HTMLFormElement>('form[data-validate]').forEach(f => {
+  const check = (el: HTMLInputElement) => { const msg = el.required && rules[el.name] ? rules[el.name](el.value) : ''; el.toggleAttribute('aria-invalid', !!msg); const e = f.querySelector('[data-error-for="' + el.name + '"]'); if (e) e.textContent = msg; return !msg; };
+  f.querySelectorAll<HTMLInputElement>('input,textarea').forEach(el => el.addEventListener('input', () => { if (el.hasAttribute('aria-invalid')) check(el); }));
+  f.addEventListener('submit', async e => { e.preventDefault(); const els = [...f.querySelectorAll<HTMLInputElement>('input,textarea')]; const ok = els.map(check).every(Boolean); if (!ok) { els.find(x => x.hasAttribute('aria-invalid'))?.focus(); return; } try { await fetch(f.action, { method: 'POST', body: new FormData(f) }); } catch {} f.querySelectorAll<HTMLElement>('.fields, button[type=submit]').forEach(x => x.hidden = true); f.querySelector<HTMLElement>('.done')!.hidden = false; (window as any).plToast?.('Message sent.'); });
+});
+</script>
+<style>.cf{padding:24px;display:flex;flex-direction:column;gap:14px}.fields{display:flex;flex-direction:column;gap:12px}.done{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:24px 0;animation:pl-pop .35s ease}.done span{width:48px;height:48px;border-radius:14px;background:var(--pl-accent-tint);border:1px solid var(--pl-accent-line);color:var(--pl-accent-ink);font-size:20px;display:flex;align-items:center;justify-content:center}.done p{margin:0;font-size:14px;color:var(--pl-muted)}[hidden]{display:none!important}</style>

@@ -1,0 +1,9 @@
+---
+interface Props { variant?: 'primary'|'secondary'|'ghost'|'link'|'danger'; size?: 'sm'|'md'|'lg'; href?: string; loading?: boolean; disabled?: boolean; type?: 'button'|'submit'; class?: string; [k: string]: any }
+const { variant='primary', size='md', href, loading=false, disabled=false, type='button', class: cls='', ...rest } = Astro.props;
+const c = ['pl-btn', 'pl-btn--'+variant, size!=='md' && 'pl-btn--'+size, cls].filter(Boolean).join(' ');
+const Tag = href ? 'a' : 'button';
+---
+<Tag class={c} href={href} type={href ? undefined : type} disabled={!href && (disabled || loading)} aria-disabled={disabled || loading || undefined} aria-busy={loading || undefined} {...rest}>
+  {loading && <span class="pl-btn__spin" aria-hidden="true" />}<slot />{variant==='link' && ' →'}
+</Tag>

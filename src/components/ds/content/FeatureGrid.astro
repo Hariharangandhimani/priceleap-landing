@@ -1,0 +1,7 @@
+---
+import FeatureCard from '@/components/ds/content/FeatureCard.astro';
+interface Props { items: { title: string; body: string; icon?: 'square'|'circle'|'diamond'; href?: string }[]; variant?: 'framed'|'numbered'; min?: string }
+const { items, variant='framed', min='260px' } = Astro.props;
+---
+<div class={variant==='framed' ? 'pl-frame g' : 'g gap'} style={`--min:${min}`}>{items.map((it, i) => <FeatureCard {...it} variant={variant} n={'0' + (i+1)} />)}</div>
+<style>.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,var(--min)),1fr))}.gap{gap:12px}</style>

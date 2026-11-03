@@ -1,0 +1,6 @@
+---
+interface Props { label?: string; size?: number; target?: string }
+const { label='Play video', size=64, target } = Astro.props;
+---
+<button class="play" aria-label={label} data-open={target} style={`--s:${size}px`}><span class="ring" aria-hidden="true"></span><span class="tri" aria-hidden="true"></span></button>
+<style>.play{position:relative;width:var(--s);height:var(--s);border-radius:50%;border:none;background:var(--pl-accent);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:var(--pl-shadow-accent)}.ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--pl-accent);animation:pl-ring 2.4s ease-out infinite}.tri{width:0;height:0;border-left:16px solid var(--pl-on-accent);border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}</style>

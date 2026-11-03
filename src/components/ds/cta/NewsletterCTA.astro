@@ -1,0 +1,12 @@
+---
+interface Props { title?: string; body?: string; action?: string; variant?: 'stacked'|'inline' }
+const { title='Pricing insights, every other week.', body='Market moves, MAP trends and product updates. No spam.', action='/api/subscribe', variant='stacked' } = Astro.props;
+---
+<form class={'nl ' + variant} action={action} method="post" data-nl novalidate>
+  {variant==='stacked' && <div><strong>{title}</strong><p>{body}</p></div>}
+  <div class="row"><label class="sr-only" for="nl-email">Email</label><input id="nl-email" class="pl-input" type="email" name="email" placeholder="you@company.com" required /><button class="pl-btn pl-btn--primary" type="submit">Subscribe</button></div>
+  <span class="err" hidden>Enter a valid email address.</span>
+  <div class="ok" hidden><span>✓</span>You're subscribed. Check your inbox to confirm.</div>
+</form>
+<script>document.querySelectorAll<HTMLFormElement>('[data-nl]').forEach(f => f.addEventListener('submit', async e => { e.preventDefault(); const i = f.querySelector('input')!, err = f.querySelector<HTMLElement>('.err')!, ok = f.querySelector<HTMLElement>('.ok')!, btn = f.querySelector('button')!; if (!i.checkValidity()) { i.setAttribute('aria-invalid', 'true'); err.hidden = false; return; } i.removeAttribute('aria-invalid'); err.hidden = true; btn.textContent = 'Subscribing…'; try { await fetch(f.action, { method: 'POST', body: new FormData(f) }); } catch {} f.querySelector<HTMLElement>('.row')!.hidden = true; ok.hidden = false; }));</script>
+<style>.nl{display:flex;flex-direction:column;gap:12px}strong{font-size:18px}p{margin:4px 0 0;font-size:14px;color:var(--pl-muted)}.row{display:flex;gap:8px;flex-wrap:wrap}.row input{flex:1;min-width:180px;width:auto}.inline .row{border:1px solid var(--pl-line);border-radius:12px;padding:4px 4px 4px 4px;background:#fff}.inline input{border:none;box-shadow:none!important}.err{font-size:12px;color:var(--pl-danger-ink)}.ok{display:flex;align-items:center;gap:10px;border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);border-radius:11px;padding:12px 14px;font-size:14px;animation:pl-pop .3s ease}.ok span{width:20px;height:20px;border-radius:50%;background:var(--pl-accent);color:var(--pl-on-accent);font-size:11px;display:flex;align-items:center;justify-content:center}[hidden]{display:none!important}</style>

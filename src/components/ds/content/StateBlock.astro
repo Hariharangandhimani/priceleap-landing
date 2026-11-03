@@ -1,0 +1,8 @@
+---
+interface Props { kind: 'empty'|'error'|'success'|'loading'; title?: string; body?: string }
+const { kind, title, body } = Astro.props; const icon = { empty: '∅', error: '!', success: '✓', loading: '' }[kind];
+---
+{kind==='loading'
+  ? <div class="sk" aria-busy="true" aria-label="Loading"><span style="width:70%;height:18px"></span><span style="width:100%"></span><span style="width:85%"></span><span style="height:90px;margin-top:6px"></span></div>
+  : <div class={'st ' + kind} role={kind==='error' ? 'alert' : 'status'}><span class="ic" aria-hidden="true">{icon}</span><strong>{title}</strong><p>{body}</p><slot /></div>}
+<style>.st{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:24px}.ic{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px}.empty .ic{border:1px dashed var(--pl-line-strong);color:var(--pl-faint-2)}.error .ic{background:var(--pl-danger-tint);border:1px solid var(--pl-danger-line);color:var(--pl-danger)}.success .ic{background:var(--pl-accent);color:var(--pl-on-accent);box-shadow:var(--pl-shadow-accent)}p{margin:0;font-size:13px;color:var(--pl-muted)}.sk{display:flex;flex-direction:column;gap:10px}.sk span{height:12px;border-radius:6px;background:linear-gradient(90deg,#eeece7 0%,#f8f7f4 50%,#eeece7 100%);background-size:400px 100%;animation:pl-shimmer 1.4s linear infinite}</style>

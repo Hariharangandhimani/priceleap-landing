@@ -1,0 +1,6 @@
+---
+interface Props { industry: string; metric: string; label: string; href: string; logo?: string }
+const { industry, metric, label, href, logo } = Astro.props;
+---
+<a class="pl-card cs" href={href}><div class="top">{logo ? <img src={logo} alt="" height="28" /> : <span class="lg">company logo</span>}<span class="pl-label">{industry}</span></div><div><b>{metric}</b><p>{label}</p></div><span class="go">Read case study →</span></a>
+<style>.cs{padding:24px;display:flex;flex-direction:column;gap:18px;color:var(--pl-ink);transition:border-color .2s}.cs:hover{border-color:var(--pl-accent);color:var(--pl-ink)}.top{display:flex;justify-content:space-between;align-items:center}.lg{height:28px;padding:0 10px;border:1px dashed var(--pl-line-strong);border-radius:6px;font-family:var(--pl-mono);font-size:10px;color:var(--pl-faint);display:flex;align-items:center}b{font-size:40px;letter-spacing:-.04em}p{margin:4px 0 0;font-size:14px;color:var(--pl-muted)}.go{font-family:var(--pl-mono);font-size:12px;color:var(--pl-accent-ink);border-top:1px dashed var(--pl-line);padding-top:14px}</style>

@@ -1,0 +1,33 @@
+---
+interface Props { tabs: string[]; variant?: 'underline'|'vertical'|'segmented'; id: string }
+const { tabs, variant='underline', id } = Astro.props;
+---
+<div class={'tabs ' + variant} data-tabs={id} style={`--n:${tabs.length}`}>
+  <div class="list" role="tablist" aria-orientation={variant==='vertical' ? 'vertical' : 'horizontal'}>{variant==='segmented' && <span class="pill" aria-hidden="true"></span>}{tabs.map((t, i) => <button role="tab" id={`${id}-t${i}`} aria-controls={`${id}-p${i}`} aria-selected={i===0 ? 'true' : 'false'} tabindex={i===0 ? 0 : -1}>{t}</button>)}</div>
+  <div class="panels">{tabs.map((_, i) => (
+    <div role="tabpanel" id={`${id}-p${i}`} aria-labelledby={`${id}-t${i}`} hidden={i!==0}>
+      {i===0 && <slot name="panel-0" />}
+      {i===1 && <slot name="panel-1" />}
+      {i===2 && <slot name="panel-2" />}
+      {i===3 && <slot name="panel-3" />}
+      {i===4 && <slot name="panel-4" />}
+      {i===5 && <slot name="panel-5" />}
+    </div>
+  ))}</div>
+</div>
+<script>
+document.querySelectorAll<HTMLElement>('[data-tabs]').forEach(root => {
+  const tabs = [...root.querySelectorAll<HTMLElement>('[role=tab]')], panels = [...root.querySelectorAll<HTMLElement>('[role=tabpanel]')];
+  const sel = (i: number) => { tabs.forEach((t, k) => { t.setAttribute('aria-selected', String(k === i)); t.tabIndex = k === i ? 0 : -1; }); panels.forEach((p, k) => p.hidden = k !== i); root.style.setProperty('--i', String(i)); };
+  tabs.forEach((t, i) => { t.addEventListener('click', () => sel(i)); t.addEventListener('keydown', e => { const d = ['ArrowRight','ArrowDown'].includes(e.key) ? 1 : ['ArrowLeft','ArrowUp'].includes(e.key) ? -1 : 0; if (d) { e.preventDefault(); const n = (i + d + tabs.length) % tabs.length; sel(n); tabs[n].focus(); } }); });
+});
+</script>
+<style>
+.tabs{--i:0}.list{display:flex;gap:24px;border-bottom:1px solid var(--pl-line-soft);position:relative;overflow-x:auto}
+button{font:inherit;font-size:14px;cursor:pointer;border:none;background:none;color:var(--pl-muted);padding:10px 2px;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s}
+.underline [aria-selected=true]{color:var(--pl-ink);border-bottom-color:var(--pl-accent)}
+.vertical{display:grid;grid-template-columns:minmax(0,240px) 1fr;gap:16px}.vertical .list{flex-direction:column;gap:4px;border:none}.vertical button{position:relative;text-align:left;border:1px solid transparent;border-radius:10px;padding:11px 14px;font-weight:500;overflow:hidden}.vertical [aria-selected=true]{background:#fff;border-color:var(--pl-line);color:var(--pl-ink)}.vertical [aria-selected=true]::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--pl-accent)}
+.segmented .list{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:0;padding:4px;border:1px solid var(--pl-line);border-radius:12px;background:var(--pl-surface-2)}.segmented button{position:relative;border:none;padding:9px 0;font-weight:500;z-index:1}.segmented [aria-selected=true]{color:var(--pl-on-accent)}
+.pill{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 8px) / var(--n));border-radius:9px;background:var(--pl-accent);transform:translateX(calc(var(--i) * 100%));transition:transform .3s var(--pl-ease)}
+.panels{padding-top:16px}@media (max-width:640px){.vertical{grid-template-columns:1fr}}
+</style>

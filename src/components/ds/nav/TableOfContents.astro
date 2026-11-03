@@ -1,0 +1,7 @@
+---
+interface Props { items: { id: string; label: string }[]; title?: string; sticky?: boolean }
+const { items, title='On this page', sticky=true } = Astro.props;
+---
+<nav class={'toc' + (sticky ? ' sticky' : '')} aria-label={title} data-toc><span class="pl-label">{title}</span><ol>{items.map((it, i) => <li><a href={'#' + it.id} data-toc-link={it.id}><span>0{i+1}</span>{it.label}</a></li>)}</ol></nav>
+<script>document.querySelectorAll<HTMLElement>('[data-toc]').forEach(toc => { const links = [...toc.querySelectorAll<HTMLElement>('[data-toc-link]')]; const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) links.forEach(l => l.toggleAttribute('aria-current', l.dataset.tocLink === e.target.id)); }), { rootMargin: '-20% 0px -70% 0px' }); links.forEach(l => { const t = document.getElementById(l.dataset.tocLink!); t && io.observe(t); }); });</script>
+<style>.sticky{position:sticky;top:96px}ol{list-style:none;margin:10px 0 0;padding:0}a{display:flex;gap:12px;align-items:center;padding:8px 0 8px 14px;border-left:2px solid var(--pl-line);font-size:14px;color:var(--pl-muted);transition:all .2s}a span{font-family:var(--pl-mono);font-size:10px;color:var(--pl-faint-2)}a[aria-current]{border-left-color:var(--pl-accent);color:var(--pl-ink);font-weight:500}</style>

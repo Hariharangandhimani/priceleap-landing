@@ -1,0 +1,6 @@
+---
+interface Props { name: string; label: string; checked?: boolean; type?: 'checkbox'|'radio'; value?: string }
+const { name, label, checked=false, type='checkbox', value } = Astro.props;
+---
+<label class="opt"><input type={type} name={name} value={value} checked={checked} /><span class={'box ' + type} aria-hidden="true"></span>{label}</label>
+<style>.opt{display:inline-flex;align-items:center;gap:10px;font-size:15px;cursor:pointer}input{position:absolute;opacity:0;pointer-events:none}.box{width:20px;height:20px;border:1.5px solid #c9c7c0;background:#fff;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--pl-on-accent)}.checkbox{border-radius:6px}.radio{border-radius:50%}input:checked+.checkbox{background:var(--pl-accent);border-color:var(--pl-accent)}input:checked+.checkbox::after{content:"✓"}input:checked+.radio{border:5px solid var(--pl-accent)}input:focus-visible+.box{box-shadow:var(--pl-ring)}</style>

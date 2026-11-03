@@ -1,0 +1,28 @@
+---
+interface QA { q: string; a: string; cat?: string }
+interface Props { items: QA[]; variant?: 'list'|'categorised'|'cards'; schema?: boolean; id?: string }
+const { items, variant='list', schema=true, id='faq' } = Astro.props;
+const cats = [...new Set(items.map(i => i.cat).filter(Boolean))] as string[];
+const ld = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: items.map(i => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.a } })) };
+---
+<div class={'faq ' + variant} data-faq={id}>
+  {variant==='categorised' && <div class="cats" role="tablist">{cats.map((c, i) => <button role="tab" aria-selected={i===0 ? 'true' : 'false'} data-cat={c}>{c}<span>{items.filter(x => x.cat===c).length}</span></button>)}<p>Still stuck? <a href="/contact">Talk to sales →</a></p></div>}
+  <div class="items">
+    {items.map((it, i) => (
+      <details class="qa" data-cat={it.cat} hidden={variant==='categorised' && it.cat !== cats[0]} open={variant==='list' && i===0}>
+        <summary>{variant==='cards' && <span class="n">0{i+1}</span>}<span class="q">{it.q}</span><span class="ic" aria-hidden="true"></span></summary>
+        <div class="a">{it.a}</div>
+      </details>))}
+  </div>
+</div>
+{schema && <script type="application/ld+json" set:html={JSON.stringify(ld)} />}
+<script>document.querySelectorAll<HTMLElement>('[data-faq]').forEach(f => f.querySelectorAll<HTMLElement>('[role=tab]').forEach(t => t.addEventListener('click', () => { f.querySelectorAll('[role=tab]').forEach(x => x.setAttribute('aria-selected', String(x === t))); f.querySelectorAll<HTMLElement>('.qa').forEach(q => q.hidden = q.dataset.cat !== t.dataset.cat); })));</script>
+<style>
+summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 0;font-size:16px;font-weight:500}summary::-webkit-details-marker{display:none}.q{flex:1}
+.ic{flex:none;width:28px;height:28px;border-radius:8px;border:1px solid var(--pl-line);position:relative;transition:transform .25s}.ic::before,.ic::after{content:"";position:absolute;left:50%;top:50%;width:10px;height:1.5px;background:currentColor;transform:translate(-50%,-50%)}.ic::after{transform:translate(-50%,-50%) rotate(90deg)}
+details[open] .ic{transform:rotate(45deg);color:var(--pl-accent-ink)}.a{padding:0 44px 18px 0;font-size:15px;line-height:1.65;color:var(--pl-muted);animation:pl-fadeup .3s ease}
+.list .items{background:#fff;border:1px solid var(--pl-line);border-radius:16px;padding:8px 28px}.list .qa{border-bottom:1px solid var(--pl-line-soft)}.list .qa:last-child{border:none}
+.categorised{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);border:1px solid var(--pl-line);border-radius:20px;overflow:hidden;background:var(--pl-line);gap:1px}.cats{background:var(--pl-surface-2);padding:20px;display:flex;flex-direction:column;gap:4px}.cats button{font:inherit;position:relative;overflow:hidden;text-align:left;border:none;background:none;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:500;color:var(--pl-muted);display:flex;justify-content:space-between;cursor:pointer}.cats button span{font-family:var(--pl-mono);font-size:11px;color:var(--pl-faint-2)}.cats [aria-selected=true]{background:#fff;color:var(--pl-ink)}.cats [aria-selected=true]::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--pl-accent)}.cats p{margin-top:auto;font-size:13px;color:var(--pl-muted)}.cats a{color:var(--pl-accent-ink);font-weight:500}.categorised .items{background:#fff;padding:12px 24px}.categorised .qa{border-bottom:1px dashed var(--pl-line)}.categorised .ic{border-radius:50%}.categorised details[open] .ic{background:var(--pl-accent);border-color:var(--pl-accent);color:var(--pl-on-accent)}
+.cards .items{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;align-items:start}.cards .qa{background:#fff;border:1px solid var(--pl-line);border-radius:16px;padding:0 20px;transition:border-color .25s,box-shadow .25s}.cards .qa[open]{border-color:var(--pl-accent);box-shadow:0 16px 34px -20px rgba(24,229,99,.55)}.n{flex:none;width:30px;height:30px;border-radius:50%;background:#f3f1ec;color:var(--pl-faint);font-family:var(--pl-mono);font-size:11px;display:flex;align-items:center;justify-content:center}.cards [open] .n{background:var(--pl-accent);color:var(--pl-on-accent)}.cards .a{padding-left:44px}
+@media (max-width:760px){.categorised{grid-template-columns:1fr}}
+</style>

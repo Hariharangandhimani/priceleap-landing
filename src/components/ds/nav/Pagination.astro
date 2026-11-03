@@ -1,0 +1,13 @@
+---
+interface Props { current: number; total: number; base: string; variant?: 'numbered'|'prev-next'|'load-more' }
+const { current, total, base, variant='numbered' } = Astro.props; const url = (p: number) => p === 1 ? base : `${base}/page/${p}`;
+const pages = [...new Set([1, current-1, current, current+1, total].filter(p => p >= 1 && p <= total))].sort((a,b)=>a-b);
+---
+{variant==='load-more'
+  ? <div class="lm"><span class="pl-label">Showing page {current} of {total}</span>{current < total && <a class="pl-btn pl-btn--secondary" href={url(current+1)} data-load-more>Load more articles</a>}</div>
+  : <nav aria-label="Pagination" class="pg">
+      <a class="pb" href={current>1 ? url(current-1) : undefined} aria-disabled={current===1}>← {variant==='prev-next' && 'Previous'}</a>
+      {variant==='numbered' ? pages.map((p, i) => <>{i>0 && p-pages[i-1]>1 && <span class="gap">…</span>}<a class="pn" href={url(p)} aria-current={p===current ? 'page' : undefined}>{p}</a></>) : <span class="pl-label">Page {current} of {total}</span>}
+      <a class={'pb ' + (variant==='prev-next' ? 'next' : '')} href={current<total ? url(current+1) : undefined} aria-disabled={current===total}>{variant==='prev-next' && 'Next'} →</a>
+    </nav>}
+<style>.pg{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.pb,.pn{min-width:38px;height:38px;padding:0 12px;border-radius:10px;border:1px solid var(--pl-line);background:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:14px}.pn{font-family:var(--pl-mono);font-size:13px}.pn[aria-current]{background:var(--pl-accent);border-color:var(--pl-accent);color:var(--pl-on-accent)}.pb[aria-disabled=true]{opacity:.4;pointer-events:none}.next{background:var(--pl-accent);border-color:var(--pl-accent);color:var(--pl-on-accent);font-weight:500}.gap{color:var(--pl-faint-2);padding:0 4px}.lm{display:flex;flex-direction:column;align-items:center;gap:10px}</style>

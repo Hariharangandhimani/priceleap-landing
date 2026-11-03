@@ -1,0 +1,5 @@
+---
+interface Props { tone?: 'accent'|'solid'|'neutral'|'danger'|'warn'; live?: boolean }
+const { tone='accent', live=false } = Astro.props;
+---
+<span class={'pl-badge pl-badge--'+tone}>{live && <span class="pl-dot pl-dot--live" />}<slot /></span>

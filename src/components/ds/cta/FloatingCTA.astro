@@ -1,0 +1,7 @@
+---
+interface Props { text: string; label?: string; href?: string; showAfter?: number }
+const { text, label='Book a demo', href='/demo', showAfter=600 } = Astro.props;
+---
+<div class="fcta" data-fcta={showAfter} hidden><span class="pl-dot pl-dot--live"></span><span>{text}</span><a class="pl-btn pl-btn--primary pl-btn--sm" href={href}>{label}</a><button aria-label="Dismiss" data-x>✕</button></div>
+<script>document.querySelectorAll<HTMLElement>('[data-fcta]').forEach(el => { let dismissed = false; const on = () => { if (!dismissed) el.hidden = scrollY < +el.dataset.fcta!; }; addEventListener('scroll', on, { passive: true }); el.querySelector('[data-x]')!.addEventListener('click', () => { dismissed = true; el.hidden = true; }); });</script>
+<style>.fcta{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:80;display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--pl-line);border-radius:999px;padding:6px 6px 6px 16px;box-shadow:0 16px 36px -16px rgba(23,22,26,.4);white-space:nowrap;font-size:13px;font-weight:500;animation:pl-pop .4s ease}.fcta[hidden]{display:none}button{border:none;background:none;cursor:pointer;color:var(--pl-faint);font-size:11px;padding:0 6px}@media (max-width:520px){.fcta>span:nth-child(2){display:none}}</style>

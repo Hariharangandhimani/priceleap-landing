@@ -1,0 +1,22 @@
+---
+interface Post { title: string; href: string; category: string; date: string; readTime: string; excerpt?: string; author?: { name: string; initials?: string }; cover?: string }
+interface Props { post: Post; variant?: 'standard'|'featured'|'horizontal'|'minimal'; index?: number }
+const { post, variant='standard', index=1 } = Astro.props; const ini = post.author?.initials ?? post.author?.name.split(' ').map(x => x[0]).join('').slice(0,2);
+---
+<article class={'bc ' + variant}>
+  <a href={post.href} class="lnk">
+    {variant==='minimal' ? <><span class="n">{String(index).padStart(2,'0')}</span><h3>{post.title}</h3><span class="m">{post.readTime}</span></> : <>
+      <div class="cv">{post.cover ? <img src={post.cover} alt="" loading="lazy" /> : <div class="pl-placeholder" style="height:100%"><span>blog cover</span></div>}</div>
+      <div class="bd">
+        <div class="tags">{variant==='featured' && <span class="pl-badge pl-badge--solid">Featured</span>}<span class="cat">{post.category}</span></div>
+        <h3>{post.title}</h3>{post.excerpt && variant!=='standard' && <p>{post.excerpt}</p>}
+        <div class="meta">{variant==='featured' && post.author && <span class="av">{ini}</span>}{variant==='featured' && post.author && <span>{post.author.name} ·</span>}<time>{post.date}</time> · {post.readTime} read</div>
+      </div></>}
+  </a>
+</article>
+<style>.lnk{color:var(--pl-ink);display:flex;height:100%}.lnk:hover{color:var(--pl-ink)}.bc{background:#fff;border:1px solid var(--pl-line);border-radius:16px;overflow:hidden;transition:transform .25s,box-shadow .25s,border-color .25s}.bc:hover{transform:translateY(-3px);box-shadow:0 20px 40px -24px rgba(23,22,26,.35)}
+.standard .lnk{flex-direction:column}.cv{height:150px}.cv img{width:100%;height:100%;object-fit:cover}.cv .pl-placeholder{border-radius:0;border:none}.bd{padding:18px;display:flex;flex-direction:column;gap:10px;flex:1}.cat{font-family:var(--pl-mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)}.tags{display:flex;gap:8px;align-items:center}h3{margin:0;font-size:17px;font-weight:600;line-height:1.3}p{margin:0;font-size:15px;line-height:1.6;color:var(--pl-muted)}.meta{margin-top:auto;display:flex;align-items:center;gap:8px;font-family:var(--pl-mono);font-size:11px;color:var(--pl-faint)}.av{width:30px;height:30px;border-radius:50%;background:var(--pl-accent-tint);border:1px solid var(--pl-accent-line);color:var(--pl-accent-ink);font-size:10px;display:flex;align-items:center;justify-content:center}
+.featured{border-radius:20px}.featured .lnk{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}.featured .cv{height:auto;min-height:240px}.featured .bd{padding:28px;gap:14px}.featured h3{font-size:clamp(22px,2.6vw,30px);letter-spacing:-.02em;line-height:1.2}
+.horizontal{border-radius:14px}.horizontal:hover{transform:none;box-shadow:none;border-color:var(--pl-accent-line)}.horizontal .lnk{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:18px;align-items:center;padding:12px}.horizontal .cv{height:110px;border-radius:10px;overflow:hidden}.horizontal .bd{padding:0}.horizontal p{font-size:13px}.horizontal .meta{display:none}
+.minimal{border:none;border-bottom:1px solid #f3f1ec;border-radius:0}.minimal:hover{transform:none;box-shadow:none;background:var(--pl-surface-2)}.minimal .lnk{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:14px;align-items:baseline;padding:16px 20px}.minimal h3{font-size:15px;font-weight:500}.n,.m{font-family:var(--pl-mono);font-size:11px;color:var(--pl-faint-2)}
+@media (max-width:520px){.horizontal .lnk{grid-template-columns:1fr}}</style>

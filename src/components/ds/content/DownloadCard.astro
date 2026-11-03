@@ -1,0 +1,7 @@
+---
+import Button from '@/components/ds/ui/Button.astro';
+interface Props { title: string; desc: string; kind?: string; meta: string; href: string }
+const { title, desc, kind='GUIDE', meta, href } = Astro.props;
+---
+<div class="pl-card dl"><div class="cover" aria-hidden="true"><span>{kind}</span><b>{title}</b></div><div class="body"><strong>{title}</strong><span class="desc">{desc}</span><span class="pl-label">{meta}</span><Button href={href} size="sm" download>Download free ↓</Button></div></div>
+<style>.dl{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:22px}.cover{width:84px;height:108px;flex:none;border-radius:8px;border:1px solid var(--pl-line);background:#fff;box-shadow:6px 6px 0 var(--pl-accent-tint),6px 6px 0 1px var(--pl-accent-line);display:flex;flex-direction:column;justify-content:space-between;padding:10px}.cover span{font-family:var(--pl-mono);font-size:8px;color:var(--pl-accent-ink)}.cover b{font-size:10px;line-height:1.2}.body{flex:1;min-width:180px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}.desc{font-size:13px;color:var(--pl-muted)}</style>
