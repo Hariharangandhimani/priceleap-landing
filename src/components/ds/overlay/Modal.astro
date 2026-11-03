@@ -1,0 +1,9 @@
+---
+interface Props { id: string; title?: string; eyebrow?: string; width?: string; variant?: 'default'|'video'|'confirm' }
+const { id, title, eyebrow, width='480px', variant='default' } = Astro.props;
+---
+<dialog class={'pl-dialog md ' + variant} id={id} aria-labelledby={title ? id + '-t' : undefined} style={`width:min(100% - 32px,${width})`}>
+  <button class="pl-dialog__close" data-close aria-label="Close">✕</button>
+  <div class="in">{variant==='confirm' && <span class="warn" aria-hidden="true">!</span>}{eyebrow && <span class="pl-label acc">{eyebrow}</span>}{title && <h2 id={id + '-t'}>{title}</h2>}<slot /><div class="act"><slot name="actions" /></div></div>
+</dialog>
+<style>.in{padding:28px;display:flex;flex-direction:column;gap:12px}.video .in{padding:14px}.acc{color:var(--pl-accent-ink)}h2{margin:0;font-size:22px;letter-spacing:-.02em;padding-right:40px}.act{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}.act:empty{display:none}.warn{width:44px;height:44px;border-radius:12px;background:var(--pl-danger-tint);border:1px solid var(--pl-danger-line);color:var(--pl-danger);display:flex;align-items:center;justify-content:center;font-size:18px}</style>

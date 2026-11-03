@@ -1,0 +1,6 @@
+---
+interface Props { title: string; action?: string; submitLabel?: string }
+const { title, action='/api/lead', submitLabel='Get the report' } = Astro.props;
+---
+<form class="pl-card lf" action={action} method="post" data-validate novalidate><strong>{title}</strong><div class="g"><input class="pl-input" name="first" placeholder="First name" aria-label="First name" /><input class="pl-input" name="company" placeholder="Company" aria-label="Company" required /><input class="pl-input full" name="email" type="email" placeholder="Work email" aria-label="Work email" required /><span class="pl-field__error full" data-error-for="email"></span><button class="pl-btn pl-btn--primary full" type="submit">{submitLabel}</button></div><small>We'll never share your email. Unsubscribe anytime.</small><div class="done" hidden>✓ Check your inbox for the report.</div></form>
+<style>.lf{padding:22px;display:flex;flex-direction:column;gap:14px}strong{font-size:17px}.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}.full{grid-column:span 2}small{font-size:11px;color:var(--pl-faint)}.done{color:var(--pl-accent-ink);font-weight:500}[hidden]{display:none!important}</style>

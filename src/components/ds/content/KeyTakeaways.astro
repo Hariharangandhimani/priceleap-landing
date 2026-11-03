@@ -1,0 +1,6 @@
+---
+interface Props { title?: string; items?: string[]; variant?: 'box'|'definition'; term?: string }
+const { title='Key takeaways', items=[], variant='box', term } = Astro.props;
+---
+{variant==='box' ? <aside class="kt"><span class="pl-label">{title}</span><ul>{items.map(i => <li>{i}</li>)}</ul></aside> : <aside class="def"><strong>{term}</strong> <span><slot /></span></aside>}
+<style>.kt{border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);border-radius:14px;padding:16px 18px}.kt .pl-label{color:var(--pl-accent-ink)}ul{margin:8px 0 0;padding-left:18px;font-size:14px;line-height:1.7}.def{border:1px solid var(--pl-line);border-left:3px solid var(--pl-accent);background:#fff;border-radius:0 12px 12px 0;padding:14px 16px}.def span{color:var(--pl-muted);font-size:14px}</style>

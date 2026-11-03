@@ -1,0 +1,6 @@
+---
+interface Props { label: string; href?: string; variant?: 'default'|'accent'|'round' }
+const { label, href, variant='default' } = Astro.props; const Tag = href ? 'a' : 'button';
+---
+<Tag class={'pl-iconbtn ' + variant} href={href} aria-label={label}><slot /></Tag>
+<style>.accent{background:var(--pl-accent);border-color:var(--pl-accent);color:var(--pl-on-accent)}.round{border-radius:50%}</style>

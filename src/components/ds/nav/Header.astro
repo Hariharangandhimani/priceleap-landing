@@ -1,0 +1,72 @@
+---
+import Logo from './Logo.astro';
+import Button from '@/components/ds/ui/Button.astro';
+import { MENUS, DIRECT } from '@/data/nav';
+const shapes = ['sq','ci','di'];
+---
+<header class="hdr" data-header>
+  <div class="bar pl-container">
+    <div class="left"><Logo />
+      <nav class="desk" aria-label="Main">
+        {MENUS.map(m => <button class="nl" aria-expanded="false" aria-controls={'mega-'+m.key} data-menu={m.key}>{m.label}<span aria-hidden="true">▾</span></button>)}
+        {DIRECT.map(d => <a class="nl" href={d.href}>{d.label}</a>)}
+      </nav>
+    </div>
+    <div class="right"><a class="signin" href="/login">Sign in</a><Button href="/demo" size="sm">Book a demo</Button>
+      <button class="burger" aria-label="Menu" aria-expanded="false" aria-controls="mobnav" data-burger><i></i><i></i><i></i></button></div>
+  </div>
+  {MENUS.map(m => (
+    <div class="mega" id={'mega-'+m.key} data-mega={m.key} hidden>
+      <div class="pl-frame mframe">
+        <div class="mtop"><span class="pl-label">{m.eyebrow}</span><a href={m.all.href} class="mall">{m.all.label} →</a></div>
+        <div class="mbody">
+          <div class="mitems">{m.items.map((it, i) => <a href={it.href} class="mi"><span class="mi-ic"><span class={'shape ' + shapes[i%3]}></span></span><span class="mi-no">0{i+1}</span><span class="mi-t">{it.t}{it.tag && <span class="pl-badge pl-badge--solid">{it.tag}</span>}</span><span class="mi-d">{it.d}</span><span class="mi-go">Open →</span></a>)}</div>
+          <div class="mfeat"><span class="pl-label">Featured</span><div class="fcard"><span class="pl-label acc">{m.featured.tag}</span><b>{m.featured.stat}</b><span class="fbar"><i style={`width:${m.featured.bar}%`}></i></span><span class="pl-label">{m.featured.sub}</span></div><strong>{m.featured.title}</strong><p>{m.featured.desc}</p><Button href={m.featured.href} size="sm">{m.featured.cta}</Button></div>
+        </div>
+        <div class="mlinks">{m.links.map(l => <a href={l.href}><span class="pl-dot"></span>{l.label}<span>↗</span></a>)}<span class="status"><span class="pl-dot pl-dot--live"></span>All systems operational</span></div>
+      </div>
+    </div>))}
+  <div class="mob" id="mobnav" hidden data-mob>
+    <div class="seg" role="tablist">{MENUS.map((m, i) => <button role="tab" aria-selected={i===0 ? 'true' : 'false'} data-tab={m.key}>{m.label}</button>)}</div>
+    {MENUS.map((m, i) => <div class="mpanel" data-panel={m.key} hidden={i!==0}><div class="pl-frame">{m.items.map((it, k) => <a href={it.href} class="mrow"><span class="mi-ic"><span class={'shape ' + shapes[k%3]}></span></span><span><b>{it.t}</b><small>{it.d}</small></span><span aria-hidden="true">›</span></a>)}</div></div>)}
+    <div class="pl-frame two">{DIRECT.map(d => <a href={d.href} class="mrow">{d.label}<span>↗</span></a>)}</div>
+    <div class="mfoot"><Button href="/login" variant="secondary">Sign in</Button><Button href="/demo">Book a demo</Button></div>
+  </div>
+</header>
+<script>
+  const hdr = document.querySelector('[data-header]')!; let open: string | null = null;
+  const show = (k: string | null) => { open = k; hdr.querySelectorAll<HTMLElement>('[data-mega]').forEach(p => p.hidden = p.dataset.mega !== k); hdr.querySelectorAll<HTMLElement>('[data-menu]').forEach(b => b.setAttribute('aria-expanded', String(b.dataset.menu === k))); };
+  hdr.querySelectorAll<HTMLElement>('[data-menu]').forEach(b => { b.addEventListener('mouseenter', () => matchMedia('(hover:hover)').matches && show(b.dataset.menu!)); b.addEventListener('click', () => show(open === b.dataset.menu ? null : b.dataset.menu!)); });
+  hdr.addEventListener('mouseleave', () => show(null));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { show(null); toggleMob(false); } });
+  const burger = hdr.querySelector<HTMLElement>('[data-burger]')!, mob = hdr.querySelector<HTMLElement>('[data-mob]')!;
+  const toggleMob = (v = mob.hidden) => { mob.hidden = !v; burger.setAttribute('aria-expanded', String(v)); document.body.style.overflow = v ? 'hidden' : ''; };
+  burger.addEventListener('click', () => toggleMob());
+  hdr.querySelectorAll<HTMLElement>('[data-tab]').forEach(t => t.addEventListener('click', () => { hdr.querySelectorAll<HTMLElement>('[data-tab]').forEach(x => x.setAttribute('aria-selected', String(x === t))); hdr.querySelectorAll<HTMLElement>('[data-panel]').forEach(p => p.hidden = p.dataset.panel !== t.dataset.tab); }));
+</script>
+<style>
+.hdr{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--pl-line);isolation:isolate}
+.hdr::before{content:"";position:absolute;inset:0;z-index:-1;background:rgba(246,245,242,.86);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:20px;padding-top:14px;padding-bottom:14px}
+.left{display:flex;align-items:center;gap:36px;min-width:0}.desk{display:flex;gap:2px}
+.nl{font:inherit;font-size:15px;border:none;background:none;color:#4a4950;padding:8px 12px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:6px}.nl span{font-size:9px;color:var(--pl-faint-2);transition:transform .2s}.nl[aria-expanded=true]{background:var(--pl-hover);color:var(--pl-ink)}.nl[aria-expanded=true] span{transform:rotate(180deg)}
+.right{display:flex;align-items:center;gap:10px}.signin{font-size:15px;padding:8px 10px}
+.burger{display:none;width:44px;height:44px;border-radius:11px;border:1px solid var(--pl-line);background:#fff;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer}.burger i{width:18px;height:1.5px;background:var(--pl-ink);transition:transform .25s,opacity .2s}
+.burger[aria-expanded=true] i:nth-child(1){transform:translateY(6.5px) rotate(45deg)}.burger[aria-expanded=true] i:nth-child(2){opacity:0}.burger[aria-expanded=true] i:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+.mega{position:absolute;left:0;right:0;top:100%;padding:10px 12px 0;animation:pl-pop .2s ease}.mframe{box-shadow:0 40px 80px -40px rgba(23,22,26,.35)}
+.mtop{background:var(--pl-surface-2)!important;padding:12px 20px;display:flex;justify-content:space-between}.mall{font-family:var(--pl-mono);font-size:11px;color:var(--pl-accent-ink)}
+.mbody{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:1px;background:var(--pl-line)!important}.mitems{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--pl-line)}
+.mi{position:relative;background:#fff;padding:18px;display:grid;grid-template-columns:1fr auto;gap:12px 8px;color:var(--pl-ink)}.mi::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:transparent;transition:background .2s}.mi:hover{background:var(--pl-surface-2);color:var(--pl-ink)}.mi:hover::before{background:var(--pl-accent)}
+.mi-ic{width:36px;height:36px;border-radius:10px;border:1px solid var(--pl-line-soft);background:#fff;display:flex;align-items:center;justify-content:center;transition:all .2s}.mi:hover .mi-ic{background:var(--pl-accent-tint);border-color:var(--pl-accent-line)}
+.shape{width:11px;height:11px;background:var(--pl-accent)}.sq{border-radius:4px}.ci{border-radius:50%}.di{border-radius:2px;transform:rotate(45deg)}
+.mi-no{font-family:var(--pl-mono);font-size:10px;color:var(--pl-faint-2);text-align:right}.mi-t{grid-column:1/-1;font-size:15px;font-weight:500;display:flex;gap:8px;align-items:center}.mi-d{grid-column:1/-1;font-size:13px;line-height:1.45;color:var(--pl-muted);margin-top:-8px}.mi-go{grid-column:1/-1;font-family:var(--pl-mono);font-size:11px;color:var(--pl-accent-ink);opacity:0;transition:opacity .2s}.mi:hover .mi-go{opacity:1}
+.mfeat{background:#fff;padding:20px;display:flex;flex-direction:column;gap:12px}.fcard{border:1px solid var(--pl-line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;box-shadow:0 16px 30px -22px rgba(23,22,26,.4)}.fcard b{font-size:28px;letter-spacing:-.03em}.acc{color:var(--pl-accent-ink)}.fbar{height:5px;border-radius:5px;background:var(--pl-line-soft)}.fbar i{display:block;height:100%;border-radius:5px;background:var(--pl-accent)}.mfeat p{margin:0;font-size:13px;color:var(--pl-muted)}
+.mlinks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) 320px;gap:1px;background:var(--pl-line)!important}.mlinks>*{background:var(--pl-surface-2);padding:12px 18px;display:flex;align-items:center;gap:8px;font-size:13px}.mlinks a span:last-child{margin-left:auto;color:var(--pl-faint-2)}.status{font-family:var(--pl-mono);font-size:11px;color:var(--pl-faint)}
+.mob{position:absolute;left:0;right:0;top:100%;height:calc(100dvh - 100%);overflow-y:auto;background:var(--pl-canvas);border-top:1px solid var(--pl-line);padding:16px;display:flex;flex-direction:column;gap:14px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border:1px solid var(--pl-line);border-radius:13px;background:#fff}.seg button{font:inherit;font-size:14px;font-weight:500;border:none;min-height:42px;border-radius:9px;background:none;color:#55545b;cursor:pointer}.seg [aria-selected=true]{background:var(--pl-accent);color:var(--pl-on-accent)}
+.mrow{display:flex;align-items:center;gap:12px;padding:14px;min-height:56px;color:var(--pl-ink)}.mrow>span:last-child{margin-left:auto;color:#c9c7c0}.mrow b{display:block;font-size:15px;font-weight:500}.mrow small{font-size:12px;color:var(--pl-faint)}
+.two{grid-template-columns:1fr 1fr}.mfoot{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;position:sticky;bottom:-16px;background:#fff;margin:auto -16px -16px;padding:16px;border-top:1px solid var(--pl-line)}
+@media (max-width:959px){.desk,.signin,.mega{display:none!important}.burger{display:flex}}
+@media (min-width:960px){.mob{display:none!important}}
+@media (min-width:640px){.mpanel .pl-frame{grid-template-columns:1fr 1fr}}
+</style>

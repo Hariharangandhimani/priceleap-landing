@@ -1,0 +1,8 @@
+---
+interface Props { label?: string; name: string; options: string[]; value?: string }
+const { label, name, options, value } = Astro.props;
+---
+<label class="pl-field">{label && <span class="pl-field__label">{label}</span>}
+  <span class="wrap"><select class="pl-input" name={name}>{options.map(o => <option selected={o===value}>{o}</option>)}</select><span class="caret" aria-hidden="true">▾</span></span>
+</label>
+<style>.wrap{position:relative}select{appearance:none;padding-right:36px}.caret{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--pl-faint-2);pointer-events:none}</style>

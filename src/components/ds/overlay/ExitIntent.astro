@@ -1,0 +1,8 @@
+---
+import Modal from '@/components/ds/overlay/Modal.astro';
+interface Props { id?: string; title: string; body: string; cta: string; href: string }
+const { id='exit', title, body, cta, href } = Astro.props;
+---
+<Modal id={id} width="560px" eyebrow="Before you go" title={title}><p class="b">{body}</p><a class="pl-btn pl-btn--primary" href={href}>{cta}</a><button class="no" data-close>No thanks</button></Modal>
+<script define:vars={{ id }}>let shown = sessionStorage.getItem('pl-exit'); document.addEventListener('mouseout', e => { if (!shown && !e.relatedTarget && e.clientY < 8) { shown = '1'; sessionStorage.setItem('pl-exit', '1'); document.getElementById(id)?.showModal(); } });</script>
+<style>.b{margin:0;font-size:14px;color:var(--pl-muted)}.no{border:none;background:none;color:var(--pl-faint);font-size:13px;text-align:left;cursor:pointer;padding:0}</style>

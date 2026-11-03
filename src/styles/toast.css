@@ -1,0 +1,4 @@
+#pl-toasts{position:fixed;right:16px;top:16px;z-index:110;display:flex;flex-direction:column;gap:8px;width:min(calc(100% - 32px),360px)}
+.pl-toast{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--pl-accent-line);border-radius:12px;padding:12px 14px;font-size:14px;box-shadow:0 20px 40px -20px rgba(23,22,26,.4);animation:pl-slidein .3s ease}
+.pl-toast--error{background:var(--pl-danger-tint);border-color:var(--pl-danger-line)}
+.pl-toast__ic{width:20px;height:20px;flex:none;border-radius:50%;background:var(--pl-accent);color:var(--pl-on-accent);font-size:11px;display:flex;align-items:center;justify-content:center}.pl-toast--error .pl-toast__ic{background:var(--pl-danger);color:#fff}

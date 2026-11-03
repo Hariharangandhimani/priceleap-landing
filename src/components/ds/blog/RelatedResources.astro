@@ -1,0 +1,6 @@
+---
+interface Props { items: { kind: string; title: string; meta: string; href: string }[] }
+const { items } = Astro.props;
+---
+<div class="pl-frame rr">{items.map(i => <a href={i.href}><span class="pl-label acc">{i.kind}</span><strong>{i.title}</strong><span class="m">{i.meta}<span>→</span></span></a>)}</div>
+<style>.rr{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));border-radius:18px}a{padding:20px;display:flex;flex-direction:column;gap:10px;color:var(--pl-ink)}a:hover{background:var(--pl-surface-2);color:var(--pl-ink)}.acc{color:var(--pl-accent-ink)}strong{font-size:15px;line-height:1.35}.m{margin-top:auto;display:flex;justify-content:space-between;font-family:var(--pl-mono);font-size:11px;color:var(--pl-faint)}.m span{color:var(--pl-accent-ink)}</style>

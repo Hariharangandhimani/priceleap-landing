@@ -28,11 +28,9 @@ const { title = site.title, description = site.description } = Astro.props;
       <slot />
     </div>
     <script>
-      // Scroll reveal
-      const io = 'IntersectionObserver' in window
-        ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('is-in'); io!.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' })
-        : null;
-      document.querySelectorAll('[data-reveal]').forEach(el => io ? io.observe(el) : el.classList.add('is-in'));
+      // Shared client helpers: scroll reveal, --pl-scroll progress var,
+      // window.plToast, and [data-open]/[data-close] dialog wiring.
+      import '@/scripts/ui.ts';
       // Sticky header scroll state
       const hdr = document.querySelector<HTMLElement>('[data-lhdr]');
       if (hdr) addEventListener('scroll', () => hdr.classList.toggle('scrolled', scrollY > 4), { passive: true });

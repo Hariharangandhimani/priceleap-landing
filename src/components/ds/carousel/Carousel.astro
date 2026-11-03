@@ -1,0 +1,22 @@
+---
+interface Props { label: string; title?: string; variant?: 'rail'|'slides'; autoplay?: number; itemWidth?: string }
+const { label, title, variant='rail', autoplay=0, itemWidth='300px' } = Astro.props;
+---
+<section class={'car ' + variant} aria-roledescription="carousel" aria-label={label} data-car data-autoplay={autoplay || undefined} style={`--w:${itemWidth}`}>
+  <div class="head">{title && <strong>{title}</strong>}<div class="nav"><button class="pl-iconbtn" aria-label="Previous" data-prev>←</button><button class="pl-iconbtn accent" aria-label="Next" data-next>→</button></div></div>
+  <div class="track" data-track tabindex="0"><slot /></div>
+  <div class="dots" data-dots role="tablist" aria-label="Choose slide"></div>
+</section>
+<script>
+document.querySelectorAll<HTMLElement>('[data-car]').forEach(c => {
+  const track = c.querySelector<HTMLElement>('[data-track]')!, items = [...track.children] as HTMLElement[], dots = c.querySelector<HTMLElement>('[data-dots]')!;
+  items.forEach((it, i) => { it.setAttribute('role', 'group'); it.setAttribute('aria-roledescription', 'slide'); it.setAttribute('aria-label', `${i + 1} of ${items.length}`); const d = document.createElement('button'); d.setAttribute('aria-label', 'Go to slide ' + (i + 1)); d.addEventListener('click', () => go(i)); dots.appendChild(d); });
+  const idx = () => Math.round(track.scrollLeft / (items[0]?.offsetWidth + 12 || 1));
+  const go = (i: number) => { const n = (i + items.length) % items.length; track.scrollTo({ left: items[n].offsetLeft - track.offsetLeft, behavior: 'smooth' }); };
+  const sync = () => [...dots.children].forEach((d, k) => d.toggleAttribute('aria-current', k === idx()));
+  track.addEventListener('scroll', () => requestAnimationFrame(sync), { passive: true }); sync();
+  c.querySelector('[data-prev]')!.addEventListener('click', () => go(idx() - 1)); c.querySelector('[data-next]')!.addEventListener('click', () => go(idx() + 1));
+  const ms = +(c.dataset.autoplay || 0); if (ms && !matchMedia('(prefers-reduced-motion: reduce)').matches) { let t = setInterval(() => go(idx() + 1), ms); c.addEventListener('pointerenter', () => clearInterval(t)); c.addEventListener('pointerleave', () => t = setInterval(() => go(idx() + 1), ms)); }
+});
+</script>
+<style>.car{display:flex;flex-direction:column;gap:16px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px}.head strong{font-size:18px}.nav{display:flex;gap:8px;margin-left:auto}.nav .accent{background:var(--pl-accent);border-color:var(--pl-accent);color:var(--pl-on-accent)}.track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;outline:none}.track::-webkit-scrollbar{display:none}.track>:global(*){flex:none;width:var(--w);scroll-snap-align:start}.slides .track>:global(*){width:100%}.dots{display:flex;gap:6px;justify-content:center}.dots :global(button){width:7px;height:7px;border-radius:7px;border:none;background:var(--pl-line-strong);cursor:pointer;padding:0;transition:all .3s}.dots :global(button[aria-current]){width:22px;background:var(--pl-accent)}</style>

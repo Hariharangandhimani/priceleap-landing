@@ -1,0 +1,6 @@
+.pl-dialog{border:1px solid var(--pl-line);border-radius:20px;padding:0;width:min(100% - 32px,480px);max-height:calc(100dvh - 32px);background:#fff;box-shadow:0 40px 80px -30px rgba(23,22,26,.45);color:var(--pl-ink)}
+.pl-dialog[open]{animation:pl-pop .3s var(--pl-ease)}
+.pl-dialog::backdrop{background:rgba(23,22,26,.4);backdrop-filter:blur(4px);animation:pl-fade .2s ease}
+.pl-dialog__close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:10px;border:1px solid var(--pl-line);background:#fff;cursor:pointer;font-size:12px}
+.pl-dialog--drawer{margin:0 0 0 auto;height:100dvh;max-height:none;width:min(100%,400px);border-radius:0;border-width:0 0 0 1px;background:var(--pl-canvas)}
+.pl-dialog--drawer[open]{animation:pl-slidein .3s var(--pl-ease)}

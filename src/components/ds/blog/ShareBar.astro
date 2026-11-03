@@ -1,0 +1,8 @@
+---
+interface Props { url: string; title: string }
+const { url, title } = Astro.props; const u = encodeURIComponent(url), t = encodeURIComponent(title);
+const links = [['LinkedIn','in',`https://www.linkedin.com/sharing/share-offsite/?url=${u}`],['X','X',`https://twitter.com/intent/tweet?url=${u}&text=${t}`],['Facebook','f',`https://www.facebook.com/sharer/sharer.php?u=${u}`]];
+---
+<div class="sb"><span class="pl-label">Share</span>{links.map(([n, s, h]) => <a href={h} target="_blank" rel="noopener" aria-label={'Share on ' + n}>{s}</a>)}<button type="button" data-copy={url} data-label="Copy link">Copy link</button></div>
+<script>document.querySelectorAll<HTMLButtonElement>('.sb [data-copy]').forEach(b => b.addEventListener('click', async () => { try { await navigator.clipboard.writeText(b.dataset.copy!); } catch {} b.textContent = 'Copied ✓'; setTimeout(() => b.textContent = b.dataset.label!, 1600); }));</script>
+<style>.sb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.sb a,.sb button{height:36px;min-width:36px;padding:0 10px;border-radius:10px;border:1px solid var(--pl-line);background:#fff;display:inline-flex;align-items:center;justify-content:center;font-family:var(--pl-mono);font-size:12px;color:var(--pl-ink-2);cursor:pointer;transition:border-color .2s,color .2s}.sb a:hover{border-color:var(--pl-accent);color:var(--pl-accent-ink)}</style>

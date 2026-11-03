@@ -1,0 +1,7 @@
+---
+interface Props { logos: { src?: string; alt: string }[]; variant?: 'grid'|'badges' }
+const { logos, variant='grid' } = Astro.props;
+---
+{variant==='grid' ? <ul class="pl-frame lg">{logos.map(l => <li>{l.src ? <img src={l.src} alt={l.alt} loading="lazy" /> : <span>{l.alt}</span>}</li>)}</ul>
+ : <ul class="bd">{logos.map(l => <li class="pl-card">{l.src && <img src={l.src} alt="" loading="lazy" />}<span class="pl-badge pl-badge--accent">✓ {l.alt}</span></li>)}</ul>}
+<style>ul{list-style:none;margin:0;padding:0}.lg{grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));border-radius:16px}.lg li{height:84px;display:flex;align-items:center;justify-content:center;color:var(--pl-faint-2);font-size:17px;font-weight:600;transition:color .2s}.lg li:hover{color:var(--pl-ink)}.lg img{max-height:36px;filter:grayscale(1);opacity:.7}.lg li:hover img{filter:none;opacity:1}.bd{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:10px}.bd li{padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px}.bd img{height:40px;object-fit:contain}</style>

@@ -1,0 +1,6 @@
+---
+interface Props { variant?: 'solid'|'dashed'|'label'; label?: string }
+const { variant='solid', label } = Astro.props;
+---
+{variant==='label' ? <div class="lab" role="separator"><span></span><em>{label}</em><span></span></div> : <hr class={variant} />}
+<style>hr{border:0;margin:0;height:0;border-top:1px solid var(--pl-line)}hr.dashed{border-top-style:dashed}.lab{display:flex;align-items:center;gap:14px}.lab span{flex:1;height:1px;background:var(--pl-line)}.lab em{font-style:normal;font-family:var(--pl-mono);font-size:10px;letter-spacing:.14em;color:var(--pl-faint-2);text-transform:uppercase}</style>

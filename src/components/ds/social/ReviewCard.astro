@@ -1,0 +1,6 @@
+---
+interface Props { source: string; rating: string; quote: string }
+const { source, rating, quote } = Astro.props;
+---
+<figure class="pl-card rv" itemscope itemtype="https://schema.org/Review"><div class="top"><span class="pl-label">{source}</span><span><b itemprop="ratingValue">{rating}</b> <span class="st" aria-hidden="true">★★★★★</span></span></div><blockquote itemprop="reviewBody">{quote}</blockquote></figure>
+<style>.rv{margin:0;padding:18px;display:flex;flex-direction:column;gap:10px}.top{display:flex;justify-content:space-between;align-items:center}.st{color:var(--pl-accent);font-size:12px}blockquote{margin:0;font-size:14px;line-height:1.55;color:var(--pl-ink-2)}</style>
