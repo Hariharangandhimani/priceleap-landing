@@ -1,0 +1,539 @@
+---
+/**
+ * Ecommerce Price Tracking — native rebuild on the shared light design system.
+ * Content ported 1:1 from ecommerce-price-tracking.html.
+ */
+import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
+import LHeader from '@/components/light/LHeader.astro';
+import LFooter from '@/components/light/LFooter.astro';
+import SectionHeader from '@/components/ds/nav/SectionHeader.astro';
+import FAQ from '@/components/ds/faq/FAQ.astro';
+import CTA from '@/components/ds/cta/CTA.astro';
+
+const logos = ['McAfee', 'Xometry', 'Do it Best', 'Wolt', 'neho', 'apoBank'];
+
+const posStyle = {
+  Above: { bg: '#FDECEB', bc: '#F5C6C3', c: '#C9372E' },
+  Below: { bg: '#E8FCEF', bc: '#BFF3D2', c: '#0B7A34' },
+  Match: { bg: '#F4F5F4', bc: '#E6E8E6', c: '#3A414C' },
+};
+const heroRows = [
+  { n: 'Aurora 55" 4K TV', vs: 'vs MarketOne', you: '$619.00', comp: '$598.00', d: '▼ 3.4%', pos: 'Above' },
+  { n: 'NovaBook Air 14', vs: 'vs ShopRanked', you: '$1,049.00', comp: '$1,089.00', d: '▲ 3.8%', pos: 'Below' },
+  { n: 'PureSound Buds Pro', vs: 'vs Marketplace', you: '$129.00', comp: '$129.00', d: '— 0%', pos: 'Match' },
+  { n: 'Kettle K2 Stainless', vs: 'vs MarketOne', you: '$74.50', comp: '$66.90', d: '▼ 10.2%', pos: 'Above' },
+];
+const tape = [
+  ['Aurora 55" 4K TV', '▼ 3.4%', '#C9372E'], ['NovaBook Air 14', '▲ 3.8%', '#0B7A34'],
+  ['Kettle K2 Stainless', '▼ 10.2%', '#C9372E'], ['PureSound Buds Pro', '— 0%', '#6E7684'],
+  ['12 SKUs changed', '3 competitors', '#0B7A34'], ['MarketOne · SKU 88213', 'checked 06:00', '#5A6373'],
+];
+
+// "before" spreadsheet
+const sheetRows = [
+  ['TV-55-AUR', '$612', '?', '11 days ago'],
+  ['NB-AIR-14', '$1,099', '$1,080', '6 days ago'],
+  ['BUDS-PRO', '#N/A', '$132', '14 days ago'],
+  ['KET-K2-SS', '$71', '?', '9 days ago'],
+];
+
+const solStats = [
+  { k: 'SKUs monitored', v: '12,480', c: '#0A0A0A' },
+  { k: 'Sources tracked', v: '38', c: '#0A0A0A' },
+  { k: 'Priced below market', v: '61%', c: '#0B7A34' },
+  { k: 'Priced above market', v: '22%', c: '#C9372E' },
+  { k: 'Match confidence', v: '98.4%', c: '#0A0A0A' },
+  { k: 'Last full sync', v: '06:00 & 18:00', c: '#0A0A0A' },
+];
+
+const baRows = [
+  { b: 'Analysts check competitor sites by hand and paste prices into spreadsheets.', a: 'Competitor and marketplace prices are collected automatically.' },
+  { b: 'Data is days old by the time anyone reviews it.', a: 'Data refreshes on the schedule you set.' },
+  { b: 'Product matches are guessed by title, so variants and pack sizes get mixed up.', a: 'Each price is matched to the right product in your catalog, down to the variant.' },
+  { b: 'Coverage stops at a few hundred SKUs and a handful of competitors.', a: 'Your full catalog and competitive set are covered in one view.' },
+  { b: 'Price moves are spotted late, after margin or sales are already lost.', a: 'Alerts flag meaningful price changes so your team can act on them quickly.' },
+];
+
+const sites = [
+  { t: 'MarketOne', on: true }, { t: 'ShopRanked', on: true }, { t: 'Marketplace', on: true },
+  { t: 'Protected', lock: true }, { t: 'Regional', on: true }, { t: 'Long-tail', on: true },
+  { t: 'D2C', on: true }, { t: 'JS-heavy', lock: true }, { t: 'Reseller', on: true },
+];
+const scaleBars = [14, 22, 30, 40, 52, 64, 80, 100];
+
+const reasons = [
+  { t: 'Any website, any marketplace', d: 'Track competitors, marketplaces, and sites that block most tools, across your full catalog.', kind: 'sites' },
+  { t: 'AI matching across sites, sellers, and variants', d: 'We match competitor products to yours accurately, including items without a UPC or EAN, so you compare the right product and not a lookalike.', kind: 'matches' },
+  { t: 'Real-time and scheduled monitoring', d: 'Choose how often each group of products refreshes.', kind: 'schedules' },
+  { t: 'Built for thousands of SKUs, not one', d: 'Built for retailers and brands tracking thousands of SKUs, not shoppers tracking one.', kind: 'scale' },
+];
+
+const schedules = [
+  { n: 'Electronics · high-velocity', f: 'Every 4 hours', hot: true },
+  { n: 'Home & kitchen', f: 'Daily', hot: false },
+  { n: 'Seasonal · clearance', f: '2× / day', hot: false },
+  { n: 'Long-tail catalog', f: 'Weekly', hot: false },
+];
+const matches = [
+  { n: 'Aurora 55" 4K TV', d: 'MarketOne SKU 88213' },
+  { n: 'NovaBook Air 14', d: 'no UPC · matched on specs' },
+  { n: 'PureSound Buds Pro', d: '3 variants linked' },
+];
+const alerts = [
+  { t: "MarketOne dropped Kettle K2 to $66.90 · you're now 10.2% above.", time: '2 min ago', mk: '▼', kind: 'down' },
+  { t: "ShopRanked raised NovaBook Air to $1,089 · you're now cheapest.", time: '1 hr ago', mk: '▲', kind: 'up' },
+  { t: '12 SKUs changed across 3 competitors.', time: 'Today', mk: '≡', kind: 'neutral' },
+];
+
+const skuHead = ['1K', '5K', '10K', '25K', '50K', '100K', '250K', '1M'];
+const siteRows = ['5 sites', '10 sites', '20 sites', '40 sites', '80 sites'];
+const hx = 5, hy = 3; // default highlighted coverage: 40 sites × 100K
+
+const faqs = [
+  { q: 'Which websites and marketplaces can you track?', a: "Competitor sites, marketplaces, and sites that are hard for most tools to reach. If it's on the web, we can usually track it." },
+  { q: 'How accurate is the matching?', a: 'We match on more than barcodes, so products without a UPC or EAN still get matched to the right competitor item.' },
+  { q: 'How often is the data refreshed?', a: 'You set the cadence per product group, from daily down to multiple times a day where it matters.' },
+  { q: 'Can it handle our full catalog?', a: 'Yes. The platform is built for large SKU counts and many competitors at once.' },
+  { q: 'How do we get the data into our systems?', a: 'Through the dashboard, scheduled exports, or our API.' },
+];
+---
+
+<LightBaseLayout
+  title="Ecommerce Price Tracking · PriceLeap"
+  description="Track competitor and marketplace prices across your entire catalog, kept accurate and current without manual checks."
+>
+  <LHeader />
+
+  <!-- ══ HERO ══ -->
+  <section class="ep-hero">
+    <div class="ep-hero__grid" aria-hidden="true"></div>
+    <div class="ep-hero__glow" aria-hidden="true"></div>
+    <div class="ep-wrap ep-hero__inner">
+      <div class="ep-hero__copy">
+        <nav class="ep-crumb"><a href="/light">Solutions</a><span>/</span><span>Ecommerce Price Tracking</span></nav>
+        <span class="ep-eyebrow"><span class="ep-eyebrow__dot"></span>Ecommerce Price Tracking</span>
+        <h1 class="ep-h1"><span class="w4">Ecommerce price tracking, built for retail teams, </span><b>not spreadsheets.</b></h1>
+        <p class="ep-lead">Track competitor and marketplace prices across your entire catalog, kept accurate and current without manual checks.</p>
+        <div class="ep-hero__btns">
+          <a href="/book-a-demo" class="ep-btn ep-btn--primary">Get a demo</a>
+          <a href="#solution" class="ep-btn ep-btn--secondary">See how it works <span>→</span></a>
+        </div>
+        <div class="ep-hero__ticks">
+          {['Matched to the right product', 'Any site or marketplace', 'Refresh on your schedule'].map(t => (
+            <span class="ep-tick"><span class="ep-tick__ic">✓</span>{t}</span>
+          ))}
+        </div>
+      </div>
+
+      <!-- Price comparison card -->
+      <div class="ep-hero__card-wrap">
+        <div class="ep-card">
+          <div class="ep-card__head">
+            <span class="ep-dots"><i></i><i></i><i></i></span>
+            <span class="ep-card__title">Catalog · competitor prices</span>
+            <span class="ep-live"><span class="ep-live__dot"></span>LIVE</span>
+          </div>
+          <div class="ep-card__rowhead"><span>PRODUCT</span><span>YOU</span><span>COMP</span><span style="text-align:right">POS</span></div>
+          {heroRows.map(r => {
+            const p = posStyle[r.pos as keyof typeof posStyle];
+            const dc = r.d.startsWith('▼') ? '#C9372E' : r.d.startsWith('▲') ? '#0B7A34' : '#6E7684';
+            return (
+              <div class="ep-prow">
+                <div class="ep-prow__name"><div class="ep-prow__n">{r.n}</div><div class="ep-prow__vs">{r.vs}</div></div>
+                <span class="ep-prow__you">{r.you}</span>
+                <span class="ep-prow__comp" style={`color:${dc}`}>{r.comp}<small>{r.d}</small></span>
+                <span class="ep-prow__pos" style={`background:${p.bg};border-color:${p.bc};color:${p.c}`}>{r.pos}</span>
+              </div>
+            );
+          })}
+          <div class="ep-card__tape">
+            <div class="ep-tape">{[...tape, ...tape].map(([n, d, c]) => <span class="ep-tape__i"><b>{n}</b><em style={`color:${c}`}>{d}</em></span>)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ LOGOS ══ -->
+  <section class="ep-logos">
+    <div class="ep-wrap ep-logos__inner">
+      <div class="ep-logos__label">Trusted by retail and brand teams</div>
+      <div class="ep-logos__track"><div class="ep-logos__marquee">{[...logos, ...logos].map(l => <span class="ep-logo">{l}</span>)}</div></div>
+    </div>
+  </section>
+
+  <!-- ══ PROBLEM ══ -->
+  <section id="problem" class="ep-sec ep-sec--tint">
+    <div class="ep-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="The problem" title="Prices shift every day across hundreds of competitors and marketplaces." accent="Past a few hundred SKUs, manual tracking stops working." align="center" />
+      </div>
+      <div class="ep-problem" data-reveal>
+        <div class="ep-sheet">
+          <div class="ep-sheet__bar"><span class="ep-sheet__file">competitor_prices_FINAL_v7.xlsx</span></div>
+          <div class="ep-sheet__grid">
+            <div class="ep-sheet__cell ep-sheet__cell--h">SKU</div><div class="ep-sheet__cell ep-sheet__cell--h">YOU</div><div class="ep-sheet__cell ep-sheet__cell--h">COMP</div><div class="ep-sheet__cell ep-sheet__cell--h">CHECKED</div>
+            {sheetRows.flatMap(r => r.map((v, ci) => (
+              <div class="ep-sheet__cell" style={`color:${(v === '?' || v === '#N/A') ? '#C9372E' : ci === 3 ? '#8A5A00' : '#0A0A0A'}`}>{v}</div>
+            )))}
+          </div>
+        </div>
+        <div class="ep-problem__points">
+          <p>Spreadsheets and one-off checks fall behind the moment your catalog grows.</p>
+          <p>Bad matches and stale prices quietly cost you margin on some products and sales on others.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ SOLUTION ══ -->
+  <section id="solution" class="ep-sec">
+    <div class="ep-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="The solution · Ecommerce price monitoring tools" title="One reliable view of where your prices sit" accent="against the market." lead="PriceLeap watches the prices you care about, matches them to the right products in your catalog, and keeps that data fresh enough to act on. You get one reliable view, updated on a schedule you set." align="center" />
+      </div>
+      <div class="ep-stats" data-reveal>
+        {solStats.map(st => (
+          <div class="ep-stat">
+            <div class="ep-stat__v" style={`color:${st.c}`}>{st.v}</div>
+            <div class="ep-stat__k">{st.k}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ BEFORE & AFTER ══ -->
+  <section id="compare" class="ep-sec ep-sec--tint">
+    <div class="ep-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Before and after" title="What changes when PriceLeap runs" accent="your price tracking." align="center" />
+      </div>
+      <div class="ep-cmp" data-reveal>
+        <div class="ep-cmp__head"><span></span><span class="ep-cmp__hb">Manual tracking</span><span class="ep-cmp__ha">With PriceLeap</span></div>
+        {baRows.map(r => (
+          <div class="ep-cmp__row">
+            <div class="ep-cmp__k"></div>
+            <div class="ep-cmp__b">{r.b}</div>
+            <div class="ep-cmp__a"><span class="ep-cmp__atick">✓</span>{r.a}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ WHY PRICELEAP ══ -->
+  <section id="why" class="ep-sec">
+    <div class="ep-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Why PriceLeap" title="What makes the tracking" accent="dependable at scale." align="center" />
+      </div>
+      <div class="ep-reasons" data-reveal>
+        {reasons.map(r => (
+          <div class="ep-reason">
+            <h3 class="ep-reason__t">{r.t}</h3>
+            <p class="ep-reason__d">{r.d}</p>
+            {r.kind === 'sites' && (
+              <div class="ep-sites">{sites.map(s => (
+                <span class="ep-site" style={s.lock ? 'border-color:#F5C6C3;color:#C9372E' : s.on ? 'background:#E8FCEF;border-color:#BFF3D2;color:#0B7A34' : ''}>{s.lock ? '✓ ' + s.t : s.t}</span>
+              ))}</div>
+            )}
+            {r.kind === 'matches' && (
+              <div class="ep-matches">{matches.map(m => (
+                <div class="ep-match"><span class="ep-match__ic">✓</span><div><b>{m.n}</b><small>{m.d}</small></div></div>
+              ))}</div>
+            )}
+            {r.kind === 'schedules' && (
+              <div class="ep-scheds">{schedules.map(s => (
+                <div class="ep-sched" style={s.hot ? 'border-color:#BFF3D2;background:#E8FCEF' : ''}>
+                  <span class="ep-sched__n">{s.n}</span>
+                  <span class="ep-sched__f" style={s.hot ? 'background:#18E563;color:#0A0A0A' : ''}>{s.f}</span>
+                </div>
+              ))}</div>
+            )}
+            {r.kind === 'scale' && (
+              <div class="ep-scale">{scaleBars.map((h, i) => (
+                <span class="ep-scale__bar" style={`height:${h}%;background:${i === scaleBars.length - 1 ? '#18E563' : i > 4 ? '#8EF0B2' : '#DDE1DD'}`}></span>
+              ))}</div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CORE FEATURES ══ -->
+  <section class="ep-sec ep-sec--tint">
+    <div class="ep-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Core features" title="What you get inside" accent="the platform." align="center" />
+      </div>
+      <div class="ep-feats" data-reveal>
+        <div class="ep-feat">
+          <h3 class="ep-feat__t">Know the moment a competitor moves</h3>
+          <p class="ep-feat__d">Alerts flag meaningful price changes before you lose the sale.</p>
+          <div class="ep-alerts">
+            {alerts.map(a => (
+              <div class="ep-alert">
+                <span class="ep-alert__ic" style={`background:${a.kind === 'down' ? '#FDECEB' : a.kind === 'up' ? '#E8FCEF' : '#F4F5F4'};color:${a.kind === 'down' ? '#C9372E' : a.kind === 'up' ? '#0B7A34' : '#3A414C'}`}>{a.mk}</span>
+                <span class="ep-alert__t">{a.t}</span>
+                <span class="ep-alert__time">{a.time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div class="ep-feat">
+          <h3 class="ep-feat__t">Tracking that goes somewhere</h3>
+          <p class="ep-feat__d">Any site or marketplace in, your data out through the dashboard, export, or API. A price tracker for any website you compete on.</p>
+          <div class="ep-sinks">
+            {['Dashboard', 'Scheduled export', 'API', 'BI / ERP'].map(s => <span class="ep-sink">{s}</span>)}
+          </div>
+          <p class="ep-feat__note">Prices don't just sit in a report. They feed your pricing, so the data goes somewhere.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PROOF ══ -->
+  <section class="ep-sec">
+    <div class="ep-wrap ep-proof" data-reveal>
+      <span class="ep-eyebrow"><span class="ep-eyebrow__sq"></span>Proof</span>
+      <blockquote>Large catalogs, many sources, dependable data your pricing team can rely on.</blockquote>
+      <div class="ep-proof__badges">
+        {['Any website, any marketplace', 'AI matching, UPC or not', 'Refresh on your schedule', 'Full-catalog coverage'].map(b => (
+          <span class="ep-proof__badge"><span class="ep-tick__ic">✓</span>{b}</span>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PRICING (scope grid) ══ -->
+  <section id="pricing" class="ep-sec ep-sec--tint">
+    <div class="ep-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Pricing" title="Scoped to" accent="your catalog." lead="Pricing scales with the number of sites and SKUs you track. Tell us your catalog and competitive set, and we'll scope it to fit." align="center" />
+      </div>
+      <div class="ep-scope" data-reveal>
+        <div class="ep-scope__grid-wrap">
+          <div class="ep-scope__skuhead">
+            <span></span>{skuHead.map(h => <span class="ep-scope__sku">{h}</span>)}
+          </div>
+          {siteRows.map((row, y) => (
+            <div class="ep-scope__row">
+              <span class="ep-scope__site">{row}</span>
+              {skuHead.map((_, x) => (
+                <span class="ep-scope__cell" style={`background:${(x <= hx && y <= hy) ? (x === hx && y === hy ? '#18E563' : '#8EF0B2') : '#F4F5F4'}`}></span>
+              ))}
+            </div>
+          ))}
+          <div class="ep-scope__label">Showing <b>40 sites × 100K SKUs</b> · every cell priced the same way: sites × SKUs</div>
+        </div>
+        <div class="ep-scope__cta">
+          <div class="ep-scope__cta-t">Contact us for custom requirements</div>
+          <p>Talk to us about custom coverage — we'll scope it to fit your catalog and competitive set.</p>
+          <a href="/book-a-demo" class="ep-btn ep-btn--primary">Get a custom quote</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FAQ ══ -->
+  <section id="faq" class="ep-sec">
+    <div class="ep-wrap ep-faq">
+      <div data-reveal>
+        <SectionHeader eyebrow="FAQ" title="Questions buyers" accent="ask us." align="center" />
+      </div>
+      <div data-reveal style="margin-top:36px">
+        <FAQ items={faqs} variant="list" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CTA ══ -->
+  <div class="ep-wrap" style="padding-bottom:96px">
+    <CTA
+      variant="primary"
+      title="See it run on your own catalog"
+      accent="and competitors."
+      body="We'll show ecommerce price tracking live on your real SKUs and competitive set — matched, scored, and refreshed."
+      primary={{ label: 'Get a demo', href: '/book-a-demo' }}
+      secondary={{ label: 'See pricing', href: '#pricing' }}
+    />
+  </div>
+
+  <LFooter />
+</LightBaseLayout>
+
+<style>
+.ep-wrap { max-width: var(--pl-container); margin: 0 auto; padding-left: var(--pl-gutter); padding-right: var(--pl-gutter); }
+.ep-sec { padding: clamp(64px,8vw,112px) 0; border-bottom: 1px solid var(--pl-line); }
+.ep-sec--tint { background: #FBFBFA; }
+.ep-h1 { margin: 24px 0 0; font-family: var(--pl-font); font-size: clamp(36px,5vw,64px); line-height: 1.03; letter-spacing: -.045em; color: #0A0A0A; text-wrap: balance; font-weight: 700; }
+.ep-h1 .w4 { font-weight: 400; }
+.ep-lead { margin: 22px 0 0; max-width: 560px; font-size: 18px; line-height: 1.6; color: #3A414C; }
+.ep-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #0B7A34; }
+.ep-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.8s ease-out infinite; }
+.ep-eyebrow__sq { width: 7px; height: 7px; border-radius: 2px; background: #18E563; }
+
+.ep-btn { height: 48px; padding: 0 22px; display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; font-family: var(--pl-font); font-weight: 500; font-size: 15px; transition: all .2s; }
+.ep-btn--primary { background: #18E563; color: #0A0A0A; box-shadow: 0 12px 26px -12px rgba(24,229,99,.9); }
+.ep-btn--primary:hover { background: #14D35A; color: #0A0A0A; }
+.ep-btn--secondary { background: #fff; border: 1px solid var(--pl-line); color: #0A0A0A; }
+.ep-btn--secondary:hover { border-color: #C4CAC4; }
+.ep-btn--secondary span { color: #0B7A34; }
+
+/* hero */
+.ep-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
+.ep-hero__grid { position: absolute; inset: 0; background-image: linear-gradient(#EEF0EE 1px,transparent 1px),linear-gradient(90deg,#EEF0EE 1px,transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); pointer-events: none; }
+.ep-hero__glow { position: absolute; right: -10%; top: -20%; width: 720px; height: 620px; background: radial-gradient(closest-side,rgba(24,229,99,.14),transparent); pointer-events: none; }
+.ep-hero__inner { position: relative; display: grid; grid-template-columns: minmax(0,.95fr) minmax(0,1.05fr); gap: clamp(40px,5vw,64px); align-items: center; padding-top: clamp(48px,7vw,96px); padding-bottom: clamp(48px,6vw,80px); }
+.ep-crumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5A6373; margin-bottom: 24px; }
+.ep-crumb a { color: #5A6373; }
+.ep-crumb span:last-child { color: #0A0A0A; }
+.ep-hero__btns { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
+.ep-hero__ticks { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.ep-tick { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #3A414C; }
+.ep-tick__ic { flex: none; width: 18px; height: 18px; border-radius: 50%; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+
+.ep-hero__card-wrap { position: relative; min-width: 0; }
+.ep-card { background: #fff; border: 1px solid var(--pl-line); border-radius: 20px; box-shadow: 0 40px 80px -40px rgba(10,10,10,.28); overflow: hidden; }
+.ep-card__head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #EEF0EE; background: #FBFBFA; }
+.ep-dots { display: flex; gap: 5px; }
+.ep-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--pl-line); }
+.ep-card__title { font-size: 13px; font-weight: 500; color: #0A0A0A; }
+.ep-live { margin-left: auto; display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: #E8FCEF; border: 1px solid #BFF3D2; font-family: var(--pl-mono); font-size: 10px; color: #0B7A34; }
+.ep-live__dot { width: 6px; height: 6px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.6s infinite; }
+.ep-card__rowhead, .ep-prow { display: grid; grid-template-columns: minmax(0,1.6fr) 92px 92px 76px; gap: 10px; align-items: center; }
+.ep-card__rowhead { padding: 10px 16px; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .06em; color: #6E7684; border-bottom: 1px solid #EEF0EE; }
+.ep-prow { padding: 12px 16px; border-bottom: 1px solid #EEF0EE; }
+.ep-prow__name { min-width: 0; }
+.ep-prow__n { font-size: 13px; font-weight: 500; color: #0A0A0A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ep-prow__vs { font-family: var(--pl-mono); font-size: 10px; color: #6E7684; }
+.ep-prow__you { font-family: var(--pl-font); font-size: 14px; font-weight: 600; color: #0A0A0A; }
+.ep-prow__comp { font-family: var(--pl-font); font-size: 14px; font-weight: 600; display: flex; flex-direction: column; }
+.ep-prow__comp small { font-family: var(--pl-mono); font-size: 10px; }
+.ep-prow__pos { justify-self: end; height: 22px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: 6px; border: 1px solid; font-family: var(--pl-mono); font-size: 10px; }
+.ep-card__tape { background: #FBFBFA; border-top: 1px solid #EEF0EE; overflow: hidden; -webkit-mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
+.ep-tape { display: flex; width: max-content; animation: pl-marquee 26s linear infinite; }
+.ep-tape__i { flex: none; display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-right: 1px solid #EEF0EE; font-size: 12px; }
+.ep-tape__i b { font-weight: 500; color: #3A414C; }
+.ep-tape__i em { font-style: normal; font-family: var(--pl-mono); font-size: 11px; }
+
+/* logos */
+.ep-logos { border-bottom: 1px solid var(--pl-line); }
+.ep-logos__inner { display: grid; grid-template-columns: 280px minmax(0,1fr); }
+.ep-logos__label { padding: 22px 0; display: flex; align-items: center; border-right: 1px solid var(--pl-line); font-family: var(--pl-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #5A6373; }
+.ep-logos__track { overflow: hidden; -webkit-mask-image: linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); mask-image: linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); }
+.ep-logos__marquee { display: flex; width: max-content; animation: pl-marquee 32s linear infinite; }
+.ep-logo { flex: none; width: 200px; height: 84px; display: flex; align-items: center; justify-content: center; border-right: 1px solid #EEF0EE; font-family: var(--pl-font); font-size: 21px; font-weight: 600; color: #6E7684; }
+
+/* problem */
+.ep-problem { margin-top: 48px; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; align-items: center; }
+.ep-sheet { border: 1px solid var(--pl-line); border-radius: 16px; overflow: hidden; background: #fff; }
+.ep-sheet__bar { padding: 10px 14px; background: #FBFBFA; border-bottom: 1px solid #EEF0EE; }
+.ep-sheet__file { font-family: var(--pl-mono); font-size: 12px; color: #5A6373; }
+.ep-sheet__grid { display: grid; grid-template-columns: repeat(4,1fr); }
+.ep-sheet__cell { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid #EEF0EE; border-right: 1px solid #EEF0EE; font-family: var(--pl-mono); }
+.ep-sheet__cell--h { font-size: 10px; letter-spacing: .06em; color: #6E7684; background: #FBFBFA; }
+.ep-sheet__grid > .ep-sheet__cell:nth-child(4n) { border-right: none; }
+.ep-problem__points { display: flex; flex-direction: column; gap: 18px; }
+.ep-problem__points p { margin: 0; font-size: 18px; line-height: 1.55; color: #3A414C; padding-left: 18px; border-left: 2px solid #F5C6C3; }
+
+/* solution stats */
+.ep-stats { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,180px),1fr)); gap: 1px; background: var(--pl-line); border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; }
+.ep-stat { background: #fff; padding: 28px 24px; }
+.ep-stat__v { font-family: var(--pl-font); font-size: 28px; font-weight: 600; letter-spacing: -.03em; }
+.ep-stat__k { margin-top: 6px; font-size: 14px; color: #5A6373; }
+
+/* compare */
+.ep-cmp { margin-top: 48px; border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; }
+.ep-cmp__head, .ep-cmp__row { display: grid; grid-template-columns: 56px minmax(0,1fr) minmax(0,1fr); }
+.ep-cmp__head { background: #FBFBFA; border-bottom: 1px solid var(--pl-line); }
+.ep-cmp__head span { padding: 14px 18px; font-family: var(--pl-mono); font-size: 11px; letter-spacing: .08em; color: #5A6373; }
+.ep-cmp__ha { color: #0B7A34; }
+.ep-cmp__row { border-bottom: 1px solid #EEF0EE; }
+.ep-cmp__row:last-child { border-bottom: none; }
+.ep-cmp__k { border-right: 1px solid #EEF0EE; }
+.ep-cmp__b { padding: 18px; font-size: 14px; line-height: 1.55; color: #5A6373; }
+.ep-cmp__a { padding: 18px; font-size: 14px; line-height: 1.55; color: #0A0A0A; border-left: 1px solid #BFF3D2; background: #FCFEFC; display: flex; gap: 10px; }
+.ep-cmp__atick { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+
+/* reasons */
+.ep-reasons { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,300px),1fr)); gap: 16px; }
+.ep-reason { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 28px; }
+.ep-reason__t { margin: 0; font-family: var(--pl-font); font-size: 18px; font-weight: 600; letter-spacing: -.01em; color: #0A0A0A; }
+.ep-reason__d { margin: 10px 0 0; font-size: 14px; line-height: 1.55; color: #5A6373; }
+.ep-sites { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 6px; }
+.ep-site { height: 26px; padding: 0 10px; display: inline-flex; align-items: center; border: 1px solid var(--pl-line); border-radius: 7px; font-size: 12px; color: #5A6373; }
+.ep-matches { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+.ep-match { display: flex; align-items: center; gap: 10px; }
+.ep-match__ic { flex: none; width: 24px; height: 24px; border-radius: 7px; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+.ep-match b { display: block; font-size: 13px; color: #0A0A0A; }
+.ep-match small { font-size: 11px; color: #6E7684; }
+.ep-scheds { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+.ep-sched { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--pl-line); border-radius: 10px; padding: 10px 12px; background: #FBFBFA; }
+.ep-sched__n { font-size: 12px; color: #0A0A0A; }
+.ep-sched__f { height: 22px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: 6px; background: #F4F5F4; font-family: var(--pl-mono); font-size: 10px; color: #3A414C; }
+.ep-scale { margin-top: 18px; display: flex; align-items: flex-end; gap: 8px; height: 90px; }
+.ep-scale__bar { flex: 1; border-radius: 4px 4px 0 0; min-height: 10px; }
+
+/* features */
+.ep-feats { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,340px),1fr)); gap: 16px; }
+.ep-feat { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 28px; }
+.ep-feat__t { margin: 0; font-family: var(--pl-font); font-size: 20px; font-weight: 600; letter-spacing: -.01em; color: #0A0A0A; }
+.ep-feat__d { margin: 10px 0 0; font-size: 15px; line-height: 1.55; color: #5A6373; }
+.ep-feat__note { margin: 16px 0 0; font-size: 13px; color: #6E7684; }
+.ep-alerts { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+.ep-alert { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; border: 1px solid #EEF0EE; border-radius: 12px; padding: 10px 12px; background: #FBFBFA; }
+.ep-alert__ic { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.ep-alert__t { font-size: 13px; line-height: 1.4; color: #0A0A0A; }
+.ep-alert__time { font-family: var(--pl-mono); font-size: 10px; color: #6E7684; white-space: nowrap; }
+.ep-sinks { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 8px; }
+.ep-sink { height: 32px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 9px; background: #F4F5F4; font-family: var(--pl-mono); font-size: 12px; color: #3A414C; }
+
+/* proof */
+.ep-proof { text-align: center; display: flex; flex-direction: column; align-items: center; }
+.ep-proof blockquote { margin: 18px 0 0; max-width: 760px; font-family: var(--pl-font); font-size: clamp(24px,3vw,34px); font-weight: 600; line-height: 1.25; letter-spacing: -.02em; color: #0A0A0A; }
+.ep-proof__badges { margin-top: 28px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.ep-proof__badge { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border: 1px solid var(--pl-line); border-radius: 10px; background: #fff; font-size: 13px; color: #3A414C; }
+
+/* scope */
+.ep-scope { margin-top: 48px; display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); gap: 16px; align-items: stretch; }
+.ep-scope__grid-wrap { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 24px; }
+.ep-scope__skuhead, .ep-scope__row { display: grid; grid-template-columns: 70px repeat(8,1fr); gap: 4px; align-items: center; }
+.ep-scope__skuhead { margin-bottom: 4px; }
+.ep-scope__sku { font-family: var(--pl-mono); font-size: 10px; color: #6E7684; text-align: center; }
+.ep-scope__row { margin-bottom: 4px; }
+.ep-scope__site { font-family: var(--pl-mono); font-size: 11px; color: #5A6373; }
+.ep-scope__cell { height: 26px; border-radius: 4px; }
+.ep-scope__label { margin-top: 14px; font-size: 13px; color: #5A6373; }
+.ep-scope__label b { color: #0A0A0A; }
+.ep-scope__cta { border: 1.5px solid #18E563; border-radius: 20px; background: #fff; padding: 32px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 0 0 6px rgba(24,229,99,.08); }
+.ep-scope__cta-t { font-family: var(--pl-font); font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: #0A0A0A; }
+.ep-scope__cta p { margin: 12px 0 20px; font-size: 15px; line-height: 1.55; color: #5A6373; }
+.ep-scope__cta .ep-btn { align-self: flex-start; }
+
+.ep-faq { max-width: 860px; }
+
+.pl-js [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+.pl-js [data-reveal].is-in { opacity: 1; transform: none; }
+
+@media (max-width: 999px) {
+  .ep-hero__inner { grid-template-columns: 1fr; }
+  .ep-logos__inner { grid-template-columns: 1fr; }
+  .ep-logos__label { border-right: none; border-bottom: 1px solid var(--pl-line); }
+  .ep-problem { grid-template-columns: 1fr; }
+  .ep-feats { grid-template-columns: 1fr; }
+  .ep-scope { grid-template-columns: 1fr; }
+}
+@media (max-width: 719px) {
+  .ep-cmp__head, .ep-cmp__row { grid-template-columns: 1fr; }
+  .ep-cmp__k { display: none; }
+  .ep-cmp__b, .ep-cmp__a { border-left: none; border-top: 1px solid #EEF0EE; }
+  .ep-scope__skuhead, .ep-scope__row { grid-template-columns: 56px repeat(8,1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+  .ep-logos__marquee, .ep-tape { animation: none; }
+}
+</style>

@@ -1,4 +1,6 @@
 // Lightweight client helpers. Import once in the base layout: <script>import '../scripts/ui.ts'</script>
+// 0) Mark JS as available so [data-reveal] hide styles only apply when we can un-hide them.
+document.documentElement.classList.add('pl-js');
 // 1) Scroll reveal
 const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('is-in'); io!.unobserve(e.target); } }), { rootMargin: '0px 0px -10% 0px' }) : null;
 document.querySelectorAll('[data-reveal]').forEach(el => io ? io.observe(el) : el.classList.add('is-in'));

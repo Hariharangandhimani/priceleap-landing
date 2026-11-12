@@ -1,0 +1,518 @@
+---
+/**
+ * Real-Time Price Monitoring — native rebuild on the shared light design system.
+ * Layout: LightBaseLayout + LHeader + LFooter. Content ported 1:1 from the
+ * provided design (real-time-price-monitoring.html). [X] placeholders kept verbatim.
+ */
+import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
+import LHeader from '@/components/light/LHeader.astro';
+import LFooter from '@/components/light/LFooter.astro';
+import SectionHeader from '@/components/ds/nav/SectionHeader.astro';
+import Tabs from '@/components/ds/nav/Tabs.astro';
+import FAQ from '@/components/ds/faq/FAQ.astro';
+import CTA from '@/components/ds/cta/CTA.astro';
+
+const heroSources = [
+  { n: 'Marketplace A', ab: 'MA', type: 'MARKETPLACE', price: '$184.99' },
+  { n: 'Retailer B',    ab: 'RB', type: 'RETAILER',    price: '$189.00' },
+  { n: 'PriceCompare',  ab: 'PC', type: 'COMPARISON',  price: '$179.90' },
+  { n: 'Reseller 0871', ab: 'R7', type: 'RESELLER',    price: '$176.50' },
+  { n: 'Regional store',ab: 'RS', type: 'REGIONAL',    price: '€172.00' },
+];
+
+const retailRows = [
+  { n: 'You',           p: '$159.00', hl: true,  tag: '',             tbg: '', tc: '', strike: false },
+  { n: 'Retailer B',    p: '$149.00', hl: false, tag: 'PROMO −6%',    tbg: '#FDECEB', tc: '#C9372E', strike: false },
+  { n: 'Marketplace A', p: '$157.50', hl: false, tag: '',             tbg: '', tc: '', strike: false },
+  { n: 'D2C store C',   p: '$162.00', hl: false, tag: 'OUT OF STOCK', tbg: '#F4F5F4', tc: '#5A6373', strike: true },
+];
+const brandRows = [
+  { n: 'Authorized retailer',        p: '$179.00', tag: 'AT MAP',  tbg: '#E8FCEF', tbc: '#BFF3D2', tc: '#0B7A34', pc: '#0A0A0A' },
+  { n: 'Seller 2841 · Marketplace',  p: '$164.70', tag: '−8% MAP', tbg: '#FDECEB', tbc: '#F5C6C3', tc: '#C9372E', pc: '#C9372E' },
+  { n: 'Regional reseller · DE',     p: '€179.00', tag: 'AT MAP',  tbg: '#E8FCEF', tbc: '#BFF3D2', tc: '#0B7A34', pc: '#0A0A0A' },
+  { n: 'Marketplace seller 0098',    p: '$181.00', tag: 'ABOVE',   tbg: '#F4F5F4', tbc: '#E6E8E6', tc: '#3A414C', pc: '#0A0A0A' },
+];
+
+const personas = [
+  {
+    kicker: 'For retailers', title: 'Price monitoring for Retailers',
+    bullets: [
+      'Reprice with confidence instead of guessing where the market is.',
+      'Catch promotions and out-of-stocks early enough to respond.',
+      'See every competitor price on the SKUs you share, updated through the day.',
+    ],
+  },
+  {
+    kicker: 'For brands & manufacturers', title: 'Price monitoring for Brands',
+    bullets: [
+      'Protect price positioning and channel relationships across regions.',
+      'Track how every reseller and marketplace seller prices your products.',
+      'Detect MAP violations with the seller, price and timestamp recorded.',
+    ],
+  },
+];
+
+const clients = ['McAfee', 'Xometry', 'Do it Best', 'Wolt', 'neho', 'apoBank'];
+const logos = ['McAfee', 'Xometry', 'Do it Best', 'Wolt', 'neho', 'apoBank'];
+
+const steps = [
+  { t: 'Collect', b1: 'We monitor [marketplaces, retailer sites, comparison engines] across [X countries, X currencies, X languages].', b2: 'Owned extraction captures the sellers who never show up in a data feed.', mv: '[X]', ml: 'sources monitored' },
+  { t: 'Render & unblock', b1: 'Headless rendering reads JavaScript-heavy pages — variants, infinite scroll, prices that load only after a click.', b2: 'Rotating proxies and managed fingerprints clear bot defenses on the hardest sites, including [Amazon & Cloudflare-protected stores].', mv: '[X]%', ml: 'pages rendered' },
+  { t: 'Match', b1: 'We match by [EAN/UPC, attributes, image] — including items with no barcode and across pack-size or variant differences.', b2: 'Human review on every match our models flag as uncertain.', mv: '[X]%', ml: 'match accuracy' },
+  { t: 'Validate', b1: 'Each data point clears anomaly checks before you see it — a price that drops 90% overnight gets caught, not shipped.', b2: 'When a competitor redesigns a page, the extractor self-heals instead of feeding you silent blanks.', mv: '[X]%', ml: 'anomalies caught' },
+  { t: 'Deliver', b1: 'Guaranteed refresh by tier: priority SKUs every [X], standard catalog every [Y] — stated, not implied.', b2: 'Take the data however you work: [API, export, S3, Snowflake, webhook].', mv: '[X] min', ml: 'refresh, top tier' },
+];
+
+const monday = [
+  { n: '01', ts: 'MON 09:00 · FRESHNESS', t: "You price against data that's [minutes/hours] old, not days old — so you stop reacting late." },
+  { n: '02', ts: 'MON 09:15 · COVERAGE', t: 'You see the full competitive set, long-tail sellers included, not just the obvious players.' },
+  { n: '03', ts: 'MON 09:30 · TIME BACK', t: 'You stop burning analyst hours cleaning broken scrapes and chasing missing SKUs.' },
+];
+
+const baRows = [
+  { k: 'Data freshness', b: 'Prices pulled once a day, stale by lunch.', a: "Continuous collection, so you price against what's live on site now." },
+  { k: 'Coverage', b: 'Top SKUs and obvious competitors only. Resellers and regional sites go unseen.', a: 'The full competitive set across your whole catalogue, long-tail sellers included.' },
+  { k: 'Analyst time', b: 'Hours spent cleaning broken scrapes and chasing missing SKUs.', a: 'Matched, cleaned data arrives ready to use. Your team works on decisions.' },
+  { k: 'Response', b: "You find out about a competitor's price cut after it has cost you sales.", a: 'Price, promo and stock changes reach you as they happen.' },
+];
+
+const proofPoints = [
+  'No silent blanks shipped — anomaly checks stop broken values before delivery.',
+  'Self-healing extractors recover when a competitor redesigns a page.',
+  'Every data point carries a timestamp, so you always know how fresh it is.',
+];
+
+const faqs = [
+  { q: "Can competitors tell we're monitoring them?", a: 'No. Collection runs through rotating proxies and managed fingerprints, so requests look like ordinary shopper traffic and are not tied back to your company.' },
+  { q: 'How fresh is the data, really?', a: 'Refresh is guaranteed by tier: priority SKUs every [X], standard catalog every [Y]. Every data point carries a timestamp so you can see exactly how old it is.' },
+  { q: 'Can you match products with no EAN or UPC?', a: 'Yes. We match by [EAN/UPC, attributes, image], handle pack-size and variant differences, and send every uncertain match to human review.' },
+  { q: 'Do you handle bot-protected and JavaScript-heavy sites?', a: 'Yes. Headless rendering reads prices that load via JavaScript or after a click, and rotating proxies clear bot defenses on sites including [Amazon & Cloudflare-protected stores].' },
+  { q: 'What happens when a competitor changes their site?', a: 'The extractor self-heals when a page is redesigned, and anomaly checks stop broken or implausible values from reaching you. You never receive silent blanks.' },
+  { q: 'Can we get the data into our own stack?', a: 'Yes. Take the data however you work: [API, export, S3, Snowflake, webhook].' },
+  { q: 'Will it scale from hundreds to millions of SKUs?', a: 'Yes. Coverage scales with your catalog, with [X] B SKUs already under coverage and refresh tiers that keep priority SKUs fast as volume grows.' },
+];
+
+const ctaRows = [
+  { n: 'Marketplace A', p: '$184.99', f: '3m ago' },
+  { n: 'Retailer B',    p: '$189.00', f: '6m ago' },
+  { n: 'Reseller 0871', p: '$176.50', f: '10m ago' },
+];
+// 60-cell uptime strip, one amber cell (index 23) — matches source
+const uptime = Array.from({ length: 60 }, (_, i) => (i === 23 ? '#F4DDAE' : '#18E563'));
+---
+
+<LightBaseLayout
+  title="Real-Time Price Monitoring · PriceLeap"
+  description="PriceLeap pulls live e-commerce prices from the sites you actually compete on. Clean, matched, decision-ready data."
+>
+  <LHeader />
+
+  <!-- ══ HERO ══ -->
+  <section class="rtm-hero">
+    <div class="rtm-hero__grid" aria-hidden="true"></div>
+    <div class="rtm-hero__glow" aria-hidden="true"></div>
+    <div class="rtm-wrap rtm-hero__inner">
+      <div class="rtm-hero__copy">
+        <nav class="rtm-crumb"><a href="/light">Product</a><span>/</span><span>Real-Time Price Monitoring</span></nav>
+        <span class="rtm-eyebrow"><span class="rtm-eyebrow__dot"></span>Real-Time Price Monitoring</span>
+        <h1 class="rtm-h1"><span class="w4">The data engine behind </span><b>every price decision you trust</b></h1>
+        <p class="rtm-lead">PriceLeap pulls live e-commerce prices from the sites you actually compete on, refreshing priority SKUs every [X minutes]. You get clean, matched, decision-ready data — not a scrape that breaks the moment a competitor changes their page.</p>
+        <div class="rtm-hero__btns">
+          <a href="/book-a-demo" class="rtm-btn rtm-btn--primary">Get a demo</a>
+          <a href="#engine" class="rtm-btn rtm-btn--secondary">How the engine works <span>→</span></a>
+        </div>
+        <div class="rtm-hero__ticks">
+          {['Clean, matched, decision-ready data', 'No silent blanks shipped', 'Self-healing extractors'].map(t => (
+            <span class="rtm-tick"><span class="rtm-tick__ic">✓</span>{t}</span>
+          ))}
+        </div>
+      </div>
+
+      <!-- Live monitoring card -->
+      <div class="rtm-hero__card-wrap">
+        <div class="rtm-card">
+          <div class="rtm-card__head">
+            <span class="rtm-dots"><i></i><i></i><i></i></span>
+            <span class="rtm-card__title">Live monitoring · Sonix ANC 700</span>
+            <span class="rtm-live"><span class="rtm-live__dot"></span>LIVE</span>
+          </div>
+          <div class="rtm-card__sources">
+            {heroSources.map(r => (
+              <div class="rtm-src">
+                <span class="rtm-src__ab">{r.ab}</span>
+                <div class="rtm-src__meta"><b>{r.n}</b><span>{r.type}</span></div>
+                <span class="rtm-src__price">{r.price}</span>
+                <span class="rtm-src__dot"></span>
+              </div>
+            ))}
+          </div>
+          <div class="rtm-card__foot">
+            <div><span class="rtm-foot__k">PAGES SCANNED TODAY</span><span class="rtm-foot__v">1,284,512</span></div>
+            <div style="text-align:right"><span class="rtm-foot__k">LAST CHANGE</span><span class="rtm-foot__v" style="color:#0B7A34">4s ago</span></div>
+          </div>
+        </div>
+        <div class="rtm-card__badge">
+          <span class="rtm-card__badge-ic">✓</span>
+          <div><div class="rtm-card__badge-t">Headless render · rotating proxy</div><div class="rtm-card__badge-s">Looks like ordinary shopper traffic</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ LOGOS ══ -->
+  <section class="rtm-logos">
+    <div class="rtm-wrap rtm-logos__inner">
+      <div class="rtm-logos__label">Monitoring live for these teams</div>
+      <div class="rtm-logos__track">
+        <div class="rtm-logos__marquee">{[...logos, ...logos].map(l => <span class="rtm-logo">{l}</span>)}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ BASICS ══ -->
+  <section id="basics" class="rtm-sec">
+    <div class="rtm-wrap">
+      <div class="rtm-split-head" data-reveal>
+        <div>
+          <span class="rtm-eyebrow"><span class="rtm-eyebrow__sq"></span>The basics</span>
+          <h2 class="rtm-h2"><span class="w4">What is </span><b>real-time price monitoring?</b></h2>
+        </div>
+        <div class="rtm-split-lead">
+          <p>Real-time price monitoring is the continuous collection of competitor prices, promotions and stock status from the sites where your products are sold. Instead of checking a handful of pages by hand, software captures every change as it happens, matches it to your catalogue, and shows where you stand on each SKU.</p>
+          <p class="rtm-note">For most vendors, "real-time" means real-time for your top SKUs and daily for the rest. A price you pulled this morning is already stale by lunch — and you priced against it.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ WHO IT'S FOR ══ -->
+  <section id="who" class="rtm-sec rtm-sec--tint">
+    <div class="rtm-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Who it's for" title="Who should be" accent="using it?" lead="Any business that sells online against competitors or through resellers. Whether you are a retailer setting your own prices or a brand protecting how others price your products, the same live data drives the decision." align="center" />
+      </div>
+      <div class="rtm-personas" data-reveal>
+        {personas.map((p, idx) => (
+          <div class="rtm-persona">
+            <span class="rtm-persona__kicker">{p.kicker}</span>
+            <h3 class="rtm-persona__title">{p.title}</h3>
+            <ul class="rtm-persona__list">
+              {p.bullets.map(b => <li><span class="rtm-tick__ic">✓</span>{b}</li>)}
+            </ul>
+            <div class="rtm-mini">
+              {(idx === 0 ? retailRows : brandRows).map(r => (
+                <div class="rtm-mini__row" style={idx === 0 && (r as any).hl ? 'background:#E8FCEF;border-color:#BFF3D2' : ''}>
+                  <span class="rtm-mini__n">{r.n}</span>
+                  <span class="rtm-mini__p" style={`${(r as any).strike ? 'text-decoration:line-through;color:#6E7684;' : ''}${(r as any).pc ? `color:${(r as any).pc};` : ''}`}>{r.p}</span>
+                  {r.tag && <span class="rtm-mini__tag" style={`background:${r.tbg};color:${r.tc};${(r as any).tbc ? `border:1px solid ${(r as any).tbc}` : ''}`}>{r.tag}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CUSTOMERS ══ -->
+  <section class="rtm-sec">
+    <div class="rtm-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Customers" title="Who is already" accent="using it?" align="center" />
+      </div>
+      <div class="rtm-clients" data-reveal>
+        {clients.map(c => <div class="rtm-client">{c}</div>)}
+        {[1,2,3,4].map(() => <div class="rtm-client rtm-client--ph"></div>)}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PROBLEM ══ -->
+  <section id="problem" class="rtm-sec rtm-sec--tint">
+    <div class="rtm-wrap rtm-problem" data-reveal>
+      <span class="rtm-eyebrow rtm-eyebrow--red"><span class="rtm-eyebrow__sq" style="background:#E5483F"></span>Problem</span>
+      <h2 class="rtm-h2" style="max-width:820px"><span class="w4">Wrong data costs more than </span><b>no data</b></h2>
+      <p class="rtm-problem__lead">A price you pulled this morning is already stale by lunch — and you priced against it. Broken scrapes, missed resellers, and silent blanks don't just slow your team down; they push you to decide on numbers that were never true.</p>
+    </div>
+  </section>
+
+  <!-- ══ ENGINE (5 steps) ══ -->
+  <section id="engine" class="rtm-sec">
+    <div class="rtm-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="How the engine works" title="Five things go right before a price" accent="reaches you" align="center" />
+      </div>
+      <div class="rtm-engine" data-reveal>
+        <Tabs tabs={steps.map((s, i) => `0${i + 1} ${s.t}`)} id="rtm-engine" variant="underline">
+          <div slot="panel-0"><div class="rtm-step"><div class="rtm-step__body"><p>{steps[0].b1}</p><p>{steps[0].b2}</p></div><div class="rtm-step__metric"><span class="rtm-step__mv">{steps[0].mv}</span><span class="rtm-step__ml">{steps[0].ml}</span></div></div></div>
+          <div slot="panel-1"><div class="rtm-step"><div class="rtm-step__body"><p>{steps[1].b1}</p><p>{steps[1].b2}</p></div><div class="rtm-step__metric"><span class="rtm-step__mv">{steps[1].mv}</span><span class="rtm-step__ml">{steps[1].ml}</span></div></div></div>
+          <div slot="panel-2"><div class="rtm-step"><div class="rtm-step__body"><p>{steps[2].b1}</p><p>{steps[2].b2}</p></div><div class="rtm-step__metric"><span class="rtm-step__mv">{steps[2].mv}</span><span class="rtm-step__ml">{steps[2].ml}</span></div></div></div>
+          <div slot="panel-3"><div class="rtm-step"><div class="rtm-step__body"><p>{steps[3].b1}</p><p>{steps[3].b2}</p></div><div class="rtm-step__metric"><span class="rtm-step__mv">{steps[3].mv}</span><span class="rtm-step__ml">{steps[3].ml}</span></div></div></div>
+          <div slot="panel-4"><div class="rtm-step"><div class="rtm-step__body"><p>{steps[4].b1}</p><p>{steps[4].b2}</p><div class="rtm-delivers">{['API','Export','S3','Snowflake','Webhook'].map(d => <span>{d}</span>)}</div></div><div class="rtm-step__metric"><span class="rtm-step__mv">{steps[4].mv}</span><span class="rtm-step__ml">{steps[4].ml}</span></div></div></div>
+        </Tabs>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ MONDAY ══ -->
+  <section id="monday" class="rtm-sec rtm-sec--tint">
+    <div class="rtm-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Monday morning" title="What changes on" accent="Monday morning" align="center" />
+      </div>
+      <div class="rtm-monday" data-reveal>
+        {monday.map(m => (
+          <div class="rtm-mon">
+            <span class="rtm-mon__ts">{m.ts}</span>
+            <span class="rtm-mon__n">{m.n}</span>
+            <p class="rtm-mon__t">{m.t}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ BEFORE & AFTER ══ -->
+  <section id="compare" class="rtm-sec">
+    <div class="rtm-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Before and after" title="Pricing without PriceLeap," accent="and with it" align="center" />
+      </div>
+      <div class="rtm-cmp" data-reveal>
+        <div class="rtm-cmp__head"><span></span><span class="rtm-cmp__hb">Without PriceLeap</span><span class="rtm-cmp__ha">With PriceLeap</span></div>
+        {baRows.map(r => (
+          <div class="rtm-cmp__row">
+            <div class="rtm-cmp__k">{r.k}</div>
+            <div class="rtm-cmp__b">{r.b}</div>
+            <div class="rtm-cmp__a"><span class="rtm-cmp__atick">✓</span>{r.a}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PROOF ══ -->
+  <section id="proof" class="rtm-sec rtm-sec--tint">
+    <div class="rtm-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Proof" title="Enterprise-grade," accent="not best-effort" align="center" />
+      </div>
+      <div class="rtm-proof" data-reveal>
+        <div class="rtm-proof__card">
+          <div class="rtm-proof__title">Collection uptime · last 60 days</div>
+          <div class="rtm-uptime">{uptime.map(c => <span style={`background:${c}`}></span>)}</div>
+          <div class="rtm-uptime__legend"><span><i style="background:#18E563"></i>Healthy</span><span><i style="background:#F4DDAE"></i>Self-healed</span></div>
+        </div>
+        <ul class="rtm-proof__list">
+          {proofPoints.map(p => <li><span class="rtm-tick__ic">✓</span>{p}</li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FAQ ══ -->
+  <section id="faq" class="rtm-sec">
+    <div class="rtm-wrap rtm-faq">
+      <div data-reveal>
+        <SectionHeader eyebrow="FAQ" title="The questions evaluators" accent="actually ask" align="center" />
+      </div>
+      <div data-reveal style="margin-top:36px">
+        <FAQ items={faqs} variant="list" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CTA ══ -->
+  <section class="rtm-sec rtm-sec--tint" style="border-bottom:none">
+    <div class="rtm-wrap rtm-cta" data-reveal>
+      <div class="rtm-cta__copy">
+        <span class="rtm-eyebrow"><span class="rtm-eyebrow__dot"></span>Want to see it on your own SKUs?</span>
+        <h2 class="rtm-h2"><span class="w4">See your real competitors' prices, </span><b>live, in the demo</b></h2>
+        <p class="rtm-lead">We'll pull live data on your own SKUs during the call. You'll see freshness and match accuracy on your actual catalog — not a canned demo.</p>
+        <div class="rtm-hero__btns"><a href="/book-a-demo" class="rtm-btn rtm-btn--primary">Get a demo</a></div>
+      </div>
+      <div class="rtm-cta__card">
+        <div class="rtm-card__head"><span class="rtm-live"><span class="rtm-live__dot"></span>LIVE</span><span class="rtm-card__title" style="margin-left:0">Your SKUs</span></div>
+        <div class="rtm-card__sources">
+          {ctaRows.map(r => (
+            <div class="rtm-src">
+              <div class="rtm-src__meta" style="margin-left:0"><b>{r.n}</b></div>
+              <span class="rtm-src__price">{r.p}</span>
+              <span class="rtm-src__f">{r.f}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <LFooter />
+</LightBaseLayout>
+
+<style>
+.rtm-wrap { max-width: var(--pl-container); margin: 0 auto; padding-left: var(--pl-gutter); padding-right: var(--pl-gutter); }
+.rtm-sec { padding: clamp(64px,8vw,112px) 0; border-bottom: 1px solid var(--pl-line); }
+.rtm-sec--tint { background: #FBFBFA; }
+.rtm-h1 { margin: 24px 0 0; font-family: var(--pl-font); font-size: clamp(38px,5.4vw,68px); line-height: 1.02; letter-spacing: -.045em; color: #0A0A0A; text-wrap: balance; font-weight: 700; }
+.rtm-h1 .w4 { font-weight: 400; }
+.rtm-h2 { margin: 16px 0 0; font-family: var(--pl-font); font-size: clamp(30px,4vw,48px); line-height: 1.06; letter-spacing: -.035em; color: #0A0A0A; text-wrap: balance; font-weight: 700; }
+.rtm-h2 .w4 { font-weight: 400; }
+.rtm-lead { margin: 22px 0 0; max-width: 560px; font-size: 18px; line-height: 1.6; color: #3A414C; }
+.rtm-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #0B7A34; }
+.rtm-eyebrow--red { color: #C9372E; }
+.rtm-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.8s ease-out infinite; }
+.rtm-eyebrow__sq { width: 7px; height: 7px; border-radius: 2px; background: #18E563; }
+
+.rtm-btn { height: 48px; padding: 0 22px; display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; font-family: var(--pl-font); font-weight: 500; font-size: 15px; transition: all .2s; }
+.rtm-btn--primary { background: #18E563; color: #0A0A0A; box-shadow: 0 12px 26px -12px rgba(24,229,99,.9); }
+.rtm-btn--primary:hover { background: #14D35A; color: #0A0A0A; }
+.rtm-btn--secondary { background: #fff; border: 1px solid var(--pl-line); color: #0A0A0A; }
+.rtm-btn--secondary:hover { border-color: #C4CAC4; }
+.rtm-btn--secondary span { color: #0B7A34; }
+
+/* hero */
+.rtm-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
+.rtm-hero__grid { position: absolute; inset: 0; background-image: linear-gradient(#EEF0EE 1px,transparent 1px),linear-gradient(90deg,#EEF0EE 1px,transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); pointer-events: none; }
+.rtm-hero__glow { position: absolute; right: -10%; top: -20%; width: 720px; height: 620px; background: radial-gradient(closest-side,rgba(24,229,99,.14),transparent); pointer-events: none; }
+.rtm-hero__inner { position: relative; display: grid; grid-template-columns: minmax(0,1.02fr) minmax(0,1fr); gap: clamp(40px,5vw,64px); align-items: center; padding-top: clamp(48px,7vw,96px); padding-bottom: clamp(48px,6vw,80px); }
+.rtm-crumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5A6373; margin-bottom: 24px; }
+.rtm-crumb a { color: #5A6373; }
+.rtm-crumb span:last-child { color: #0A0A0A; }
+.rtm-hero__btns { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
+.rtm-hero__ticks { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.rtm-tick { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #3A414C; }
+.rtm-tick__ic { flex: none; width: 18px; height: 18px; border-radius: 50%; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+
+.rtm-hero__card-wrap { position: relative; min-width: 0; }
+.rtm-card { background: #fff; border: 1px solid var(--pl-line); border-radius: 20px; box-shadow: 0 40px 80px -40px rgba(10,10,10,.28),0 0 0 6px rgba(255,255,255,.7); overflow: hidden; }
+.rtm-card__head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #EEF0EE; background: #FBFBFA; }
+.rtm-dots { display: flex; gap: 5px; }
+.rtm-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--pl-line); }
+.rtm-card__title { font-size: 13px; font-weight: 500; color: #0A0A0A; }
+.rtm-live { margin-left: auto; display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: #E8FCEF; border: 1px solid #BFF3D2; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .08em; color: #0B7A34; }
+.rtm-live__dot { width: 6px; height: 6px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.6s infinite; }
+.rtm-card__sources { padding: 6px 8px; }
+.rtm-src { display: grid; grid-template-columns: 34px 1fr auto auto; gap: 10px; align-items: center; padding: 10px 8px; border-top: 1px solid #EEF0EE; }
+.rtm-src:first-child { border-top: none; }
+.rtm-src__ab { width: 34px; height: 34px; border-radius: 9px; background: #F4F5F4; border: 1px solid var(--pl-line); display: flex; align-items: center; justify-content: center; font-family: var(--pl-mono); font-size: 11px; color: #3A414C; }
+.rtm-src__meta { min-width: 0; margin-left: 2px; }
+.rtm-src__meta b { display: block; font-size: 13px; font-weight: 500; color: #0A0A0A; }
+.rtm-src__meta span { font-family: var(--pl-mono); font-size: 9px; letter-spacing: .08em; color: #6E7684; }
+.rtm-src__price { font-family: var(--pl-font); font-size: 15px; font-weight: 600; color: #0A0A0A; }
+.rtm-src__dot { width: 7px; height: 7px; border-radius: 50%; background: #18E563; }
+.rtm-src__f { font-family: var(--pl-mono); font-size: 10px; color: #6E7684; }
+.rtm-card__foot { border-top: 1px solid #EEF0EE; background: #FBFBFA; padding: 14px 16px; display: flex; justify-content: space-between; }
+.rtm-foot__k { display: block; font-family: var(--pl-mono); font-size: 9px; letter-spacing: .08em; color: #6E7684; }
+.rtm-foot__v { font-family: var(--pl-font); font-size: 18px; font-weight: 600; color: #0A0A0A; }
+.rtm-card__badge { position: absolute; left: -28px; bottom: -22px; background: #fff; border: 1px solid var(--pl-line); border-radius: 14px; padding: 10px 14px; box-shadow: 0 20px 40px -24px rgba(10,10,10,.35); display: flex; align-items: center; gap: 10px; }
+.rtm-card__badge-ic { width: 28px; height: 28px; border-radius: 8px; background: #18E563; color: #0A0A0A; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.rtm-card__badge-t { font-size: 12px; font-weight: 600; color: #0A0A0A; }
+.rtm-card__badge-s { font-family: var(--pl-mono); font-size: 10px; color: #5A6373; }
+
+/* logos */
+.rtm-logos { border-bottom: 1px solid var(--pl-line); }
+.rtm-logos__inner { display: grid; grid-template-columns: 260px minmax(0,1fr); }
+.rtm-logos__label { padding: 22px 0; display: flex; align-items: center; border-right: 1px solid var(--pl-line); font-family: var(--pl-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #5A6373; }
+.rtm-logos__track { overflow: hidden; -webkit-mask-image: linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); mask-image: linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); }
+.rtm-logos__marquee { display: flex; width: max-content; animation: pl-marquee 32s linear infinite; }
+.rtm-logo { flex: none; width: 200px; height: 84px; display: flex; align-items: center; justify-content: center; border-right: 1px solid #EEF0EE; font-family: var(--pl-font); font-size: 21px; font-weight: 600; color: #6E7684; }
+
+/* basics */
+.rtm-split-head { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,420px),1fr)); gap: 24px 64px; align-items: start; }
+.rtm-split-lead p { margin: 0; font-size: 17px; line-height: 1.65; color: #3A414C; }
+.rtm-note { margin-top: 16px !important; color: #5A6373 !important; font-size: 15px !important; }
+
+/* personas */
+.rtm-personas { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,360px),1fr)); gap: 16px; }
+.rtm-persona { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 28px; }
+.rtm-persona__kicker { font-family: var(--pl-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #0B7A34; }
+.rtm-persona__title { margin: 10px 0 0; font-family: var(--pl-font); font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: #0A0A0A; }
+.rtm-persona__list { margin: 18px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.rtm-persona__list li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.5; color: #3A414C; }
+.rtm-mini { margin-top: 22px; border: 1px solid var(--pl-line); border-radius: 14px; overflow: hidden; }
+.rtm-mini__row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-top: 1px solid #EEF0EE; border-left: 2px solid transparent; }
+.rtm-mini__row:first-child { border-top: none; }
+.rtm-mini__n { flex: 1; font-size: 13px; color: #0A0A0A; }
+.rtm-mini__p { font-family: var(--pl-font); font-size: 14px; font-weight: 600; color: #0A0A0A; }
+.rtm-mini__tag { height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 5px; font-family: var(--pl-mono); font-size: 9px; letter-spacing: .04em; }
+
+/* clients */
+.rtm-clients { margin-top: 44px; display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 1px; background: var(--pl-line); border: 1px solid var(--pl-line); border-radius: 18px; overflow: hidden; }
+.rtm-client { background: #fff; height: 96px; display: flex; align-items: center; justify-content: center; font-family: var(--pl-font); font-size: 19px; font-weight: 600; color: #6E7684; }
+.rtm-client--ph { background: repeating-linear-gradient(135deg,#FAFAF9 0 8px,#fff 8px 16px); }
+
+/* problem */
+.rtm-problem { text-align: center; display: flex; flex-direction: column; align-items: center; }
+.rtm-problem__lead { margin: 22px 0 0; max-width: 720px; font-size: 18px; line-height: 1.65; color: #3A414C; }
+
+/* engine tabs */
+.rtm-engine { margin-top: 48px; border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: clamp(20px,3vw,32px); }
+.rtm-step { display: grid; grid-template-columns: minmax(0,1fr) 200px; gap: 32px; align-items: center; }
+.rtm-step__body p { margin: 0 0 12px; font-size: 16px; line-height: 1.6; color: #3A414C; }
+.rtm-step__body p:last-child { margin-bottom: 0; }
+.rtm-step__metric { border: 1px solid #BFF3D2; background: #E8FCEF; border-radius: 16px; padding: 22px; text-align: center; }
+.rtm-step__mv { display: block; font-family: var(--pl-font); font-size: 40px; font-weight: 600; letter-spacing: -.03em; color: #0B7A34; }
+.rtm-step__ml { font-family: var(--pl-mono); font-size: 11px; letter-spacing: .06em; color: #0B7A34; text-transform: uppercase; }
+.rtm-delivers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.rtm-delivers span { height: 28px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 8px; background: #F4F5F4; font-family: var(--pl-mono); font-size: 12px; color: #3A414C; }
+
+/* monday */
+.rtm-monday { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 16px; }
+.rtm-mon { border: 1px solid var(--pl-line); border-radius: 18px; background: #fff; padding: 24px; position: relative; }
+.rtm-mon__ts { font-family: var(--pl-mono); font-size: 10px; letter-spacing: .08em; color: #0B7A34; }
+.rtm-mon__n { position: absolute; top: 20px; right: 24px; font-family: var(--pl-mono); font-size: 12px; color: #C4CAC4; }
+.rtm-mon__t { margin: 14px 0 0; font-size: 16px; line-height: 1.5; color: #0A0A0A; }
+
+/* compare */
+.rtm-cmp { margin-top: 48px; border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; }
+.rtm-cmp__head, .rtm-cmp__row { display: grid; grid-template-columns: minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr); }
+.rtm-cmp__head { background: #FBFBFA; border-bottom: 1px solid var(--pl-line); }
+.rtm-cmp__head span { padding: 14px 18px; font-family: var(--pl-mono); font-size: 11px; letter-spacing: .08em; color: #5A6373; }
+.rtm-cmp__ha { color: #0B7A34; }
+.rtm-cmp__row { border-bottom: 1px solid #EEF0EE; }
+.rtm-cmp__row:last-child { border-bottom: none; }
+.rtm-cmp__k { padding: 18px; font-size: 15px; font-weight: 500; color: #0A0A0A; }
+.rtm-cmp__b { padding: 18px; font-size: 14px; line-height: 1.55; color: #5A6373; border-left: 1px solid #EEF0EE; }
+.rtm-cmp__a { padding: 18px; font-size: 14px; line-height: 1.55; color: #0A0A0A; border-left: 1px solid #BFF3D2; background: #FCFEFC; display: flex; gap: 10px; }
+.rtm-cmp__atick { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+
+/* proof */
+.rtm-proof { margin-top: 48px; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; align-items: center; }
+.rtm-proof__card { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 24px; }
+.rtm-proof__title { font-size: 15px; font-weight: 600; color: #0A0A0A; margin-bottom: 18px; }
+.rtm-uptime { display: grid; grid-template-columns: repeat(30,1fr); gap: 4px; }
+.rtm-uptime span { height: 28px; border-radius: 3px; }
+.rtm-uptime__legend { margin-top: 14px; display: flex; gap: 20px; font-family: var(--pl-mono); font-size: 11px; color: #5A6373; }
+.rtm-uptime__legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+.rtm-proof__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.rtm-proof__list li { display: flex; align-items: flex-start; gap: 10px; font-size: 16px; line-height: 1.5; color: #3A414C; }
+
+/* faq / cta */
+.rtm-faq { max-width: 860px; }
+.rtm-cta { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr); gap: clamp(32px,5vw,56px); align-items: center; }
+.rtm-cta__card { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; overflow: hidden; box-shadow: 0 30px 60px -40px rgba(10,10,10,.3); }
+.rtm-cta__card .rtm-card__head { justify-content: flex-start; }
+
+.pl-js [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+.pl-js [data-reveal].is-in { opacity: 1; transform: none; }
+
+@media (max-width: 999px) {
+  .rtm-hero__inner { grid-template-columns: 1fr; }
+  .rtm-logos__inner { grid-template-columns: 1fr; }
+  .rtm-logos__label { border-right: none; border-bottom: 1px solid var(--pl-line); }
+  .rtm-step { grid-template-columns: 1fr; gap: 20px; }
+  .rtm-proof { grid-template-columns: 1fr; }
+  .rtm-cta { grid-template-columns: 1fr; }
+}
+@media (max-width: 719px) {
+  .rtm-cmp__head, .rtm-cmp__row { grid-template-columns: 1fr; }
+  .rtm-cmp__b, .rtm-cmp__a { border-left: none; border-top: 1px solid #EEF0EE; }
+  .rtm-cmp__head span:first-child { display: none; }
+  .rtm-card__badge { display: none; }
+  .rtm-uptime { grid-template-columns: repeat(20,1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+  .rtm-logos__marquee { animation: none; }
+}
+</style>
