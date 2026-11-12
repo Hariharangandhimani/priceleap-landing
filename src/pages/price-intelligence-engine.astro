@@ -1,0 +1,672 @@
+---
+/**
+ * Price Intelligence Engine — native rebuild on the shared light design system.
+ * Layout: LightBaseLayout + LHeader + LFooter. Content ported 1:1 from the
+ * original design; bespoke JS widgets re-expressed as clean CSS/markup.
+ */
+import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
+import LHeader from '@/components/light/LHeader.astro';
+import LFooter from '@/components/light/LFooter.astro';
+import SectionHeader from '@/components/ds/nav/SectionHeader.astro';
+import Tabs from '@/components/ds/nav/Tabs.astro';
+import FeatureGrid from '@/components/ds/content/FeatureGrid.astro';
+import StatsStrip from '@/components/ds/content/StatsStrip.astro';
+import FAQ from '@/components/ds/faq/FAQ.astro';
+import CTA from '@/components/ds/cta/CTA.astro';
+
+// ── Content (ported from the source page) ──
+const heroRows = [
+  { n: 'Sonix ANC 700 Headphones', you: 'You $189.00', lo: 18, span: 54, pos: 28, tag: 'BELOW' },
+  { n: 'Earbuds Pro 2 · White',    you: 'You $159.00', lo: 22, span: 40, pos: 74, tag: 'ABOVE' },
+  { n: 'SmartFit Watch 46mm',      you: 'You $249.00', lo: 14, span: 62, pos: 50, tag: 'IN LINE' },
+  { n: 'Portable Speaker Mini 4',  you: 'You $79.00',  lo: 30, span: 44, pos: 46, tag: 'IN LINE' },
+];
+const tagStyle = {
+  'BELOW':   { bg: '#E8FCEF', bc: '#BFF3D2', c: '#0B7A34', dot: '#18E563' },
+  'ABOVE':   { bg: '#FDECEB', bc: '#F5C6C3', c: '#C9372E', dot: '#E5483F' },
+  'IN LINE': { bg: '#F4F5F4', bc: '#E6E8E6', c: '#3A414C', dot: '#0A0A0A' },
+};
+const logos = ['apoBank', 'McAfee', 'Xometry', 'Do it Best', 'Wolt', 'neho'];
+
+const overview = [
+  { n: '1', t: 'Collects market data', d: 'Competitor prices, stock status, promotions, and price history from the channels you sell in.' },
+  { n: '2', t: 'Matches it to your catalog', d: 'Links each competitor listing to the right product so every comparison is like-for-like.' },
+  { n: '3', t: 'Shows your position', d: 'Highlights where you are above, below, or in line with the market, and which competitors moved.' },
+];
+
+const problems = [
+  { n: '01', t: 'Competitor prices change before weekly reports are ready.', tag: 'STALE' },
+  { n: '02', t: 'Spreadsheet checks miss product-level context.', tag: 'NO CONTEXT' },
+  { n: '03', t: 'One bad product match can trigger the wrong pricing move.', tag: 'MISMATCH' },
+  { n: '04', t: 'Teams lose time debating screenshots, exports, and stale market views.', tag: 'DEBATE' },
+];
+
+const flowIn = ['Competitor prices', 'Availability', 'Product matches', 'Price history', 'Channel signals'];
+const flowOut = ['Market position', 'Price gaps', 'Alerts', 'Decision signals'];
+
+const caps = [
+  { t: 'Market position intelligence', d: 'See exactly where you sit against the market — by product, category, and channel — in a single index you can trust.', b1: 'Live price index that rolls up to category and channel views.', b2: "See where you're below, at, or above market at a glance." },
+  { t: 'Competitor movement detection', d: 'Know which competitors moved, on which products, and by how much — the moment it happens, not next week.', b1: 'Movement feed grouped by competitor, category, and direction.', b2: 'Filters out noise so only meaningful changes surface.' },
+  { t: 'Price history & trend context', d: 'Every price comes with its history — so a single data point becomes a trend your team can read with confidence.', b1: 'Side-by-side history for you and each tracked competitor.', b2: 'Spot recurring promo cycles and pricing patterns over time.' },
+  { t: 'Decision-ready alerts', d: 'Alerts arrive with the context to act on — what changed, why it matters, and where you now stand.', b1: 'Prioritized by impact, not just by what moved.', b2: 'Routed to email, Slack, or webhook with full context attached.' },
+];
+
+const compare = [
+  { n: '01', k: 'Collecting prices', b: 'Analysts check competitor sites by hand and paste prices into spreadsheets.', a: 'Competitor prices, stock, and promotions are collected automatically.' },
+  { n: '02', k: 'Product matching', b: 'Listings are compared by name, so pack sizes and variants get mixed up.', a: 'Each competitor listing is matched to the right product for like-for-like comparison.' },
+  { n: '03', k: 'Spotting changes', b: 'Competitor moves are noticed late, often after sales have already shifted.', a: 'Alerts flag which competitors moved and which products are affected.' },
+  { n: '04', k: 'Market position', b: 'No single view of where you sit across channels and categories.', a: 'One view shows where you are above, below, or in line with the market.' },
+  { n: '05', k: 'Reporting', b: 'Hours spent building slides before every pricing review.', a: 'Shareable market snapshots ready for reviews and leadership updates.' },
+  { n: '06', k: 'Pricing decisions', b: 'Based on partial data and gut feel.', a: 'Based on current, complete market data.' },
+];
+
+const catRows = [
+  { n: 'Headphones', v: -6.2 }, { n: 'Wearables', v: 3.4 }, { n: 'Speakers', v: -2.1 },
+  { n: 'Accessories', v: 7.8 }, { n: 'Smart home', v: 0.6 },
+];
+const feed = [
+  { who: 'Retailer B',    what: 'Earbuds Pro 2',        cat: 'HEADPHONES',  t: '2m',  d: '−6.2%', down: true },
+  { who: 'Marketplace A', what: 'SmartFit Watch 46mm',  cat: 'WEARABLES',   t: '9m',  d: '+3.1%', down: false },
+  { who: 'D2C store C',   what: 'Speaker Mini 4',       cat: 'SPEAKERS',    t: '14m', d: '−4.0%', down: true },
+  { who: 'Retailer B',    what: 'Sonix ANC 700',        cat: 'HEADPHONES',  t: '31m', d: '−2.5%', down: true },
+  { who: 'Marketplace D', what: 'Charging Dock 3-in-1', cat: 'ACCESSORIES', t: '48m', d: '+5.0%', down: false },
+];
+
+const uses = [
+  { t: 'Weekly pricing review', d: 'Walk into the meeting with the market already summarized and prioritized.' },
+  { t: 'Category performance checks', d: 'See which categories are slipping or winning on price at a glance.' },
+  { t: 'Competitor response planning', d: "Understand a rival's move and its impact before you respond." },
+  { t: 'Promotion monitoring', d: 'Track competitor promotions and discount depth as they happen.' },
+  { t: 'Marketplace position review', d: 'Compare your standing across each marketplace and channel.' },
+  { t: 'Executive pricing updates', d: 'Share a clean, board-ready snapshot of market position in seconds.' },
+];
+
+const stats = [
+  { value: '8,000', label: 'SKUs monitored across a single catalog.' },
+  { value: '28%→90%+', label: 'Buy Box win rate, before and after.' },
+  { value: '~19%', label: 'Gross margin recovered through better positioning.' },
+  { value: '50K+', label: 'SKU catalog readiness, without slowdown.' },
+];
+
+const plans = [
+  { n: 'Starter', price: '$89',  sku: 'Up to 1,500 products / month', cta: 'Start with Starter', pop: false, f: ['Track 5 competitors', 'Daily price refresh, 1× per day', 'Real-time competitor price tracking', 'Email price alerts', 'Basic pricing rules engine', 'CSV export & dashboard access', 'REST API access'] },
+  { n: 'Growth',  price: '$159', sku: 'Up to 3,000 products / month', cta: 'Choose Growth', pop: true,  f: ['Everything in Starter', 'Track 5 competitors', 'Daily price refresh, 2× per day', 'Advanced pricing rules & auto-response', 'Margin protection system', 'Slack & webhook alerts', 'Decision engine & auto-response'] },
+  { n: 'Scale',   price: '$299', sku: 'Up to 6,000 products / month', cta: 'Choose Scale', pop: false, f: ['Everything in Growth', 'Track 5 competitors', 'Daily price refresh, 3× per day', 'Priority alert processing', 'Full automation mode', 'Advanced ERP integration', 'Dedicated onboarding support'] },
+];
+
+const faqs = [
+  { q: 'What is a Price Intelligence Engine?', a: "It's the layer that organizes competitor prices, availability, product matches, history, and channel signals into one trusted view of your market position — so your team reads answers, not raw exports." },
+  { q: 'How is this different from price tracking?', a: 'Price tracking tells you what a price is. The Price Intelligence Engine tells you what it means — where you stand, who moved, and what changed in context — so a single number becomes a decision signal.' },
+  { q: 'What data does it use?', a: 'Competitor prices, product availability, verified product matches, full price history, and channel-level signals across the marketplaces and sites you choose to track.' },
+  { q: 'Does it automatically change prices?', a: 'No. The Price Intelligence Engine is the intelligence layer — it explains the market. Acting on it is the job of the separate Pricing Decision and Margin Protection Engines, which you control.' },
+  { q: 'Can we track our own competitor set?', a: 'Yes. You define exactly which competitors, marketplaces, and channels matter for your catalog, and the engine builds your market view around that set.' },
+  { q: 'How often is the data refreshed?', a: 'Refresh frequency scales with your plan — from once daily on Starter up to three times daily on Scale, with custom cadence available for larger catalogs.' },
+  { q: 'How is pricing calculated?', a: "Plan pricing is based on the number of products monitored per month and refresh frequency. Need more competitors, SKUs, or a custom cadence? We'll scope a plan to your setup." },
+];
+
+const partners = ['Automation Anywhere', 'Google Cloud', 'Microsoft', 'Adobe', 'AWS'];
+const certs = [
+  { t: 'ISO 9001', s: 'Quality', src: '/assets/iso-9001.webp' },
+  { t: 'ISO 27001', s: 'Security', src: '/assets/iso-27001.avif' },
+  { t: 'GDPR', s: 'Compliant', src: '/assets/gdpr.webp' },
+  { t: 'HIPAA', s: 'Compliant', ab: 'HIPAA' },
+  { t: 'Forbes', s: 'Featured', ab: 'F' },
+];
+
+const catMax = Math.max(...catRows.map(c => Math.abs(c.v)));
+---
+
+<LightBaseLayout
+  title="Price Intelligence Engine · PriceLeap"
+  description="PriceLeap shows where your prices stand, which competitors moved, and what changed across products, channels, and categories."
+>
+  <LHeader />
+
+  <!-- ══ HERO ══ -->
+  <section class="pie-hero">
+    <div class="pie-hero__grid" aria-hidden="true"></div>
+    <div class="pie-hero__glow" aria-hidden="true"></div>
+    <div class="pie-wrap pie-hero__inner">
+      <div class="pie-hero__copy">
+        <nav class="pie-crumb"><a href="/light">Product</a><span>/</span><span>Price Intelligence Engine</span></nav>
+        <span class="pie-eyebrow"><span class="pie-eyebrow__dot"></span>Price Intelligence Engine</span>
+        <h1 class="pie-h1"><span class="w4">Turn competitor price movement into </span><b>pricing intelligence.</b></h1>
+        <p class="pie-lead">PriceLeap shows where your prices stand, which competitors moved, and what changed across products, channels, and categories — before your team decides what to do next.</p>
+        <div class="pie-hero__btns">
+          <a href="/book-a-demo" class="pie-btn pie-btn--primary">Get a demo</a>
+          <a href="#how" class="pie-btn pie-btn--secondary">See how it works <span>→</span></a>
+        </div>
+        <div class="pie-hero__ticks">
+          {['Verified, QC-checked matches', 'Refreshed up to 3× daily', 'Built for 50K+ SKU catalogs'].map(t => (
+            <span class="pie-tick"><span class="pie-tick__ic">✓</span>{t}</span>
+          ))}
+        </div>
+      </div>
+
+      <!-- Market position card -->
+      <div class="pie-hero__card-wrap">
+        <div class="pie-card">
+          <div class="pie-card__head">
+            <span class="pie-dots"><i></i><i></i><i></i></span>
+            <span class="pie-card__title">Market position</span>
+            <span class="pie-card__sub">· All channels</span>
+            <span class="pie-live"><span class="pie-live__dot"></span>LIVE</span>
+          </div>
+          <div class="pie-card__kpis">
+            <div><span class="pie-k">PRICE INDEX</span><span class="pie-v">101.8</span></div>
+            <div><span class="pie-k">MOVED · 24H</span><span class="pie-v">37</span></div>
+            <div><span class="pie-k">MATCH QC</span><span class="pie-v" style="color:#0B7A34">99.1%</span></div>
+          </div>
+          <div class="pie-card__rows">
+            <div class="pie-rowhead"><span>PRODUCT</span><span>YOU VS MARKET RANGE</span><span style="text-align:right">POSITION</span></div>
+            {heroRows.map(r => {
+              const s = tagStyle[r.tag as keyof typeof tagStyle];
+              return (
+                <div class="pie-row">
+                  <div class="pie-row__name"><div class="pie-row__n">{r.n}</div><div class="pie-row__you">{r.you}</div></div>
+                  <div class="pie-row__bar">
+                    <span class="pie-bar__track"></span>
+                    <span class="pie-bar__span" style={`left:${r.lo}%;width:${r.span}%`}></span>
+                    <span class="pie-bar__mid"></span>
+                    <span class="pie-bar__dot" style={`left:${r.pos}%;background:${s.dot};box-shadow:0 0 0 1px ${s.dot}`}></span>
+                  </div>
+                  <span class="pie-row__tag" style={`background:${s.bg};border-color:${s.bc};color:${s.c}`}>{r.tag}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div class="pie-card__foot">
+            <span class="pie-card__arrow" style="color:#C9372E">▼</span>
+            <div class="pie-card__move"><b>Retailer B</b> moved Earbuds Pro 2 <span style="font-family:var(--pl-mono);color:#C9372E">▼ 6.2%</span></div>
+            <span class="pie-card__ago">2 MIN AGO</span>
+          </div>
+        </div>
+        <div class="pie-card__badge">
+          <span class="pie-card__badge-ic">✓</span>
+          <div><div class="pie-card__badge-t">Like-for-like match</div><div class="pie-card__badge-s">Pack size · variant · seller</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ LOGOS ══ -->
+  <section class="pie-logos">
+    <div class="pie-wrap pie-logos__inner">
+      <div class="pie-logos__label">Used by pricing teams at</div>
+      <div class="pie-logos__track">
+        <div class="pie-logos__marquee">
+          {[...logos, ...logos].map(l => <span class="pie-logo">{l}</span>)}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ OVERVIEW ══ -->
+  <section id="overview" class="pie-sec">
+    <div class="pie-wrap">
+      <div class="pie-split-head" data-reveal>
+        <div>
+          <span class="pie-eyebrow"><span class="pie-eyebrow__sq"></span>Overview</span>
+          <h2 class="pie-h2"><span class="w4">What is the </span><b>Price Intelligence Engine?</b></h2>
+        </div>
+        <p class="pie-split-lead">The Price Intelligence Engine is the market-monitoring layer of PriceLeap. It collects competitor prices and availability, matches them to your products, and shows where you stand across products, channels, and categories.</p>
+      </div>
+      <div class="pie-overview" data-reveal>
+        {overview.map(o => (
+          <div class="pie-ov">
+            <div class="pie-ov__head"><span class="pie-ov__n">{o.n}</span><span class="pie-ov__t">{o.t}</span></div>
+            <p class="pie-ov__d">{o.d}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PROBLEM ══ -->
+  <section id="problem" class="pie-sec pie-sec--tint">
+    <div class="pie-wrap pie-problem">
+      <div class="pie-problem__head" data-reveal>
+        <span class="pie-eyebrow pie-eyebrow--red"><span class="pie-eyebrow__sq" style="background:#E5483F"></span>The real problem</span>
+        <h2 class="pie-h2"><span class="w4">Pricing teams don't need more raw data. </span><b>They need trusted answers.</b></h2>
+      </div>
+      <div class="pie-problem__list">
+        {problems.map(p => (
+          <div class="pie-prob" data-reveal>
+            <span class="pie-prob__n">{p.n}</span>
+            <span class="pie-prob__t">{p.t}</span>
+            <span class="pie-prob__tag"><span class="pie-prob__tagdot"></span>{p.tag}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ WHAT IT DOES (inputs → engine → outputs) ══ -->
+  <section id="how" class="pie-sec">
+    <div class="pie-wrap">
+      <div data-reveal>
+        <SectionHeader
+          eyebrow="What it does"
+          title="What the Price Intelligence Engine"
+          accent="does"
+          lead="The Price Intelligence Engine organizes competitor prices, availability, product matches, price history, and channel signals into a clear view of your market position."
+          align="center"
+        />
+      </div>
+      <div class="pie-flow" data-reveal>
+        <div class="pie-flow__col">
+          <div class="pie-flow__lbl">INPUTS</div>
+          <div class="pie-flow__items">
+            {flowIn.map(f => <div class="pie-flow__chip">{f}</div>)}
+          </div>
+        </div>
+        <div class="pie-flow__engine">
+          <div class="pie-flow__engine-lbl">PRICELEAP</div>
+          <div class="pie-flow__engine-t">Price Intelligence Engine</div>
+          <div class="pie-flow__engine-d">Organizes, matches &amp; contextualizes the market in real time.</div>
+          <div class="pie-flow__engine-tags"><span>ORGANIZE</span><span>MATCH</span><span class="on">CONTEXT</span></div>
+        </div>
+        <div class="pie-flow__col pie-flow__col--out">
+          <div class="pie-flow__lbl pie-flow__lbl--out">OUTPUTS</div>
+          <div class="pie-flow__items">
+            {flowOut.map(f => <div class="pie-flow__chip pie-flow__chip--out">{f}</div>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CAPABILITIES (tabs) ══ -->
+  <section id="capabilities" class="pie-sec pie-sec--tint">
+    <div class="pie-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Capabilities" title="Everything your team reads before a" accent="pricing decision." align="center" />
+      </div>
+      <div class="pie-caps" data-reveal>
+        <Tabs tabs={caps.map(c => c.t)} id="pie-caps" variant="underline">
+          <div slot="panel-0"><div class="pie-cap"><p class="pie-cap__d">{caps[0].d}</p><ul class="pie-cap__list"><li><span class="pie-cap__tick">✓</span>{caps[0].b1}</li><li><span class="pie-cap__tick">✓</span>{caps[0].b2}</li></ul></div></div>
+          <div slot="panel-1"><div class="pie-cap"><p class="pie-cap__d">{caps[1].d}</p><ul class="pie-cap__list"><li><span class="pie-cap__tick">✓</span>{caps[1].b1}</li><li><span class="pie-cap__tick">✓</span>{caps[1].b2}</li></ul></div></div>
+          <div slot="panel-2"><div class="pie-cap"><p class="pie-cap__d">{caps[2].d}</p><ul class="pie-cap__list"><li><span class="pie-cap__tick">✓</span>{caps[2].b1}</li><li><span class="pie-cap__tick">✓</span>{caps[2].b2}</li></ul></div></div>
+          <div slot="panel-3"><div class="pie-cap"><p class="pie-cap__d">{caps[3].d}</p><ul class="pie-cap__list"><li><span class="pie-cap__tick">✓</span>{caps[3].b1}</li><li><span class="pie-cap__tick">✓</span>{caps[3].b2}</li></ul></div></div>
+        </Tabs>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ BEFORE & AFTER ══ -->
+  <section id="compare" class="pie-sec">
+    <div class="pie-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Before and after" title="How pricing work changes with" accent="PriceLeap." align="center" />
+      </div>
+      <div class="pie-cmp" data-reveal>
+        <div class="pie-cmp__head">
+          <span></span>
+          <span class="pie-cmp__hb">Before · manual</span>
+          <span class="pie-cmp__ha">After · PriceLeap</span>
+        </div>
+        {compare.map(c => (
+          <div class="pie-cmp__row">
+            <div class="pie-cmp__k"><span class="pie-cmp__n">{c.n}</span>{c.k}</div>
+            <div class="pie-cmp__b">{c.b}</div>
+            <div class="pie-cmp__a"><span class="pie-cmp__atick">✓</span>{c.a}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PLATFORM (category movers + live feed) ══ -->
+  <section id="platform" class="pie-sec pie-sec--tint">
+    <div class="pie-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Platform" title="Intelligence first. Decisions next." accent="Margins protected." align="center" />
+      </div>
+      <div class="pie-plat" data-reveal>
+        <div class="pie-plat__card">
+          <div class="pie-plat__title">Category movement · 24h</div>
+          <div class="pie-cats">
+            {catRows.map(c => {
+              const wd = Math.abs(c.v) / catMax * 48;
+              const neg = c.v < 0;
+              const col = neg ? '#18E563' : c.v > 3 ? '#E5483F' : '#C4CAC4';
+              const tc = neg ? '#0B7A34' : c.v > 3 ? '#C9372E' : '#3A414C';
+              return (
+                <div class="pie-cat">
+                  <span class="pie-cat__n">{c.n}</span>
+                  <span class="pie-cat__track">
+                    <span class="pie-cat__fill" style={`width:${wd}%;${neg ? 'right' : 'left'}:50%;background:${col}`}></span>
+                    <span class="pie-cat__mid"></span>
+                  </span>
+                  <span class="pie-cat__v" style={`color:${tc}`}>{c.v > 0 ? '+' : ''}{c.v.toFixed(1)}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div class="pie-plat__card">
+          <div class="pie-plat__title">Live movement feed</div>
+          <div class="pie-feed">
+            {feed.map(m => (
+              <div class="pie-feed__row">
+                <span class="pie-feed__a" style={`background:${m.down ? '#FDECEB' : '#E8FCEF'};color:${m.down ? '#C9372E' : '#0B7A34'}`}>{m.down ? '▼' : '▲'}</span>
+                <div class="pie-feed__meta"><b>{m.who}</b> · {m.what}<span class="pie-feed__cat">{m.cat}</span></div>
+                <span class="pie-feed__d" style={`color:${m.down ? '#C9372E' : '#0B7A34'}`}>{m.d}</span>
+                <span class="pie-feed__t">{m.t}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ WHERE TEAMS USE IT ══ -->
+  <section class="pie-sec">
+    <div class="pie-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Where teams use it" title="One market view, used across the" accent="pricing week." align="center" />
+      </div>
+      <div data-reveal style="margin-top:40px">
+        <FeatureGrid variant="numbered" min="300px" items={uses.map(u => ({ title: u.t, body: u.d }))} />
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ BUILT FOR SCALE ══ -->
+  <section class="pie-sec pie-sec--tint">
+    <div class="pie-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Built for scale" title="Built for pricing work at real" accent="catalog scale." align="center" />
+      </div>
+      <div data-reveal style="margin-top:40px;border:1px solid var(--pl-line);border-radius:20px;overflow:hidden">
+        <StatsStrip items={stats} />
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PRICING ══ -->
+  <section id="pricing" class="pie-sec">
+    <div class="pie-wrap">
+      <div data-reveal>
+        <SectionHeader eyebrow="Pricing" title="Choose the plan that fits your" accent="catalog size." align="center" />
+      </div>
+      <div class="pie-plans" data-reveal>
+        {plans.map(p => (
+          <div class={`pie-plan${p.pop ? ' pie-plan--pop' : ''}`}>
+            {p.pop && <span class="pie-plan__badge">MOST POPULAR</span>}
+            <div class="pie-plan__name">{p.n}</div>
+            <div class="pie-plan__price">{p.price}<span>/mo</span></div>
+            <div class="pie-plan__sku">{p.sku}</div>
+            <a href="/book-a-demo" class={`pie-plan__cta${p.pop ? ' pie-plan__cta--pop' : ''}`}>{p.cta}</a>
+            <ul class="pie-plan__feats">
+              {p.f.map(f => <li><span class="pie-plan__tick">✓</span><span class={f.startsWith('Everything') ? 'pie-plan__f--bold' : ''}>{f}</span></li>)}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FAQ ══ -->
+  <section id="faq" class="pie-sec pie-sec--tint">
+    <div class="pie-wrap pie-faq">
+      <div data-reveal>
+        <SectionHeader eyebrow="FAQ" title="Questions pricing teams ask" accent="first." align="center" />
+      </div>
+      <div data-reveal style="margin-top:36px">
+        <FAQ items={faqs} variant="list" />
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ TRUST ══ -->
+  <section class="pie-sec">
+    <div class="pie-wrap pie-trust" data-reveal>
+      <span class="pie-trust__lbl">Trusted &amp; certified</span>
+      <div class="pie-trust__row">
+        {certs.map(c => (
+          <div class="pie-cert">
+            {c.src ? <img src={c.src} alt={c.t} width="34" height="34" /> : <span class="pie-cert__ab">{c.ab}</span>}
+            <div><b>{c.t}</b><small>{c.s}</small></div>
+          </div>
+        ))}
+      </div>
+      <div class="pie-trust__partners">
+        {partners.map(p => <span class="pie-partner">{p}</span>)}
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CTA ══ -->
+  <div class="pie-wrap" style="padding-bottom:96px">
+    <CTA
+      variant="primary"
+      title="See your market position before your next"
+      accent="pricing decision."
+      body="Get a demo of the Price Intelligence Engine on your own catalog and competitor set."
+      primary={{ label: 'Get a demo', href: '/book-a-demo' }}
+      secondary={{ label: 'See pricing', href: '#pricing' }}
+    />
+  </div>
+
+  <LFooter />
+</LightBaseLayout>
+
+<style>
+/* ── shell ── */
+.pie-wrap { max-width: var(--pl-container); margin: 0 auto; padding-left: var(--pl-gutter); padding-right: var(--pl-gutter); }
+.pie-sec { padding: clamp(64px,8vw,112px) 0; border-bottom: 1px solid var(--pl-line); }
+.pie-sec--tint { background: #FBFBFA; }
+.pie-h1 { margin: 18px 0 0; font-family: var(--pl-font); font-size: clamp(38px,5.4vw,68px); line-height: 1.02; letter-spacing: -.045em; color: #0A0A0A; text-wrap: balance; font-weight: 700; }
+.pie-h1 .w4 { font-weight: 400; }
+.pie-h2 { margin: 16px 0 0; font-family: var(--pl-font); font-size: clamp(30px,4vw,48px); line-height: 1.06; letter-spacing: -.035em; color: #0A0A0A; text-wrap: balance; font-weight: 700; }
+.pie-h2 .w4 { font-weight: 400; }
+.pie-lead { margin: 22px 0 0; max-width: 560px; font-size: 18px; line-height: 1.6; color: #3A414C; }
+.pie-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #0B7A34; }
+.pie-eyebrow--red { color: #C9372E; }
+.pie-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.8s ease-out infinite; }
+.pie-eyebrow__sq { width: 7px; height: 7px; border-radius: 2px; background: #18E563; }
+
+/* buttons */
+.pie-btn { height: 48px; padding: 0 22px; display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; font-family: var(--pl-font); font-weight: 500; font-size: 15px; transition: all .2s; }
+.pie-btn--primary { background: #18E563; color: #0A0A0A; box-shadow: 0 12px 26px -12px rgba(24,229,99,.9); }
+.pie-btn--primary:hover { background: #14D35A; color: #0A0A0A; }
+.pie-btn--secondary { background: #fff; border: 1px solid var(--pl-line); color: #0A0A0A; }
+.pie-btn--secondary:hover { border-color: #C4CAC4; }
+.pie-btn--secondary span { color: #0B7A34; }
+
+/* ── hero ── */
+.pie-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
+.pie-hero__grid { position: absolute; inset: 0; background-image: linear-gradient(#EEF0EE 1px,transparent 1px),linear-gradient(90deg,#EEF0EE 1px,transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); pointer-events: none; }
+.pie-hero__glow { position: absolute; right: -10%; top: -20%; width: 720px; height: 620px; background: radial-gradient(closest-side,rgba(24,229,99,.14),transparent); pointer-events: none; }
+.pie-hero__inner { position: relative; display: grid; grid-template-columns: minmax(0,1.02fr) minmax(0,1fr); gap: clamp(40px,5vw,64px); align-items: center; padding-top: clamp(48px,7vw,96px); padding-bottom: clamp(48px,6vw,80px); }
+.pie-crumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5A6373; }
+.pie-crumb a { color: #5A6373; }
+.pie-crumb span:last-child { color: #0A0A0A; }
+.pie-eyebrow + .pie-h1, .pie-crumb + .pie-eyebrow { margin-top: 24px; }
+.pie-hero__btns { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
+.pie-hero__ticks { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.pie-tick { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #3A414C; }
+.pie-tick__ic { width: 18px; height: 18px; border-radius: 50%; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+
+/* hero card */
+.pie-hero__card-wrap { position: relative; min-width: 0; }
+.pie-card { background: #fff; border: 1px solid var(--pl-line); border-radius: 20px; box-shadow: 0 40px 80px -40px rgba(10,10,10,.28),0 0 0 6px rgba(255,255,255,.7); overflow: hidden; }
+.pie-card__head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #EEF0EE; background: #FBFBFA; }
+.pie-dots { display: flex; gap: 5px; }
+.pie-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--pl-line); }
+.pie-card__title { font-size: 13px; font-weight: 500; color: #0A0A0A; }
+.pie-card__sub { font-size: 12px; color: #6E7684; }
+.pie-live { margin-left: auto; display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: #E8FCEF; border: 1px solid #BFF3D2; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .08em; color: #0B7A34; }
+.pie-live__dot { width: 6px; height: 6px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.6s infinite; }
+.pie-card__kpis { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1px; background: #EEF0EE; border-bottom: 1px solid #EEF0EE; }
+.pie-card__kpis > div { background: #fff; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.pie-k { font-family: var(--pl-mono); font-size: 10px; letter-spacing: .08em; color: #6E7684; }
+.pie-v { font-family: var(--pl-font); font-size: 24px; font-weight: 600; letter-spacing: -.03em; color: #0A0A0A; }
+.pie-card__rows { padding: 6px 16px 10px; }
+.pie-rowhead, .pie-row { display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1.4fr) 76px; gap: 14px; align-items: center; }
+.pie-rowhead { padding: 8px 0; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .08em; color: #6E7684; }
+.pie-row { padding: 11px 0; border-top: 1px solid #EEF0EE; }
+.pie-row__n { font-size: 13px; font-weight: 500; color: #0A0A0A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pie-row__you { font-family: var(--pl-mono); font-size: 11px; color: #5A6373; }
+.pie-row__bar { position: relative; height: 18px; }
+.pie-bar__track { position: absolute; left: 0; right: 0; top: 8px; height: 2px; border-radius: 2px; background: #EEF0EE; }
+.pie-bar__span { position: absolute; top: 6px; height: 6px; border-radius: 6px; background: #E1E5E1; }
+.pie-bar__mid { position: absolute; left: 50%; top: 2px; width: 1px; height: 14px; background: #C4CAC4; }
+.pie-bar__dot { position: absolute; top: 9px; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; border: 2px solid #fff; }
+.pie-row__tag { justify-self: end; height: 22px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: 6px; border: 1px solid; font-family: var(--pl-mono); font-size: 10px; white-space: nowrap; }
+.pie-card__foot { border-top: 1px solid #EEF0EE; background: #FBFBFA; padding: 12px 16px; display: flex; align-items: center; gap: 10px; min-height: 52px; }
+.pie-card__arrow { flex: none; width: 26px; height: 26px; border-radius: 8px; background: #fff; border: 1px solid var(--pl-line); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.pie-card__move { min-width: 0; flex: 1; font-size: 13px; color: #3A414C; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pie-card__move b { color: #0A0A0A; }
+.pie-card__ago { flex: none; font-family: var(--pl-mono); font-size: 10px; color: #6E7684; }
+.pie-card__badge { position: absolute; left: -28px; bottom: -22px; background: #fff; border: 1px solid var(--pl-line); border-radius: 14px; padding: 10px 14px; box-shadow: 0 20px 40px -24px rgba(10,10,10,.35); display: flex; align-items: center; gap: 10px; }
+.pie-card__badge-ic { width: 28px; height: 28px; border-radius: 8px; background: #18E563; color: #0A0A0A; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.pie-card__badge-t { font-size: 12px; font-weight: 600; color: #0A0A0A; }
+.pie-card__badge-s { font-family: var(--pl-mono); font-size: 10px; color: #5A6373; }
+
+/* ── logos ── */
+.pie-logos { border-bottom: 1px solid var(--pl-line); }
+.pie-logos__inner { display: grid; grid-template-columns: 260px minmax(0,1fr); padding: 0; }
+.pie-logos__label { padding: 22px 0; display: flex; align-items: center; border-right: 1px solid var(--pl-line); font-family: var(--pl-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #5A6373; }
+.pie-logos__track { overflow: hidden; -webkit-mask-image: linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); mask-image: linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); }
+.pie-logos__marquee { display: flex; width: max-content; animation: pl-marquee 32s linear infinite; }
+.pie-logo { flex: none; width: 200px; height: 84px; display: flex; align-items: center; justify-content: center; border-right: 1px solid #EEF0EE; font-family: var(--pl-font); font-size: 21px; font-weight: 600; color: #6E7684; }
+
+/* ── split head (overview) ── */
+.pie-split-head { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,420px),1fr)); gap: 24px 64px; align-items: end; }
+.pie-split-lead { margin: 0; font-size: 17px; line-height: 1.65; color: #3A414C; max-width: 540px; }
+.pie-overview { margin-top: 56px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,300px),1fr)); gap: 16px; }
+.pie-ov { border: 1px solid var(--pl-line); border-radius: 18px; background: #fff; padding: 24px; }
+.pie-ov__head { display: flex; align-items: center; gap: 10px; }
+.pie-ov__n { width: 28px; height: 28px; border-radius: 50%; background: #18E563; color: #0A0A0A; font-family: var(--pl-mono); font-size: 12px; display: flex; align-items: center; justify-content: center; }
+.pie-ov__t { font-family: var(--pl-font); font-size: 18px; font-weight: 600; color: #0A0A0A; }
+.pie-ov__d { margin: 12px 0 0; font-size: 15px; line-height: 1.6; color: #5A6373; }
+
+/* ── problem ── */
+.pie-problem { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); gap: clamp(36px,5vw,72px); align-items: start; }
+.pie-problem__head { position: sticky; top: 100px; }
+.pie-problem__list { display: flex; flex-direction: column; gap: 12px; }
+.pie-prob { background: #fff; border: 1px solid var(--pl-line); border-radius: 16px; padding: 22px 24px; display: grid; grid-template-columns: 44px minmax(0,1fr) auto; gap: 16px; align-items: center; transition: border-color .25s, box-shadow .25s; }
+.pie-prob:hover { border-color: #F5C6C3; box-shadow: 0 18px 36px -26px rgba(201,55,46,.45); }
+.pie-prob__n { width: 44px; height: 44px; border-radius: 12px; background: #FDECEB; border: 1px solid #F5C6C3; color: #C9372E; font-family: var(--pl-mono); font-size: 12px; display: flex; align-items: center; justify-content: center; }
+.pie-prob__t { font-size: 17px; line-height: 1.45; color: #0A0A0A; }
+.pie-prob__tag { height: 24px; padding: 0 9px; display: inline-flex; align-items: center; gap: 6px; border-radius: 6px; border: 1px dashed #F5C6C3; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .08em; color: #C9372E; white-space: nowrap; }
+.pie-prob__tagdot { width: 5px; height: 5px; border-radius: 50%; background: #E5483F; }
+
+/* ── flow ── */
+.pie-flow { margin-top: 56px; display: grid; grid-template-columns: 1fr auto 1fr; gap: 24px; align-items: center; }
+.pie-flow__col { border: 1px solid var(--pl-line); border-radius: 18px; background: #FBFBFA; padding: 16px; }
+.pie-flow__col--out { border-color: #BFF3D2; background: #E8FCEF; }
+.pie-flow__lbl { font-family: var(--pl-mono); font-size: 11px; letter-spacing: .12em; color: #5A6373; margin-bottom: 12px; }
+.pie-flow__lbl--out { color: #0B7A34; }
+.pie-flow__items { display: flex; flex-direction: column; gap: 8px; }
+.pie-flow__chip { height: 48px; padding: 0 14px; display: flex; align-items: center; background: #fff; border: 1px solid var(--pl-line); border-radius: 12px; font-size: 14px; font-weight: 500; color: #0A0A0A; }
+.pie-flow__chip--out { border-color: #BFF3D2; }
+.pie-flow__engine { text-align: center; background: #fff; border: 1.5px solid #18E563; border-radius: 24px; padding: 24px 20px; box-shadow: 0 0 0 8px rgba(24,229,99,.08),0 30px 60px -30px rgba(11,122,52,.5); max-width: 280px; }
+.pie-flow__engine-lbl { font-family: var(--pl-mono); font-size: 11px; letter-spacing: .1em; color: #0B7A34; }
+.pie-flow__engine-t { margin-top: 8px; font-family: var(--pl-font); font-size: 20px; font-weight: 600; letter-spacing: -.02em; color: #0A0A0A; }
+.pie-flow__engine-d { margin-top: 8px; font-size: 13px; line-height: 1.5; color: #5A6373; }
+.pie-flow__engine-tags { margin-top: 14px; display: flex; justify-content: center; gap: 6px; }
+.pie-flow__engine-tags span { height: 22px; padding: 0 8px; display: flex; align-items: center; border-radius: 6px; background: #F4F5F4; font-family: var(--pl-mono); font-size: 10px; color: #3A414C; }
+.pie-flow__engine-tags .on { background: #E8FCEF; color: #0B7A34; }
+
+/* ── capabilities ── */
+.pie-caps { margin-top: 48px; border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: clamp(20px,3vw,32px); }
+.pie-cap__d { margin: 0; font-size: 17px; line-height: 1.6; color: #3A414C; max-width: 680px; }
+.pie-cap__list { margin: 20px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.pie-cap__list li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; color: #3A414C; }
+.pie-cap__tick { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 11px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+
+/* ── compare ── */
+.pie-cmp { margin-top: 48px; border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; }
+.pie-cmp__head, .pie-cmp__row { display: grid; grid-template-columns: minmax(0,.8fr) minmax(0,1fr) minmax(0,1fr); }
+.pie-cmp__head { background: #FBFBFA; border-bottom: 1px solid var(--pl-line); }
+.pie-cmp__head span { padding: 14px 18px; font-family: var(--pl-mono); font-size: 11px; letter-spacing: .08em; color: #5A6373; }
+.pie-cmp__ha { color: #0B7A34; }
+.pie-cmp__row { border-bottom: 1px solid #EEF0EE; }
+.pie-cmp__row:last-child { border-bottom: none; }
+.pie-cmp__k { padding: 18px; font-size: 15px; font-weight: 500; color: #0A0A0A; display: flex; align-items: flex-start; gap: 10px; }
+.pie-cmp__n { font-family: var(--pl-mono); font-size: 11px; color: #6E7684; }
+.pie-cmp__b { padding: 18px; font-size: 14px; line-height: 1.55; color: #5A6373; border-left: 1px solid #EEF0EE; }
+.pie-cmp__a { padding: 18px; font-size: 14px; line-height: 1.55; color: #0A0A0A; border-left: 1px solid #BFF3D2; background: #FCFEFC; display: flex; gap: 10px; }
+.pie-cmp__atick { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+
+/* ── platform ── */
+.pie-plat { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,340px),1fr)); gap: 16px; }
+.pie-plat__card { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 24px; }
+.pie-plat__title { font-size: 15px; font-weight: 600; color: #0A0A0A; margin-bottom: 18px; }
+.pie-cats { display: flex; flex-direction: column; gap: 14px; }
+.pie-cat { display: grid; grid-template-columns: 110px 1fr 56px; gap: 12px; align-items: center; }
+.pie-cat__n { font-size: 13px; color: #3A414C; }
+.pie-cat__track { position: relative; height: 10px; border-radius: 10px; background: #F4F5F4; }
+.pie-cat__fill { position: absolute; top: 0; height: 100%; border-radius: 10px; }
+.pie-cat__mid { position: absolute; left: 50%; top: -3px; width: 1px; height: 16px; background: #C4CAC4; }
+.pie-cat__v { font-family: var(--pl-mono); font-size: 12px; text-align: right; }
+.pie-feed { display: flex; flex-direction: column; }
+.pie-feed__row { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 10px; align-items: center; padding: 11px 0; border-top: 1px solid #EEF0EE; }
+.pie-feed__row:first-child { border-top: none; }
+.pie-feed__a { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.pie-feed__meta { font-size: 13px; color: #3A414C; min-width: 0; }
+.pie-feed__meta b { color: #0A0A0A; }
+.pie-feed__cat { display: block; font-family: var(--pl-mono); font-size: 9px; letter-spacing: .08em; color: #6E7684; }
+.pie-feed__d { font-family: var(--pl-mono); font-size: 12px; }
+.pie-feed__t { font-family: var(--pl-mono); font-size: 10px; color: #6E7684; }
+
+/* ── pricing ── */
+.pie-plans { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,300px),1fr)); gap: 16px; align-items: start; }
+.pie-plan { position: relative; border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 28px 24px; }
+.pie-plan--pop { border: 1.5px solid #18E563; box-shadow: 0 0 0 6px rgba(24,229,99,.1),0 30px 60px -36px rgba(11,122,52,.5); }
+.pie-plan__badge { position: absolute; top: -11px; left: 24px; height: 22px; padding: 0 10px; display: inline-flex; align-items: center; border-radius: 999px; background: #18E563; color: #0A0A0A; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .08em; }
+.pie-plan__name { font-family: var(--pl-font); font-size: 18px; font-weight: 600; color: #0A0A0A; }
+.pie-plan__price { margin-top: 10px; font-family: var(--pl-font); font-size: 40px; font-weight: 600; letter-spacing: -.03em; color: #0A0A0A; }
+.pie-plan__price span { font-size: 15px; font-weight: 400; color: #6E7684; }
+.pie-plan__sku { margin-top: 4px; font-size: 13px; color: #5A6373; }
+.pie-plan__cta { margin-top: 20px; height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--pl-line); background: #fff; color: #0A0A0A; font-family: var(--pl-font); font-weight: 500; font-size: 14px; transition: all .2s; }
+.pie-plan__cta:hover { border-color: #0A0A0A; }
+.pie-plan__cta--pop { background: #18E563; border-color: #18E563; color: #0A0A0A; box-shadow: 0 12px 26px -12px rgba(24,229,99,.9); }
+.pie-plan__cta--pop:hover { background: #14D35A; }
+.pie-plan__feats { margin: 20px 0 0; padding: 20px 0 0; list-style: none; border-top: 1px solid #EEF0EE; display: flex; flex-direction: column; gap: 12px; }
+.pie-plan__feats li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: #3A414C; }
+.pie-plan__tick { flex: none; width: 18px; height: 18px; border-radius: 50%; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 10px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.pie-plan__f--bold { font-weight: 600; color: #0A0A0A; }
+
+/* ── faq / trust ── */
+.pie-faq { max-width: 860px; }
+.pie-trust { display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center; }
+.pie-trust__lbl { font-family: var(--pl-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #6E7684; }
+.pie-trust__row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
+.pie-cert { display: flex; align-items: center; gap: 10px; border: 1px solid var(--pl-line); border-radius: 14px; padding: 12px 16px; background: #fff; }
+.pie-cert img { display: block; object-fit: contain; }
+.pie-cert__ab { width: 34px; height: 34px; border-radius: 8px; background: #F4F5F4; display: flex; align-items: center; justify-content: center; font-family: var(--pl-mono); font-size: 11px; color: #3A414C; }
+.pie-cert b { display: block; font-size: 13px; color: #0A0A0A; }
+.pie-cert small { font-size: 11px; color: #6E7684; }
+.pie-trust__partners { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 28px; }
+.pie-partner { font-family: var(--pl-font); font-size: 15px; font-weight: 500; color: #6E7684; }
+
+/* ── reveal (uses global --pl via ui.ts .is-in; also local) ── */
+.pl-js [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+.pl-js [data-reveal].is-in { opacity: 1; transform: none; }
+
+/* ── responsive ── */
+@media (max-width: 999px) {
+  .pie-hero__inner { grid-template-columns: 1fr; }
+  .pie-problem { grid-template-columns: 1fr; }
+  .pie-problem__head { position: relative; top: 0; }
+  .pie-flow { grid-template-columns: 1fr; }
+  .pie-flow__engine { max-width: none; }
+  .pie-logos__inner { grid-template-columns: 1fr; }
+  .pie-logos__label { border-right: none; border-bottom: 1px solid var(--pl-line); }
+}
+@media (max-width: 719px) {
+  .pie-cmp__head, .pie-cmp__row { grid-template-columns: 1fr; }
+  .pie-cmp__b, .pie-cmp__a { border-left: none; border-top: 1px solid #EEF0EE; }
+  .pie-cmp__head span:first-child { display: none; }
+  .pie-card__badge { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+  .pie-logos__marquee { animation: none; }
+}
+</style>
