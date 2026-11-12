@@ -1,0 +1,12 @@
+---
+import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
+import LHeader from '@/components/light/LHeader.astro';
+import LFooter from '@/components/light/LFooter.astro';
+import LegalDoc from '@/components/legal/LegalDoc.astro';
+import { privacy } from '@/data/legal';
+---
+<LightBaseLayout title={`${privacy.title} · PriceLeap`} description={privacy.description}>
+  <LHeader />
+  <LegalDoc doc={privacy} />
+  <LFooter />
+</LightBaseLayout>
