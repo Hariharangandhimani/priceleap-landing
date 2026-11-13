@@ -14,7 +14,7 @@ const { plan: p } = Astro.props;
   <div class="ec__foot"><span class="mono">{p.daily}</span><a href={p.href}>{p.cta}</a></div>
 </article>
 <style>
-  .ec { position: relative; overflow: hidden; padding: clamp(22px, 3vw, 30px); border: 1px solid var(--line); border-radius: 22px; background: linear-gradient(160deg, #141414, var(--surface-3) 60%); display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 90px; transition: border-color .3s, box-shadow .3s; }
+  .ec { position: relative; overflow: hidden; padding: clamp(22px, 3vw, 30px); border: 1px solid var(--line); border-radius: 22px; background: linear-gradient(160deg, #fff7f3, var(--surface) 60%); display: flex; flex-direction: column; gap: 20px; scroll-margin-top: 90px; transition: border-color .3s, box-shadow .3s; }
   .ec.is-rec { border-color: var(--green); box-shadow: var(--glow); }
   .ec__rec { display: none; } .ec.is-rec .ec__rec { display: inline-block; }
   .ec__glow { position: absolute; right: -60px; top: -60px; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(closest-side, rgba(255, 49, 49,.12), transparent); }

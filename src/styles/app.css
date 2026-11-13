@@ -26,6 +26,13 @@
   --font-display: var(--pl-font);
   --font-body: var(--pl-font);
   --font-mono: var(--pl-mono);
+  /* Compatibility aliases for the remaining component primitives. */
+  --radius: var(--pl-radius-md);
+  --section-y: clamp(4.5rem, 9vw, 8rem);
+  --glow: var(--pl-shadow-accent);
+  --ease: var(--pl-ease);
+  --amber: var(--pl-warn);
+  --red-soft: var(--pl-danger);
 }
 
 @layer base {

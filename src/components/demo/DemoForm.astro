@@ -115,7 +115,7 @@ import { skuSizes, channels, timeSlots } from '@/data/demo';
 </script>
 
 <style>
-  .df { border: 1px solid var(--line); border-radius: 22px; background: var(--surface); box-shadow: 0 50px 120px -40px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.04); overflow: hidden; }
+  .df { border: 1px solid var(--line); border-radius: 22px; background: var(--surface); box-shadow: var(--pl-shadow-lg); overflow: hidden; }
   .df__top { padding: 20px 22px 0; } .df__meta { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .1em; color: var(--muted); } .df__meta span:last-child { letter-spacing: 0; color: var(--dim); }
   .df__bars { margin-top: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; } .df__bars i { position: relative; height: 4px; border-radius: 2px; background: var(--line-soft); overflow: hidden; }
   .df__bars i::after { content: ''; position: absolute; inset: 0 auto 0 0; width: var(--w, 0%); background: var(--green); transition: width .5s var(--ease); }
@@ -123,7 +123,7 @@ import { skuSizes, channels, timeSlots } from '@/data/demo';
   h2 { font-size: 24px; font-weight: 600; letter-spacing: -.02em; } .df__step p.muted { margin-top: 6px; font-size: 14px; }
   .dim { color: var(--dim); font-weight: 400; }
   .df__hint { min-height: 16px; font-size: 12px; color: var(--green); } .df__hint[data-tone="warn"] { color: var(--amber); } .df__hint[data-tone="err"] { color: var(--red-soft); }
-  .df__cta { flex: 1; height: 54px; border: 0; border-radius: 12px; background: var(--green); color: var(--bg); font-family: var(--font-display); font-weight: 600; font-size: 16px; cursor: pointer; box-shadow: 0 12px 30px -12px rgba(255, 49, 49,.7); transition: background .2s; }
+  .df__cta { flex: 1; height: 54px; border: 0; border-radius: 12px; background: var(--green); color: var(--pl-on-accent); font-family: var(--font-display); font-weight: 600; font-size: 16px; cursor: pointer; box-shadow: 0 12px 30px -12px rgba(255, 49, 49,.7); transition: background .2s; }
   .df__cta:hover { background: var(--green-hover); } .df__cta:disabled { background: var(--green-dark); cursor: not-allowed; box-shadow: none; }
   .df__trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; font-size: 12px; color: var(--muted); }
   .df__grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .df__grid4 .choice { font-size: 12.5px; padding: 0 4px; }
