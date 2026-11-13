@@ -128,11 +128,11 @@ const splitItem = (item: string) => {
 
 /* reading progress */
 .lg-progress { position: fixed; left: 0; top: 0; right: 0; height: 3px; z-index: 90; background: transparent; pointer-events: none; }
-.lg-progress i { display: block; height: 100%; width: calc(var(--pl-scroll, 0) * 100%); background: #18E563; }
+.lg-progress i { display: block; height: 100%; width: calc(var(--pl-scroll, 0) * 100%); background: #FF3131; }
 
 /* eyebrow / headings */
-.lg-eyebrow { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 999px; background: #fff; border: 1px solid var(--pl-line); font-family: var(--pl-mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: #0B7A34; }
-.lg-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.8s infinite; }
+.lg-eyebrow { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 999px; background: #fff; border: 1px solid var(--pl-line); font-family: var(--pl-mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: #B01C1C; }
+.lg-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.8s infinite; }
 
 /* hero */
 .lg-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
@@ -148,7 +148,7 @@ const splitItem = (item: string) => {
 .lg-meta__actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
 .lg-print { height: 36px; padding: 0 16px; border: 1px solid var(--pl-line); border-radius: 10px; background: #fff; font-family: var(--pl-font); font-weight: 500; font-size: 13px; cursor: pointer; }
 .lg-print:hover { border-color: #0A0A0A; }
-.lg-other { font-family: var(--pl-mono); font-size: 12px; color: #0B7A34; }
+.lg-other { font-family: var(--pl-mono); font-size: 12px; color: #B01C1C; }
 
 /* body layout */
 .lg-body { padding: clamp(40px,5vw,64px) 0 clamp(64px,8vw,104px); }
@@ -161,8 +161,8 @@ const splitItem = (item: string) => {
 .lg-toc a { display: flex; gap: 12px; align-items: baseline; padding: 8px 10px 8px 14px; border-left: 2px solid transparent; border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.4; color: #5A6373; transition: all .2s; }
 .lg-toc a:hover { color: #0A0A0A; background: #FBFBFA; }
 .lg-toc__n { font-family: var(--pl-mono); font-size: 10px; color: #A3ABB8; flex: none; }
-.lg-toc a[aria-current] { border-left-color: #18E563; color: #0A0A0A; font-weight: 500; background: #F4FDF7; }
-.lg-toc a[aria-current] .lg-toc__n { color: #0B7A34; }
+.lg-toc a[aria-current] { border-left-color: #FF3131; color: #0A0A0A; font-weight: 500; background: #F4FDF7; }
+.lg-toc a[aria-current] .lg-toc__n { color: #B01C1C; }
 
 /* content */
 .lg-content { min-width: 0; max-width: 760px; }
@@ -171,18 +171,18 @@ const splitItem = (item: string) => {
 .lg-intro p:last-child { margin-bottom: 0; }
 .lg-sec { padding: 28px 0; border-top: 1px solid #EEF0EE; scroll-margin-top: 100px; }
 .lg-sec:first-of-type { border-top: none; padding-top: 0; }
-.lg-group { font-family: var(--pl-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #0B7A34; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px dashed #BFF3D2; }
+.lg-group { font-family: var(--pl-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #B01C1C; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px dashed #FFD6C8; }
 .lg-sec__lab { font-family: var(--pl-mono); font-size: 11px; letter-spacing: .08em; color: #A3ABB8; }
 .lg-h2 { margin: 8px 0 18px; font-family: var(--pl-font); font-size: clamp(22px,2.6vw,28px); font-weight: 600; letter-spacing: -.02em; color: #0A0A0A; }
 .lg-h3 { margin: 22px 0 12px; font-family: var(--pl-font); font-size: 17px; font-weight: 600; color: #0A0A0A; }
 .lg-p { margin: 0 0 16px; font-size: 16px; line-height: 1.7; color: #3A414C; }
 .lg-clause { display: grid; grid-template-columns: 44px minmax(0,1fr); gap: 12px; margin: 0 0 16px; }
-.lg-clause__n { font-family: var(--pl-mono); font-size: 13px; color: #0B7A34; padding-top: 2px; }
+.lg-clause__n { font-family: var(--pl-mono); font-size: 13px; color: #B01C1C; padding-top: 2px; }
 .lg-clause p { margin: 0; font-size: 16px; line-height: 1.7; color: #3A414C; }
 .lg-list { list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .lg-list--indent { padding-left: 24px; }
 .lg-list li { display: grid; grid-template-columns: 24px minmax(0,1fr); gap: 12px; align-items: start; font-size: 16px; line-height: 1.6; color: #3A414C; }
-.lg-list__mk { width: 24px; height: 24px; flex: none; border-radius: 7px; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-family: var(--pl-mono); font-size: 11px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.lg-list__mk { width: 24px; height: 24px; flex: none; border-radius: 7px; background: #E8FCEF; border: 1px solid #FFD6C8; color: #B01C1C; font-family: var(--pl-mono); font-size: 11px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
 .lg-list--ordered .lg-list__mk { background: #F4F5F4; border-color: var(--pl-line); color: #3A414C; }
 .lg-list li b { color: #0A0A0A; font-weight: 600; }
 
@@ -191,7 +191,7 @@ const splitItem = (item: string) => {
 :global(html[data-scrolled-900]) .lg-top { opacity: 1; visibility: visible; transform: none; }
 .lg-top svg { position: absolute; inset: 0; width: 48px; height: 48px; transform: rotate(-90deg); }
 .lg-top__track { fill: none; stroke: #EEF0EE; stroke-width: 2; }
-.lg-top__ring { fill: none; stroke: #18E563; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 131.9; stroke-dashoffset: calc(131.9 * (1 - var(--pl-scroll, 0))); }
+.lg-top__ring { fill: none; stroke: #FF3131; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 131.9; stroke-dashoffset: calc(131.9 * (1 - var(--pl-scroll, 0))); }
 .lg-top__arrow { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #0A0A0A; }
 
 @media (max-width: 999px) {

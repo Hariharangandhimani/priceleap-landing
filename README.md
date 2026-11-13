@@ -9,8 +9,8 @@ npm run build
 ## Structure
 ```
 src/
-  styles/global.css        Design tokens (CSS vars) + base/utility classes
-  layouts/BaseLayout.astro Head, fonts, Nav, Footer, scroll-reveal
+  styles/app.css           Tailwind entrypoint, light tokens, base utilities
+  layouts/SiteLayout.astro Shared SEO, header, footer, and scroll-reveal
   data/                    All copy & numbers (site.ts, home.ts, pricing.ts) — edit here
   scripts/                 Tiny vanilla helpers: reveal, stepper, format
   components/
@@ -27,11 +27,11 @@ public/assets/ mark, icons, logos/, badges/
 ```
 
 ## Layout variants
-`<BaseLayout chrome="minimal">` hides the marketing nav links + big footer (used on demo/contact for conversion).
+`<SiteLayout>` owns the shared header, mega menu, footer, SEO metadata, and motion initialization for every route.
 
 ## Conventions
 - Zero framework JS: each interactive component ships a small `<script>` (Astro bundles + dedupes).
-- Scoped `<style>` per component; shared tokens live in `global.css`.
+- Tailwind utilities plus scoped component styles; shared tokens live in `tokens.css` and `app.css`.
 - `data-reveal` on any element = fade-up on scroll. Respects `prefers-reduced-motion`.
 - `data-at="N"` inside a stepper root = element turns `.is-on` at step N (see `scripts/stepper.ts`).
 - Pricing: `data-monthly` / `data-annual` attributes swap automatically with the billing toggle.

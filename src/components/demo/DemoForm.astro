@@ -34,7 +34,7 @@ import { skuSizes, channels, timeSlots } from '@/data/demo';
     <h2>You're booked, <span data-first>there</span>.</h2>
     <p><span data-when></span><br /><span class="muted">Invite sent to <span data-email-out></span></span></p>
     <div class="df__note"><span class="dot dot--pulse"></span><span><b>We're already building your sample.</b> Our team is matching your top products against competitors so the demo uses your real data.</span></div>
-    <div class="df__row"><a href="#" class="df__ghost">Add to calendar</a><button type="button" class="df__ghost" data-reschedule>Reschedule</button></div>
+    <div class="df__row"><a href="/contact" class="df__ghost">Talk to sales</a><button type="button" class="df__ghost" data-reschedule>Reschedule</button></div>
   </div>
 
   <div class="df__foot"><span class="df__avs"><i>AK</i><i>RM</i><i>SN</i></span><span>Run by a pricing specialist, not a sales script.</span></div>
@@ -92,8 +92,18 @@ import { skuSizes, channels, timeSlots } from '@/data/demo';
       confirm.disabled = true; confirm.textContent = 'Booking…';
       state.email = email.value; state.name = name.value; state.site = (steps[1] as HTMLFormElement).site?.value;
       state.channels = [...root.querySelectorAll<HTMLElement>('[data-channel][aria-pressed="true"]')].map((x) => x.dataset.channel);
-      // TODO: send `state` to your CRM / calendar (HubSpot, Calendly, etc.)
-      await new Promise((r) => setTimeout(r, 900));
+      const endpoint = import.meta.env.PUBLIC_DEMO_ENDPOINT || '';
+      if (!endpoint) {
+        confirm.disabled = false; confirm.textContent = 'Confirm ' + state.time;
+        root.querySelector<HTMLElement>('[data-step-hint]')!.textContent = 'Booking is temporarily unavailable';
+        return;
+      }
+      const response = await fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(state) });
+      if (!response.ok) {
+        confirm.disabled = false; confirm.textContent = 'Try again';
+        root.querySelector<HTMLElement>('[data-step-hint]')!.textContent = 'We could not save that time. Please try again.';
+        return;
+      }
       root.querySelector('[data-first]')!.textContent = name.value.trim().split(' ')[0] || 'there';
       root.querySelector('[data-email-out]')!.textContent = email.value;
       root.querySelector('[data-when]')!.textContent = days[state.day].toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) + ' at ' + state.time;
@@ -113,7 +123,7 @@ import { skuSizes, channels, timeSlots } from '@/data/demo';
   h2 { font-size: 24px; font-weight: 600; letter-spacing: -.02em; } .df__step p.muted { margin-top: 6px; font-size: 14px; }
   .dim { color: var(--dim); font-weight: 400; }
   .df__hint { min-height: 16px; font-size: 12px; color: var(--green); } .df__hint[data-tone="warn"] { color: var(--amber); } .df__hint[data-tone="err"] { color: var(--red-soft); }
-  .df__cta { flex: 1; height: 54px; border: 0; border-radius: 12px; background: var(--green); color: var(--bg); font-family: var(--font-display); font-weight: 600; font-size: 16px; cursor: pointer; box-shadow: 0 12px 30px -12px rgba(24,229,99,.7); transition: background .2s; }
+  .df__cta { flex: 1; height: 54px; border: 0; border-radius: 12px; background: var(--green); color: var(--bg); font-family: var(--font-display); font-weight: 600; font-size: 16px; cursor: pointer; box-shadow: 0 12px 30px -12px rgba(255, 49, 49,.7); transition: background .2s; }
   .df__cta:hover { background: var(--green-hover); } .df__cta:disabled { background: var(--green-dark); cursor: not-allowed; box-shadow: none; }
   .df__trust { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; font-size: 12px; color: var(--muted); }
   .df__grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .df__grid4 .choice { font-size: 12.5px; padding: 0 4px; }
@@ -127,8 +137,8 @@ import { skuSizes, channels, timeSlots } from '@/data/demo';
   .df__times { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
   .df__times .choice[aria-pressed="true"] { background: var(--green); color: var(--bg); } .df__times .choice:disabled { color: #3A3A3A; text-decoration: line-through; cursor: not-allowed; }
   .df__done { align-items: center; text-align: center; padding-block: 32px 26px; } .df__done p { font-size: 15px; line-height: 1.55; }
-  .df__check { width: 64px; height: 64px; border-radius: 50%; background: var(--green); color: var(--bg); display: grid; place-items: center; font-size: 28px; font-weight: 700; animation: pl-pop .5s ease both; box-shadow: 0 0 0 10px rgba(24,229,99,.1); }
-  .df__note { width: 100%; padding: 14px; border: 1px solid var(--green-dark); border-radius: 12px; background: rgba(24,229,99,.05); text-align: left; display: flex; gap: 12px; font-size: 13.5px; line-height: 1.5; } .df__note .dot { margin-top: 6px; } .df__note b { color: var(--white); font-weight: 500; }
+  .df__check { width: 64px; height: 64px; border-radius: 50%; background: var(--green); color: var(--bg); display: grid; place-items: center; font-size: 28px; font-weight: 700; animation: pl-pop .5s ease both; box-shadow: 0 0 0 10px rgba(255, 49, 49,.1); }
+  .df__note { width: 100%; padding: 14px; border: 1px solid var(--green-dark); border-radius: 12px; background: rgba(255, 49, 49,.05); text-align: left; display: flex; gap: 12px; font-size: 13.5px; line-height: 1.5; } .df__note .dot { margin-top: 6px; } .df__note b { color: var(--white); font-weight: 500; }
   .df__done .df__row { width: 100%; } .df__ghost { flex: 1; height: 46px; border-radius: 11px; border: 1px solid var(--line); background: transparent; color: var(--white); font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
   .df__foot { padding: 14px 22px; border-top: 1px solid var(--line-soft); background: var(--surface-2); display: flex; align-items: center; gap: 12px; font-size: 12.5px; color: var(--muted); }
   .df__avs { display: flex; } .df__avs i { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface-2); background: var(--green-deep); color: var(--green); font-style: normal; font-size: 10px; font-weight: 600; display: grid; place-items: center; } .df__avs i + i { margin-left: -8px; background: var(--line-soft); color: var(--white); }

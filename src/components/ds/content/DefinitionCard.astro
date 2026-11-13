@@ -2,5 +2,5 @@
 interface Props { term: string; phonetic?: string; pos?: string; related?: string[] }
 const { term, phonetic, pos='noun', related=[] } = Astro.props;
 ---
-<dfn class="pl-card dc"><span class="t">{term}{phonetic && <em>{phonetic} · {pos}</em>}</span><span class="d"><slot /></span>{related.length > 0 && <span class="rel">{related.map(r => <a href={'/glossary/' + r.toLowerCase().replace(/\s+/g, '-')}>#{r}</a>)}</span>}</dfn>
+<dfn class="pl-card dc"><span class="t">{term}{phonetic && <em>{phonetic} · {pos}</em>}</span><span class="d"><slot /></span>{related.length > 0 && <span class="rel">{related.map(r => <a href={'/design-system#' + r.toLowerCase().replace(/\s+/g, '-')}>#{r}</a>)}</span>}</dfn>
 <style>.dc{display:flex;flex-direction:column;gap:10px;padding:22px;font-style:normal}.t{font-size:24px;font-weight:600;letter-spacing:-.02em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}em{font-style:normal;font-family:var(--pl-mono);font-size:12px;font-weight:400;color:var(--pl-faint)}.d{font-size:15px;line-height:1.6;color:var(--pl-ink-2)}.rel{display:flex;gap:6px;flex-wrap:wrap}.rel a{font-family:var(--pl-mono);font-size:11px;border:1px solid var(--pl-line);border-radius:6px;padding:3px 8px;color:#55545b}</style>

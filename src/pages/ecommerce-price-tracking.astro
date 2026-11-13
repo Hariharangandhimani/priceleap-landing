@@ -3,9 +3,7 @@
  * Ecommerce Price Tracking — native rebuild on the shared light design system.
  * Content ported 1:1 from ecommerce-price-tracking.html.
  */
-import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
-import LHeader from '@/components/light/LHeader.astro';
-import LFooter from '@/components/light/LFooter.astro';
+import SiteLayout from '@/layouts/SiteLayout.astro';
 import SectionHeader from '@/components/ds/nav/SectionHeader.astro';
 import FAQ from '@/components/ds/faq/FAQ.astro';
 import CTA from '@/components/ds/cta/CTA.astro';
@@ -14,7 +12,7 @@ const logos = ['McAfee', 'Xometry', 'Do it Best', 'Wolt', 'neho', 'apoBank'];
 
 const posStyle = {
   Above: { bg: '#FDECEB', bc: '#F5C6C3', c: '#C9372E' },
-  Below: { bg: '#E8FCEF', bc: '#BFF3D2', c: '#0B7A34' },
+  Below: { bg: '#E8FCEF', bc: '#FFD6C8', c: '#B01C1C' },
   Match: { bg: '#F4F5F4', bc: '#E6E8E6', c: '#3A414C' },
 };
 const heroRows = [
@@ -24,9 +22,9 @@ const heroRows = [
   { n: 'Kettle K2 Stainless', vs: 'vs MarketOne', you: '$74.50', comp: '$66.90', d: '▼ 10.2%', pos: 'Above' },
 ];
 const tape = [
-  ['Aurora 55" 4K TV', '▼ 3.4%', '#C9372E'], ['NovaBook Air 14', '▲ 3.8%', '#0B7A34'],
+  ['Aurora 55" 4K TV', '▼ 3.4%', '#C9372E'], ['NovaBook Air 14', '▲ 3.8%', '#B01C1C'],
   ['Kettle K2 Stainless', '▼ 10.2%', '#C9372E'], ['PureSound Buds Pro', '— 0%', '#6E7684'],
-  ['12 SKUs changed', '3 competitors', '#0B7A34'], ['MarketOne · SKU 88213', 'checked 06:00', '#5A6373'],
+  ['12 SKUs changed', '3 competitors', '#B01C1C'], ['MarketOne · SKU 88213', 'checked 06:00', '#5A6373'],
 ];
 
 // "before" spreadsheet
@@ -40,7 +38,7 @@ const sheetRows = [
 const solStats = [
   { k: 'SKUs monitored', v: '12,480', c: '#0A0A0A' },
   { k: 'Sources tracked', v: '38', c: '#0A0A0A' },
-  { k: 'Priced below market', v: '61%', c: '#0B7A34' },
+  { k: 'Priced below market', v: '61%', c: '#B01C1C' },
   { k: 'Priced above market', v: '22%', c: '#C9372E' },
   { k: 'Match confidence', v: '98.4%', c: '#0A0A0A' },
   { k: 'Last full sync', v: '06:00 & 18:00', c: '#0A0A0A' },
@@ -98,11 +96,10 @@ const faqs = [
 ];
 ---
 
-<LightBaseLayout
+<SiteLayout
   title="Ecommerce Price Tracking · PriceLeap"
   description="Track competitor and marketplace prices across your entire catalog, kept accurate and current without manual checks."
 >
-  <LHeader />
 
   <!-- ══ HERO ══ -->
   <section class="ep-hero">
@@ -136,7 +133,7 @@ const faqs = [
           <div class="ep-card__rowhead"><span>PRODUCT</span><span>YOU</span><span>COMP</span><span style="text-align:right">POS</span></div>
           {heroRows.map(r => {
             const p = posStyle[r.pos as keyof typeof posStyle];
-            const dc = r.d.startsWith('▼') ? '#C9372E' : r.d.startsWith('▲') ? '#0B7A34' : '#6E7684';
+            const dc = r.d.startsWith('▼') ? '#C9372E' : r.d.startsWith('▲') ? '#B01C1C' : '#6E7684';
             return (
               <div class="ep-prow">
                 <div class="ep-prow__name"><div class="ep-prow__n">{r.n}</div><div class="ep-prow__vs">{r.vs}</div></div>
@@ -235,7 +232,7 @@ const faqs = [
             <p class="ep-reason__d">{r.d}</p>
             {r.kind === 'sites' && (
               <div class="ep-sites">{sites.map(s => (
-                <span class="ep-site" style={s.lock ? 'border-color:#F5C6C3;color:#C9372E' : s.on ? 'background:#E8FCEF;border-color:#BFF3D2;color:#0B7A34' : ''}>{s.lock ? '✓ ' + s.t : s.t}</span>
+                <span class="ep-site" style={s.lock ? 'border-color:#F5C6C3;color:#C9372E' : s.on ? 'background:#E8FCEF;border-color:#FFD6C8;color:#B01C1C' : ''}>{s.lock ? '✓ ' + s.t : s.t}</span>
               ))}</div>
             )}
             {r.kind === 'matches' && (
@@ -245,15 +242,15 @@ const faqs = [
             )}
             {r.kind === 'schedules' && (
               <div class="ep-scheds">{schedules.map(s => (
-                <div class="ep-sched" style={s.hot ? 'border-color:#BFF3D2;background:#E8FCEF' : ''}>
+                <div class="ep-sched" style={s.hot ? 'border-color:#FFD6C8;background:#E8FCEF' : ''}>
                   <span class="ep-sched__n">{s.n}</span>
-                  <span class="ep-sched__f" style={s.hot ? 'background:#18E563;color:#0A0A0A' : ''}>{s.f}</span>
+                  <span class="ep-sched__f" style={s.hot ? 'background:#FF3131;color:#0A0A0A' : ''}>{s.f}</span>
                 </div>
               ))}</div>
             )}
             {r.kind === 'scale' && (
               <div class="ep-scale">{scaleBars.map((h, i) => (
-                <span class="ep-scale__bar" style={`height:${h}%;background:${i === scaleBars.length - 1 ? '#18E563' : i > 4 ? '#8EF0B2' : '#DDE1DD'}`}></span>
+                <span class="ep-scale__bar" style={`height:${h}%;background:${i === scaleBars.length - 1 ? '#FF3131' : i > 4 ? '#FFB49A' : '#DDE1DD'}`}></span>
               ))}</div>
             )}
           </div>
@@ -275,7 +272,7 @@ const faqs = [
           <div class="ep-alerts">
             {alerts.map(a => (
               <div class="ep-alert">
-                <span class="ep-alert__ic" style={`background:${a.kind === 'down' ? '#FDECEB' : a.kind === 'up' ? '#E8FCEF' : '#F4F5F4'};color:${a.kind === 'down' ? '#C9372E' : a.kind === 'up' ? '#0B7A34' : '#3A414C'}`}>{a.mk}</span>
+                <span class="ep-alert__ic" style={`background:${a.kind === 'down' ? '#FDECEB' : a.kind === 'up' ? '#E8FCEF' : '#F4F5F4'};color:${a.kind === 'down' ? '#C9372E' : a.kind === 'up' ? '#B01C1C' : '#3A414C'}`}>{a.mk}</span>
                 <span class="ep-alert__t">{a.t}</span>
                 <span class="ep-alert__time">{a.time}</span>
               </div>
@@ -322,7 +319,7 @@ const faqs = [
             <div class="ep-scope__row">
               <span class="ep-scope__site">{row}</span>
               {skuHead.map((_, x) => (
-                <span class="ep-scope__cell" style={`background:${(x <= hx && y <= hy) ? (x === hx && y === hy ? '#18E563' : '#8EF0B2') : '#F4F5F4'}`}></span>
+                <span class="ep-scope__cell" style={`background:${(x <= hx && y <= hy) ? (x === hx && y === hy ? '#FF3131' : '#FFB49A') : '#F4F5F4'}`}></span>
               ))}
             </div>
           ))}
@@ -361,8 +358,7 @@ const faqs = [
     />
   </div>
 
-  <LFooter />
-</LightBaseLayout>
+</SiteLayout>
 
 <style>
 .ep-wrap { max-width: var(--pl-container); margin: 0 auto; padding-left: var(--pl-gutter); padding-right: var(--pl-gutter); }
@@ -371,21 +367,21 @@ const faqs = [
 .ep-h1 { margin: 24px 0 0; font-family: var(--pl-font); font-size: clamp(36px,5vw,64px); line-height: 1.03; letter-spacing: -.045em; color: #0A0A0A; text-wrap: balance; font-weight: 700; }
 .ep-h1 .w4 { font-weight: 400; }
 .ep-lead { margin: 22px 0 0; max-width: 560px; font-size: 18px; line-height: 1.6; color: #3A414C; }
-.ep-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #0B7A34; }
-.ep-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.8s ease-out infinite; }
-.ep-eyebrow__sq { width: 7px; height: 7px; border-radius: 2px; background: #18E563; }
+.ep-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #B01C1C; }
+.ep-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.8s ease-out infinite; }
+.ep-eyebrow__sq { width: 7px; height: 7px; border-radius: 2px; background: #FF3131; }
 
 .ep-btn { height: 48px; padding: 0 22px; display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; font-family: var(--pl-font); font-weight: 500; font-size: 15px; transition: all .2s; }
-.ep-btn--primary { background: #18E563; color: #0A0A0A; box-shadow: 0 12px 26px -12px rgba(24,229,99,.9); }
-.ep-btn--primary:hover { background: #14D35A; color: #0A0A0A; }
+.ep-btn--primary { background: #FF3131; color: #0A0A0A; box-shadow: 0 12px 26px -12px rgba(255, 49, 49,.9); }
+.ep-btn--primary:hover { background: #F23830; color: #0A0A0A; }
 .ep-btn--secondary { background: #fff; border: 1px solid var(--pl-line); color: #0A0A0A; }
 .ep-btn--secondary:hover { border-color: #C4CAC4; }
-.ep-btn--secondary span { color: #0B7A34; }
+.ep-btn--secondary span { color: #B01C1C; }
 
 /* hero */
 .ep-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
 .ep-hero__grid { position: absolute; inset: 0; background-image: linear-gradient(#EEF0EE 1px,transparent 1px),linear-gradient(90deg,#EEF0EE 1px,transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); pointer-events: none; }
-.ep-hero__glow { position: absolute; right: -10%; top: -20%; width: 720px; height: 620px; background: radial-gradient(closest-side,rgba(24,229,99,.14),transparent); pointer-events: none; }
+.ep-hero__glow { position: absolute; right: -10%; top: -20%; width: 720px; height: 620px; background: radial-gradient(closest-side,rgba(255, 49, 49,.14),transparent); pointer-events: none; }
 .ep-hero__inner { position: relative; display: grid; grid-template-columns: minmax(0,.95fr) minmax(0,1.05fr); gap: clamp(40px,5vw,64px); align-items: center; padding-top: clamp(48px,7vw,96px); padding-bottom: clamp(48px,6vw,80px); }
 .ep-crumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5A6373; margin-bottom: 24px; }
 .ep-crumb a { color: #5A6373; }
@@ -393,7 +389,7 @@ const faqs = [
 .ep-hero__btns { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
 .ep-hero__ticks { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .ep-tick { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #3A414C; }
-.ep-tick__ic { flex: none; width: 18px; height: 18px; border-radius: 50%; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+.ep-tick__ic { flex: none; width: 18px; height: 18px; border-radius: 50%; background: #E8FCEF; border: 1px solid #FFD6C8; color: #B01C1C; font-size: 10px; display: flex; align-items: center; justify-content: center; }
 
 .ep-hero__card-wrap { position: relative; min-width: 0; }
 .ep-card { background: #fff; border: 1px solid var(--pl-line); border-radius: 20px; box-shadow: 0 40px 80px -40px rgba(10,10,10,.28); overflow: hidden; }
@@ -401,8 +397,8 @@ const faqs = [
 .ep-dots { display: flex; gap: 5px; }
 .ep-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--pl-line); }
 .ep-card__title { font-size: 13px; font-weight: 500; color: #0A0A0A; }
-.ep-live { margin-left: auto; display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: #E8FCEF; border: 1px solid #BFF3D2; font-family: var(--pl-mono); font-size: 10px; color: #0B7A34; }
-.ep-live__dot { width: 6px; height: 6px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.6s infinite; }
+.ep-live { margin-left: auto; display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: #E8FCEF; border: 1px solid #FFD6C8; font-family: var(--pl-mono); font-size: 10px; color: #B01C1C; }
+.ep-live__dot { width: 6px; height: 6px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.6s infinite; }
 .ep-card__rowhead, .ep-prow { display: grid; grid-template-columns: minmax(0,1.6fr) 92px 92px 76px; gap: 10px; align-items: center; }
 .ep-card__rowhead { padding: 10px 16px; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .06em; color: #6E7684; border-bottom: 1px solid #EEF0EE; }
 .ep-prow { padding: 12px 16px; border-bottom: 1px solid #EEF0EE; }
@@ -450,13 +446,13 @@ const faqs = [
 .ep-cmp__head, .ep-cmp__row { display: grid; grid-template-columns: 56px minmax(0,1fr) minmax(0,1fr); }
 .ep-cmp__head { background: #FBFBFA; border-bottom: 1px solid var(--pl-line); }
 .ep-cmp__head span { padding: 14px 18px; font-family: var(--pl-mono); font-size: 11px; letter-spacing: .08em; color: #5A6373; }
-.ep-cmp__ha { color: #0B7A34; }
+.ep-cmp__ha { color: #B01C1C; }
 .ep-cmp__row { border-bottom: 1px solid #EEF0EE; }
 .ep-cmp__row:last-child { border-bottom: none; }
 .ep-cmp__k { border-right: 1px solid #EEF0EE; }
 .ep-cmp__b { padding: 18px; font-size: 14px; line-height: 1.55; color: #5A6373; }
-.ep-cmp__a { padding: 18px; font-size: 14px; line-height: 1.55; color: #0A0A0A; border-left: 1px solid #BFF3D2; background: #FCFEFC; display: flex; gap: 10px; }
-.ep-cmp__atick { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+.ep-cmp__a { padding: 18px; font-size: 14px; line-height: 1.55; color: #0A0A0A; border-left: 1px solid #FFD6C8; background: #FCFEFC; display: flex; gap: 10px; }
+.ep-cmp__atick { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #E8FCEF; border: 1px solid #FFD6C8; color: #B01C1C; font-size: 11px; display: flex; align-items: center; justify-content: center; }
 
 /* reasons */
 .ep-reasons { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,300px),1fr)); gap: 16px; }
@@ -467,7 +463,7 @@ const faqs = [
 .ep-site { height: 26px; padding: 0 10px; display: inline-flex; align-items: center; border: 1px solid var(--pl-line); border-radius: 7px; font-size: 12px; color: #5A6373; }
 .ep-matches { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; }
 .ep-match { display: flex; align-items: center; gap: 10px; }
-.ep-match__ic { flex: none; width: 24px; height: 24px; border-radius: 7px; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+.ep-match__ic { flex: none; width: 24px; height: 24px; border-radius: 7px; background: #E8FCEF; border: 1px solid #FFD6C8; color: #B01C1C; font-size: 11px; display: flex; align-items: center; justify-content: center; }
 .ep-match b { display: block; font-size: 13px; color: #0A0A0A; }
 .ep-match small { font-size: 11px; color: #6E7684; }
 .ep-scheds { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
@@ -508,7 +504,7 @@ const faqs = [
 .ep-scope__cell { height: 26px; border-radius: 4px; }
 .ep-scope__label { margin-top: 14px; font-size: 13px; color: #5A6373; }
 .ep-scope__label b { color: #0A0A0A; }
-.ep-scope__cta { border: 1.5px solid #18E563; border-radius: 20px; background: #fff; padding: 32px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 0 0 6px rgba(24,229,99,.08); }
+.ep-scope__cta { border: 1.5px solid #FF3131; border-radius: 20px; background: #fff; padding: 32px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 0 0 6px rgba(255, 49, 49,.08); }
 .ep-scope__cta-t { font-family: var(--pl-font); font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: #0A0A0A; }
 .ep-scope__cta p { margin: 12px 0 20px; font-size: 15px; line-height: 1.55; color: #5A6373; }
 .ep-scope__cta .ep-btn { align-self: flex-start; }

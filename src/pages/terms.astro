@@ -1,12 +1,8 @@
 ---
-import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
-import LHeader from '@/components/light/LHeader.astro';
-import LFooter from '@/components/light/LFooter.astro';
+import SiteLayout from '@/layouts/SiteLayout.astro';
 import LegalDoc from '@/components/legal/LegalDoc.astro';
 import { terms } from '@/data/legal';
 ---
-<LightBaseLayout title={`${terms.title} · PriceLeap`} description={terms.description}>
-  <LHeader />
+<SiteLayout title={`${terms.title} · PriceLeap`} description={terms.description}>
   <LegalDoc doc={terms} />
-  <LFooter />
-</LightBaseLayout>
+</SiteLayout>

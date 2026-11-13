@@ -1,6 +1,6 @@
 ---
 interface Props { text: string; label?: string; href?: string; showAfter?: number }
-const { text, label='Book a demo', href='/demo', showAfter=600 } = Astro.props;
+const { text, label='Book a demo', href='/book-a-demo', showAfter=600 } = Astro.props;
 ---
 <div class="fcta" data-fcta={showAfter} hidden><span class="pl-dot pl-dot--live"></span><span>{text}</span><a class="pl-btn pl-btn--primary pl-btn--sm" href={href}>{label}</a><button aria-label="Dismiss" data-x>✕</button></div>
 <script>document.querySelectorAll<HTMLElement>('[data-fcta]').forEach(el => { let dismissed = false; const on = () => { if (!dismissed) el.hidden = scrollY < +el.dataset.fcta!; }; addEventListener('scroll', on, { passive: true }); el.querySelector('[data-x]')!.addEventListener('click', () => { dismissed = true; el.hidden = true; }); });</script>

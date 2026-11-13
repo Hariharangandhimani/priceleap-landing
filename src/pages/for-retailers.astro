@@ -4,9 +4,7 @@
  * light design system. Content ported 1:1 from for-retailers.html.
  * [X] / [Client name] placeholders kept verbatim.
  */
-import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
-import LHeader from '@/components/light/LHeader.astro';
-import LFooter from '@/components/light/LFooter.astro';
+import SiteLayout from '@/layouts/SiteLayout.astro';
 import SectionHeader from '@/components/ds/nav/SectionHeader.astro';
 import Tabs from '@/components/ds/nav/Tabs.astro';
 import FAQ from '@/components/ds/faq/FAQ.astro';
@@ -43,8 +41,8 @@ const sol = [
 
 const audit = [
   { n: 'Store brand Oat Milk 1L', k: 'PRIVATE LABEL', v: '0.87', bg: '#FFF8EB', bc: '#F4DDAE', c: '#8A5A00' },
-  { n: 'Sonix ANC 700 · Black', k: 'EXACT · EAN', v: '0.99', bg: '#E8FCEF', bc: '#BFF3D2', c: '#0B7A34' },
-  { n: 'Detergent Pods 42ct → 60ct', k: 'VARIANT · PACK SIZE', v: '0.93', bg: '#E8FCEF', bc: '#BFF3D2', c: '#0B7A34' },
+  { n: 'Sonix ANC 700 · Black', k: 'EXACT · EAN', v: '0.99', bg: '#E8FCEF', bc: '#FFD6C8', c: '#B01C1C' },
+  { n: 'Detergent Pods 42ct → 60ct', k: 'VARIANT · PACK SIZE', v: '0.93', bg: '#E8FCEF', bc: '#FFD6C8', c: '#B01C1C' },
 ];
 
 const bList = ['Category managers rebuild competitor price sheets by hand every week.', "Coverage stops at a sample of SKUs because matching doesn't scale.", 'Mismatched variants make teams second-guess the numbers.', 'Regional, marketplace, and banner prices live in separate files.'];
@@ -57,8 +55,8 @@ const features = [
   { t: 'Data delivery & integrations', d: 'Gets competitive data into your stack with no copy-paste. Lands where your team already works.', points: ['API, BI connectors, and scheduled feeds', 'Pipes cleanly into your pricing, ERP, PIM, and reporting tools.', 'Pushes into your BI, ERP/PIM, or systems by API. Not one more dashboard.'] },
 ];
 const matchBars = [
-  { n: 'Exact matches', v: 98, label: '98% exact', bar: '#18E563', tc: '#0B7A34' },
-  { n: 'Variant matches', v: 91, label: '91% variant', bar: '#18E563', tc: '#0B7A34' },
+  { n: 'Exact matches', v: 98, label: '98% exact', bar: '#FF3131', tc: '#B01C1C' },
+  { n: 'Variant matches', v: 91, label: '91% variant', bar: '#FF3131', tc: '#B01C1C' },
   { n: 'Private-label / similar', v: 74, label: '74% review', bar: '#F0B44C', tc: '#8A5A00' },
 ];
 
@@ -86,11 +84,10 @@ const faqs = [
 ];
 ---
 
-<LightBaseLayout
+<SiteLayout
   title="Retail Price Intelligence · PriceLeap"
   description="Competitor prices for your entire catalog, matched accurately and refreshed every day."
 >
-  <LHeader />
 
   <!-- ══ HERO ══ -->
   <section class="fr-hero">
@@ -124,23 +121,23 @@ const faqs = [
           <div class="fr-card__kpis">
             <div><span class="fr-k">PRICE INDEX</span><span class="fr-v">98.4</span></div>
             <div><span class="fr-k">OPEN ALERTS</span><span class="fr-v">12</span></div>
-            <div><span class="fr-k">COVERAGE</span><span class="fr-v" style="color:#0B7A34">100%</span></div>
+            <div><span class="fr-k">COVERAGE</span><span class="fr-v" style="color:#B01C1C">100%</span></div>
           </div>
           <div class="fr-card__bars">
             {catBars.map(c => (
               <div class="fr-bar">
-                <span class="fr-bar__col" style={`height:${c.neg ? 70 : 92}px;background:${c.neg ? '#18E563' : '#E5483F'}`}></span>
+                <span class="fr-bar__col" style={`height:${c.neg ? 70 : 92}px;background:${c.neg ? '#FF3131' : '#E5483F'}`}></span>
                 <span class="fr-bar__n">{c.n.slice(0,4)}</span>
-                <span class="fr-bar__d" style={`color:${c.neg ? '#0B7A34' : '#C9372E'}`}>{c.d}</span>
+                <span class="fr-bar__d" style={`color:${c.neg ? '#B01C1C' : '#C9372E'}`}>{c.d}</span>
               </div>
             ))}
           </div>
           <div class="fr-card__feed">
             {alertFeed.map(a => (
               <div class="fr-feed__row">
-                <span class="fr-feed__dot" style={`background:${a.down === null ? '#F4F5F4' : a.down ? '#FDECEB' : '#E8FCEF'};color:${a.down === null ? '#5A6373' : a.down ? '#C9372E' : '#0B7A34'}`}>{a.down === null ? '○' : a.down ? '▼' : '▲'}</span>
+                <span class="fr-feed__dot" style={`background:${a.down === null ? '#F4F5F4' : a.down ? '#FDECEB' : '#E8FCEF'};color:${a.down === null ? '#5A6373' : a.down ? '#C9372E' : '#B01C1C'}`}>{a.down === null ? '○' : a.down ? '▼' : '▲'}</span>
                 <span class="fr-feed__t">{a.t}</span>
-                <span class="fr-feed__d" style={`color:${a.down === null ? '#5A6373' : a.down ? '#C9372E' : '#0B7A34'}`}>{a.d}</span>
+                <span class="fr-feed__d" style={`color:${a.down === null ? '#5A6373' : a.down ? '#C9372E' : '#B01C1C'}`}>{a.d}</span>
               </div>
             ))}
           </div>
@@ -234,7 +231,7 @@ const faqs = [
         <div class="fr-ba__col fr-ba__col--after">
           <div class="fr-ba__tag fr-ba__tag--on">WITH PRICELEAP</div>
           <div class="fr-ba__title">Accurate, complete, and refreshed daily.</div>
-          <div class="fr-ba__meter"><span class="fr-ba__meter-k">Coverage</span><span class="fr-ba__meter-bar"><i style="width:100%;background:#18E563"></i></span><span class="fr-ba__meter-v" style="color:#0B7A34">100%</span></div>
+          <div class="fr-ba__meter"><span class="fr-ba__meter-k">Coverage</span><span class="fr-ba__meter-bar"><i style="width:100%;background:#FF3131"></i></span><span class="fr-ba__meter-v" style="color:#B01C1C">100%</span></div>
           <ul class="fr-ba__list">{aList.map(t => <li><span class="fr-ba__check">✓</span>{t}</li>)}</ul>
         </div>
       </div>
@@ -331,8 +328,7 @@ const faqs = [
     />
   </div>
 
-  <LFooter />
-</LightBaseLayout>
+</SiteLayout>
 
 <style>
 .fr-wrap { max-width: var(--pl-container); margin: 0 auto; padding-left: var(--pl-gutter); padding-right: var(--pl-gutter); }
@@ -343,22 +339,22 @@ const faqs = [
 .fr-h2 { margin: 16px 0 0; font-family: var(--pl-font); font-size: clamp(30px,4vw,48px); line-height: 1.06; letter-spacing: -.035em; color: #0A0A0A; text-wrap: balance; font-weight: 700; }
 .fr-h2 .w4 { font-weight: 400; }
 .fr-lead { margin: 22px 0 0; max-width: 560px; font-size: 18px; line-height: 1.6; color: #3A414C; }
-.fr-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #0B7A34; }
+.fr-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #B01C1C; }
 .fr-eyebrow--red { color: #C9372E; }
-.fr-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.8s ease-out infinite; }
-.fr-eyebrow__sq { width: 7px; height: 7px; border-radius: 2px; background: #18E563; }
+.fr-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.8s ease-out infinite; }
+.fr-eyebrow__sq { width: 7px; height: 7px; border-radius: 2px; background: #FF3131; }
 
 .fr-btn { height: 48px; padding: 0 22px; display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; font-family: var(--pl-font); font-weight: 500; font-size: 15px; transition: all .2s; }
-.fr-btn--primary { background: #18E563; color: #0A0A0A; box-shadow: 0 12px 26px -12px rgba(24,229,99,.9); }
-.fr-btn--primary:hover { background: #14D35A; color: #0A0A0A; }
+.fr-btn--primary { background: #FF3131; color: #0A0A0A; box-shadow: 0 12px 26px -12px rgba(255, 49, 49,.9); }
+.fr-btn--primary:hover { background: #F23830; color: #0A0A0A; }
 .fr-btn--secondary { background: #fff; border: 1px solid var(--pl-line); color: #0A0A0A; }
 .fr-btn--secondary:hover { border-color: #C4CAC4; }
-.fr-btn--secondary span { color: #0B7A34; }
+.fr-btn--secondary span { color: #B01C1C; }
 
 /* hero */
 .fr-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
 .fr-hero__grid { position: absolute; inset: 0; background-image: linear-gradient(#EEF0EE 1px,transparent 1px),linear-gradient(90deg,#EEF0EE 1px,transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); pointer-events: none; }
-.fr-hero__glow { position: absolute; right: -10%; top: -20%; width: 720px; height: 620px; background: radial-gradient(closest-side,rgba(24,229,99,.14),transparent); pointer-events: none; }
+.fr-hero__glow { position: absolute; right: -10%; top: -20%; width: 720px; height: 620px; background: radial-gradient(closest-side,rgba(255, 49, 49,.14),transparent); pointer-events: none; }
 .fr-hero__inner { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: clamp(40px,5vw,64px); align-items: center; padding-top: clamp(48px,7vw,96px); padding-bottom: clamp(48px,6vw,80px); }
 .fr-crumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5A6373; margin-bottom: 24px; }
 .fr-crumb a { color: #5A6373; }
@@ -366,7 +362,7 @@ const faqs = [
 .fr-hero__btns { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
 .fr-hero__ticks { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .fr-tick { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #3A414C; }
-.fr-tick__ic { flex: none; width: 18px; height: 18px; border-radius: 50%; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+.fr-tick__ic { flex: none; width: 18px; height: 18px; border-radius: 50%; background: #E8FCEF; border: 1px solid #FFD6C8; color: #B01C1C; font-size: 10px; display: flex; align-items: center; justify-content: center; }
 
 .fr-hero__card-wrap { position: relative; min-width: 0; }
 .fr-card { background: #fff; border: 1px solid var(--pl-line); border-radius: 20px; box-shadow: 0 40px 80px -40px rgba(10,10,10,.28); overflow: hidden; }
@@ -374,8 +370,8 @@ const faqs = [
 .fr-dots { display: flex; gap: 5px; }
 .fr-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--pl-line); }
 .fr-card__title { font-size: 13px; font-weight: 500; color: #0A0A0A; }
-.fr-live { margin-left: auto; display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: #E8FCEF; border: 1px solid #BFF3D2; font-family: var(--pl-mono); font-size: 10px; color: #0B7A34; }
-.fr-live__dot { width: 6px; height: 6px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.6s infinite; }
+.fr-live { margin-left: auto; display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: #E8FCEF; border: 1px solid #FFD6C8; font-family: var(--pl-mono); font-size: 10px; color: #B01C1C; }
+.fr-live__dot { width: 6px; height: 6px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.6s infinite; }
 .fr-card__kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: #EEF0EE; border-bottom: 1px solid #EEF0EE; }
 .fr-card__kpis > div { background: #fff; padding: 12px 14px; display: flex; flex-direction: column; gap: 3px; }
 .fr-k { font-family: var(--pl-mono); font-size: 9px; letter-spacing: .06em; color: #6E7684; }
@@ -433,9 +429,9 @@ const faqs = [
 /* before & after */
 .fr-ba { margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .fr-ba__col { border: 1px solid var(--pl-line); border-radius: 20px; padding: 28px; background: #FBFBFA; }
-.fr-ba__col--after { border: 1.5px solid #18E563; background: #fff; box-shadow: 0 0 0 6px rgba(24,229,99,.08),0 30px 60px -40px rgba(11,122,52,.5); }
+.fr-ba__col--after { border: 1.5px solid #FF3131; background: #fff; box-shadow: 0 0 0 6px rgba(255, 49, 49,.08),0 30px 60px -40px rgba(200, 30, 30,.5); }
 .fr-ba__tag { height: 22px; padding: 0 10px; display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid var(--pl-line); background: #fff; font-family: var(--pl-mono); font-size: 10px; color: #5A6373; }
-.fr-ba__tag--on { background: #18E563; border-color: #18E563; color: #0A0A0A; }
+.fr-ba__tag--on { background: #FF3131; border-color: #FF3131; color: #0A0A0A; }
 .fr-ba__title { margin: 14px 0 0; font-family: var(--pl-font); font-size: 20px; font-weight: 600; letter-spacing: -.02em; color: #0A0A0A; }
 .fr-ba__meter { margin: 16px 0 0; display: flex; align-items: center; gap: 10px; }
 .fr-ba__meter-k { font-family: var(--pl-mono); font-size: 10px; color: #6E7684; }
@@ -445,12 +441,12 @@ const faqs = [
 .fr-ba__list { margin: 20px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
 .fr-ba__list li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.5; color: #0A0A0A; }
 .fr-ba__x { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #FDECEB; border: 1px solid #F5C6C3; color: #C9372E; font-size: 10px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-.fr-ba__check { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #18E563; color: #0A0A0A; font-size: 10px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.fr-ba__check { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #FF3131; color: #0A0A0A; font-size: 10px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
 
 /* features */
 .fr-feats { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,360px),1fr)); gap: 16px; }
 .fr-feat { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 28px; }
-.fr-feat__n { font-family: var(--pl-mono); font-size: 12px; color: #0B7A34; }
+.fr-feat__n { font-family: var(--pl-mono); font-size: 12px; color: #B01C1C; }
 .fr-feat__t { margin: 10px 0 0; font-family: var(--pl-font); font-size: 20px; font-weight: 600; letter-spacing: -.02em; color: #0A0A0A; }
 .fr-feat__d { margin: 10px 0 0; font-size: 15px; line-height: 1.55; color: #5A6373; }
 .fr-feat__list { margin: 18px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
@@ -477,7 +473,7 @@ const faqs = [
 .fr-scope__in { display: flex; justify-content: space-between; align-items: center; padding: 18px; }
 .fr-scope__k { font-size: 15px; color: #5A6373; }
 .fr-scope__v { font-family: var(--pl-font); font-size: 16px; font-weight: 600; color: #0A0A0A; }
-.fr-scope__cta { border: 1.5px solid #18E563; border-radius: 20px; background: #fff; padding: 32px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 0 0 6px rgba(24,229,99,.08); }
+.fr-scope__cta { border: 1.5px solid #FF3131; border-radius: 20px; background: #fff; padding: 32px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 0 0 6px rgba(255, 49, 49,.08); }
 .fr-scope__cta-t { font-family: var(--pl-font); font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: #0A0A0A; }
 .fr-scope__cta p { margin: 12px 0 20px; font-size: 15px; line-height: 1.55; color: #5A6373; }
 .fr-scope__cta .fr-btn { align-self: flex-start; }

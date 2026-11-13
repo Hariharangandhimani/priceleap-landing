@@ -150,7 +150,7 @@ const checks = [
 .lacc__head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; }
 .lacc__card { margin-top: 52px; background: #fff; border: 1px solid var(--pl-line); border-radius: 22px; overflow: hidden; box-shadow: 0 30px 60px -40px rgba(23,22,26,.25); }
 .lacc__bar { display: flex; align-items: center; gap: 12px; padding: 14px 22px; border-bottom: 1px solid var(--pl-line-soft); background: var(--pl-surface-2); flex-wrap: wrap; }
-.lacc__dot-live { width: 7px; height: 7px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.6s infinite; flex: none; }
+.lacc__dot-live { width: 7px; height: 7px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.6s infinite; flex: none; }
 .lacc__bar-label { font-size: 11px; letter-spacing: .1em; color: var(--pl-ink); }
 .lacc__bar-item { margin-left: auto; font-size: 11px; color: var(--pl-faint); }
 
@@ -162,7 +162,7 @@ const checks = [
 .lacc__steps { position: relative; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,210px),1fr)); gap: 28px 20px; }
 .lacc__step { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; }
 .lacc__ic { position: relative; width: 64px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; background: var(--pl-surface-2); border: 1px solid var(--pl-line); color: var(--pl-faint); transition: all .45s; }
-.lacc__step.is-active .lacc__ic { background: var(--pl-accent-tint); border-color: var(--pl-accent); color: var(--pl-accent-ink); box-shadow: 0 0 0 6px rgba(24,229,99,.08); }
+.lacc__step.is-active .lacc__ic { background: var(--pl-accent-tint); border-color: var(--pl-accent); color: var(--pl-accent-ink); box-shadow: 0 0 0 6px rgba(255, 49, 49,.08); }
 .lacc__step.is-done .lacc__ic { background: var(--pl-accent-tint); border-color: var(--pl-accent-line); color: var(--pl-accent-ink); }
 .lacc__badge { position: absolute; top: -8px; right: -8px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--pl-surface-2); border: 1px solid var(--pl-line); font-size: 10px; font-weight: 600; color: var(--pl-faint); display: flex; align-items: center; justify-content: center; transition: all .45s; }
 .lacc__step.is-done .lacc__badge { background: var(--pl-accent); border-color: var(--pl-accent); color: var(--pl-on-accent); font-size: 0; }
@@ -209,9 +209,9 @@ const checks = [
 .lacc__stat-val { display: block; margin-top: 8px; font-size: clamp(20px,2vw,26px); font-weight: 400; font-variant-numeric: tabular-nums; }
 
 /* SLA banner */
-.lacc__sla { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; background: #fff; border: 1px solid var(--pl-accent-line); border-radius: 16px; padding: 18px 22px; box-shadow: 0 14px 30px -20px rgba(24,229,99,.5); }
+.lacc__sla { margin-top: 12px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; background: #fff; border: 1px solid var(--pl-accent-line); border-radius: 16px; padding: 18px 22px; box-shadow: 0 14px 30px -20px rgba(255, 49, 49,.5); }
 .lacc__sla-left { display: flex; align-items: center; gap: 16px; }
-.lacc__sla-ic { width: 44px; height: 44px; flex: none; border-radius: 12px; background: linear-gradient(135deg,#18E563,#0fb04b); color: var(--pl-on-accent); font-size: 18px; display: flex; align-items: center; justify-content: center; }
+.lacc__sla-ic { width: 44px; height: 44px; flex: none; border-radius: 12px; background: linear-gradient(135deg,#FF3131,#EE2A22); color: var(--pl-on-accent); font-size: 18px; display: flex; align-items: center; justify-content: center; }
 .lacc__sla-text { font-size: 18px; font-weight: 500; }
 .lacc__sla-link { color: var(--pl-accent-ink); font-weight: 500; white-space: nowrap; }
 </style>

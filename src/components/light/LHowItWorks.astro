@@ -62,7 +62,7 @@ const steps = [
               <div class="lhow__index-preview">
                 <div class="lhow__index-row"><span class="mono lhow__index-n">105.4</span><span class="mono lhow__index-d">▼ 3.6%</span></div>
                 <div class="lhow__index-bars">
-                  {[40,55,48,62,58,70,66,80,74,88].map((h, k) => <span style={`height:${h}%;background:${k>=7?'#18E563':'#e4e2dc'}`}></span>)}
+                  {[40,55,48,62,58,70,66,80,74,88].map((h, k) => <span style={`height:${h}%;background:${k>=7?'#FF3131':'#e4e2dc'}`}></span>)}
                 </div>
               </div>
             </div>
@@ -115,9 +115,9 @@ const steps = [
 /* Progress header */
 .lhow__progbar { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 14px 22px; }
 .lhow__prog-label { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .12em; color: var(--pl-ink); }
-.lhow__prog-dot { width: 7px; height: 7px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.6s infinite; flex: none; }
+.lhow__prog-dot { width: 7px; height: 7px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.6s infinite; flex: none; }
 .lhow__prog-track { flex: 1; min-width: 160px; height: 4px; border-radius: 4px; background: var(--pl-line); }
-.lhow__prog-fill { height: 100%; border-radius: 4px; background: #18E563; transition: width .6s ease; }
+.lhow__prog-fill { height: 100%; border-radius: 4px; background: #FF3131; transition: width .6s ease; }
 .lhow__prog-note { font-size: 11px; color: var(--pl-faint); }
 
 /* Steps */
@@ -125,10 +125,10 @@ const steps = [
 .lhow__step { position: relative; font: inherit; color: inherit; text-align: left; border: none; background: var(--pl-surface-2); padding: 26px 22px 24px; display: flex; flex-direction: column; gap: 16px; cursor: pointer; transition: background .3s; }
 .lhow__step--on { background: #fff; }
 .lhow__accent-bar { position: absolute; left: 0; right: 0; top: 0; height: 2px; background: transparent; transition: background .3s; }
-.lhow__step--on .lhow__accent-bar { background: linear-gradient(90deg,#18E563,#0fb04b); }
+.lhow__step--on .lhow__accent-bar { background: linear-gradient(90deg,#FF3131,#EE2A22); }
 .lhow__step-top { display: flex; justify-content: space-between; align-items: center; }
 .lhow__num { width: 36px; height: 36px; border-radius: 50%; background: var(--pl-canvas); border: 1px solid var(--pl-line); color: var(--pl-faint); font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; transition: all .3s; }
-.lhow__step--on .lhow__num { background: #18E563; border-color: #18E563; color: var(--pl-on-accent); box-shadow: 0 4px 14px -4px rgba(24,229,99,.7); }
+.lhow__step--on .lhow__num { background: #FF3131; border-color: #FF3131; color: var(--pl-on-accent); box-shadow: 0 4px 14px -4px rgba(255, 49, 49,.7); }
 .lhow__day-tag { font-size: 10px; letter-spacing: .12em; padding: 3px 8px; border-radius: 5px; background: var(--pl-canvas); color: var(--pl-faint); transition: all .3s; }
 .lhow__step--on .lhow__day-tag { background: var(--pl-accent-tint); color: var(--pl-accent-ink); }
 .lhow__step-title { font-size: 19px; font-weight: 600; letter-spacing: -.01em; color: var(--pl-faint); transition: color .3s; }
@@ -139,30 +139,30 @@ const steps = [
 .lhow__preview { margin-top: auto; padding: 12px; border-radius: 12px; background: var(--pl-canvas); border: 1px dashed var(--pl-line); opacity: 0; transition: opacity .3s; }
 .lhow__step--on .lhow__preview { opacity: 1; }
 .lhow__preview-row { display: flex; align-items: center; gap: 7px; border: 1px solid var(--pl-line-soft); background: #fff; border-radius: 8px; padding: 7px 10px; font-size: 12px; margin-bottom: 6px; }
-.lhow__dot-sm { width: 6px; height: 6px; border-radius: 50%; background: #18E563; flex: none; }
+.lhow__dot-sm { width: 6px; height: 6px; border-radius: 50%; background: #FF3131; flex: none; }
 .lhow__preview-val { margin-left: auto; font-size: 10px; color: var(--pl-faint); }
 .lhow__match { display: grid; grid-template-columns: 1fr 26px 1fr; gap: 6px; align-items: center; }
 .lhow__match-card { border: 1px solid var(--pl-line-soft); background: #fff; border-radius: 8px; padding: 8px; font-size: 11px; line-height: 1.35; }
 .lhow__match-card--found { border-color: var(--pl-accent-line); }
 .lhow__match-sku { font-size: 9px; color: var(--pl-faint); }
-.lhow__match-conf { font-size: 9px; color: #0a8f3c; }
-.lhow__match-icon { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--pl-accent-line); background: var(--pl-accent-tint); color: #0a8f3c; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+.lhow__match-conf { font-size: 9px; color: #C81E1E; }
+.lhow__match-icon { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--pl-accent-line); background: var(--pl-accent-tint); color: #C81E1E; font-size: 11px; display: flex; align-items: center; justify-content: center; }
 .lhow__badges { display: flex; gap: 6px; margin-top: 8px; }
-.lhow__badges span { font-family: var(--pl-mono); font-size: 9px; letter-spacing: .08em; color: #0a8f3c; border: 1px solid var(--pl-accent-line); background: var(--pl-accent-tint); border-radius: 4px; padding: 2px 6px; }
+.lhow__badges span { font-family: var(--pl-mono); font-size: 9px; letter-spacing: .08em; color: #C81E1E; border: 1px solid var(--pl-accent-line); background: var(--pl-accent-tint); border-radius: 4px; padding: 2px 6px; }
 .lhow__index-preview { border: 1px solid var(--pl-line-soft); background: #fff; border-radius: 8px; padding: 10px; }
 .lhow__index-row { display: flex; justify-content: space-between; align-items: baseline; }
 .lhow__index-n { font-size: 20px; font-weight: 500; }
-.lhow__index-d { font-size: 9px; color: #0a8f3c; }
+.lhow__index-d { font-size: 9px; color: #C81E1E; }
 .lhow__index-bars { display: flex; align-items: flex-end; gap: 3px; height: 28px; margin-top: 8px; }
 .lhow__index-bars span { flex: 1; border-radius: 2px; }
 .lhow__rec { border: 1px solid var(--pl-accent-line); background: var(--pl-accent-tint); border-radius: 8px; padding: 10px; }
-.lhow__rec-label { font-size: 9px; letter-spacing: .1em; color: #0a8f3c; }
+.lhow__rec-label { font-size: 9px; letter-spacing: .1em; color: #C81E1E; }
 .lhow__rec-price { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; } .lhow__rec-price s { font-size: 11px; color: var(--pl-faint-2); } .lhow__rec-price b { font-size: 18px; font-weight: 500; }
-.lhow__rec-apply { display: inline-block; margin-top: 8px; background: #18E563; color: var(--pl-on-accent); font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 6px; }
+.lhow__rec-apply { display: inline-block; margin-top: 8px; background: #FF3131; color: var(--pl-on-accent); font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 6px; }
 
 /* Footer */
 .lhow__footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 18px 22px; }
 .lhow__footer span { font-size: 15px; color: #3a3940; }
-.lhow__cta { background: #18E563; color: var(--pl-on-accent); font-weight: 500; font-size: 15px; padding: 12px 20px; border-radius: 12px; box-shadow: 0 10px 24px -12px rgba(24,229,99,.8); white-space: nowrap; }
-.lhow__cta:hover { background: #14d159; color: var(--pl-on-accent); }
+.lhow__cta { background: #FF3131; color: var(--pl-on-accent); font-weight: 500; font-size: 15px; padding: 12px 20px; border-radius: 12px; box-shadow: 0 10px 24px -12px rgba(255, 49, 49,.8); white-space: nowrap; }
+.lhow__cta:hover { background: #EC2B2B; color: var(--pl-on-accent); }
 </style>

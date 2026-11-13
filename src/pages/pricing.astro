@@ -1,5 +1,5 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro';
+import SiteLayout from '@/layouts/SiteLayout.astro';
 import PageHero from '@/components/ui/PageHero.astro';
 import BillingToggle from '@/components/pricing/BillingToggle.astro';
 import PlanFinder from '@/components/pricing/PlanFinder.astro';
@@ -10,7 +10,7 @@ import CompareTable from '@/components/pricing/CompareTable.astro';
 import CTABanner from '@/components/sections/CTABanner.astro';
 import { freePlans, paidPlans, enterprisePlans } from '@/data/pricing';
 ---
-<BaseLayout title="Pricing | PriceLeap — pay for what you actually monitor" description="Simple, usage-based PriceLeap plans that scale with your catalog. Start free — no credit card required.">
+<SiteLayout title="Pricing | PriceLeap — pay for what you actually monitor" description="Simple, usage-based PriceLeap plans that scale with your catalog. Start free — no credit card required.">
   <PageHero pill="Pricing" lede="Simple, usage-based plans that scale with your catalog. Start free — no credit card required.">
     <span class="light">Pay for what you </span><span class="bold accent">actually monitor.</span>
     <div slot="after" style="margin-top:12px"><BillingToggle /></div>
@@ -34,7 +34,7 @@ import { freePlans, paidPlans, enterprisePlans } from '@/data/pricing';
 
   <CompareTable />
   <CTABanner size="md" title="Not sure which plan fits?" text="Book a 15-minute demo and we'll size it on your real catalog." secondary={{ label: 'Start free', href: '#free' }} />
-</BaseLayout>
+</SiteLayout>
 <style>
   .group { padding-top: 56px; scroll-margin-top: 80px; }
   .group__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }

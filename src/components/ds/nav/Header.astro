@@ -12,7 +12,7 @@ const shapes = ['sq','ci','di'];
         {DIRECT.map(d => <a class="nl" href={d.href}>{d.label}</a>)}
       </nav>
     </div>
-    <div class="right"><a class="signin" href="/login">Sign in</a><Button href="/demo" size="sm">Book a demo</Button>
+    <div class="right"><a class="signin" href="https://app.priceleap.ai">Sign in</a><Button href="/book-a-demo" size="sm">Book a demo</Button>
       <button class="burger" aria-label="Menu" aria-expanded="false" aria-controls="mobnav" data-burger><i></i><i></i><i></i></button></div>
   </div>
   {MENUS.map(m => (
@@ -30,7 +30,7 @@ const shapes = ['sq','ci','di'];
     <div class="seg" role="tablist">{MENUS.map((m, i) => <button role="tab" aria-selected={i===0 ? 'true' : 'false'} data-tab={m.key}>{m.label}</button>)}</div>
     {MENUS.map((m, i) => <div class="mpanel" data-panel={m.key} hidden={i!==0}><div class="pl-frame">{m.items.map((it, k) => <a href={it.href} class="mrow"><span class="mi-ic"><span class={'shape ' + shapes[k%3]}></span></span><span><b>{it.t}</b><small>{it.d}</small></span><span aria-hidden="true">›</span></a>)}</div></div>)}
     <div class="pl-frame two">{DIRECT.map(d => <a href={d.href} class="mrow">{d.label}<span>↗</span></a>)}</div>
-    <div class="mfoot"><Button href="/login" variant="secondary">Sign in</Button><Button href="/demo">Book a demo</Button></div>
+    <div class="mfoot"><Button href="https://app.priceleap.ai" variant="secondary">Sign in</Button><Button href="/book-a-demo">Book a demo</Button></div>
   </div>
 </header>
 <script>

@@ -1,5 +1,5 @@
 ---
-import BaseLayout from '@/layouts/BaseLayout.astro';
+import SiteLayout from '@/layouts/SiteLayout.astro';
 import Pill from '@/components/ui/Pill.astro';
 import Accordion from '@/components/ui/Accordion.astro';
 import DemoForm from '@/components/demo/DemoForm.astro';
@@ -7,7 +7,7 @@ import TrustStrip from '@/components/home/TrustStrip.astro';
 import Button from '@/components/ui/Button.astro';
 import { demoBenefits, demoSample, agenda, demoFaqs } from '@/data/demo';
 ---
-<BaseLayout title="Book a demo | PriceLeap Pricing Intelligence" description="See PriceLeap running on your products and competitors in a 15-minute demo. Free competitor price sample included.">
+<SiteLayout title="Book a demo | PriceLeap Pricing Intelligence" description="See PriceLeap running on your products and competitors in a 15-minute demo. Free competitor price sample included.">
   <section class="dh">
     <div class="bg-grid" aria-hidden="true"></div>
     <div class="container dh__grid">
@@ -16,7 +16,7 @@ import { demoBenefits, demoSample, agenda, demoFaqs } from '@/data/demo';
         <h1><span class="light">See your real competitor data — </span><span class="bold accent">before you buy.</span></h1>
         <p class="lede">We'll run PriceLeap on your products and competitors, live. You leave with a free price-gap sample — whether you sign up or not.</p>
       </div>
-      <div id="book" class="dh__form"><DemoForm /><p class="dh__privacy">We'll never share your data. <a href="#">Privacy policy</a></p></div>
+      <div id="book" class="dh__form"><DemoForm /><p class="dh__privacy">We'll never share your data. <a href="/privacy-policy">Privacy policy</a></p></div>
       <div class="dh__rest">
         <ul class="dh__benefits">{demoBenefits.map((b) => <li><span>✓</span><p><b>{b.t}</b> {b.d}</p></li>)}</ul>
         <div class="dh__sample" aria-hidden="true">
@@ -43,7 +43,7 @@ import { demoBenefits, demoSample, agenda, demoFaqs } from '@/data/demo';
     const bar = document.querySelector<HTMLElement>('[data-sticky-cta]'); const form = document.getElementById('book');
     if (bar && form && 'IntersectionObserver' in window) new IntersectionObserver(([e]) => bar.classList.toggle('is-on', !e.isIntersecting), { threshold: 0.15 }).observe(form);
   </script>
-</BaseLayout>
+</SiteLayout>
 <style>
   .dh { position: relative; }
   .dh__grid { position: relative; padding-block: clamp(32px, 6vw, 72px) clamp(48px, 7vw, 96px); display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "form" "rest"; gap: 28px clamp(32px, 5vw, 72px); align-items: start; }

@@ -1,5 +1,6 @@
 export const site = {
   name: 'PriceLeap',
+  url: 'https://priceleap.ai',
   title: 'Pricing Intelligence Software for E-commerce & Marketplaces | PriceLeap',
   description: 'PriceLeap gives e-commerce and marketplace teams real-time competitor price tracking, verified data accuracy, and dynamic pricing that protects every point of margin.',
   email: 'sales_team@priceleap.ai',

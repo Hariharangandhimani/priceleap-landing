@@ -1,5 +1,5 @@
 ---
-interface Props { label?: string; name: string; type?: string; placeholder?: string; error?: string; textarea?: boolean; required?: boolean; value?: string; disabled?: boolean }
+interface Props { label?: string; name: string; type?: 'text' | 'email' | 'url' | 'number' | 'search' | 'tel' | 'password'; placeholder?: string; error?: string; textarea?: boolean; required?: boolean; value?: string; disabled?: boolean }
 const { label, name, type='text', placeholder, error, textarea=false, required=false, value, disabled=false } = Astro.props;
 const id = 'f-' + name; const errId = id + '-err';
 ---

@@ -1,7 +1,7 @@
 ---
 import Button from '@/components/ds/ui/Button.astro';
 interface Props { variant?: 'centered'|'split'|'product'; pill?: string; title: string; accent?: string; lead?: string; primary?: { label: string; href: string }; secondary?: { label: string; href: string }; visualLabel?: string }
-const { variant='centered', pill, title, accent, lead, primary={ label: 'Book a demo', href: '/demo' }, secondary, visualLabel='product visual' } = Astro.props;
+const { variant='centered', pill, title, accent, lead, primary={ label: 'Book a demo', href: '/book-a-demo' }, secondary, visualLabel='product visual' } = Astro.props;
 ---
 <section class={'hero ' + variant}>
   {variant==='centered' && <div class="dots" aria-hidden="true"></div>}

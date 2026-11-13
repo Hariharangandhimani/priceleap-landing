@@ -4,9 +4,7 @@
  * shared light design system. Content ported 1:1 from dynamic-pricing-software.html.
  * [retailer] / X / Y placeholders kept verbatim.
  */
-import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
-import LHeader from '@/components/light/LHeader.astro';
-import LFooter from '@/components/light/LFooter.astro';
+import SiteLayout from '@/layouts/SiteLayout.astro';
 import SectionHeader from '@/components/ds/nav/SectionHeader.astro';
 import Tabs from '@/components/ds/nav/Tabs.astro';
 import FAQ from '@/components/ds/faq/FAQ.astro';
@@ -18,7 +16,7 @@ const signals = [
   { k: 'Competitor moved', v: '−4.0%', c: '#C9372E' },
   { k: 'Demand elasticity', v: 'Low', c: '#0A0A0A' },
   { k: 'Stock on hand', v: '142u', c: '#0A0A0A' },
-  { k: 'Margin floor', v: '32% ✓', c: '#0B7A34' },
+  { k: 'Margin floor', v: '32% ✓', c: '#B01C1C' },
 ];
 
 const latency = [
@@ -56,11 +54,11 @@ const elastic = [
   { n: 'Lumen Desk Lamp', el: 'Med', pos: 'Slow mover', flag: '− Trim', lvl: 2 },
   { n: 'Nimbus Speaker', el: 'Low', pos: 'Underpriced', flag: '+ Raise', lvl: 1 },
 ];
-const flagStyle = (f: string) => f.startsWith('+') ? { bg: '#E8FCEF', bc: '#BFF3D2', c: '#0B7A34' } : f.startsWith('−') ? { bg: '#FFF8EB', bc: '#F4DDAE', c: '#8A5A00' } : { bg: '#F4F5F4', bc: '#E6E8E6', c: '#3A414C' };
+const flagStyle = (f: string) => f.startsWith('+') ? { bg: '#E8FCEF', bc: '#FFD6C8', c: '#B01C1C' } : f.startsWith('−') ? { bg: '#FFF8EB', bc: '#F4DDAE', c: '#8A5A00' } : { bg: '#F4F5F4', bc: '#E6E8E6', c: '#3A414C' };
 
 const scenarioBars = [
-  { k: 'Revenue', v: '+1.1%', pct: 20, c: '#18E563', tc: '#0B7A34' },
-  { k: 'Margin', v: '+4.2%', pct: 48, c: '#18E563', tc: '#0B7A34' },
+  { k: 'Revenue', v: '+1.1%', pct: 20, c: '#FF3131', tc: '#B01C1C' },
+  { k: 'Margin', v: '+4.2%', pct: 48, c: '#FF3131', tc: '#B01C1C' },
   { k: 'Units', v: '−0.5%', pct: 8, c: '#E5483F', tc: '#C9372E' },
 ];
 
@@ -87,11 +85,10 @@ const faqs = [
 ];
 ---
 
-<LightBaseLayout
+<SiteLayout
   title="Dynamic Pricing Software · Price Decision Engine · PriceLeap"
   description="Set the right price for every SKU, across every store and channel — automatically, and with the reasoning visible before anything changes."
 >
-  <LHeader />
 
   <!-- ══ HERO ══ -->
   <section class="dp-hero">
@@ -243,9 +240,9 @@ const faqs = [
                 <div class="dp-elastic__row">
                   <span class="dp-elastic__n">{e.n}</span>
                   <span class="dp-elastic__bars">
-                    <i style={`background:${e.lvl >= 1 ? '#18E563' : '#E6E8E6'}`}></i>
-                    <i style={`background:${e.lvl >= 2 ? '#18E563' : '#E6E8E6'}`}></i>
-                    <i style={`background:${e.lvl >= 3 ? '#18E563' : '#E6E8E6'}`}></i>
+                    <i style={`background:${e.lvl >= 1 ? '#FF3131' : '#E6E8E6'}`}></i>
+                    <i style={`background:${e.lvl >= 2 ? '#FF3131' : '#E6E8E6'}`}></i>
+                    <i style={`background:${e.lvl >= 3 ? '#FF3131' : '#E6E8E6'}`}></i>
                   </span>
                   <span class="dp-elastic__pos">{e.pos}</span>
                   <span class="dp-elastic__flag" style={`background:${f.bg};border-color:${f.bc};color:${f.c}`}>{e.flag}</span>
@@ -286,7 +283,7 @@ const faqs = [
             <div class="dp-route__row" style={m.safe ? '' : 'background:#FFFDF7'}>
               <span class="dp-route__n">{m.n}</span>
               <span class="dp-route__d">{m.d}</span>
-              <span class="dp-route__tag" style={`background:${m.safe ? '#E8FCEF' : '#FFF8EB'};border-color:${m.safe ? '#BFF3D2' : '#F4DDAE'};color:${m.safe ? '#0B7A34' : '#8A5A00'}`}>{m.safe ? 'Auto' : 'Review'}</span>
+              <span class="dp-route__tag" style={`background:${m.safe ? '#E8FCEF' : '#FFF8EB'};border-color:${m.safe ? '#FFD6C8' : '#F4DDAE'};color:${m.safe ? '#B01C1C' : '#8A5A00'}`}>{m.safe ? 'Auto' : 'Review'}</span>
             </div>
           ))}
         </div>
@@ -312,7 +309,7 @@ const faqs = [
             <div class="dp-stack__row">
               <div class="dp-stack__meta"><b>{c.n}</b><small>{c.ch}</small></div>
               <span class="dp-stack__p">{c.p}</span>
-              <span class="dp-stack__s" style={`background:${c.s === 'Review' ? '#FFF8EB' : '#E8FCEF'};color:${c.s === 'Review' ? '#8A5A00' : '#0B7A34'}`}>{c.s}</span>
+              <span class="dp-stack__s" style={`background:${c.s === 'Review' ? '#FFF8EB' : '#E8FCEF'};color:${c.s === 'Review' ? '#8A5A00' : '#B01C1C'}`}>{c.s}</span>
             </div>
           ))}
         </div>
@@ -344,8 +341,7 @@ const faqs = [
     </div>
   </section>
 
-  <LFooter />
-</LightBaseLayout>
+</SiteLayout>
 
 <style>
 .dp-wrap { max-width: var(--pl-container); margin: 0 auto; padding-left: var(--pl-gutter); padding-right: var(--pl-gutter); }
@@ -354,20 +350,20 @@ const faqs = [
 .dp-h1 { margin: 24px 0 0; font-family: var(--pl-font); font-size: clamp(38px,5.4vw,68px); line-height: 1.02; letter-spacing: -.045em; color: #0A0A0A; text-wrap: balance; font-weight: 700; }
 .dp-h1 .w4 { font-weight: 400; }
 .dp-lead { margin: 22px 0 0; max-width: 560px; font-size: 18px; line-height: 1.6; color: #3A414C; }
-.dp-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #0B7A34; }
-.dp-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.8s ease-out infinite; }
+.dp-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #B01C1C; }
+.dp-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.8s ease-out infinite; }
 
 .dp-btn { height: 48px; padding: 0 22px; display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; font-family: var(--pl-font); font-weight: 500; font-size: 15px; transition: all .2s; }
-.dp-btn--primary { background: #18E563; color: #0A0A0A; box-shadow: 0 12px 26px -12px rgba(24,229,99,.9); }
-.dp-btn--primary:hover { background: #14D35A; color: #0A0A0A; }
+.dp-btn--primary { background: #FF3131; color: #0A0A0A; box-shadow: 0 12px 26px -12px rgba(255, 49, 49,.9); }
+.dp-btn--primary:hover { background: #F23830; color: #0A0A0A; }
 .dp-btn--secondary { background: #fff; border: 1px solid var(--pl-line); color: #0A0A0A; }
 .dp-btn--secondary:hover { border-color: #C4CAC4; }
-.dp-btn--secondary span { color: #0B7A34; }
+.dp-btn--secondary span { color: #B01C1C; }
 
 /* hero */
 .dp-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
 .dp-hero__grid { position: absolute; inset: 0; background-image: linear-gradient(#EEF0EE 1px,transparent 1px),linear-gradient(90deg,#EEF0EE 1px,transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); pointer-events: none; }
-.dp-hero__glow { position: absolute; right: -10%; top: -20%; width: 720px; height: 620px; background: radial-gradient(closest-side,rgba(24,229,99,.14),transparent); pointer-events: none; }
+.dp-hero__glow { position: absolute; right: -10%; top: -20%; width: 720px; height: 620px; background: radial-gradient(closest-side,rgba(255, 49, 49,.14),transparent); pointer-events: none; }
 .dp-hero__inner { position: relative; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: clamp(40px,5vw,64px); align-items: center; padding-top: clamp(48px,7vw,96px); padding-bottom: clamp(48px,6vw,80px); }
 .dp-crumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5A6373; margin-bottom: 24px; }
 .dp-crumb a { color: #5A6373; }
@@ -375,7 +371,7 @@ const faqs = [
 .dp-hero__btns { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
 .dp-hero__ticks { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .dp-tick { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #3A414C; }
-.dp-tick__ic { flex: none; width: 18px; height: 18px; border-radius: 50%; background: #E8FCEF; border: 1px solid #BFF3D2; color: #0B7A34; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+.dp-tick__ic { flex: none; width: 18px; height: 18px; border-radius: 50%; background: #E8FCEF; border: 1px solid #FFD6C8; color: #B01C1C; font-size: 10px; display: flex; align-items: center; justify-content: center; }
 
 .dp-hero__card-wrap { position: relative; min-width: 0; }
 .dp-card { background: #fff; border: 1px solid var(--pl-line); border-radius: 20px; box-shadow: 0 40px 80px -40px rgba(10,10,10,.28); overflow: hidden; }
@@ -383,8 +379,8 @@ const faqs = [
 .dp-dots { display: flex; gap: 5px; }
 .dp-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--pl-line); }
 .dp-card__title { font-size: 13px; font-weight: 500; color: #0A0A0A; }
-.dp-live { margin-left: auto; display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: #E8FCEF; border: 1px solid #BFF3D2; font-family: var(--pl-mono); font-size: 10px; color: #0B7A34; }
-.dp-live__dot { width: 6px; height: 6px; border-radius: 50%; background: #18E563; animation: pl-pulse 1.6s infinite; }
+.dp-live { margin-left: auto; display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: #E8FCEF; border: 1px solid #FFD6C8; font-family: var(--pl-mono); font-size: 10px; color: #B01C1C; }
+.dp-live__dot { width: 6px; height: 6px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.6s infinite; }
 .dp-card__signals { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #EEF0EE; border-bottom: 1px solid #EEF0EE; }
 .dp-signal { background: #fff; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
 .dp-signal__k { font-size: 13px; color: #5A6373; }
@@ -392,10 +388,10 @@ const faqs = [
 .dp-card__rec { padding: 18px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .dp-rec__lbl { display: block; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .06em; color: #6E7684; }
 .dp-rec__price { display: block; font-family: var(--pl-font); font-size: 32px; font-weight: 600; letter-spacing: -.03em; color: #0A0A0A; margin: 2px 0; }
-.dp-rec__note { font-family: var(--pl-mono); font-size: 10px; color: #0B7A34; }
+.dp-rec__note { font-family: var(--pl-mono); font-size: 10px; color: #B01C1C; }
 .dp-rec__actions { display: flex; flex-direction: column; gap: 8px; }
 .dp-rec__btn { height: 38px; padding: 0 18px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--pl-line); background: #fff; font-family: var(--pl-font); font-weight: 500; font-size: 13px; color: #0A0A0A; }
-.dp-rec__btn--primary { background: #18E563; border-color: #18E563; }
+.dp-rec__btn--primary { background: #FF3131; border-color: #FF3131; }
 .dp-card__foot { border-top: 1px solid #EEF0EE; background: #FBFBFA; padding: 10px 16px; font-family: var(--pl-mono); font-size: 11px; color: #6E7684; }
 
 /* logos */
@@ -425,20 +421,20 @@ const faqs = [
 /* pillars */
 .dp-pillars { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 16px; }
 .dp-pillar { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 28px; }
-.dp-pillar__n { font-family: var(--pl-mono); font-size: 12px; color: #0B7A34; }
+.dp-pillar__n { font-family: var(--pl-mono); font-size: 12px; color: #B01C1C; }
 .dp-pillar__t { margin: 10px 0 0; font-family: var(--pl-font); font-size: 19px; font-weight: 600; letter-spacing: -.01em; color: #0A0A0A; }
 .dp-pillar__d { margin: 10px 0 0; font-size: 15px; line-height: 1.55; color: #5A6373; }
 
 /* vs */
 .dp-vs { margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .dp-vs__col { border: 1px solid var(--pl-line); border-radius: 20px; padding: 28px; background: #FBFBFA; }
-.dp-vs__col--new { border: 1.5px solid #18E563; background: #fff; box-shadow: 0 0 0 6px rgba(24,229,99,.08),0 30px 60px -40px rgba(11,122,52,.5); }
+.dp-vs__col--new { border: 1.5px solid #FF3131; background: #fff; box-shadow: 0 0 0 6px rgba(255, 49, 49,.08),0 30px 60px -40px rgba(200, 30, 30,.5); }
 .dp-vs__tag { height: 24px; padding: 0 10px; display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid var(--pl-line); background: #fff; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .06em; color: #5A6373; }
-.dp-vs__tag--on { background: #18E563; border-color: #18E563; color: #0A0A0A; }
+.dp-vs__tag--on { background: #FF3131; border-color: #FF3131; color: #0A0A0A; }
 .dp-vs__col ul { margin: 20px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
 .dp-vs__col li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.5; color: #0A0A0A; }
 .dp-vs__x { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #FDECEB; border: 1px solid #F5C6C3; color: #C9372E; font-size: 10px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-.dp-vs__check { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #18E563; color: #0A0A0A; font-size: 10px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+.dp-vs__check { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #FF3131; color: #0A0A0A; font-size: 10px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
 
 /* how */
 .dp-how { margin-top: 48px; border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: clamp(20px,3vw,32px); }
@@ -457,16 +453,16 @@ const faqs = [
 .dp-elastic__flag { justify-self: end; height: 22px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: 6px; border: 1px solid; font-family: var(--pl-mono); font-size: 10px; }
 .dp-scen__tabs { display: inline-flex; gap: 4px; padding: 4px; border: 1px solid var(--pl-line); border-radius: 10px; background: #FBFBFA; margin-bottom: 18px; }
 .dp-scen__tab { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 7px; font-size: 12px; color: #5A6373; }
-.dp-scen__tab--on { background: #18E563; color: #0A0A0A; font-weight: 500; }
+.dp-scen__tab--on { background: #FF3131; color: #0A0A0A; font-weight: 500; }
 .dp-scen__price { font-family: var(--pl-font); font-size: 28px; font-weight: 600; letter-spacing: -.03em; color: #0A0A0A; display: flex; align-items: center; gap: 10px; }
-.dp-scen__rec { font-family: var(--pl-mono); font-size: 10px; color: #0B7A34; background: #E8FCEF; border: 1px solid #BFF3D2; border-radius: 6px; padding: 2px 8px; }
+.dp-scen__rec { font-family: var(--pl-mono); font-size: 10px; color: #B01C1C; background: #E8FCEF; border: 1px solid #FFD6C8; border-radius: 6px; padding: 2px 8px; }
 .dp-scen__bars { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
 .dp-scen__bar { display: grid; grid-template-columns: 70px 1fr 56px; gap: 10px; align-items: center; }
 .dp-scen__k { font-size: 12px; color: #5A6373; }
 .dp-scen__track { height: 8px; border-radius: 8px; background: #F4F5F4; overflow: hidden; }
 .dp-scen__track i { display: block; height: 100%; border-radius: 8px; }
 .dp-scen__v { font-family: var(--pl-mono); font-size: 12px; text-align: right; }
-.dp-scen__note { margin: 16px 0 0; font-size: 13px; line-height: 1.55; color: #0B7A34; background: #E8FCEF; border-radius: 10px; padding: 12px 14px; }
+.dp-scen__note { margin: 16px 0 0; font-size: 13px; line-height: 1.55; color: #B01C1C; background: #E8FCEF; border-radius: 10px; padding: 12px 14px; }
 .dp-route { margin-top: 16px; border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 24px; }
 .dp-route__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .dp-route__thr { font-family: var(--pl-mono); font-size: 11px; color: #5A6373; border: 1px solid var(--pl-line); border-radius: 999px; padding: 3px 10px; }

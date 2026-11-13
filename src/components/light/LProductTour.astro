@@ -7,7 +7,7 @@ const tabs = [
   { n:'04', t:'Ask the Agent', d:'Plain-English answers on prices, rivals and alerts.', title:'PriceLeap Agent', sub:'Online · grounded in your live catalog data' },
 ];
 const feed = [
-  { time:'09:42', type:'PRICE DROP', color:'#0a8f3c', text:'Retailer B cut 14 audio SKUs by avg 3.1%', delta:'−3.1%' },
+  { time:'09:42', type:'PRICE DROP', color:'#C81E1E', text:'Retailer B cut 14 audio SKUs by avg 3.1%', delta:'−3.1%' },
   { time:'09:18', type:'OUT OF STOCK', color:'#e08a00', text:'D2C store C out of stock on Smart Fitness Watch 46mm', delta:'OOS' },
   { time:'08:55', type:'PROMOTION', color:'#a09fa6', text:'Marketplace D launched 20% off campaign on speakers', delta:'20% off' },
   { time:'08:31', type:'MAP ALERT', color:'#e5484d', text:'Seller 2841 listed 8.0% below MAP on Marketplace A', delta:'−8.0%' },
@@ -174,13 +174,13 @@ const feed = [
 .ltour__head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0; }
 .ltour__tabs { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,200px),1fr)); gap: 12px; margin-top: 52px; }
 .ltour__tab { position: relative; text-align: left; font: inherit; background: #fff; border: 1px solid var(--pl-line); border-radius: 16px; padding: 20px 20px 22px; cursor: pointer; overflow: hidden; transition: border-color .3s, box-shadow .3s; display: flex; flex-direction: column; gap: 0; }
-.ltour__tab--on { border-color: var(--pl-accent); box-shadow: 0 8px 24px -12px rgba(24,229,99,.4); }
+.ltour__tab--on { border-color: var(--pl-accent); box-shadow: 0 8px 24px -12px rgba(255, 49, 49,.4); }
 .ltour__tab-top { display: flex; align-items: center; gap: 10px; }
 .ltour__num { font-size: 11px; color: var(--pl-faint-2); }
 .ltour__num--on { color: var(--pl-accent-ink); }
 .ltour__tab-title { font-size: 17px; font-weight: 500; color: var(--pl-ink); }
 .ltour__tab-desc { margin-top: 10px; font-size: 14px; line-height: 1.5; color: var(--pl-muted); }
-.ltour__fill { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: linear-gradient(90deg,#18E563,#0fb04b); }
+.ltour__fill { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: linear-gradient(90deg,#FF3131,#EE2A22); }
 .ltour__tab--on .ltour__fill { width: 100%; transition: width 7s linear; }
 
 /* Window */
@@ -201,7 +201,7 @@ const feed = [
 .ltour__subtab--on { color: var(--pl-accent-ink); border-bottom: 2px solid var(--pl-accent); margin-bottom: -1px; font-weight: 500; }
 .ltour__urls { background: var(--pl-surface-2); border: 1px solid var(--pl-line-soft); border-radius: 14px; padding: 20px 22px; font-size: 14px; line-height: 2; }
 .ltour__urls-hint { color: var(--pl-faint-2); }
-.ltour__caret { display: inline-block; width: 9px; height: 18px; background: #18E563; vertical-align: -2px; animation: ltblink 1s steps(1) infinite; margin-top: 4px; }
+.ltour__caret { display: inline-block; width: 9px; height: 18px; background: #FF3131; vertical-align: -2px; animation: ltblink 1s steps(1) infinite; margin-top: 4px; }
 .ltour__track-opts { border: 1px solid var(--pl-line-soft); border-radius: 14px; padding: 20px 22px; }
 .ltour__track-title { font-size: 16px; font-weight: 600; }
 .ltour__track-sub { font-size: 14px; color: var(--pl-muted); margin-top: 4px; }
@@ -211,7 +211,7 @@ const feed = [
 .ltour__opt-row { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; }
 .ltour__opt p { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: var(--pl-muted); }
 .ltour__radio { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #c9c7c0; flex: none; }
-.ltour__radio--on { border: 5px solid #18E563; background: #fff; }
+.ltour__radio--on { border: 5px solid #FF3131; background: #fff; }
 .ltour__opt-tag { font-size: 10px; letter-spacing: .08em; margin-left: auto; border: 1px solid var(--pl-accent-line); color: var(--pl-accent-ink); background: #fff; border-radius: 5px; padding: 2px 6px; white-space: nowrap; }
 .ltour__opt-tag--muted { border-color: var(--pl-line-soft); color: var(--pl-faint); }
 
@@ -233,7 +233,7 @@ const feed = [
 .ltour__rec-price { display: flex; align-items: baseline; gap: 12px; margin-top: 10px; } .ltour__rec-price s { font-size: 16px; color: var(--pl-faint-2); } .ltour__rec-price b { font-size: 40px; font-weight: 500; letter-spacing: -.02em; }
 .ltour__rec-note { font-size: 14px; color: var(--pl-muted); }
 .ltour__rec-btns { display: flex; gap: 8px; margin-top: 10px; }
-.ltour__rec-apply { background: #18E563; color: #0b1f12; font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: 9px; cursor: pointer; }
+.ltour__rec-apply { background: #FF3131; color: #fff; font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: 9px; cursor: pointer; }
 .ltour__rec-edit { border: 1px solid var(--pl-line-soft); background: #fff; font-size: 13px; padding: 8px 14px; border-radius: 9px; cursor: pointer; }
 
 /* Tab 3 */
@@ -241,9 +241,9 @@ const feed = [
 .ltour__msg-agent { background: #fff; border: 1px solid var(--pl-line-soft); border-radius: 14px 14px 14px 4px; padding: 16px 18px; font-size: 15px; line-height: 1.6; max-width: 600px; }
 .ltour__agent-label { font-size: 10px; letter-spacing: .12em; color: var(--pl-accent-ink); margin-bottom: 6px; }
 .ltour__chat-btns { display: flex; gap: 8px; margin-top: 12px; }
-.ltour__chat-cta { background: #18E563; color: #0b1f12; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.ltour__chat-cta { background: #FF3131; color: #fff; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
 .ltour__chat-ghost { border: 1px solid var(--pl-line-soft); font-size: 12px; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
 .ltour__msg-user { align-self: flex-end; background: #e3fbec; border: 1px solid var(--pl-accent-line); border-radius: 14px 14px 4px 14px; padding: 12px 16px; font-size: 15px; max-width: 80%; }
 .ltour__chat-input { display: flex; align-items: center; gap: 10px; border: 1px solid var(--pl-line-soft); border-radius: 12px; padding: 12px 16px; color: var(--pl-faint-2); font-size: 14px; }
-.ltour__chat-send { margin-left: auto; width: 28px; height: 28px; border-radius: 8px; background: #18E563; color: #0b1f12; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.ltour__chat-send { margin-left: auto; width: 28px; height: 28px; border-radius: 8px; background: #FF3131; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
 </style>

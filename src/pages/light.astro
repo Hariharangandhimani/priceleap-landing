@@ -1,7 +1,6 @@
 ---
-import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
+import SiteLayout from '@/layouts/SiteLayout.astro';
 import LAnnouncement from '@/components/light/LAnnouncement.astro';
-import LHeader from '@/components/light/LHeader.astro';
 import LHero from '@/components/light/LHero.astro';
 import LDashboard from '@/components/light/LDashboard.astro';
 import LTrusted from '@/components/light/LTrusted.astro';
@@ -13,13 +12,11 @@ import LHowItWorks from '@/components/light/LHowItWorks.astro';
 import LIntegrations from '@/components/light/LIntegrations.astro';
 import LResults from '@/components/light/LResults.astro';
 import LCTA from '@/components/light/LCTA.astro';
-import LFooter from '@/components/light/LFooter.astro';
 ---
-<LightBaseLayout
+<SiteLayout
   title="Pricing Intelligence Software for E-commerce & Marketplaces | PriceLeap"
   description="PriceLeap gives e-commerce and marketplace teams real-time competitor price tracking, verified data accuracy, and dynamic pricing that protects every point of margin."
 >
-  <link rel="canonical" href="https://priceleap.ai/" slot="head" />
   <LAnnouncement
     slot="before-header"
     text="PriceLeap Agent answers pricing questions in plain English, right inside your dashboard."
@@ -27,7 +24,6 @@ import LFooter from '@/components/light/LFooter.astro';
     href="#product"
   />
 
-  <LHeader />
   <LHero />
   <LDashboard />
   <LTrusted />
@@ -39,5 +35,4 @@ import LFooter from '@/components/light/LFooter.astro';
   <LIntegrations />
   <LResults />
   <LCTA id="demo" />
-  <LFooter />
-</LightBaseLayout>
+</SiteLayout>

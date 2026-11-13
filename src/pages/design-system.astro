@@ -3,9 +3,7 @@
  * PriceLeap Design System — complete component library page
  * All 54 components displayed with live examples and props documentation
  */
-import LightBaseLayout from '@/layouts/LightBaseLayout.astro';
-import LHeader from '@/components/light/LHeader.astro';
-import LFooter from '@/components/light/LFooter.astro';
+import SiteLayout from '@/layouts/SiteLayout.astro';
 
 // ── Design system components ──
 // UI primitives
@@ -91,11 +89,11 @@ const navSections = [
 ];
 
 const sampleTestimonials = [
-  { ini:'DM', role:'Head of Pricing', industry:'Consumer Electronics', stat:'+28%', statLabel:'REVENUE LIFT · Q1',
+  { initials:'DM', role:'Head of Pricing', industry:'Consumer Electronics', stat:'+28%', statLabel:'REVENUE LIFT · Q1',
     quote:'PriceLeap gave us competitor data we finally trust. We stopped guessing and started winning on margin.' },
-  { ini:'SR', role:'Category Manager', industry:'Marketplace Seller', stat:'90%+', statLabel:'BUY BOX WIN RATE',
+  { initials:'SR', role:'Category Manager', industry:'Marketplace Seller', stat:'90%+', statLabel:'BUY BOX WIN RATE',
     quote:'The accuracy is genuinely different. Human QC on every match means we can automate without fear.' },
-  { ini:'AK', role:'VP Commerce', industry:'D2C Brand', stat:'80%', statLabel:'TIME SAVED ON CHECKS',
+  { initials:'AK', role:'VP Commerce', industry:'D2C Brand', stat:'80%', statLabel:'TIME SAVED ON CHECKS',
     quote:'Setup took a week. Our pricing team now acts on live data instead of spreadsheets.' },
 ];
 
@@ -148,14 +146,14 @@ const sampleIntegrations = [
   { name:'Snowflake',logo:'/assets/logos/snowflake.svg',api:'DATA SHARE', connected:false },
 ];
 
-const tokens = {
+const tokens: Record<string, { name: string; hex: string; role: string; border?: string }[]> = {
   brand: [
-    { name:'Velocity Green',  hex:'#18E563', role:'CTAs, live states, accent' },
-    { name:'Green Hover',     hex:'#14d159', role:'Button hover' },
-    { name:'Green Ink',       hex:'#0a8f3c', role:'Gradient text, links' },
-    { name:'Green Tint',      hex:'#effdf4', role:'Accent backgrounds' },
-    { name:'On Accent',       hex:'#0b1f12', role:'Text on green' },
-    { name:'Green Line',      hex:'#b4f2c9', role:'Accent borders' },
+    { name:'Velocity Green',  hex:'#FF3131', role:'CTAs, live states, accent' },
+    { name:'Green Hover',     hex:'#EC2B2B', role:'Button hover' },
+    { name:'Green Ink',       hex:'#C81E1E', role:'Gradient text, links' },
+    { name:'Green Tint',      hex:'#FFF1EC', role:'Accent backgrounds' },
+    { name:'On Accent',       hex:'#ffffff', role:'Text on accent' },
+    { name:'Green Line',      hex:'#FFCDBE', role:'Accent borders' },
   ],
   neutrals: [
     { name:'Ink',        hex:'#17161a', role:'Headings, primary text' },
@@ -176,8 +174,7 @@ const tokens = {
 };
 ---
 
-<LightBaseLayout title="PriceLeap Design System v2 — All 54 Components">
-  <LHeader />
+<SiteLayout title="PriceLeap Design System v2 — All 54 Components">
 
   <!-- ── Hero ── -->
   <section class="ds-hero">
@@ -187,7 +184,7 @@ const tokens = {
       <h1>One system for every <br /><b class="ds-grad">PriceLeap page.</b></h1>
       <p>54 reusable Astro components, 7 CSS token files, vanilla JS helpers. Every block on this page is a real, importable component — no stubs, no placeholders.</p>
       <div class="ds-hero-chips">
-        <span><span class="ds-chip-sq"></span>#18E563 · Velocity Green</span>
+        <span><span class="ds-chip-sq"></span>#FF3131 · Velocity Green</span>
         <span>Geist · Inter · Geist Mono</span>
         <span>54 components</span>
         <span>7 style files</span>
@@ -223,7 +220,7 @@ const tokens = {
           <span class="ds-sec-n mono">01</span>
           <h2>Design Tokens</h2>
         </div>
-        <p class="ds-sec-desc">Single source of truth in <code>src/styles/tokens.css</code>. Import once in <code>LightBaseLayout</code> — every component inherits <code>--pl-*</code> variables automatically.</p>
+        <p class="ds-sec-desc">Single source of truth in <code>src/styles/tokens.css</code>. Import once in <code>SiteLayout</code> — every component inherits <code>--pl-*</code> variables automatically.</p>
 
         {[
           { label: 'Brand', swatches: tokens.brand },
@@ -246,7 +243,7 @@ const tokens = {
         ))}
 
         <div class="ds-token-files">
-          {['tokens.css','animations.css','primitives.css','global.css','light.css','dialog.css','toast.css'].map(f => (
+          {['app.css','tokens.css','animations.css','primitives.css','dialog.css','toast.css'].map(f => (
             <div class="ds-token-file">
               <span class="ds-file-dot"></span>
               <code>{f}</code>
@@ -276,7 +273,7 @@ const tokens = {
               <Button href="/book-a-demo">Book a demo</Button>
               <Button variant="secondary">Secondary</Button>
               <Button variant="ghost">Ghost</Button>
-              <Button variant="link" href="#">Learn more</Button>
+              <Button variant="link" href="/price-intelligence-engine">Learn more</Button>
               <Button variant="danger">Delete</Button>
             </div>
             <div class="ds-row" style="margin-top:20px"><h4>Sizes</h4></div>
@@ -371,8 +368,8 @@ const tokens = {
         <div class="ds-block">
           <div class="ds-block-head"><h3>AnnouncementBar</h3><code>&lt;AnnouncementBar tag text href cta variant /&gt;</code></div>
           <div class="ds-card" style="padding:0;overflow:hidden">
-            <AnnouncementBar text="PriceLeap Agent answers pricing questions in plain English." href="#" cta="See it in action →" variant="dark" />
-            <AnnouncementBar tag="UPDATE" text="ISO 27001 certification renewed for 2026–2027." href="#" cta="Read more →" variant="tint" />
+            <AnnouncementBar text="PriceLeap Agent answers pricing questions in plain English." href="/book-a-demo" cta="See it in action →" variant="dark" />
+            <AnnouncementBar tag="UPDATE" text="ISO 27001 certification renewed for 2026–2027." href="/about" cta="Read more →" variant="tint" />
           </div>
         </div>
 
@@ -380,8 +377,8 @@ const tokens = {
         <div class="ds-block">
           <div class="ds-block-head"><h3>Breadcrumbs</h3><code>&lt;Breadcrumbs items variant /&gt;</code></div>
           <div class="ds-card" style="display:flex;flex-direction:column;gap:16px">
-            <Breadcrumbs items={[{label:'Home',href:'/'},{label:'Product',href:'/product'},{label:'Price Intelligence'}]} variant="text" />
-            <Breadcrumbs items={[{label:'Home',href:'/'},{label:'Blog',href:'/blog'},{label:'How to Win the Buy Box'}]} variant="chips" />
+              <Breadcrumbs items={[{label:'Home',href:'/'},{label:'Product',href:'/price-intelligence-engine'},{label:'Price Intelligence'}]} variant="text" />
+              <Breadcrumbs items={[{label:'Home',href:'/'},{label:'Design system',href:'/design-system'},{label:'How to Win the Buy Box'}]} variant="chips" />
           </div>
         </div>
 
@@ -434,8 +431,8 @@ const tokens = {
               <Dropdown label="Resources" options={['How it works','Data accuracy','Integrations','API docs']} name="dd1" />
               <Dropdown label="Sort by" options={['Newest first','Most popular','Alphabetical']} name="dd2" />
             </div>
-            <Pagination current={3} total={12} base="/blog" variant="numbered" />
-            <Pagination current={3} total={12} base="/blog" variant="prev-next" />
+            <Pagination current={3} total={12} base="/design-system#blog" variant="numbered" />
+            <Pagination current={3} total={12} base="/design-system#blog" variant="prev-next" />
           </div>
         </div>
 
@@ -594,8 +591,8 @@ const tokens = {
           <div class="ds-block-head"><h3>DownloadCard</h3><code>&lt;DownloadCard title desc kind meta href /&gt;</code></div>
           <div class="ds-card">
             <div class="ds-grid2">
-              <DownloadCard title="Pricing Team Setup Guide" desc="Connect your catalog, set rules and go live in 5 days." kind="GUIDE" meta="PDF · 18 pages · 2.4 MB" href="#" />
-              <DownloadCard title="MAP Compliance Checklist" desc="Everything you need to audit your channel compliance." kind="CHECKLIST" meta="PDF · 4 pages · 340 KB" href="#" />
+              <DownloadCard title="Pricing Team Setup Guide" desc="Connect your catalog, set rules and go live in 5 days." kind="GUIDE" meta="Talk to a specialist" href="/book-a-demo" />
+              <DownloadCard title="MAP Compliance Checklist" desc="Everything you need to audit your channel compliance." kind="CHECKLIST" meta="Talk to a specialist" href="/book-a-demo" />
             </div>
           </div>
         </div>
@@ -668,8 +665,8 @@ const tokens = {
           <div class="ds-block-head"><h3>CaseStudyCard</h3><code>&lt;CaseStudyCard industry metric label href /&gt;</code></div>
           <div class="ds-card">
             <div class="ds-grid2">
-              <CaseStudyCard industry="Consumer Electronics" metric="+28%" label="Revenue lift in Q1 after switching to automated repricing." href="#" />
-              <CaseStudyCard industry="Marketplace Seller" metric="90%+" label="Buy Box win rate in 6 weeks using PriceLeap's decision engine." href="#" />
+          <CaseStudyCard industry="Consumer Electronics" metric="+28%" label="Revenue lift in Q1 after switching to automated repricing." href="/about" />
+          <CaseStudyCard industry="Marketplace Seller" metric="90%+" label="Buy Box win rate in 6 weeks using PriceLeap's decision engine." href="/about" />
             </div>
           </div>
         </div>
@@ -827,7 +824,7 @@ const tokens = {
         <div class="ds-block">
           <div class="ds-block-head"><h3>ShareBar · RelatedResources</h3></div>
           <div class="ds-card" style="display:flex;flex-direction:column;gap:20px">
-            <ShareBar url="https://priceleap.ai/blog/win-buy-box" title="How to Win the Buy Box Without Sacrificing Margin" />
+          <ShareBar url="https://priceleap.ai/design-system#blog" title="How to Win the Buy Box Without Sacrificing Margin" />
             <div class="ds-divider"></div>
             <RelatedResources items={[
               { kind:'GUIDE', title:'The Pricing Team Setup Guide', meta:'PDF · 18 pages', href:'#' },
@@ -971,7 +968,7 @@ const tokens = {
                 <div class="ds-carousel-stat">{t.stat}</div>
                 <div class="mono ds-carousel-stat-lbl">{t.statLabel}</div>
                 <blockquote>"{t.quote}"</blockquote>
-                <div class="ds-carousel-author"><span class="ds-carousel-av">{t.ini}</span><span>{t.role} · {t.industry}</span></div>
+                <div class="ds-carousel-author"><span class="ds-carousel-av">{t.initials}</span><span>{t.role} · {t.industry}</span></div>
               </div>
             ))}
           </Carousel>
@@ -994,7 +991,7 @@ const tokens = {
             { lbl:'Heading 3', spec:'Geist 600 · 22px · −2%', txt:'Real-time competitor price tracking', style:'font-size:22px;line-height:1.3;letter-spacing:-.02em;font-weight:600;font-family:Geist,sans-serif' },
             { lbl:'Body Large', spec:'Inter 400 · 18px · 1.6', txt:'PriceLeap gives e-commerce and marketplace teams real-time competitor price tracking and verified data accuracy.', style:'font-size:18px;line-height:1.6;color:#6b6a70;font-family:Inter,sans-serif' },
             { lbl:'Body', spec:'Inter 400 · 15px · 1.6', txt:'Set rules or let AI recommend the optimal price for every product, balancing competitiveness and margin automatically.', style:'font-size:15px;line-height:1.6;color:#6b6a70;font-family:Inter,sans-serif' },
-            { lbl:'Label / Mono', spec:'Geist Mono 500 · 11px · +10%', txt:'CORE CAPABILITIES · ₹24,480 ▼ −2.0%', style:'font-family:Geist Mono,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#0a8f3c' },
+            { lbl:'Label / Mono', spec:'Geist Mono 500 · 11px · +10%', txt:'CORE CAPABILITIES · ₹24,480 ▼ −2.0%', style:'font-family:Geist Mono,monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#C81E1E' },
           ].map(t => (
             <div class="ds-type-row">
               <div class="ds-type-meta"><div class="mono" style="font-size:12px;color:#17161a">{t.lbl}</div><div class="mono ds-type-spec">{t.spec}</div></div>
@@ -1055,7 +1052,7 @@ const tokens = {
       accent="today."
       bullets={[
         '54 reusable Astro components',
-        '7 CSS token files — one import in BaseLayout',
+        'Tailwind entrypoint + shared CSS tokens — one import in SiteLayout',
         'Vanilla JS helpers bundled in ui.ts',
         'All components support --pl-* token overrides',
         'Mobile responsive out of the box',
@@ -1065,25 +1062,24 @@ const tokens = {
     />
   </div>
 
-  <LFooter />
-</LightBaseLayout>
+</SiteLayout>
 
 <style>
 /* ── Page shell ── */
 .ds-hero { position:relative; padding:clamp(56px,7vw,96px) var(--pl-gutter) 32px; overflow:hidden; max-width:var(--pl-container); margin:0 auto; border-bottom:1px solid var(--pl-line); }
 .ds-hero-dots { position:absolute; inset:0 -56px; background-image:linear-gradient(#eef0ee 1px,transparent 1px),linear-gradient(90deg,#eef0ee 1px,transparent 1px); background-size:48px 48px; -webkit-mask-image:radial-gradient(ellipse 60% 80% at 70% 30%,#000 10%,transparent 70%); mask-image:radial-gradient(ellipse 60% 80% at 70% 30%,#000 10%,transparent 70%); pointer-events:none; }
 .ds-hero-copy { position:relative; max-width:840px; }
-.ds-live-pill { display:inline-flex; align-items:center; gap:8px; font-family:var(--pl-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:#0b7a34; }
-.ds-live-dot { width:7px; height:7px; border-radius:50%; background:#18E563; animation:pl-pulse 1.8s ease-out infinite; flex:none; }
+.ds-live-pill { display:inline-flex; align-items:center; gap:8px; font-family:var(--pl-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:#B01C1C; }
+.ds-live-dot { width:7px; height:7px; border-radius:50%; background:#FF3131; animation:pl-pulse 1.8s ease-out infinite; flex:none; }
 .ds-hero-copy h1 { margin:20px 0 0; font-family:var(--pl-font); font-size:clamp(40px,5.5vw,72px); line-height:1.02; letter-spacing:-.045em; color:#0a0a0a; text-wrap:balance; }
 .ds-grad { background:var(--pl-grad-text); -webkit-background-clip:text; background-clip:text; color:transparent; }
 .ds-hero-copy p { margin:22px 0 0; font-size:18px; line-height:1.6; color:#3a414c; max-width:640px; }
 .ds-hero-chips { margin-top:24px; display:flex; flex-wrap:wrap; gap:8px; }
 .ds-hero-chips span { height:30px; padding:0 12px; display:inline-flex; align-items:center; gap:8px; border:1px solid #e6e8e6; border-radius:999px; background:#fff; font-size:13px; color:#3a414c; }
-.ds-chip-sq { width:10px; height:10px; border-radius:3px; background:#18E563; flex:none; }
+.ds-chip-sq { width:10px; height:10px; border-radius:3px; background:#FF3131; flex:none; }
 .ds-hero-btns { margin-top:28px; display:flex; gap:12px; flex-wrap:wrap; }
-.ds-btn-primary { display:inline-flex; align-items:center; height:48px; padding:0 22px; border-radius:12px; background:#18E563; color:#0b1f12; font-family:var(--pl-font); font-weight:600; font-size:15px; box-shadow:0 10px 24px -12px rgba(24,229,99,.8); transition:background .2s; }
-.ds-btn-primary:hover { background:#14d159; color:#0b1f12; }
+.ds-btn-primary { display:inline-flex; align-items:center; height:48px; padding:0 22px; border-radius:12px; background:#FF3131; color:#fff; font-family:var(--pl-font); font-weight:600; font-size:15px; box-shadow:0 10px 24px -12px rgba(255, 49, 49,.8); transition:background .2s; }
+.ds-btn-primary:hover { background:#EC2B2B; color:#fff; }
 .ds-btn-secondary { display:inline-flex; align-items:center; height:48px; padding:0 20px; border-radius:12px; border:1px solid #d5d9d5; background:#fff; color:#0a0a0a; font-family:var(--pl-font); font-weight:500; font-size:15px; transition:border-color .2s; }
 .ds-btn-secondary:hover { border-color:#0a0a0a; color:#0a0a0a; }
 
@@ -1102,7 +1098,7 @@ const tokens = {
 .ds-sec { padding-top:72px; }
 .ds-sec-head { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
 .ds-sec-head h2 { margin:0; font-size:clamp(26px,3vw,40px); font-weight:600; letter-spacing:-.03em; }
-.ds-sec-n { font-family:var(--pl-mono); font-size:12px; letter-spacing:.1em; color:#0b7a34; }
+.ds-sec-n { font-family:var(--pl-mono); font-size:12px; letter-spacing:.1em; color:#B01C1C; }
 .ds-sec-desc { font-size:16px; line-height:1.6; color:#3a414c; max-width:680px; margin:0 0 32px; }
 .ds-sec-desc code { font-family:var(--pl-mono); font-size:13px; background:#f4f5f4; border:1px solid #e6e8e6; border-radius:5px; padding:1px 6px; }
 .ds-divider { height:1px; background:var(--pl-line); margin:56px 0 0; }
@@ -1135,7 +1131,7 @@ const tokens = {
 .ds-swatch-role { font-size:11px; line-height:1.4; color:#5a6373; }
 .ds-token-files { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px; padding-top:20px; border-top:1px solid #eef0ee; }
 .ds-token-file { display:flex; align-items:center; gap:8px; border:1px solid #e6e8e6; border-radius:8px; padding:8px 12px; background:#fff; }
-.ds-file-dot { width:8px; height:8px; border-radius:50%; background:#18E563; flex:none; }
+.ds-file-dot { width:8px; height:8px; border-radius:50%; background:#FF3131; flex:none; }
 .ds-token-file code { font-family:var(--pl-mono); font-size:12px; color:#0a0a0a; }
 
 /* Trigger buttons for overlays */
@@ -1163,14 +1159,14 @@ const tokens = {
 .ds-anim-row { display:flex; align-items:center; gap:20px; }
 .ds-anim-row > span:first-child { font-size:15px; font-weight:500; color:#0a0a0a; min-width:72px; }
 .ds-anim-row code { font-family:var(--pl-mono); font-size:12px; color:#5a6373; }
-.ds-pulse-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#18E563; animation:pl-pulse 1.8s ease-out infinite; }
-.ds-spin-demo { display:inline-block; width:16px; height:16px; border-radius:50%; border:2.5px solid #e4e2dc; border-top-color:#18E563; animation:pl-spin .8s linear infinite; }
+.ds-pulse-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#FF3131; animation:pl-pulse 1.8s ease-out infinite; }
+.ds-spin-demo { display:inline-block; width:16px; height:16px; border-radius:50%; border:2.5px solid #e4e2dc; border-top-color:#FF3131; animation:pl-spin .8s linear infinite; }
 .ds-marquee-row { overflow:hidden; -webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); }
 .ds-marquee-inner { display:flex; animation:pl-marquee 4s linear infinite; white-space:nowrap; font-size:13px; color:#3a414c; }
 
 /* Carousel cards */
 .ds-carousel-card { width:320px; background:#fff; border:1px solid var(--pl-line); border-radius:18px; padding:24px; display:flex; flex-direction:column; gap:14px; flex:none; }
-.ds-carousel-stat { font-family:var(--pl-font); font-size:40px; font-weight:600; letter-spacing:-.04em; color:#0a8f3c; }
+.ds-carousel-stat { font-family:var(--pl-font); font-size:40px; font-weight:600; letter-spacing:-.04em; color:#C81E1E; }
 .ds-carousel-stat-lbl { font-size:10px; letter-spacing:.12em; color:var(--pl-faint); }
 .ds-carousel-card blockquote { margin:0; font-size:14px; line-height:1.6; color:var(--pl-muted); }
 .ds-carousel-author { display:flex; align-items:center; gap:10px; margin-top:auto; }
