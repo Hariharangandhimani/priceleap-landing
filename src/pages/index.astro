@@ -1,42 +1,381 @@
 ---
-/**
- * Homepage (/) — the light PriceLeap homepage. (The previous dark homepage is
- * preserved on the `dark-theme` branch.) /light remains as an alias.
- */
-import SiteLayout from '@/layouts/SiteLayout.astro';
-import LAnnouncement from '@/components/light/LAnnouncement.astro';
-import LHero from '@/components/light/LHero.astro';
-import LDashboard from '@/components/light/LDashboard.astro';
-import LTrusted from '@/components/light/LTrusted.astro';
-import LProblem from '@/components/light/LProblem.astro';
-import LProductTour from '@/components/light/LProductTour.astro';
-import LCapabilities from '@/components/light/LCapabilities.astro';
-import LAccuracy from '@/components/light/LAccuracy.astro';
-import LHowItWorks from '@/components/light/LHowItWorks.astro';
-import LIntegrations from '@/components/light/LIntegrations.astro';
-import LResults from '@/components/light/LResults.astro';
-import LCTA from '@/components/light/LCTA.astro';
----
-<SiteLayout
-  title="Pricing Intelligence Software for E-commerce & Marketplaces | PriceLeap"
-  description="PriceLeap gives e-commerce and marketplace teams real-time competitor price tracking, verified data accuracy, and dynamic pricing that protects every point of margin."
->
-  <LAnnouncement
-    slot="before-header"
-    text="PriceLeap Agent answers pricing questions in plain English, right inside your dashboard."
-    cta="See it in action →"
-    href="#product"
-  />
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+import '../styles/pl-marketing.css';
 
-  <LHero />
-  <LDashboard />
-  <LTrusted />
-  <LProblem />
-  <LProductTour />
-  <LCapabilities />
-  <LAccuracy />
-  <LHowItWorks />
-  <LIntegrations />
-  <LResults />
-  <LCTA id="demo" />
-</SiteLayout>
+const logos = [...['McAfee', 'Xometry', 'Do it Best', 'Wolt', 'neho', 'apoBank', 'Shopify', 'Flipkart'], ...['McAfee', 'Xometry', 'Do it Best', 'Wolt', 'neho', 'apoBank', 'Shopify', 'Flipkart']];
+const pains = [
+  { n: '01', tag: 'STALE', t: "Stale competitor prices you can't act on" },
+  { n: '02', tag: 'MISMATCH', t: 'Wrong product matches skewing your view' },
+  { n: '03', tag: 'MANUAL', t: 'Manual price-checking across dozens of sites' },
+  { n: '04', tag: 'LEAK', t: 'Discounting that quietly gives away margin' },
+];
+const tabs = [
+  { n: '01', t: 'Add products', d: 'Paste URLs, upload a file, or connect your catalog.', panel: 'Add Products', sub: 'AI tracks pricing, finds competitors and monitors their prices.' },
+  { n: '02', t: 'Monitor the market', d: 'Every price move, stock-out and promo, as it happens.', panel: 'Market Monitor', sub: 'Live feed of competitor changes across every tracked SKU.' },
+  { n: '03', t: 'Dynamic pricing', d: 'Rules with floors, ceilings and MAP built in.', panel: 'Dynamic Pricing', sub: 'Set guardrails once; PriceLeap recommends inside them.' },
+  { n: '04', t: 'Ask the Agent', d: 'Plain-English answers on prices, rivals and alerts.', panel: 'PriceLeap Agent', sub: 'Ask anything about your catalog and the market.' },
+];
+const feed = [
+  { time: '23:14', type: 'PRICE DROP', text: 'Retailer B cut True Wireless Earbuds Pro', delta: '-2.4%', c: '#e5484d' },
+  { time: '23:09', type: 'STOCK-OUT', text: 'Marketplace A is out of stock on Smart Fitness Watch', delta: '0 units', c: '#e08a00' },
+  { time: '22:57', type: 'PROMO', text: 'D2C store C launched 20% off on Bluetooth Speaker', delta: '20% off', c: 'var(--pl-accent-end)' },
+  { time: '22:41', type: 'PRICE RISE', text: 'Marketplace D raised 4K Action Camera Pro', delta: '+3.1%', c: 'var(--pl-accent-ink)' },
+  { time: '22:30', type: 'NEW LISTING', text: 'New model detected: Mechanical Keyboard TKL v2', delta: '+1 SKU', c: 'var(--pl-muted-2)' },
+];
+const steps = [
+  { n: '01', t: 'Connect your catalog', d: 'Upload your products or sync from Shopify, marketplaces, or a feed in minutes.' },
+  { n: '02', t: 'We match & monitor', d: 'AI matches every product and human QC verifies it — then we track prices in real time.' },
+  { n: '03', t: 'Get pricing intelligence', d: 'See your price index, competitive gaps, and the biggest pricing opportunities.' },
+  { n: '04', t: 'Optimize & act', d: 'Push dynamic pricing rules or apply AI recommendations to win on margin.' },
+];
+const stages = [
+  { n: '01', short: 'MATCH', t: 'AI matching', d: 'Exact, similar, and white-label products — even without barcodes.', stat: '1,204,860 matched' },
+  { n: '02', short: 'QC', t: 'Human quality control', d: 'Every match reviewed by a trained QC analyst before it counts.', stat: '100% reviewed' },
+  { n: '03', short: 'ANOMALY', t: 'Anomaly detection', d: 'Automated checks flag price and match outliers in real time.', stat: '312 outliers held' },
+  { n: '04', short: 'SLA', t: 'Accuracy SLA in writing', d: 'A contractual guarantee — not a marketing number.', stat: '[PLACEHOLDER]% guaranteed' },
+];
+const catNames = ['All', 'Ecommerce', 'ERP & CRM', 'Data & BI', 'Alerts'];
+const connectors = [
+  { n: 'Shopify', api: 'ADMIN API', cat: 'Ecommerce', m: 'Sh' }, { n: 'Amazon Seller Central', api: 'SP-API', cat: 'Ecommerce', m: 'Am' },
+  { n: 'Flipkart', api: 'SELLER API', cat: 'Ecommerce', m: 'Fk' }, { n: 'WooCommerce', api: 'REST API', cat: 'Ecommerce', m: 'Wc' },
+  { n: 'BigCommerce', api: 'REST API', cat: 'Ecommerce', m: 'Bc' }, { n: 'eBay Seller Hub', api: 'OAUTH 2.0', cat: 'Ecommerce', m: 'eB' },
+  { n: 'Walmart Marketplace', api: 'PARTNER API', cat: 'Ecommerce', m: 'Wm' }, { n: 'Magento', api: 'REST API', cat: 'Ecommerce', m: 'Mg' },
+  { n: 'Salesforce', api: 'COMMERCE CLOUD', cat: 'ERP & CRM', m: 'Sf' }, { n: 'NetSuite', api: 'SUITETALK', cat: 'ERP & CRM', m: 'Ns' },
+  { n: 'SAP S/4HANA', api: 'ODATA', cat: 'ERP & CRM', m: 'SAP' }, { n: 'Dynamics 365', api: 'DATAVERSE', cat: 'ERP & CRM', m: 'D365' },
+  { n: 'Snowflake', api: 'CONNECTOR', cat: 'Data & BI', m: 'Sn' }, { n: 'Databricks', api: 'DELTA SHARE', cat: 'Data & BI', m: 'Db' },
+  { n: 'BigQuery', api: 'STREAMING', cat: 'Data & BI', m: 'BQ' }, { n: 'Google Sheets', api: 'SHEETS API', cat: 'Data & BI', m: 'Gs' },
+  { n: 'Slack', api: 'WEBHOOK', cat: 'Alerts', m: 'Sl' }, { n: 'Microsoft Teams', api: 'WEBHOOK', cat: 'Alerts', m: 'Ms' },
+];
+const testimonials = [
+  { ini: 'HM', role: 'Head of Marketplace Pricing', ind: 'Consumer Electronics', stat: '28% → 90%+', statL: 'BUY BOX WIN RATE', q: "We were losing the Buy Box on over 60% of our top 200 SKUs and had no idea until the damage was done. PriceLeap's decision engine started catching competitor undercuts within minutes and responding automatically inside our margin floor. Our Buy Box win rate went from 28% to over 90% in six weeks — without a single manual price change." },
+  { ini: 'VP', role: 'VP of Trading & Pricing', ind: 'Home & Appliances', stat: '8,000 SKUs', statL: 'MONITORED SIMULTANEOUSLY', q: "With 8,000 SKUs across appliances, kitchenware, and furniture, we couldn't monitor pricing manually. We were reacting 4–6 hours after prices changed. PriceLeap monitors the entire catalog simultaneously. The margin protection system alone saved us from three separate price wars." },
+  { ini: 'EP', role: 'eCommerce & Parts Pricing Manager', ind: 'Automotive Parts', stat: '~19%', statL: 'GROSS MARGIN RECOVERED', q: 'Automotive parts pricing is complex — the same part has 40 competitor listings by fitment, brand and condition. PriceLeap mapped our catalog to competitor listings automatically and found gaps we had no idea existed. We recovered nearly 19% gross margin in the first quarter by pricing correctly rather than conservatively.' },
+];
+const jsonLd = [
+  { '@context': 'https://schema.org', '@type': 'Organization', name: 'PriceLeap', url: 'https://priceleap.ai', description: 'Pricing intelligence software for e-commerce and marketplace teams.' },
+  { '@context': 'https://schema.org', '@type': 'WebSite', name: 'PriceLeap', url: 'https://priceleap.ai' },
+];
+---
+<PriceLeapLayout title="PriceLeap · Price with confidence on data you can trust" description="PriceLeap gives e-commerce and marketplace teams real-time competitor price tracking, verified data accuracy, and dynamic pricing that protects every point of margin." jsonLd={jsonLd}>
+  <!-- Hero -->
+  <section class="hm-hero">
+    <div aria-hidden="true" class="hm-hero-dots"></div>
+    <div aria-hidden="true" class="hm-hero-glow"></div>
+    <div class="hm-hero-inner">
+      <div class="hm-pill">Pricing intelligence for e-commerce &amp; marketplaces<span class="hm-pill-arrow">›</span></div>
+      <h1 class="hm-h1">Price with confidence on data you can <span class="pl-gradient-text">actually trust.</span></h1>
+      <p class="hm-sub">PriceLeap gives e-commerce and marketplace teams real-time competitor price tracking, verified data accuracy, and dynamic pricing that protects <span class="hm-mark">every point of margin.</span></p>
+      <div class="hm-hero-cta">
+        <a href="/contact" class="mk-btn-primary mk-btn-lg">Book a demo</a>
+        <a href="#product" class="hm-sample"><span class="hm-sample-ava"><span class="hm-ava" style="background:var(--pl-accent)">₹</span><span class="hm-ava" style="background:var(--pl-accent-end);margin-left:-8px">%</span><span class="hm-ava" style="background:var(--pl-ink);margin-left:-8px">↗</span></span>See a sample of your competitor data <span style="color:var(--pl-faint-2)">›</span></a>
+      </div>
+      <div class="hm-live"><span class="hm-live-dot"></span><span class="hm-live-n">3,526,158</span> prices refreshed today</div>
+    </div>
+  </section>
+
+  <!-- Trusted -->
+  <section class="mk-logos">
+    <div class="mk-logos-wrap"><div class="mk-logos-label">Trusted by pricing teams at</div><div class="mk-logos-marq-wrap"><div class="mk-logos-marq">{logos.map((l) => (<div class="mk-logo">{l}</div>))}</div></div></div>
+  </section>
+
+  <!-- Cost of bad data -->
+  <section class="hm-sec">
+    <div class="hm-wrap">
+      <div data-reveal class="hm-pain-head">
+        <div>
+          <span class="hm-tag"><span class="hm-tag-slash">//</span><span class="hm-tag-mid"><span class="hm-tag-sq hm-tag-sq--danger"></span>The cost of bad data</span><span class="hm-tag-slash">\\</span></span>
+          <h2 class="hm-h2"><span style="font-weight:500">Bad pricing data costs you </span><span style="font-weight:700">margin every single day.</span></h2>
+        </div>
+        <p class="hm-pain-p">Most pricing tools hand you a dashboard and hope for the best. Sound familiar?</p>
+      </div>
+      <div data-reveal class="hm-pains">
+        {pains.map((p) => (
+          <div class="hm-pain"><div class="hm-pain-top"><span class="hm-pain-n">{p.n}</span><span class="hm-pain-tag">{p.tag}</span></div><div class="hm-pain-b"><span class="hm-pain-x">×</span><span class="hm-pain-t">{p.t}</span></div></div>
+        ))}
+      </div>
+      <div data-reveal class="hm-fix"><span class="hm-fix-check">✓</span><span class="hm-fix-t">PriceLeap fixes the root cause: accurate data, refreshed in real time, turned into pricing moves you can trust.</span><a href="#how" class="hm-fix-link">See how it works →</a></div>
+    </div>
+  </section>
+
+  <!-- Inside PriceLeap (tabs) -->
+  <section id="product" class="hm-sec hm-sand">
+    <div class="hm-wrap">
+      <div data-reveal class="hm-center">
+        <span class="hm-tag"><span class="hm-tag-slash">//</span><span class="hm-tag-mid"><span class="hm-tag-sq"></span>Inside PriceLeap</span><span class="hm-tag-slash">\\</span></span>
+        <h2 class="hm-h2" style="text-align:center;max-width:880px"><span style="font-weight:500">From a list of URLs to a repriced catalog </span><span style="font-weight:700">— in one workspace.</span></h2>
+      </div>
+      <div data-reveal class="hm-tabs" role="tablist">
+        {tabs.map((t, i) => (
+          <button type="button" role="tab" class={`hm-tab${i === 0 ? ' is-on' : ''}`} data-hm-tab={i} aria-selected={i === 0 ? 'true' : 'false'}>
+            <span class="hm-tab-n">{t.n}</span><span class="hm-tab-t">{t.t}</span><span class="hm-tab-d">{t.d}</span>
+          </button>
+        ))}
+      </div>
+      <div data-reveal class="hm-panel-wrap">
+        {tabs.map((t, i) => (
+          <div class="hm-panel" data-hm-panel={i} hidden={i !== 0}>
+            <div class="hm-panel-head"><div><div class="hm-panel-t">{t.panel}</div><div class="hm-panel-s">{t.sub}</div></div><span class="hm-panel-n">{t.n} / 04</span></div>
+            {i === 1 ? (
+              <div class="hm-feed">
+                {feed.map((f) => (<div class="hm-feed-row"><span class="hm-feed-time">{f.time}</span><span class="hm-feed-type" style={`color:${f.c}`}>{f.type}</span><span class="hm-feed-text">{f.text}</span><span class="hm-feed-delta" style={`color:${f.c}`}>{f.delta}</span></div>))}
+              </div>
+            ) : (
+              <div class="hm-panel-ph"><span class="hm-panel-ph-ico">◈</span><span>{t.panel} workspace</span></div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Accuracy / matching pipeline -->
+  <section id="accuracy" class="hm-sec">
+    <div class="hm-wrap">
+      <div data-reveal class="hm-center">
+        <span class="hm-tag"><span class="hm-tag-slash">//</span><span class="hm-tag-mid"><span class="hm-tag-sq"></span>Verified accuracy</span><span class="hm-tag-slash">\\</span></span>
+        <h2 class="hm-h2" style="text-align:center;max-width:820px"><span style="font-weight:500">Accuracy you can put in a contract, </span><span style="font-weight:700">not just a pitch deck.</span></h2>
+      </div>
+      <div data-reveal class="hm-pipe">
+        {stages.map((s) => (
+          <div class="hm-stage"><span class="hm-stage-badge">{s.short}</span><span class="hm-stage-n">{s.n}</span><h3>{s.t}</h3><p>{s.d}</p><span class="hm-stage-stat">{s.stat}</span></div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how" class="hm-sec hm-sand">
+    <div class="hm-wrap">
+      <div data-reveal class="hm-center">
+        <span class="hm-tag"><span class="hm-tag-slash">//</span><span class="hm-tag-mid"><span class="hm-tag-sq"></span>How it works</span><span class="hm-tag-slash">\\</span></span>
+        <h2 class="hm-h2" style="text-align:center"><span style="font-weight:500">Live in days, </span><span style="font-weight:700">not quarters.</span></h2>
+      </div>
+      <div data-reveal class="hm-steps">
+        {steps.map((s) => (
+          <div class="hm-step"><span class="hm-step-n">{s.n}</span><h3>{s.t}</h3><p>{s.d}</p></div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Integrations -->
+  <section id="integrations" class="hm-sec">
+    <div class="hm-wrap">
+      <div data-reveal class="hm-center">
+        <span class="hm-tag"><span class="hm-tag-slash">//</span><span class="hm-tag-mid"><span class="hm-tag-sq"></span>Integrations</span><span class="hm-tag-slash">\\</span></span>
+        <h2 class="hm-h2" style="text-align:center"><span style="font-weight:700">Fits your stack.</span><span style="font-weight:500"> Not the other way round.</span></h2>
+      </div>
+      <div data-reveal class="hm-int-cats" role="tablist">
+        {catNames.map((c, i) => (
+          <button type="button" role="tab" class={`hm-int-cat${i === 0 ? ' is-on' : ''}`} data-hm-cat={c} aria-selected={i === 0 ? 'true' : 'false'}>{c}<span class="hm-int-cat-n">{c === 'All' ? connectors.length : connectors.filter((x) => x.cat === c).length}</span></button>
+        ))}
+      </div>
+      <div data-reveal class="hm-int-grid">
+        {connectors.map((c) => (
+          <div class="hm-int" data-hm-conn-cat={c.cat}><span class="hm-int-m">{c.m}</span><span style="min-width:0"><span class="hm-int-n">{c.n}</span><span class="hm-int-api">{c.api}</span></span></div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Results / testimonials -->
+  <section id="results" class="hm-sec hm-sand">
+    <div class="hm-wrap">
+      <div data-reveal class="hm-center">
+        <span class="hm-tag"><span class="hm-tag-slash">//</span><span class="hm-tag-mid"><span class="hm-tag-sq"></span>Customer results</span><span class="hm-tag-slash">\\</span></span>
+        <h2 class="hm-h2" style="text-align:center"><span style="font-weight:500">Real results. </span><span style="font-weight:700">Real pricing teams.</span></h2>
+      </div>
+      <div data-reveal class="hm-testi">
+        <div class="hm-testi-tabs" role="tablist">
+          {testimonials.map((t, i) => (
+            <button type="button" role="tab" class={`hm-testi-tab${i === 0 ? ' is-on' : ''}`} data-hm-testi={i} aria-selected={i === 0 ? 'true' : 'false'}>
+              <span class="hm-testi-ava">{t.ini}</span>
+              <span style="min-width:0;text-align:left"><span class="hm-testi-stat">{t.stat}</span><span class="hm-testi-statl">{t.statL}</span></span>
+            </button>
+          ))}
+        </div>
+        <div class="hm-testi-body">
+          {testimonials.map((t, i) => (
+            <div class="hm-testi-quote" data-hm-testi-panel={i} hidden={i !== 0}>
+              <p>“{t.q}”</p>
+              <div class="hm-testi-who"><span class="hm-testi-role">{t.role}</span><span class="hm-testi-ind">{t.ind.toUpperCase()}</span></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="demo" class="mk-cta-sec">
+    <div class="mk-cta">
+      <div aria-hidden="true" class="mk-cta-glow"></div>
+      <div data-reveal class="mk-cta-inner">
+        <h2 class="mk-cta-h2"><span style="font-weight:500">Price with confidence on data you can </span><span style="font-weight:700">actually trust.</span></h2>
+        <div class="mk-hero-cta" style="justify-content:center"><a href="/contact" class="mk-btn-primary mk-btn-lg">Book a demo</a><a href="/contact" class="mk-btn-ghost">See a sample of your competitor data →</a></div>
+      </div>
+    </div>
+  </section>
+</PriceLeapLayout>
+
+<style>
+  .hm-sec { border-bottom: 1px solid var(--pl-line); }
+  .hm-sand { background: linear-gradient(var(--pl-canvas),var(--pl-sand)); }
+  .hm-wrap { max-width: 1280px; margin: 0 auto; padding: clamp(64px,8vw,96px) clamp(16px,4vw,28px); }
+  .hm-center { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .hm-h2 { margin: 22px 0 0; font-family: Geist, sans-serif; font-size: clamp(30px,4.2vw,52px); line-height: 1.08; letter-spacing: -.03em; color: var(--pl-ink); text-wrap: balance; }
+  .hm-tag { display: inline-flex; align-items: center; gap: 14px; font-size: 13px; color: var(--pl-ink); }
+  .hm-tag-slash { color: var(--pl-line-xstrong); font-family: 'Geist Mono', ui-monospace, monospace; }
+  .hm-tag-mid { display: flex; align-items: center; gap: 7px; border-bottom: 1px solid var(--pl-line-strong); padding-bottom: 4px; }
+  .hm-tag-sq { width: 7px; height: 7px; background: var(--pl-accent-end); transform: rotate(45deg); }
+  .hm-tag-sq--danger { background: #e5484d; }
+  [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].mk-in { opacity: 1; transform: none; }
+
+  /* Hero */
+  .hm-hero { position: relative; padding: clamp(64px,9vw,104px) clamp(16px,4vw,28px) clamp(44px,5vw,56px); text-align: center; overflow: hidden; border-bottom: 1px solid var(--pl-line); }
+  .hm-hero-dots { position: absolute; inset: 0; background-image: radial-gradient(var(--pl-line-strong) 1px,transparent 1px); background-size: 22px 22px; -webkit-mask-image: radial-gradient(ellipse at 50% 40%,#000 0%,transparent 70%); mask-image: radial-gradient(ellipse at 50% 40%,#000 0%,transparent 70%); opacity: .7; }
+  .hm-hero-glow { position: absolute; left: 50%; top: -180px; width: 720px; height: 420px; transform: translateX(-50%); background: radial-gradient(closest-side,rgba(247,99,30,.12),rgba(251,138,46,.08),transparent); pointer-events: none; }
+  .hm-hero-inner { position: relative; display: flex; flex-direction: column; align-items: center; }
+  .hm-pill { display: inline-flex; align-items: center; gap: 10px; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 999px; padding: 6px 8px 6px 14px; font-size: 13px; color: var(--pl-ink-2); box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .hm-pill-arrow { width: 20px; height: 20px; border-radius: 50%; background: var(--pl-ink); color: var(--pl-surface); display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .hm-h1 { margin: 28px 0 0; font-family: Geist, sans-serif; font-size: clamp(44px,7vw,84px); line-height: 1.02; letter-spacing: -.035em; font-weight: 500; max-width: 980px; text-wrap: balance; color: var(--pl-ink); }
+  .hm-sub { margin: 26px 0 0; font-size: 19px; line-height: 1.6; color: var(--pl-muted-2); max-width: 680px; text-wrap: pretty; }
+  .hm-mark { background: #FBEFE6; color: var(--pl-ink); padding: 1px 8px; border-radius: 6px; }
+  .hm-hero-cta { display: flex; gap: 12px; margin-top: 36px; flex-wrap: wrap; justify-content: center; }
+  .hm-sample { display: flex; align-items: center; gap: 12px; background: var(--pl-surface); border: 1px solid var(--pl-line); color: var(--pl-ink); font-weight: 500; font-size: 16px; padding: 8px 18px 8px 8px; border-radius: 14px; }
+  .hm-sample-ava { display: flex; }
+  .hm-ava { width: 30px; height: 30px; border-radius: 50%; color: var(--pl-surface); font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--pl-surface); }
+  .hm-live { margin-top: 28px; display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--pl-muted); }
+  .hm-live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pl-accent); animation: plpulse 1.6s infinite; }
+  .hm-live-n { font-family: 'Geist Mono', ui-monospace, monospace; color: var(--pl-ink); }
+
+  /* Pain */
+  .hm-pain-head { display: grid; grid-template-columns: 1fr; gap: 20px 48px; align-items: end; }
+  .hm-pain-p { margin: 0; font-size: 18px; line-height: 1.6; color: var(--pl-muted); max-width: 460px; }
+  .hm-pains { margin-top: 48px; display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--pl-line); border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; }
+  .hm-pain { background: var(--pl-surface); padding: 26px 24px 28px; display: flex; flex-direction: column; gap: 40px; min-height: 200px; }
+  .hm-pain-top { display: flex; justify-content: space-between; align-items: center; }
+  .hm-pain-n { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 13px; color: var(--pl-faint-2); }
+  .hm-pain-tag { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: .12em; color: #c4373c; background: #fff5f5; border: 1px solid #f5c2c4; border-radius: 5px; padding: 2px 7px; }
+  .hm-pain-b { margin-top: auto; display: flex; gap: 12px; align-items: flex-start; }
+  .hm-pain-x { width: 20px; height: 20px; flex: none; margin-top: 3px; border-radius: 50%; border: 1.5px solid #f5c2c4; color: #e5484d; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .hm-pain-t { font-size: 19px; font-weight: 500; line-height: 1.35; letter-spacing: -.01em; color: var(--pl-ink); }
+  .hm-fix { margin-top: 12px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); border-radius: 16px; padding: 18px 22px; }
+  .hm-fix-check { width: 40px; height: 40px; flex: none; border-radius: 11px; background: var(--pl-ink); color: var(--pl-surface); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; }
+  .hm-fix-t { flex: 1; min-width: 240px; font-size: 17px; line-height: 1.5; font-weight: 500; color: var(--pl-ink); }
+  .hm-fix-link { color: var(--pl-accent-ink); font-weight: 500; white-space: nowrap; }
+
+  /* Tabs */
+  .hm-tabs { margin-top: 48px; display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .hm-tab { text-align: left; background: var(--pl-cream); border: 1px solid var(--pl-line); border-radius: 16px; padding: 18px 20px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; transition: all .25s; }
+  .hm-tab.is-on { background: var(--pl-surface); border-color: var(--pl-accent-line); box-shadow: 0 18px 36px -28px rgba(194,65,12,.5); }
+  .hm-tab-n { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-faint); }
+  .hm-tab.is-on .hm-tab-n { color: var(--pl-accent-ink); }
+  .hm-tab-t { font-family: Geist, sans-serif; font-size: 17px; font-weight: 600; color: var(--pl-ink); }
+  .hm-tab-d { font-size: 13.5px; line-height: 1.5; color: var(--pl-muted); }
+  .hm-panel-wrap { margin-top: 16px; }
+  .hm-panel { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 22px; overflow: hidden; box-shadow: 0 30px 60px -44px rgba(60,30,15,.4); }
+  .hm-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--pl-line-soft); background: var(--pl-cream); }
+  .hm-panel-t { font-family: Geist, sans-serif; font-size: 18px; font-weight: 600; color: var(--pl-ink); }
+  .hm-panel-s { font-size: 13.5px; color: var(--pl-muted); margin-top: 2px; }
+  .hm-panel-n { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-accent-ink); }
+  .hm-feed { padding: 8px; }
+  .hm-feed-row { display: grid; grid-template-columns: 54px 110px 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 10px; }
+  .hm-feed-row:nth-child(odd) { background: var(--pl-cream); }
+  .hm-feed-time { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-faint); }
+  .hm-feed-type { font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .06em; }
+  .hm-feed-text { font-size: 13.5px; color: var(--pl-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hm-feed-delta { font-family: 'Geist Mono', monospace; font-size: 12px; text-align: right; }
+  .hm-panel-ph { min-height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--pl-faint); font-family: 'Geist Mono', monospace; font-size: 12px; background: repeating-linear-gradient(135deg,var(--pl-cream) 0 10px,var(--pl-surface) 10px 20px); }
+  .hm-panel-ph-ico { width: 44px; height: 44px; border-radius: 12px; background: var(--pl-ink); color: var(--pl-accent); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+  /* Accuracy pipeline */
+  .hm-pipe { margin-top: 48px; border: 1px solid var(--pl-line); border-radius: 24px; overflow: hidden; background: var(--pl-line); display: grid; grid-template-columns: 1fr; gap: 1px; }
+  .hm-stage { position: relative; background: var(--pl-surface); padding: 28px; display: flex; flex-direction: column; gap: 8px; }
+  .hm-stage-badge { align-self: flex-start; height: 22px; padding: 0 9px; display: flex; align-items: center; border-radius: 6px; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .08em; color: var(--pl-accent-ink); }
+  .hm-stage-n { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-faint); }
+  .hm-stage h3 { margin: 0; font-family: Geist, sans-serif; font-size: 18px; font-weight: 600; color: var(--pl-ink); }
+  .hm-stage p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--pl-muted); }
+  .hm-stage-stat { margin-top: 6px; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-accent-ink); }
+
+  /* Steps */
+  .hm-steps { margin-top: 48px; border: 1px solid var(--pl-line); border-radius: 24px; overflow: hidden; background: var(--pl-line); display: grid; grid-template-columns: 1fr; gap: 1px; }
+  .hm-step { background: var(--pl-surface); padding: 28px; display: flex; flex-direction: column; gap: 10px; }
+  .hm-step-n { width: 40px; height: 40px; border-radius: 12px; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); font-family: 'Geist Mono', monospace; font-size: 13px; color: var(--pl-accent-ink); display: flex; align-items: center; justify-content: center; }
+  .hm-step h3 { margin: 4px 0 0; font-family: Geist, sans-serif; font-size: 19px; font-weight: 600; color: var(--pl-ink); }
+  .hm-step p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--pl-muted); }
+
+  /* Integrations */
+  .hm-int-cats { margin-top: 40px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .hm-int-cat { height: 38px; padding: 0 14px; display: flex; align-items: center; gap: 8px; border-radius: 999px; border: 1px solid var(--pl-line); background: var(--pl-surface); color: var(--pl-ink-2); cursor: pointer; font-size: 13.5px; font-weight: 500; transition: all .2s; }
+  .hm-int-cat.is-on { background: var(--pl-accent-tint); border-color: var(--pl-accent); color: var(--pl-accent-ink); }
+  .hm-int-cat-n { font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--pl-faint); }
+  .hm-int-grid { margin-top: 24px; display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .hm-int { display: flex; align-items: center; gap: 12px; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 14px; padding: 14px 16px; }
+  .hm-int-m { width: 40px; height: 40px; flex: none; border-radius: 10px; background: var(--pl-cream); border: 1px solid var(--pl-line-soft); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-ink); }
+  .hm-int-n { display: block; font-size: 14.5px; font-weight: 500; color: var(--pl-ink); }
+  .hm-int-api { font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .06em; color: var(--pl-faint); }
+
+  /* Testimonials */
+  .hm-testi { margin-top: 48px; display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .hm-testi-tabs { display: flex; flex-direction: column; gap: 8px; }
+  .hm-testi-tab { display: flex; align-items: center; gap: 12px; background: var(--pl-cream); border: 1px solid var(--pl-line); border-radius: 14px; padding: 14px 16px; cursor: pointer; transition: all .2s; }
+  .hm-testi-tab.is-on { background: var(--pl-surface); border-color: var(--pl-accent-line); }
+  .hm-testi-ava { width: 38px; height: 38px; flex: none; border-radius: 50%; background: var(--pl-surface); border: 1px solid var(--pl-line); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-faint); }
+  .hm-testi-tab.is-on .hm-testi-ava { background: var(--pl-accent); color: var(--pl-ink-deep); border-color: var(--pl-accent); }
+  .hm-testi-stat { display: block; font-family: Geist, sans-serif; font-size: 16px; font-weight: 600; color: var(--pl-ink); }
+  .hm-testi-statl { display: block; font-family: 'Geist Mono', monospace; font-size: 9.5px; letter-spacing: .06em; color: var(--pl-muted); }
+  .hm-testi-body { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 20px; padding: clamp(24px,4vw,40px); }
+  .hm-testi-quote p { margin: 0; font-family: Geist, sans-serif; font-size: clamp(18px,2vw,22px); line-height: 1.5; letter-spacing: -.01em; color: var(--pl-ink); }
+  .hm-testi-who { margin-top: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .hm-testi-role { font-size: 14px; font-weight: 600; color: var(--pl-ink); }
+  .hm-testi-ind { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .06em; color: var(--pl-muted); }
+
+  @media (min-width: 640px) {
+    .hm-pains { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .hm-steps { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .hm-int-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  }
+  @media (min-width: 760px) {
+    .mk-logos-wrap { grid-template-columns: 260px minmax(0,1fr); }
+    .mk-logos-label { border-bottom: none; border-right: 1px solid var(--pl-line); }
+    .hm-pain-head { grid-template-columns: minmax(0,1.4fr) minmax(0,1fr); }
+    .hm-tabs { grid-template-columns: repeat(4,minmax(0,1fr)); }
+    .hm-pipe { grid-template-columns: repeat(4,minmax(0,1fr)); }
+    .hm-testi { grid-template-columns: 300px minmax(0,1fr); }
+  }
+  @media (min-width: 1000px) {
+    .hm-pains { grid-template-columns: repeat(4,minmax(0,1fr)); }
+    .hm-steps { grid-template-columns: repeat(4,minmax(0,1fr)); }
+    .hm-int-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  }
+</style>
+
+<script>
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('mk-in'); io.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+
+  const toggle = (tabSel: string, panelSel: string, attr: string) => {
+    const tabs = Array.from(document.querySelectorAll(tabSel)) as HTMLElement[];
+    const panels = Array.from(document.querySelectorAll(panelSel)) as HTMLElement[];
+    tabs.forEach((tab) => tab.addEventListener('click', () => {
+      const v = tab.dataset[attr];
+      tabs.forEach((t) => { t.classList.toggle('is-on', t === tab); t.setAttribute('aria-selected', String(t === tab)); });
+      panels.forEach((p) => { p.hidden = p.dataset[attr] !== v; });
+    }));
+  };
+  toggle('[data-hm-tab]', '[data-hm-panel]', 'hmTab');
+  toggle('[data-hm-testi]', '[data-hm-testi-panel]', 'hmTesti');
+
+  // Integration category filter
+  const catBtns = Array.from(document.querySelectorAll('[data-hm-cat]')) as HTMLElement[];
+  const conns = Array.from(document.querySelectorAll('[data-hm-conn-cat]')) as HTMLElement[];
+  catBtns.forEach((b) => b.addEventListener('click', () => {
+    const cat = b.dataset.hmCat;
+    catBtns.forEach((o) => { o.classList.toggle('is-on', o === b); o.setAttribute('aria-selected', String(o === b)); });
+    conns.forEach((c) => { c.style.display = (cat === 'All' || c.dataset.hmConnCat === cat) ? '' : 'none'; });
+  }));
+</script>
