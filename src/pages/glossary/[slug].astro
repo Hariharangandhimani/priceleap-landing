@@ -33,7 +33,6 @@ const contentHtml = term.contentHtml.replace(/<(h2|h3)(\s[^>]*)?>([\s\S]*?)<\/\1
 const words = contentHtml.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
 const readTime = Math.max(1, Math.round(words / 230)) + ' min read';
 const firstLetter = (term.term[0] || '#').toUpperCase();
-const initials = term.term.replace(/[^A-Za-z ]/g, '').split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase() || 'PL';
 
 // Related terms: prefer data, else same-category fallback.
 let related = (term.relatedTerms || []).slice(0, 3);

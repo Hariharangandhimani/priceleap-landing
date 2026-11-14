@@ -96,7 +96,7 @@ const secs = doc.secs.map((sec, i) => {
                   {b.kind === 'sub' && (<div class="pl-legal-sub"><span class="pl-legal-sub-n">{b.num}</span><p class="pl-legal-p">{b.text}</p></div>)}
                   {b.kind === 'list' && (
                     <div class="pl-legal-list" style={`margin-left:${b.indent}`}>
-                      {b.items.map((it) => (
+                      {b.items.map((it: { k: string; sep: string; v: string; mk: string; mb: string; mc: string }) => (
                         <div class="pl-legal-list-row">
                           <span class="pl-legal-list-mk" style={`background:${it.mb};color:${it.mc}`}>{it.mk}</span>
                           <span class="pl-legal-list-txt">{it.k && (<b>{it.k}</b>)}{it.sep}{it.v}</span>
