@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/styles/priceleap-tokens.css">
+<script src="/support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<title>Retail Price Intelligence · PriceLeap</title>
+<meta name="description" content="Competitor prices for your entire catalog, matched accurately and refreshed every day.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;background:var(--pl-surface);color:var(--pl-ink-2);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+*{box-sizing:border-box}
+a{color:var(--pl-accent-ink);text-decoration:none}
+a:hover{color:var(--pl-ink)}
+::selection{background:var(--pl-gradient);color:var(--pl-surface)}
+button{font:inherit}
+input[type=range]{accent-color:var(--pl-accent)}
+@keyframes pi-pulse{0%{box-shadow:0 0 0 0 rgba(247,99,30,.55)}100%{box-shadow:0 0 0 10px rgba(247,99,30,0)}}
+@keyframes pi-marquee{to{transform:translateX(-50%)}}
+@keyframes pi-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pi-pop{0%{opacity:0;transform:scale(.6)}70%{transform:scale(1.08)}100%{opacity:1;transform:none}}
+@keyframes pi-spin{to{transform:rotate(360deg)}}
+@keyframes pi-draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes pi-blink{50%{opacity:.25}}
+@keyframes pi-grow{from{transform:scaleX(0)}to{transform:none}}
+@keyframes pi-growy{from{transform:scaleY(0)}to{transform:none}}
+@keyframes pi-dashx{to{background-position:20px 0}}
+@keyframes pi-cell{0%,100%{background:var(--pl-surface)}50%{background:var(--pl-danger-tint)}}
+@keyframes pi-fill{0%,10%{background:var(--pl-sand);border-color:var(--pl-line)}30%,100%{background:var(--pl-gradient);border-color:var(--pl-accent)}}
+@keyframes pi-crack{0%,55%{opacity:0}65%,100%{opacity:1}}
+@keyframes pi-type{from{width:0}to{width:100%}}
+@keyframes pi-orbit{to{transform:rotate(360deg)}}
+.pl-js [data-reveal]{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.pl-js [data-reveal].pl-in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}[data-reveal]{opacity:1!important;transform:none!important}}
+</style>
+</helmet>
+
+<div ref="{{ rootRef }}" style="min-height:100vh;background:var(--pl-surface);overflow-x:clip">
+
+<dc-import name="Site Header" hint-size="100%,64px" style="position:sticky;top:0;z-index:60;display:block"></dc-import>
+
+<section id="top" data-screen-label="Hero" style="position:relative;border-bottom:1px solid var(--pl-line);overflow:hidden">
+  <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(var(--pl-line-alt) 1px,transparent 1px);background-size:22px 22px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 20%,#000 10%,transparent 70%);mask-image:radial-gradient(ellipse 60% 70% at 50% 20%,#000 10%,transparent 70%);pointer-events:none"></div>
+  <div aria-hidden="true" style="position:absolute;left:50%;bottom:-260px;width:1100px;height:560px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.16),transparent);pointer-events:none"></div>
+  <div style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(48px,7vw,96px) clamp(20px,4vw,40px) 0;display:flex;flex-direction:column;align-items:center;text-align:center">
+    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--pl-muted)"><a href="/" style="color:var(--pl-muted)">Solutions</a><span style="color:var(--pl-line-xstrong)">/</span><span style="color:var(--pl-ink)">For Retailers</span></div>
+    <span style="margin-top:24px;height:32px;padding:0 6px 0 14px;display:inline-flex;align-items:center;gap:10px;border-radius:999px;background:var(--pl-surface);border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink);box-shadow:0 8px 20px -14px rgba(60,30,15,.3)"><span style="width:7px;height:7px;border-radius:50%;background:var(--pl-gradient);animation:pi-pulse 1.8s infinite"></span>Retail Price Intelligence<span style="height:22px;padding:0 8px;display:flex;align-items:center;border-radius:999px;background:var(--pl-ink);color:var(--pl-surface);font-size:10px;letter-spacing:.06em">FOR RETAILERS</span></span>
+    <h1 style="margin:22px 0 0;font-family:Geist,sans-serif;font-size:clamp(38px,5.6vw,72px);line-height:1.02;letter-spacing:-.045em;color:var(--pl-ink);max-width:1040px;text-wrap:balance"><span style="font-weight:700">Competitor prices for your entire catalog,</span><span style="font-weight:400"> matched accurately and refreshed every day.</span></h1>
+    <p style="margin:22px 0 0;max-width:720px;font-size:18px;line-height:1.6;color:var(--pl-ink-2);text-wrap:pretty">Retail Price Intelligence finds your products across competitor sites and marketplaces, matches them down to the variant, and shows your category teams exactly where they stand on price.</p>
+    <p style="margin:10px 0 0;max-width:720px;font-size:15px;line-height:1.6;color:var(--pl-muted)">The clean competitive data your retail price optimization software has been missing.</p>
+    <div style="margin-top:28px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
+      <a href="#demo" style="height:48px;padding:0 22px;display:inline-flex;align-items:center;border-radius:12px;background:var(--pl-gradient);color:var(--pl-surface);font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.9)" style-hover="background:var(--pl-gradient-hover);color:var(--pl-surface)">Book a demo</a>
+      <a href="#demo" style="height:48px;padding:0 20px;display:inline-flex;align-items:center;gap:10px;border-radius:12px;background:var(--pl-surface);border:1px solid var(--pl-line);color:var(--pl-ink);font-family:Geist,sans-serif;font-weight:500;font-size:15px" style-hover="border-color:var(--pl-line-xstrong);color:var(--pl-ink)">Talk to sales<span style="color:var(--pl-accent-ink)">→</span></a>
+    </div>
+    <div style="margin-top:28px;display:flex;flex-wrap:wrap;justify-content:center;border:1px solid var(--pl-line);border-radius:12px;background:var(--pl-surface);overflow:hidden">
+      <span style="height:38px;padding:0 16px;display:flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-ink);border-right:1px solid var(--pl-line-soft)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-gradient)"></span>1M+ SKUs tracked</span>
+      <span style="height:38px;padding:0 16px;display:flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-ink);border-right:1px solid var(--pl-line-soft)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-gradient)"></span>[X]% match accuracy</span>
+      <span style="height:38px;padding:0 16px;display:flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-ink)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-gradient)"></span>Refreshed daily</span>
+    </div>
+
+    <div style="position:relative;margin-top:56px;width:100%;max-width:1080px">
+      <div style="position:relative;background:var(--pl-surface);border:1px solid var(--pl-line);border-bottom:none;border-radius:20px 20px 0 0;box-shadow:0 -10px 60px -30px rgba(60,30,15,.25);overflow:hidden;text-align:left">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream)">
+          <span style="display:flex;gap:5px"><span style="width:9px;height:9px;border-radius:50%;background:var(--pl-line)"></span><span style="width:9px;height:9px;border-radius:50%;background:var(--pl-line)"></span><span style="width:9px;height:9px;border-radius:50%;background:var(--pl-line)"></span></span>
+          <span style="flex:1;max-width:340px;margin:0 auto;height:26px;border-radius:8px;background:var(--pl-surface);border:1px solid var(--pl-line);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-muted)">app.priceleap.io/price-position</span>
+          <span style="display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;background:var(--pl-accent-tint);border:1px solid var(--pl-accent-line);font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-accent-ink)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-gradient);animation:pi-pulse 1.6s infinite"></span>LIVE</span>
+        </div>
+        <div style="display:grid;grid-template-columns:{{ dashCols }};gap:1px;background:var(--pl-line-soft)">
+          <div style="background:var(--pl-surface);display:grid;grid-template-rows:auto 1fr">
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--pl-line-soft);border-bottom:1px solid var(--pl-line-soft)">
+              <div style="background:var(--pl-surface);padding:16px 18px"><div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-faint)">PRICE INDEX</div><div style="margin-top:4px;font-family:Geist,sans-serif;font-size:30px;font-weight:600;letter-spacing:-.04em;color:var(--pl-ink)">{{ idx }}</div></div>
+              <div style="background:var(--pl-surface);padding:16px 18px"><div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-faint)">BELOW MKT</div><div style="margin-top:4px;font-family:Geist,sans-serif;font-size:30px;font-weight:600;letter-spacing:-.04em;color:var(--pl-accent-ink)">41%</div></div>
+              <div style="background:var(--pl-surface);padding:16px 18px"><div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-faint)">ALERTS</div><div style="margin-top:4px;display:flex;align-items:center;gap:8px;font-family:Geist,sans-serif;font-size:30px;font-weight:600;letter-spacing:-.04em;color:var(--pl-ink)">{{ alerts }}<span style="width:8px;height:8px;border-radius:50%;background:var(--pl-danger);animation:pi-blink 1.2s steps(1) infinite"></span></div></div>
+            </div>
+            <div style="padding:18px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:14px;font-weight:600;color:var(--pl-ink)">Price index by category</span><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--pl-faint)">this week</span></div>
+              <div style="margin-top:16px;display:flex;align-items:flex-end;gap:clamp(8px,2vw,18px);height:150px;border-bottom:1px solid var(--pl-line-soft);position:relative">
+                <span style="position:absolute;left:0;right:0;bottom:60%;border-top:1px dashed var(--pl-line-xstrong)"></span>
+                <span style="position:absolute;right:0;bottom:calc(60% + 4px);font-family:'Geist Mono',monospace;font-size:9.5px;color:var(--pl-faint)">MARKET 100</span>
+                <sc-for list="{{ catBars }}" as="b" hint-placeholder-count="7">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:6px">
+                    <span style="font-family:'Geist Mono',monospace;font-size:10px;color:{{ b.tc }}">{{ b.d }}</span>
+                    <span style="width:100%;max-width:44px;height:{{ b.h }}%;border-radius:6px 6px 0 0;background:{{ b.c }};transform-origin:bottom;animation:pi-growy .9s cubic-bezier(.2,.7,.2,1) {{ b.dl }}s both;transition:height .8s cubic-bezier(.2,.7,.2,1)"></span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:clamp(8px,2vw,18px);margin-top:8px">
+                <sc-for list="{{ catBars }}" as="b" hint-placeholder-count="7"><span style="flex:1;text-align:center;font-size:11px;color:var(--pl-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.n }}</span></sc-for>
+              </div>
+            </div>
+          </div>
+          <sc-if value="{{ isWide }}" hint-placeholder-val="{{ true }}">
+            <div style="background:var(--pl-cream);padding:16px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-faint)"><span>ALERTS</span><span style="color:var(--pl-accent-ink)">12 OPEN</span></div>
+              <sc-for list="{{ alertFeed }}" as="a" hint-placeholder-count="4">
+                <div key="{{ a.k }}" style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;animation:pi-in .45s ease">
+                  <span style="display:flex;justify-content:space-between;gap:8px"><span style="font-size:12px;font-weight:600;color:var(--pl-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.t }}</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:{{ a.c }}">{{ a.d }}</span></span>
+                  <span style="font-family:'Geist Mono',monospace;font-size:9.5px;color:var(--pl-faint)">{{ a.m }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-screen-label="Logos" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream)">
+  <div style="max-width:1280px;margin:0 auto;display:grid;grid-template-columns:{{ logoCols }}">
+    <div style="padding:22px clamp(20px,4vw,40px);display:flex;align-items:center;border-right:{{ logoBr }};border-bottom:{{ logoBb }};font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-muted)">Trusted by teams at</div>
+    <div style="overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)">
+      <div style="display:flex;width:max-content;animation:pi-marquee 32s linear infinite"><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/amazon.svg" alt="Amazon" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/shopify.svg" alt="Shopify" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/walmart.svg" alt="Walmart" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/ebay.svg" alt="eBay" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/target.svg" alt="Target" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/flipkart.svg" alt="Flipkart" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/etsy.svg" alt="Etsy" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/magento.svg" alt="Magento" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/woocommerce.svg" alt="WooCommerce" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/bigcommerce.svg" alt="BigCommerce" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/salesforce.svg" alt="Salesforce" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/sap.svg" alt="SAP" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/amazon.svg" alt="Amazon" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/shopify.svg" alt="Shopify" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/walmart.svg" alt="Walmart" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/ebay.svg" alt="eBay" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/target.svg" alt="Target" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/flipkart.svg" alt="Flipkart" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/etsy.svg" alt="Etsy" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/magento.svg" alt="Magento" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/woocommerce.svg" alt="WooCommerce" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/bigcommerce.svg" alt="BigCommerce" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/salesforce.svg" alt="Salesforce" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div><div style="flex:none;width:210px;height:96px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src="/assets/logos/sap.svg" alt="SAP" loading="lazy" style="height:38px;max-width:150px;width:auto;object-fit:contain"></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="problem" data-screen-label="Problem" style="border-bottom:1px solid var(--pl-line)">
+  <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+    <div data-reveal="" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:20px 64px;align-items:end">
+      <div>
+        <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-danger-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-danger)"></span>The problem</span>
+        <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">Pricing at your scale </span><span style="font-weight:700">breaks the tools built for small stores.</span></h2>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.06em;color:var(--pl-faint)"><span>100 SKUs</span><span>1K</span><span>10K</span><span>100K</span><span style="color:var(--pl-ink)">1M+</span></div>
+        <div style="position:relative;height:10px;border-radius:10px;background:linear-gradient(90deg,var(--pl-accent) 0 34%,var(--pl-danger-line) 34% 100%)">
+          <span style="position:absolute;left:34%;top:-8px;bottom:-8px;width:2px;background:var(--pl-danger-ink)"></span>
+          <span style="position:absolute;left:34%;top:calc(100% + 12px);transform:translateX(-50%);height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:var(--pl-danger-tint);border:1px solid var(--pl-danger-line);font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-danger-ink);white-space:nowrap">MOST TOOLS STOP HERE</span>
+          <span style="position:absolute;right:0;top:50%;width:16px;height:16px;margin-top:-8px;border-radius:50%;background:var(--pl-ink);border:3px solid var(--pl-surface);box-shadow:0 0 0 1px var(--pl-ink)"></span>
+        </div>
+        <span style="align-self:flex-end;font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--pl-ink)">YOUR CATALOG</span>
+      </div>
+    </div>
+    <div data-reveal="" style="margin-top:48px;border:1px solid var(--pl-line);border-radius:24px;overflow:hidden;background:var(--pl-line);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:1px">
+      <div style="background:var(--pl-surface);display:flex;flex-direction:column">
+        <div style="height:170px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream);display:flex;align-items:center;justify-content:center;padding:18px">
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--pl-line);border:1px solid var(--pl-line);border-radius:8px;overflow:hidden;width:200px">
+            <sc-for list="{{ sheet }}" as="c" hint-placeholder-count="16"><span style="height:24px;background:var(--pl-surface);font-family:'Geist Mono',monospace;font-size:9px;color:var(--pl-muted);display:flex;align-items:center;justify-content:center;animation:{{ c.an }}">{{ c.v }}</span></sc-for>
+          </div>
+        </div>
+        <div style="padding:22px;display:flex;flex-direction:column;gap:10px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-danger-ink)">01</span><p style="margin:0;font-size:15px;line-height:1.6;color:var(--pl-ink)">Your category managers still rebuild competitor price sheets by hand. By the time a sheet is ready, half the prices have already moved.</p></div>
+      </div>
+      <div style="background:var(--pl-surface);display:flex;flex-direction:column">
+        <div style="height:170px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream);display:flex;align-items:center;justify-content:center;padding:18px">
+          <div style="position:relative;width:210px;height:110px;display:flex;align-items:flex-end;gap:6px">
+            <span style="flex:1;height:22%;border-radius:4px 4px 0 0;background:var(--pl-gradient)"></span><span style="flex:1;height:38%;border-radius:4px 4px 0 0;background:var(--pl-gradient)"></span><span style="flex:1;height:56%;border-radius:4px 4px 0 0;background:var(--pl-gradient)"></span>
+            <span style="flex:1;height:74%;border-radius:4px 4px 0 0;background:var(--pl-danger-line);border:1px dashed var(--pl-danger)"></span><span style="flex:1;height:100%;border-radius:4px 4px 0 0;background:var(--pl-danger-line);border:1px dashed var(--pl-danger)"></span>
+            <span style="position:absolute;left:58%;top:6px;height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:var(--pl-surface);border:1px solid var(--pl-danger-line);font-family:'Geist Mono',monospace;font-size:9.5px;color:var(--pl-danger-ink);animation:pi-crack 3s ease infinite alternate">TIMEOUT ×</span>
+          </div>
+        </div>
+        <div style="padding:22px;display:flex;flex-direction:column;gap:10px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-danger-ink)">02</span><p style="margin:0;font-size:15px;line-height:1.6;color:var(--pl-ink)">Most repricing tools quietly fall over past a few thousand SKUs. Your catalog runs into the millions.</p></div>
+      </div>
+      <div style="background:var(--pl-surface);display:flex;flex-direction:column">
+        <div style="height:170px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream);display:flex;align-items:center;justify-content:center;padding:18px">
+          <div style="display:grid;grid-template-columns:repeat(10,14px);gap:5px">
+            <sc-for list="{{ coverage }}" as="d" hint-placeholder-count="40"><span style="width:14px;height:14px;border-radius:4px;background:{{ d.bg }};border:1px {{ d.bs }} {{ d.bc }}"></span></sc-for>
+          </div>
+        </div>
+        <div style="padding:22px;display:flex;flex-direction:column;gap:10px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-danger-ink)">03</span><p style="margin:0;font-size:15px;line-height:1.6;color:var(--pl-ink)">Matching your products to competitor listings is manual, so coverage is patchy and nobody fully trusts the numbers.</p></div>
+      </div>
+      <div style="background:var(--pl-surface);display:flex;flex-direction:column">
+        <div style="height:170px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream);display:flex;align-items:center;justify-content:center;padding:18px">
+          <div style="position:relative;width:200px;height:120px">
+            <span style="position:absolute;left:0;top:0;width:120px;height:72px;border-radius:9px;background:var(--pl-surface);border:1px solid var(--pl-line);box-shadow:0 10px 20px -14px rgba(60,30,15,.4);padding:8px 10px;font-family:'Geist Mono',monospace;font-size:9.5px;color:var(--pl-muted);transform:rotate(-6deg)">region_north.csv</span>
+            <span style="position:absolute;left:46px;top:22px;width:120px;height:72px;border-radius:9px;background:var(--pl-surface);border:1px solid var(--pl-line);box-shadow:0 10px 20px -14px rgba(60,30,15,.4);padding:8px 10px;font-family:'Geist Mono',monospace;font-size:9.5px;color:var(--pl-muted);transform:rotate(3deg)">marketplace.xlsx</span>
+            <span style="position:absolute;left:80px;top:48px;width:120px;height:72px;border-radius:9px;background:var(--pl-surface);border:1px solid var(--pl-danger-line);box-shadow:0 10px 20px -14px rgba(60,30,15,.4);padding:8px 10px;font-family:'Geist Mono',monospace;font-size:9.5px;color:var(--pl-danger-ink);transform:rotate(-2deg)">banner_B_v4_final.csv</span>
+          </div>
+        </div>
+        <div style="padding:22px;display:flex;flex-direction:column;gap:10px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-danger-ink)">04</span><p style="margin:0;font-size:15px;line-height:1.6;color:var(--pl-ink)">Prices shift by region, marketplace, and banner, and there's no single place to see all of it at once.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="solution" data-screen-label="Solution" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream);position:relative;overflow:hidden">
+  <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 70%,#000,transparent 75%);mask-image:radial-gradient(ellipse 70% 60% at 50% 70%,#000,transparent 75%)"></div>
+  <div style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+    <div data-reveal="" style="display:flex;flex-direction:column;align-items:center;text-align:center">
+      <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>The solution</span>
+      <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);max-width:900px;text-wrap:balance"><span style="font-weight:700">Retail Price Intelligence</span><span style="font-weight:400"> does the matching and monitoring so your team doesn't.</span></h2>
+      <p style="margin:18px 0 0;max-width:780px;font-size:17px;line-height:1.65;color:var(--pl-ink-2);text-wrap:pretty">It locates where your products are sold across competitor sites and marketplaces, matches them at the variant level, and refreshes pricing on the cadence you set. The output is a live view of where you sit on price, accurate enough to feed straight into your pricing and optimization decisions.</p>
+    </div>
+    <div data-reveal="" style="position:relative;margin-top:56px">
+      <sc-if value="{{ isWide }}" hint-placeholder-val="{{ true }}">
+        <div aria-hidden="true" style="position:absolute;left:12.5%;right:12.5%;top:36px;height:2px;background:repeating-linear-gradient(90deg,var(--pl-accent-line) 0 6px,transparent 6px 12px);background-size:20px 2px;animation:pi-dashx .8s linear infinite"></div>
+        <div aria-hidden="true" style="position:absolute;left:12.5%;top:36px;height:2px;width:{{ solFill }}%;background:var(--pl-gradient);transition:width .3s linear"></div>
+      </sc-if>
+      <div style="position:relative;display:grid;grid-template-columns:{{ solCols }};gap:16px">
+        <sc-for list="{{ sol }}" as="s" hint-placeholder-count="4">
+          <button onClick="{{ s.go }}" style="text-align:left;border:none;background:transparent;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:18px">
+            <span style="position:relative;width:72px;height:72px;border-radius:22px;background:{{ s.bg }};border:1.5px solid {{ s.bc }};display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:14px;color:var(--pl-ink);box-shadow:{{ s.sh }};transition:all .35s">{{ s.n }}</span>
+            <span style="width:100%;min-height:150px;background:var(--pl-surface);border:1px solid {{ s.cb }};border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:10px;box-shadow:{{ s.csh }};transition:all .35s">
+              <span style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:var(--pl-ink)">{{ s.t }}</span>
+              <span style="display:flex;flex-direction:column;gap:6px">
+                <sc-for list="{{ s.chips }}" as="c" hint-placeholder-count="3"><span style="height:26px;padding:0 9px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-radius:7px;background:var(--pl-cream);border:1px solid var(--pl-line-soft);font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--pl-ink-2)">{{ c.k }}<span style="color:var(--pl-accent-ink)">{{ c.v }}</span></span></sc-for>
+              </span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="margin:28px auto 0;max-width:760px;display:flex;align-items:center;gap:14px;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:14px;padding:14px 18px">
+        <span style="flex:none;width:32px;height:32px;border-radius:9px;background:var(--pl-ink);color:var(--pl-accent);display:flex;align-items:center;justify-content:center;font-size:14px">⇢</span>
+        <span style="font-size:14px;line-height:1.55;color:var(--pl-ink-2)">Already use PriceLeap's Pricing Decision Engine or Margin Protection Engine? The competitive data flows straight in.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="why" data-screen-label="Why teams pick us" style="border-bottom:1px solid var(--pl-line)">
+  <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+    <div data-reveal="" style="max-width:820px">
+      <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>Why teams pick us</span>
+      <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:700">Built for enterprise catalogs,</span><span style="font-weight:400"> not corner shops.</span></h2>
+    </div>
+    <div data-reveal="" style="margin-top:48px;display:grid;grid-template-columns:{{ bentoCols }};gap:16px">
+      <div style="grid-column:{{ bentoSpan }};background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:22px;overflow:hidden;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))">
+        <div style="padding:28px;display:flex;flex-direction:column;gap:10px;justify-content:center"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-accent-ink)">01</span><h3 style="margin:0;font-family:Geist,sans-serif;font-size:22px;font-weight:600;letter-spacing:-.02em;color:var(--pl-ink)">Matching you can actually audit.</h3><p style="margin:0;font-size:15px;line-height:1.6;color:var(--pl-muted)">Exact, variant, and private-label matches, each with a confidence score, not a black-box guess.</p></div>
+        <div style="background:var(--pl-cream);border-left:1px solid var(--pl-line-soft);padding:22px;display:flex;flex-direction:column;gap:8px;justify-content:center">
+          <sc-for list="{{ audit }}" as="a" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:11px;padding:10px 12px">
+              <span style="min-width:0"><span style="display:block;font-size:12.5px;color:var(--pl-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.n }}</span><span style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:var(--pl-faint)">{{ a.k }}</span></span>
+              <span style="height:24px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:{{ a.bg }};border:1px solid {{ a.bc }};font-family:'Geist Mono',monospace;font-size:11px;color:{{ a.c }}">{{ a.v }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:22px;padding:28px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden">
+        <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-accent-ink)">02</span>
+        <span style="font-family:Geist,sans-serif;font-size:clamp(44px,5vw,64px);font-weight:600;letter-spacing:-.05em;line-height:1;color:var(--pl-ink)">{{ skuCount }}</span>
+        <h3 style="margin:6px 0 0;font-family:Geist,sans-serif;font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--pl-ink)">Built for catalog scale.</h3>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:var(--pl-muted)">Millions of SKUs across regions and marketplaces, without the refresh slowing down.</p>
+      </div>
+      <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:22px;padding:28px;display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-accent-ink)">03</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:4px 0 8px">
+          <span style="height:34px;padding:0 12px;display:flex;align-items:center;border-radius:10px;background:var(--pl-gradient);font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-surface)">PL</span>
+          <span style="width:28px;height:2px;background:repeating-linear-gradient(90deg,var(--pl-accent) 0 5px,transparent 5px 10px);background-size:20px 2px;animation:pi-dashx .8s linear infinite"></span>
+          <span style="height:34px;padding:0 10px;display:flex;align-items:center;border-radius:10px;border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-ink)">BI</span>
+          <span style="height:34px;padding:0 10px;display:flex;align-items:center;border-radius:10px;border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-ink)">ERP/PIM</span>
+          <span style="height:34px;padding:0 10px;display:flex;align-items:center;border-radius:10px;border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-ink)">API</span>
+        </div>
+        <h3 style="margin:0;font-family:Geist,sans-serif;font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--pl-ink)">Lands where your team already works.</h3>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:var(--pl-muted)">Pushes into your BI, ERP/PIM, or systems by API. Not one more dashboard.</p>
+      </div>
+      <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:22px;padding:28px;display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-accent-ink)">04</span>
+        <div style="display:flex;align-items:center;gap:12px;margin:4px 0 8px;background:var(--pl-cream);border:1px solid var(--pl-line-soft);border-radius:14px;padding:10px 12px">
+          <span style="position:relative;width:40px;height:40px;flex:none;border-radius:50%;border:1px dashed var(--pl-line-xstrong);background:repeating-linear-gradient(135deg,var(--pl-sand) 0 5px,var(--pl-cream) 5px 10px)"><span style="position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;background:var(--pl-gradient);border:2px solid var(--pl-surface)"></span></span>
+          <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;color:var(--pl-ink)">Your solutions architect</span><span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-accent-ink)">ONLINE · REPLIES IN MINUTES</span></span>
+        </div>
+        <h3 style="margin:0;font-family:Geist,sans-serif;font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--pl-ink)">A real person during onboarding.</h3>
+        <p style="margin:0;font-size:15px;line-height:1.6;color:var(--pl-muted)">A named solutions architect, not a ticket queue.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="compare" data-screen-label="Before and after" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream)">
+  <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+    <div data-reveal="" style="display:flex;flex-direction:column;align-items:center;text-align:center">
+      <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>Before and after</span>
+      <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">What changes when your team </span><span style="font-weight:700">switches to PriceLeap.</span></h2>
+      <button onClick="{{ toggleBA }}" aria-label="Toggle before and after" style="margin-top:32px;position:relative;width:320px;max-width:100%;height:52px;border-radius:999px;border:1px solid var(--pl-line);background:var(--pl-surface);cursor:pointer;display:grid;grid-template-columns:1fr 1fr;padding:4px;box-shadow:0 10px 24px -18px rgba(60,30,15,.4)">
+        <span style="position:absolute;top:4px;bottom:4px;left:{{ baKnob }};width:calc(50% - 4px);border-radius:999px;background:{{ baKnobBg }};transition:left .45s cubic-bezier(.2,.7,.2,1),background .45s"></span>
+        <span style="position:relative;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:{{ baC0 }};transition:color .3s">Before PriceLeap</span>
+        <span style="position:relative;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:var(--pl-ink)">With PriceLeap</span>
+      </button>
+    </div>
+    <div data-reveal="" style="margin-top:36px;position:relative;background:var(--pl-surface);border:{{ baBorder }};border-radius:24px;overflow:hidden;transition:border-color .45s,box-shadow .45s;box-shadow:{{ baSh }}">
+      <div key="{{ baKey }}" style="display:grid;grid-template-columns:{{ splitCols }};animation:pi-in .45s ease">
+        <div style="padding:clamp(24px,4vw,44px);display:flex;flex-direction:column;gap:14px;background:{{ baLeftBg }};border-right:{{ baDiv }}">
+          <span style="align-self:flex-start;height:26px;padding:0 10px;display:flex;align-items:center;gap:6px;border-radius:7px;background:{{ baTagBg }};border:1px solid {{ baTagBc }};font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:{{ baTagC }}">{{ baTag }}</span>
+          <h3 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(26px,3vw,38px);font-weight:600;letter-spacing:-.03em;line-height:1.1;color:var(--pl-ink)">{{ baTitle }}</h3>
+          <div style="margin-top:10px;display:flex;align-items:center;gap:14px">
+            <span style="font-family:Geist,sans-serif;font-size:56px;font-weight:600;letter-spacing:-.05em;line-height:1;color:{{ baMeterC }}">{{ baCov }}</span>
+            <span style="font-size:14px;line-height:1.45;color:var(--pl-muted)">of catalog<br>monitored</span>
+          </div>
+          <div style="height:8px;border-radius:8px;background:var(--pl-line-soft);overflow:hidden"><span style="display:block;height:100%;width:{{ baCovW }};border-radius:8px;background:{{ baMeterC }};transform-origin:left;animation:pi-grow .9s cubic-bezier(.2,.7,.2,1) both"></span></div>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ baList }}" as="r" hint-placeholder-count="4">
+            <div style="display:flex;gap:14px;align-items:flex-start;padding:22px clamp(20px,3vw,32px);border-bottom:1px solid var(--pl-line-soft);animation:pi-in .45s ease {{ r.dl }}s both">
+              <span style="flex:none;margin-top:2px;width:22px;height:22px;border-radius:50%;background:{{ r.ib }};border:1px solid {{ r.ibc }};color:{{ r.ic }};font-size:11px;display:flex;align-items:center;justify-content:center">{{ r.mk }}</span>
+              <span style="font-size:16px;line-height:1.55;color:{{ r.c }}">{{ r.t }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features" data-screen-label="Core features" style="border-bottom:1px solid var(--pl-line)">
+  <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+    <div data-reveal="" style="display:flex;flex-direction:column;align-items:center;text-align:center">
+      <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>Core features</span>
+      <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">Everything from </span><span style="font-weight:700">match to action,</span><span style="font-weight:400"> in one layer.</span></h2>
+    </div>
+    <div style="position:relative;margin-top:64px;display:flex;flex-direction:column;gap:clamp(48px,7vw,96px)">
+      <sc-if value="{{ isWide }}" hint-placeholder-val="{{ true }}"><span aria-hidden="true" style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:linear-gradient(180deg,transparent,var(--pl-line) 8%,var(--pl-line) 92%,transparent)"></span></sc-if>
+
+      <div data-reveal="" style="position:relative;display:grid;grid-template-columns:{{ featCols }};gap:clamp(32px,5vw,80px);align-items:center">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)">Feature 01</span>
+          <h3 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(26px,3vw,36px);font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">AI product matching</h3>
+          <p style="margin:0;font-size:16px;line-height:1.65;color:var(--pl-ink-2)">Matches your catalog to competitor listings automatically, then keeps it accurate as listings change.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+            <span style="display:flex;gap:12px;font-size:15px;line-height:1.55;color:var(--pl-ink)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>Handles exact matches, variants, and private-label / similar products</span>
+            <span style="display:flex;gap:12px;font-size:15px;line-height:1.55;color:var(--pl-ink)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>Confidence scoring plus a human-QA layer for the matches that matter most.</span>
+          </div>
+        </div>
+        <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:20px;box-shadow:0 30px 60px -40px rgba(60,30,15,.35);overflow:hidden">
+          <div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream);font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-muted)"><span>match-review</span><span style="color:var(--pl-accent-ink)">{{ matchDone }} / 3 resolved</span></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
+            <sc-for list="{{ matchBars }}" as="m" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:13px;color:var(--pl-ink)">{{ m.n }}</span><span style="height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:{{ m.bg }};border:1px solid {{ m.bc }};font-family:'Geist Mono',monospace;font-size:10.5px;color:{{ m.c }}">{{ m.label }}</span></div>
+                <div style="height:8px;border-radius:8px;background:var(--pl-line-soft);overflow:hidden"><span style="display:block;height:100%;width:{{ m.v }}%;border-radius:8px;background:{{ m.bar }};transform-origin:left;animation:pi-grow 1.2s cubic-bezier(.2,.7,.2,1) {{ m.dl }}s both"></span></div>
+              </div>
+            </sc-for>
+            <div style="display:flex;align-items:center;gap:10px;border-top:1px dashed var(--pl-line);padding-top:14px;font-size:12.5px;color:var(--pl-ink-2)"><span style="width:26px;height:26px;border-radius:8px;background:var(--pl-warn-tint);border:1px solid var(--pl-warn-line);color:var(--pl-warn-ink);display:flex;align-items:center;justify-content:center;font-size:12px">◉</span>Low-confidence matches route to a human QA reviewer.</div>
+          </div>
+        </div>
+      </div>
+
+      <div data-reveal="" style="position:relative;display:grid;grid-template-columns:{{ featCols }};gap:clamp(32px,5vw,80px);align-items:center">
+        <div style="order:{{ featOrder }};display:flex;flex-direction:column;gap:14px">
+          <span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)">Feature 02</span>
+          <h3 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(26px,3vw,36px);font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">Competitor price monitoring</h3>
+          <p style="margin:0;font-size:16px;line-height:1.65;color:var(--pl-ink-2)">Watches the prices that move your category, as often as you need them.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+            <span style="display:flex;gap:12px;font-size:15px;line-height:1.55;color:var(--pl-ink)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>Coverage across competitor sites, marketplaces, and channels</span>
+            <span style="display:flex;gap:12px;font-size:15px;line-height:1.55;color:var(--pl-ink)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>Full price history, so you see patterns, not just today's number.</span>
+          </div>
+        </div>
+        <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:20px;box-shadow:0 30px 60px -40px rgba(60,30,15,.35);overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream);flex-wrap:wrap"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-muted)">price-history</span><span style="display:flex;gap:12px;font-size:11.5px;color:var(--pl-ink-2)"><span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:3px;border-radius:2px;background:var(--pl-gradient)"></span>You</span><span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:3px;border-radius:2px;background:var(--pl-ink)"></span>Competitor A</span><span style="display:flex;align-items:center;gap:5px"><span style="width:12px;border-top:2px dashed var(--pl-faint)"></span>Market</span></span></div>
+          <div style="padding:20px">
+            <svg viewBox="0 0 480 200" style="display:block;width:100%;height:auto;overflow:visible">
+              <line x1="0" y1="50" x2="480" y2="50" stroke="#F8EFE8"></line><line x1="0" y1="100" x2="480" y2="100" stroke="#F8EFE8"></line><line x1="0" y1="150" x2="480" y2="150" stroke="#F8EFE8"></line>
+              <path d="M0,104 L80,100 L160,108 L240,102 L320,110 L400,104 L480,106" fill="none" stroke="#7F7066" stroke-width="2" stroke-dasharray="5 5"></path>
+              <path d="M0,86 L60,88 L100,132 L150,128 L190,90 L260,92 L300,140 L350,134 L390,96 L480,92" fill="none" stroke="#1C130E" stroke-width="2" pathLength="1" style="stroke-dasharray:1;animation:pi-draw 2s ease both"></path>
+              <path d="M0,76 L80,76 L120,112 L170,110 L210,82 L280,82 L320,118 L370,116 L410,86 L480,84" fill="none" stroke="#F7631E" stroke-width="3" stroke-linecap="round" pathLength="1" style="stroke-dasharray:1;animation:pi-draw 2.4s ease .2s both"></path>
+              <circle cx="480" cy="84" r="5" fill="#F7631E" stroke="#FFFFFF" stroke-width="2"></circle>
+            </svg>
+            <div style="display:flex;justify-content:space-between;margin-top:8px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-faint)"><span>12 WEEKS AGO</span><span>TODAY</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div data-reveal="" style="position:relative;display:grid;grid-template-columns:{{ featCols }};gap:clamp(32px,5vw,80px);align-items:center">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)">Feature 03</span>
+          <h3 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(26px,3vw,36px);font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">Price position, ready to act on</h3>
+          <p style="margin:0;font-size:16px;line-height:1.65;color:var(--pl-ink-2)">Shows where you stand against each competitor, by SKU, category, and region — and turns it into pricing moves.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+            <span style="display:flex;gap:12px;font-size:15px;line-height:1.55;color:var(--pl-ink)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>Alerts when a competitor crosses a threshold you care about</span>
+            <span style="display:flex;gap:12px;font-size:15px;line-height:1.55;color:var(--pl-ink)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>Surfaces the SKUs where a price change wins margin or share, so your retail price optimization software acts on clean inputs.</span>
+          </div>
+        </div>
+        <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:20px;box-shadow:0 30px 60px -40px rgba(60,30,15,.35);overflow:hidden">
+          <div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream);font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-muted)"><span>position</span><span style="display:flex;align-items:center;gap:6px;color:var(--pl-danger-ink)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-danger);animation:pi-blink 1.2s steps(1) infinite"></span>THRESHOLD CROSSED</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--pl-line-soft)">
+            <div style="background:var(--pl-surface);padding:18px 20px"><div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-faint)">WIN MARGIN</div><div style="margin-top:4px;font-family:Geist,sans-serif;font-size:32px;font-weight:600;letter-spacing:-.04em;color:var(--pl-accent-ink)">+$1.2M</div></div>
+            <div style="background:var(--pl-surface);padding:18px 20px"><div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-faint)">SKUS TO MOVE</div><div style="margin-top:4px;font-family:Geist,sans-serif;font-size:32px;font-weight:600;letter-spacing:-.04em;color:var(--pl-ink)">318</div></div>
+          </div>
+          <div style="padding:20px;border-top:1px solid var(--pl-line-soft)">
+            <div style="position:relative;height:120px">
+              <span style="position:absolute;left:0;right:0;top:38%;border-top:1.5px dashed var(--pl-danger)"></span>
+              <span style="position:absolute;right:0;top:calc(38% - 20px);font-family:'Geist Mono',monospace;font-size:9.5px;color:var(--pl-danger-ink)">threshold</span>
+              <div style="position:absolute;inset:0;display:flex;align-items:flex-end;gap:5px">
+                <sc-for list="{{ posBars }}" as="b" hint-placeholder-count="18"><span style="flex:1;height:{{ b.h }}%;border-radius:3px 3px 0 0;background:{{ b.c }};transform-origin:bottom;animation:pi-growy .8s ease {{ b.dl }}s both"></span></sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div data-reveal="" style="position:relative;display:grid;grid-template-columns:{{ featCols }};gap:clamp(32px,5vw,80px);align-items:center">
+        <div style="order:{{ featOrder }};display:flex;flex-direction:column;gap:14px">
+          <span style="font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)">Feature 04</span>
+          <h3 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(26px,3vw,36px);font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">Data delivery &amp; integrations</h3>
+          <p style="margin:0;font-size:16px;line-height:1.65;color:var(--pl-ink-2)">Gets competitive data into your stack with no copy-paste.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+            <span style="display:flex;gap:12px;font-size:15px;line-height:1.55;color:var(--pl-ink)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>API, BI connectors, and scheduled feeds</span>
+            <span style="display:flex;gap:12px;font-size:15px;line-height:1.55;color:var(--pl-ink)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>Pipes cleanly into your pricing, ERP, PIM, and reporting tools.</span>
+          </div>
+        </div>
+        <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:20px;box-shadow:0 30px 60px -40px rgba(60,30,15,.35);overflow:hidden">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream)"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-muted)">integrations</span><span style="height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:var(--pl-accent-tint);border:1px solid var(--pl-accent-line);font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-accent-ink)">200 OK</span></div>
+          <div style="padding:18px 20px;font-family:'Geist Mono',monospace;font-size:13px;line-height:1.9;color:var(--pl-ink-2);background:var(--pl-surface)">
+            <div><span style="color:var(--pl-accent-ink)">GET</span> <span style="color:var(--pl-ink)">/v2/price-position</span></div>
+            <div style="color:var(--pl-faint)">{</div>
+            <div style="padding-left:18px">"sku": <span style="color:var(--pl-accent-ink)">"RTL-44821"</span>,</div>
+            <div style="padding-left:18px">"index": <span style="color:var(--pl-surface)">98.4</span>,</div>
+            <div style="padding-left:18px">"position": <span style="color:var(--pl-accent-ink)">"below_market"</span><span style="display:inline-block;width:8px;height:15px;margin-left:2px;vertical-align:-2px;background:var(--pl-gradient);animation:pi-blink 1s steps(1) infinite"></span></div>
+            <div style="color:var(--pl-faint)">}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--pl-line-soft);border-top:1px solid var(--pl-line-soft)">
+            <sc-for list="{{ sinks }}" as="k" hint-placeholder-count="4"><span style="background:{{ k.bg }};height:48px;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-ink);transition:background .4s"><span style="width:6px;height:6px;border-radius:50%;background:{{ k.dot }};transition:background .4s"></span>{{ k.t }}</span></sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="proof" data-screen-label="Proof" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream)">
+  <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px);display:grid;grid-template-columns:{{ proofCols }};gap:16px">
+    <div data-reveal="" style="position:relative;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:24px;padding:clamp(28px,4vw,48px);display:flex;flex-direction:column;gap:20px;overflow:hidden">
+      <span aria-hidden="true" style="position:absolute;right:-20px;top:-60px;font-family:Geist,sans-serif;font-size:260px;font-weight:700;line-height:1;color:var(--pl-accent-tint)">“</span>
+      <span style="position:relative;display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>Proof</span>
+      <h2 style="position:relative;margin:0;font-family:Geist,sans-serif;font-size:clamp(26px,3.2vw,40px);line-height:1.12;letter-spacing:-.03em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:700">[Client name]</span><span style="font-weight:400"> cut competitor-price research from </span><span style="font-weight:700">[X hours/week]</span><span style="font-weight:400"> to near zero.</span></h2>
+      <p style="position:relative;margin:0;font-size:16px;line-height:1.65;color:var(--pl-muted)">[Two or three lines: what they sell, what was breaking, what changed. End on a hard number.]</p>
+      <div style="position:relative;margin-top:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px dashed var(--pl-line);padding-top:20px">
+        <span style="height:44px;padding:0 16px;display:flex;align-items:center;border-radius:10px;border:1px dashed var(--pl-line-xstrong);background:repeating-linear-gradient(135deg,var(--pl-sand) 0 6px,var(--pl-cream) 6px 12px);font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-muted)">Client logo</span>
+        <span style="height:44px;padding:0 16px;display:flex;align-items:center;border-radius:10px;border:1px dashed var(--pl-line-xstrong);background:repeating-linear-gradient(135deg,var(--pl-sand) 0 6px,var(--pl-cream) 6px 12px);font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-muted)">G2 / Gartner / IDC badge</span>
+        <span style="font-size:13px;color:var(--pl-muted)">Trusted by enterprise retail teams</span>
+      </div>
+    </div>
+    <div data-reveal="" style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:24px;padding:clamp(28px,4vw,40px);display:flex;flex-direction:column;gap:18px">
+      <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(24px,2.6vw,30px);line-height:1.15;letter-spacing:-.03em;color:var(--pl-ink)"><span style="font-weight:700">Enterprise-grade</span><span style="font-weight:400"> by default.</span></h2>
+      <div style="display:flex;gap:10px">
+        <span style="position:relative;width:76px;height:76px;border-radius:50%;border:1.5px solid var(--pl-accent);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;font-weight:500;color:var(--pl-accent-ink)"><span style="position:absolute;inset:-6px;border-radius:50%;border:1px dashed var(--pl-accent-line);animation:pi-orbit 20s linear infinite"></span>SOC 2</span>
+        <span style="position:relative;width:76px;height:76px;border-radius:50%;border:1.5px solid var(--pl-accent);display:flex;align-items:center;justify-content:center;text-align:center;font-family:'Geist Mono',monospace;font-size:11px;font-weight:500;line-height:1.2;color:var(--pl-accent-ink)"><span style="position:absolute;inset:-6px;border-radius:50%;border:1px dashed var(--pl-accent-line);animation:pi-orbit 20s linear infinite reverse"></span>ISO<br>27001</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="display:flex;gap:12px;font-size:15px;line-height:1.5;color:var(--pl-ink)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>SOC 2 Type II and ISO 27001 certified</span>
+        <span style="display:flex;gap:12px;font-size:15px;line-height:1.5;color:var(--pl-ink)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>[X]% data-accuracy commitment and [X]% uptime SLA</span>
+        <span style="display:flex;gap:12px;font-size:15px;line-height:1.5;color:var(--pl-ink)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>Clear data governance and access controls.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" data-screen-label="Pricing" style="border-bottom:1px solid var(--pl-line)">
+  <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+    <div data-reveal="" style="border:1px solid var(--pl-line);border-radius:28px;overflow:hidden;background:var(--pl-line);display:grid;grid-template-columns:{{ splitCols }};gap:1px">
+      <div style="background:var(--pl-surface);padding:clamp(28px,4vw,52px);display:flex;flex-direction:column;gap:18px">
+        <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>Pricing</span>
+        <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.4vw,42px);line-height:1.08;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">Pricing scales with </span><span style="font-weight:700">your catalog, your competitor set, and how often you need data.</span></h2>
+        <p style="margin:0;font-size:17px;line-height:1.6;color:var(--pl-ink-2)">Tell us your setup and we'll scope it to your business. No tiers to outgrow.</p>
+        <div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap">
+          <a href="#demo" style="height:48px;padding:0 22px;display:inline-flex;align-items:center;border-radius:12px;background:var(--pl-gradient);color:var(--pl-surface);font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.9)" style-hover="background:var(--pl-gradient-hover);color:var(--pl-surface)">Get a custom quote</a>
+          <a href="#demo" style="height:48px;padding:0 20px;display:inline-flex;align-items:center;border-radius:12px;background:var(--pl-surface);border:1px solid var(--pl-line);color:var(--pl-ink);font-family:Geist,sans-serif;font-weight:500;font-size:15px" style-hover="border-color:var(--pl-line-xstrong);color:var(--pl-ink)">Book a demo</a>
+        </div>
+      </div>
+      <div style="background:var(--pl-cream);padding:clamp(24px,3.4vw,44px);display:flex;flex-direction:column;gap:22px">
+        <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:var(--pl-muted)">YOUR SETUP</span><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--pl-faint)">drag to scope</span></div>
+        <label style="display:flex;flex-direction:column;gap:10px">
+          <span style="display:flex;justify-content:space-between;font-size:14px;color:var(--pl-ink)"><span>Catalog size</span><span style="font-family:'Geist Mono',monospace;color:var(--pl-accent-ink)">{{ scSku }}</span></span>
+          <input type="range" min="0" max="5" step="1" value="{{ sku }}" onChange="{{ setSku }}" aria-label="Catalog size" style="width:100%">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:10px">
+          <span style="display:flex;justify-content:space-between;font-size:14px;color:var(--pl-ink)"><span>Competitor set</span><span style="font-family:'Geist Mono',monospace;color:var(--pl-accent-ink)">{{ scComp }}</span></span>
+          <input type="range" min="1" max="30" step="1" value="{{ comp }}" onChange="{{ setComp }}" aria-label="Competitor set" style="width:100%">
+        </label>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:14px;color:var(--pl-ink)">Refresh frequency</span>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px;border:1px solid var(--pl-line);border-radius:12px;background:var(--pl-surface)">
+            <sc-for list="{{ freqs }}" as="f" hint-placeholder-count="3"><button onClick="{{ f.go }}" style="height:36px;border:none;border-radius:9px;cursor:pointer;font-size:13px;font-weight:500;background:{{ f.bg }};color:var(--pl-ink);transition:background .25s">{{ f.t }}</button></sc-for>
+          </div>
+        </div>
+        <div style="margin-top:auto;background:var(--pl-surface);border:1px solid var(--pl-accent-line);border-radius:14px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap">
+          <div><div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-accent-ink)">PRICE POINTS / DAY</div><div style="margin-top:4px;font-family:Geist,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">{{ scPoints }}</div></div>
+          <span style="font-size:13px;color:var(--pl-muted);max-width:220px">Scoped to your setup. We'll quote on this.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" data-screen-label="FAQ" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream)">
+  <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px);display:grid;grid-template-columns:{{ splitCols }};gap:clamp(32px,5vw,72px);align-items:start">
+    <div data-reveal="" style="position:{{ stickyPos }};top:96px">
+      <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>FAQ</span>
+      <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">Frequently asked </span><span style="font-weight:700">questions</span></h2>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ faqs }}" as="q" hint-placeholder-count="7">
+        <div style="background:var(--pl-surface);border:1px solid {{ q.bc }};border-radius:16px;overflow:hidden;transition:border-color .25s,box-shadow .25s;box-shadow:{{ q.sh }}">
+          <button onClick="{{ q.go }}" aria-expanded="{{ q.open }}" style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:16px;padding:20px 22px;text-align:left">
+            <span style="font-family:'Geist Mono',monospace;font-size:11px;color:{{ q.nc }}">{{ q.n }}</span>
+            <span style="flex:1;font-family:Geist,sans-serif;font-size:17px;font-weight:500;color:var(--pl-ink)">{{ q.q }}</span>
+            <span style="flex:none;width:30px;height:30px;border-radius:9px;background:{{ q.ib }};color:var(--pl-ink);display:flex;align-items:center;justify-content:center;transform:rotate({{ q.rot }}deg);transition:transform .3s,background .3s"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"></path></svg></span>
+          </button>
+          <div style="display:grid;grid-template-rows:{{ q.rows }};transition:grid-template-rows .35s ease">
+            <div style="overflow:hidden"><p style="margin:0;padding:0 22px 22px 58px;font-size:15px;line-height:1.65;color:var(--pl-ink-2)">{{ q.a }}</p></div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+
+<section id="demo" data-screen-label="CTA" style="padding:clamp(20px,3vw,28px)">
+  <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:28px;padding:clamp(72px,10vw,120px) clamp(20px,4vw,40px);text-align:center">
+    <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(var(--pl-line-alt) 1px,transparent 1px);background-size:20px 20px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 20%,transparent 75%)"></div>
+    <div aria-hidden="true" style="position:absolute;left:50%;top:50%;width:440px;height:440px;margin:-220px 0 0 -220px;border-radius:50%;border:1px dashed var(--pl-accent-line);animation:pi-orbit 40s linear infinite"><span style="position:absolute;left:50%;top:-6px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:var(--pl-gradient);box-shadow:0 0 0 6px rgba(247,99,30,.18)"></span></div>
+    <div aria-hidden="true" style="position:absolute;left:50%;top:50%;width:640px;height:640px;margin:-320px 0 0 -320px;border-radius:50%;border:1px solid var(--pl-line-soft)"></div>
+    <div data-reveal="" style="position:relative;display:flex;flex-direction:column;align-items:center;gap:26px">
+      <span style="height:30px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:999px;background:var(--pl-surface);border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.08em;color:var(--pl-ink)">◷ 20 MIN</span>
+      <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(32px,4.8vw,60px);line-height:1.04;letter-spacing:-.045em;color:var(--pl-ink);max-width:820px;text-wrap:balance"><span style="font-weight:400">See your real price position </span><span style="font-weight:700">in a 20-minute demo.</span></h2>
+      <a href="/contact" style="height:52px;padding:0 26px;display:inline-flex;align-items:center;border-radius:12px;background:var(--pl-gradient);color:var(--pl-surface);font-family:Geist,sans-serif;font-weight:500;font-size:16px;box-shadow:0 12px 26px -12px rgba(247,99,30,.9)" style-hover="background:var(--pl-gradient-hover);color:var(--pl-surface)">Book a demo</a>
+    </div>
+  </div>
+</section>
+
+<footer data-screen-label="Footer" style="padding:clamp(20px,3vw,28px) clamp(20px,3vw,28px) 0;max-width:1336px;margin:0 auto">
+  <div style="border:1px solid var(--pl-line);border-radius:22px;overflow:hidden;background:var(--pl-line);display:grid;gap:1px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:1px">
+      <div style="background:var(--pl-surface);padding:32px 28px;display:flex;flex-direction:column;gap:18px;position:relative;overflow:hidden">
+        <div style="position:absolute;inset:0;background-image:radial-gradient(var(--pl-line) 1px,transparent 1px);background-size:18px 18px;-webkit-mask-image:linear-gradient(135deg,transparent 40%,#000);mask-image:linear-gradient(135deg,transparent 40%,#000);pointer-events:none"></div>
+        <a href="/" style="position:relative;display:flex;align-items:center;gap:10px">
+          <img src="/assets/priceleap-logo.png" alt="PriceLeap" width="158" height="30" style="display:block;height:30px;width:auto">
+        </a>
+        <p style="position:relative;margin:0;font-size:15px;line-height:1.6;color:var(--pl-muted);max-width:320px">Pricing intelligence software for e-commerce and marketplace teams. Competitor price tracking, verified accuracy and dynamic pricing in one workspace.</p>
+        <div style="position:relative;display:flex;align-items:center;gap:8px;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-ink-2)"><span style="width:7px;height:7px;border-radius:50%;background:var(--pl-gradient);animation:pi-pulse 1.6s infinite"></span>All systems operational</div>
+      </div>
+      <div style="background:var(--pl-surface);padding:32px 28px;display:flex;flex-direction:column;justify-content:space-between;gap:18px">
+        <div>
+          <div style="font-size:22px;font-weight:500;letter-spacing:-.02em;line-height:1.25">Pricing insights, every other week.</div>
+          <div style="font-size:14px;color:var(--pl-muted);margin-top:8px">Market moves, MAP trends and product updates. No spam.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="flex:1;min-width:180px;border:1px solid var(--pl-line);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--pl-faint);background:var(--pl-cream)">you@company.com</div>
+          <a href="#" style="background:var(--pl-gradient);color:var(--pl-surface);font-weight:500;font-size:14px;padding:12px 18px;border-radius:12px;box-shadow:0 10px 22px -12px rgba(247,99,30,.8)">Subscribe</a>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px">
+      <div style="background:var(--pl-surface);padding:28px 24px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.14em;color:var(--pl-faint)">PRODUCT</div>
+        <div style="display:flex;flex-direction:column;gap:11px;font-size:14px"><a href="/price-intelligence-engine" style="color:var(--pl-ink-2)">Price Intelligence</a><a href="#" style="color:var(--pl-ink-2)">Decision Engine</a><a href="/dynamic-pricing-software" style="color:var(--pl-ink-2)">Dynamic Pricing</a><a href="#" style="color:var(--pl-ink-2)">PriceLeap Agent</a><a href="#" style="color:var(--pl-ink-2)">Reports</a></div>
+      </div>
+      <div style="background:var(--pl-surface);padding:28px 24px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.14em;color:var(--pl-faint)">SOLUTIONS</div>
+        <div style="display:flex;flex-direction:column;gap:11px;font-size:14px"><a href="#" style="color:var(--pl-ink-2)">E-commerce brands</a><a href="#" style="color:var(--pl-ink-2)">Marketplace sellers</a><a href="/for-retailers" style="color:var(--pl-ink-2)">Retailers</a><a href="#" style="color:var(--pl-ink-2)">D2C stores</a><a href="#" style="color:var(--pl-ink-2)">MAP monitoring</a></div>
+      </div>
+      <div style="background:var(--pl-surface);padding:28px 24px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.14em;color:var(--pl-faint)">RESOURCES</div>
+        <div style="display:flex;flex-direction:column;gap:11px;font-size:14px"><a href="#" style="color:var(--pl-ink-2)">How it works</a><a href="#" style="color:var(--pl-ink-2)">Data accuracy</a><a href="#" style="color:var(--pl-ink-2)">Integrations</a><a href="#" style="color:var(--pl-ink-2)">API docs</a><a href="#" style="color:var(--pl-ink-2)">Changelog</a></div>
+      </div>
+      <div style="background:var(--pl-surface);padding:28px 24px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.14em;color:var(--pl-faint)">COMPANY</div>
+        <div style="display:flex;flex-direction:column;gap:11px;font-size:14px"><a href="/about" style="color:var(--pl-ink-2)">About</a><a href="#" style="color:var(--pl-ink-2)">Customers</a><a href="#" style="color:var(--pl-ink-2)">Careers</a><a href="/contact" style="color:var(--pl-ink-2)">Contact</a><a href="/contact" style="color:var(--pl-ink-2)">Book a demo</a></div>
+      </div>
+      <div style="background:var(--pl-surface);padding:28px 24px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.14em;color:var(--pl-faint)">LEGAL</div>
+        <div style="display:flex;flex-direction:column;gap:11px;font-size:14px"><a href="/privacy-policy" style="color:var(--pl-ink-2)">Privacy policy</a><a href="/terms" style="color:var(--pl-ink-2)">Terms of service</a><a href="#" style="color:var(--pl-ink-2)">Security</a><a href="#" style="color:var(--pl-ink-2)">DPA</a><a href="#" style="color:var(--pl-ink-2)">Cookie settings</a></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px">
+      <div style="background:var(--pl-cream);padding:14px 20px;display:flex;align-items:center;gap:10px;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-ink-2)"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid var(--pl-accent);color:var(--pl-accent-ink);font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>ISO 27001-aligned</div><div style="background:var(--pl-cream);padding:14px 20px;display:flex;align-items:center;gap:10px;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-ink-2)"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid var(--pl-accent);color:var(--pl-accent-ink);font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>SSO & SAML</div><div style="background:var(--pl-cream);padding:14px 20px;display:flex;align-items:center;gap:10px;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-ink-2)"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid var(--pl-accent);color:var(--pl-accent-ink);font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Role-based access</div><div style="background:var(--pl-cream);padding:14px 20px;display:flex;align-items:center;gap:10px;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-ink-2)"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid var(--pl-accent);color:var(--pl-accent-ink);font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>GDPR ready</div><div style="background:var(--pl-cream);padding:14px 20px;display:flex;align-items:center;gap:10px;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-ink-2)"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid var(--pl-accent);color:var(--pl-accent-ink);font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>99.9% uptime SLA</div>
+    </div>
+  </div>
+  <div style="overflow:hidden;margin-top:28px;line-height:.78;text-align:center;font-size:clamp(80px,19vw,236px);font-weight:600;letter-spacing:-.06em;background:linear-gradient(180deg,var(--pl-line) 0%,var(--pl-surface) 92%);-webkit-background-clip:text;background-clip:text;color:transparent;user-select:none">PriceLeap</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;border-top:1px solid var(--pl-line);padding:20px 0 24px;font-size:13px;color:var(--pl-faint)">
+    <span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:12px">© 2026 PriceLeap. All rights reserved.</span>
+    <span style="display:flex;gap:8px"><a href="#" style="width:34px;height:34px;border-radius:10px;border:1px solid var(--pl-line);background:var(--pl-surface);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--pl-ink-2)">in</a><a href="#" style="width:34px;height:34px;border-radius:10px;border:1px solid var(--pl-line);background:var(--pl-surface);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--pl-ink-2)">X</a><a href="#" style="width:34px;height:34px;border-radius:10px;border:1px solid var(--pl-line);background:var(--pl-surface);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--pl-ink-2)">YT</a><a href="#" style="width:34px;height:34px;border-radius:10px;border:1px solid var(--pl-line);background:var(--pl-surface);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--pl-ink-2)">GH</a></span>
+    <span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:12px">Made for pricing teams · ₹ INR</span>
+  </div>
+</footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;autoplay&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behavior&quot;}}">
+class Component extends DCLogic {
+  state = { w: 1280, tick: 0, sol: 0, solP: 0, ba: 1, faq: 0, sku: 4, comp: 12, freq: 0, menu: false, skuP: 0 };
+  rootRef = React.createRef();
+  componentDidMount() {
+    this._r = () => this.setState({ w: window.innerWidth });
+    this._r(); window.addEventListener('resize', this._r);
+    this._k = setInterval(() => this.setState(s => ({ tick: s.tick + 1 })), 2600);
+    this._t = setInterval(() => {
+      if (this.props.autoplay === false) return;
+      this.setState(s => { const p = s.solP + 0.05; return p >= 1 ? { sol: (s.sol + 1) % 4, solP: 0 } : { solP: p }; });
+    }, 200);
+    const root = this.rootRef.current;
+    if (root && 'IntersectionObserver' in window) {
+      root.classList.add('pl-js');
+      this._io = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; e.target.classList.add('pl-in'); this._io.unobserve(e.target); if (e.target.dataset.count !== undefined) this.count(); }), { rootMargin: '0px 0px -8% 0px' });
+      setTimeout(() => { root.querySelectorAll('[data-reveal]').forEach(el => this._io.observe(el)); const w = root.querySelector('#why [data-reveal]:last-child'); if (w) w.dataset.count = '1'; }, 60);
+    } else this.setState({ skuP: 1 });
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this._r); clearInterval(this._k); clearInterval(this._t); this._io && this._io.disconnect(); cancelAnimationFrame(this._raf); }
+  count() {
+    const t0 = performance.now(), D = 1800;
+    const step = n => { const k = Math.min(1, (n - t0) / D); this.setState({ skuP: 1 - Math.pow(1 - k, 3) }); if (k < 1) this._raf = requestAnimationFrame(step); };
+    this._raf = requestAnimationFrame(step);
+  }
+  renderVals() {
+    const s = this.state, w = s.w, isMob = w < 760, isWide = w >= 1000, tk = s.tick;
+    const cats = [['Grocery', -2.3], ['Electronics', 4.1], ['Home', -1.0], ['Beauty', 1.8], ['Toys', -3.2], ['Apparel', 0.6], ['Garden', -1.6]];
+    const catBars = cats.map(([n, d], i) => {
+      const jitter = (i === (tk % 7)) ? (d < 0 ? -0.6 : 0.6) : 0, v = d + jitter;
+      return { n, d: (v > 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '%', h: Math.max(18, Math.min(96, 60 + v * 8)), c: v < 0 ? 'var(--pl-accent)' : v > 3 ? 'var(--pl-danger)' : '#D5DAD5', tc: v < 0 ? 'var(--pl-accent-ink)' : v > 3 ? 'var(--pl-danger-ink)' : 'var(--pl-muted)', dl: (i * 0.06).toFixed(2) };
+    });
+    const al = [
+      { t: 'Competitor A cut 34 SKUs · Grocery', d: '−3.8%', c: 'var(--pl-danger-ink)', m: 'REGION NORTH · 2M AGO' },
+      { t: 'Marketplace B above you · Electronics', d: '+5.2%', c: 'var(--pl-accent-ink)', m: 'MARKETPLACE · 6M AGO' },
+      { t: 'Banner C promo started · Toys', d: '−12%', c: 'var(--pl-danger-ink)', m: 'BANNER C · 11M AGO' },
+      { t: 'Out of stock at Competitor D · Home', d: 'OOS', c: 'var(--pl-ink-2)', m: 'ONLINE · 18M AGO' },
+      { t: 'Private-label match found · Beauty', d: '91%', c: 'var(--pl-accent-ink)', m: 'MATCHING · 24M AGO' }
+    ];
+    const alertFeed = [0, 1, 2, 3].map(i => ({ ...al[(tk + i) % al.length], k: tk + '-' + i }));
+    const logoNames = [['McAfee', 'Geist,sans-serif', 600, '0'], ['Xometry', 'Geist,sans-serif', 500, '-.01em'], ['Do it Best', 'Inter,sans-serif', 700, '-.02em'], ['Wolt', 'Geist,sans-serif', 700, '.02em'], ['neho', 'Inter,sans-serif', 600, '-.03em'], ['apoBank', 'Geist,sans-serif', 700, '-.02em']];
+    const logos = [...logoNames, ...logoNames].map(([t, f, wt, ls]) => ({ t, f, w: wt, ls }));
+    const sheetVals = ['SKU', 'YOU', 'COMP', 'Δ', '4471', '$12', '$11', '?', '4472', '$8', '—', '?', '4473', '$21', '$19', '?'];
+    const sheet = sheetVals.map((v, i) => ({ v, an: (i > 3 && (i % 4 === 2 || i % 4 === 3)) ? `pi-cell 2.4s ease ${(i * 0.15).toFixed(2)}s infinite` : 'none' }));
+    const covered = [0, 1, 2, 5, 6, 9, 11, 12, 15, 18, 20, 21, 24, 27, 30, 31, 33, 36, 38];
+    const coverage = Array.from({ length: 40 }, (_, i) => { const on = covered.includes(i); return { bg: on ? 'var(--pl-accent)' : 'var(--pl-surface)', bc: on ? 'var(--pl-accent)' : 'var(--pl-line-xstrong)', bs: on ? 'solid' : 'dashed' }; });
+    const solData = [
+      { n: '01', t: 'Discover & match', chips: [['Sites found', '214'], ['Variant-level', '✓'], ['Private label', '✓']] },
+      { n: '02', t: 'Monitor competitor prices', chips: [['Cadence', 'Daily'], ['Regions', 'All'], ['History', 'Full']] },
+      { n: '03', t: 'See your price position', chips: [['By SKU', '✓'], ['By category', '✓'], ['By region', '✓']] },
+      { n: '04', t: 'Optimize and act', chips: [['Alerts', 'On'], ['API / BI', '✓'], ['Optimization', 'Feeds']] }
+    ];
+    const sol = solData.map((d, i) => {
+      const on = s.sol === i, done = i < s.sol;
+      return { ...d, chips: d.chips.map(([k, v]) => ({ k, v })), bg: on || done ? 'var(--pl-accent)' : 'var(--pl-surface)', bc: on || done ? 'var(--pl-accent)' : 'var(--pl-line)', sh: on ? '0 0 0 8px rgba(247,99,30,.16),0 16px 30px -14px rgba(247,99,30,.8)' : '0 10px 20px -16px rgba(60,30,15,.4)', cb: on ? 'var(--pl-accent-line)' : 'var(--pl-line)', csh: on ? '0 24px 44px -28px rgba(194,65,12,.5)' : 'none', go: () => this.setState({ sol: i, solP: 0 }) };
+    });
+    const solFill = Math.min(75, (s.sol + s.solP) / 3 * 75);
+    const before = s.ba === 0;
+    const bList = ['Category managers rebuild competitor price sheets by hand every week.', "Coverage stops at a sample of SKUs because matching doesn't scale.", 'Mismatched variants make teams second-guess the numbers.', 'Regional, marketplace, and banner prices live in separate files.'];
+    const aList = ['Competitor prices arrive automatically on the cadence you set.', 'Your full catalog is monitored, into the millions of SKUs.', 'Products are matched down to the variant, so teams trust what they see.', 'Every region, marketplace, and banner sits in one view.'];
+    const baList = (before ? bList : aList).map((t, i) => ({ t, dl: (0.08 * i + 0.1).toFixed(2), mk: before ? '✕' : '✓', ib: before ? 'var(--pl-danger-tint)' : 'var(--pl-accent)', ibc: before ? 'var(--pl-danger-line)' : 'var(--pl-accent)', ic: before ? 'var(--pl-danger-ink)' : 'var(--pl-ink)', c: before ? 'var(--pl-muted)' : 'var(--pl-ink)' }));
+    const mb = [['Exact matches', 98, '98% exact', 'var(--pl-accent)', 'var(--pl-accent-tint)', 'var(--pl-accent-line)', 'var(--pl-accent-ink)'], ['Variant matches', 91, '91% variant', 'var(--pl-accent)', 'var(--pl-accent-tint)', 'var(--pl-accent-line)', 'var(--pl-accent-ink)'], ['Private-label / similar', 74, '74% review', '#F0B44C', 'var(--pl-warn-tint)', 'var(--pl-warn-line)', 'var(--pl-warn-ink)']];
+    const matchBars = mb.map(([n, v, label, bar, bg, bc, c], i) => ({ n, v, label, bar, bg, bc, c, dl: (i * 0.2).toFixed(1) }));
+    const posH = [62, 70, 48, 55, 80, 66, 44, 72, 58, 50, 84, 61, 46, 68, 53, 77, 49, 64];
+    const posBars = posH.map((h, i) => ({ h, c: h > 62 ? 'var(--pl-danger)' : 'var(--pl-accent)', dl: (i * 0.04).toFixed(2) }));
+    const sk = tk % 4;
+    const sinks = ['BI', 'ERP', 'PIM', 'Feeds'].map((t, i) => ({ t, bg: i === sk ? 'var(--pl-accent-tint)' : 'var(--pl-surface)', dot: i === sk ? 'var(--pl-accent)' : 'var(--pl-line-xstrong)' }));
+    const skuSteps = [1000, 10000, 100000, 500000, 1000000, 5000000];
+    const skuLabels = ['1K', '10K', '100K', '500K', '1M', '5M+'];
+    const freqN = [1, 4, 24][s.freq];
+    const pts = skuSteps[s.sku] * s.comp * freqN;
+    const fmt = n => n >= 1e9 ? (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? Math.round(n / 1e3) + 'K' : String(n);
+    const faqData = [
+      ['How accurate is your product matching?', '[X]% on exact and variant matches, with confidence scores and human review on the rest.'],
+      ['How often does the data refresh?', 'As often as daily or intraday, set per category or competitor.'],
+      ['How many SKUs and competitors can you handle?', 'Millions of SKUs across many competitors and marketplaces, without performance trade-offs.'],
+      ['Is this a tracker or a retail price optimization software?', "It's the intelligence layer underneath optimization — accurate competitor data and price-position signals for your team or your optimization tools to act on."],
+      ['Will it fit our existing pricing and ERP systems?', 'Yes — data flows in by API, BI connectors, or feeds into your ERP/PIM.'],
+      ['How long does onboarding take?', 'Typically a few weeks, with a named solutions architect through go-live.'],
+      ['Is our data secure?', 'SOC 2 / ISO 27001 certified with full access controls.']
+    ];
+    const faqs = faqData.map(([q, a], i) => { const open = s.faq === i; return { q, a, open, n: '0' + (i + 1), rows: open ? '1fr' : '0fr', rot: open ? 45 : 0, bc: open ? 'var(--pl-accent-line)' : 'var(--pl-line)', sh: open ? '0 18px 36px -28px rgba(194,65,12,.5)' : 'none', ib: open ? 'var(--pl-accent)' : 'var(--pl-sand)', nc: open ? 'var(--pl-accent-ink)' : 'var(--pl-faint)', go: () => this.setState({ faq: open ? -1 : i }) }; });
+    return {
+      rootRef: this.rootRef, isMob, notMob: !isMob, isWide, notWide: !isWide,
+      menuOpen: s.menu && isMob, toggleMenu: () => this.setState({ menu: !s.menu }), closeMenu: () => this.setState({ menu: false }),
+      mobLinks: [{ t: 'Product', href: '#' }, { t: 'Solutions', href: '#' }, { t: 'Resources', href: '#' }, { t: 'Integrations', href: '#' }, { t: 'Pricing', href: '#pricing' }],
+      dashCols: isWide ? 'minmax(0,1fr) 300px' : '1fr',
+      idx: (98.4 + [0, -0.2, 0.1, -0.1][tk % 4]).toFixed(1), alerts: 12 + (tk % 3 === 2 ? 1 : 0),
+      catBars, alertFeed, logos,
+      logoCols: isMob ? '1fr' : '260px minmax(0,1fr)', logoBr: isMob ? 'none' : '1px solid var(--pl-line)', logoBb: isMob ? '1px solid var(--pl-line)' : 'none',
+      sheet, coverage,
+      sol, solFill, solCols: isWide ? 'repeat(4,minmax(0,1fr))' : isMob ? '1fr' : 'repeat(2,minmax(0,1fr))',
+      bentoCols: isWide ? 'repeat(3,minmax(0,1fr))' : '1fr', bentoSpan: isWide ? 'span 3' : 'auto',
+      audit: [
+        { n: 'Store brand Oat Milk 1L', k: 'PRIVATE LABEL', v: '0.87', bg: 'var(--pl-warn-tint)', bc: 'var(--pl-warn-line)', c: 'var(--pl-warn-ink)' },
+        { n: 'Sonix ANC 700 · Black', k: 'EXACT · EAN', v: '0.99', bg: 'var(--pl-accent-tint)', bc: 'var(--pl-accent-line)', c: 'var(--pl-accent-ink)' },
+        { n: 'Detergent Pods 42ct → 60ct', k: 'VARIANT · PACK SIZE', v: '0.93', bg: 'var(--pl-accent-tint)', bc: 'var(--pl-accent-line)', c: 'var(--pl-accent-ink)' }
+      ],
+      skuCount: (s.skuP >= 1 ? '1M+' : Math.round(1000000 * s.skuP).toLocaleString('en-US')),
+      toggleBA: () => this.setState({ ba: s.ba ? 0 : 1 }), baKey: 'ba' + s.ba,
+      baKnob: before ? '4px' : '50%', baKnobBg: before ? 'var(--pl-sand)' : 'var(--pl-accent)', baC0: before ? 'var(--pl-ink)' : 'var(--pl-muted)',
+      baBorder: before ? '1px solid var(--pl-line)' : '1.5px solid var(--pl-accent)', baSh: before ? 'none' : '0 0 0 6px rgba(247,99,30,.08),0 30px 60px -40px rgba(194,65,12,.5)',
+      baLeftBg: before ? 'var(--pl-cream)' : 'var(--pl-accent-tint)', baDiv: isWide ? (before ? '1px solid var(--pl-line-soft)' : '1px solid var(--pl-accent-line)') : 'none',
+      baTag: before ? 'BEFORE PRICELEAP' : 'WITH PRICELEAP', baTagBg: before ? 'var(--pl-surface)' : 'var(--pl-accent)', baTagBc: before ? 'var(--pl-line)' : 'var(--pl-accent)', baTagC: before ? 'var(--pl-muted)' : 'var(--pl-ink)',
+      baTitle: before ? 'Manual, partial, and always behind.' : 'Accurate, complete, and refreshed daily.',
+      baCov: before ? '~8%' : '100%', baCovW: before ? '8%' : '100%', baMeterC: before ? 'var(--pl-danger-ink)' : 'var(--pl-accent-ink)',
+      baList, splitCols: isWide ? 'minmax(0,1fr) minmax(0,1fr)' : '1fr', stickyPos: isWide ? 'sticky' : 'relative',
+      featCols: isWide ? 'minmax(0,1fr) minmax(0,1fr)' : '1fr', featOrder: isWide ? 2 : 0,
+      matchBars, matchDone: 2 + (tk % 2), posBars, sinks,
+      proofCols: isWide ? 'minmax(0,1.5fr) minmax(0,1fr)' : '1fr',
+      sku: s.sku, comp: s.comp,
+      setSku: e => this.setState({ sku: +e.target.value }), setComp: e => this.setState({ comp: +e.target.value }),
+      scSku: skuLabels[s.sku] + ' SKUs', scComp: s.comp + ' competitors',
+      freqs: ['Daily', '4× daily', 'Hourly'].map((t, i) => ({ t, bg: s.freq === i ? 'var(--pl-accent)' : 'transparent', go: () => this.setState({ freq: i }) })),
+      scPoints: fmt(pts),
+      faqs
+    };
+  }
+}
+</script>
+</body>
+</html>
