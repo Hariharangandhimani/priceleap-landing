@@ -1,97 +1,343 @@
 ---
-import SiteLayout from '@/layouts/SiteLayout.astro';
-import BlogCard from '@/components/blog/BlogCard.astro';
-import blogData from '@/data/blog.json';
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+import blogData from '../../data/blog.json';
+
+type Heading = { level: number; id: string; title: string };
+type Related = { slug: string; title: string; category: string };
+type Article = {
+  slug: string; category: string; title: string; excerpt: string; author: string;
+  publishedAt: string; readTime: string; heroImage?: { src: string; alt: string };
+  headings: Heading[]; contentHtml: string; relatedArticles?: Related[];
+  tags?: string[]; authorHtml?: string;
+};
 
 export function getStaticPaths() {
-  return blogData.articles.map((article) => ({ params: { slug: article.slug }, props: { article } }));
+  const articles = blogData.articles as Article[];
+  return articles.map((article) => ({ params: { slug: article.slug }, props: { article } }));
 }
 
-const { article } = Astro.props;
-const related = article.relatedArticles
-  .map((item) => blogData.articles.find((candidate) => candidate.slug === item.slug))
-  .filter((item): item is (typeof blogData.articles)[number] => Boolean(item))
-  .slice(0, 3);
+const { article } = Astro.props as { article: Article };
+const articles = blogData.articles as Article[];
+
+const toc = (article.headings || []).filter((h) => h.level === 2);
+const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+
+let related = (article.relatedArticles || []).slice(0, 3);
+if (related.length < 3) {
+  const extra = articles.filter((a) => a.slug !== article.slug && a.category === article.category && !related.some((r) => r.slug === a.slug))
+    .slice(0, 3 - related.length).map((a) => ({ slug: a.slug, title: a.title, category: a.category }));
+  related = [...related, ...extra];
+}
+const relatedFull = related.map((r) => {
+  const full = articles.find((a) => a.slug === r.slug);
+  return { ...r, excerpt: full?.excerpt || '', readTime: full?.readTime || '', image: full?.heroImage };
+});
+
+const canonicalUrl = `https://priceleap.ai/blog/${article.slug}`;
+const prompt = `Summarize the key points of this PriceLeap article for a pricing manager: ${canonicalUrl}`;
+const q = encodeURIComponent(prompt);
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: article.title,
+  description: article.excerpt,
+  image: article.heroImage ? `https://priceleap.ai${article.heroImage.src}` : undefined,
+  author: { '@type': 'Person', name: article.author },
+  publisher: { '@type': 'Organization', name: 'PriceLeap' },
+  datePublished: article.publishedAt,
+  mainEntityOfPage: canonicalUrl,
+}];
 ---
+<PriceLeapLayout title={`${article.title} · PriceLeap Blog`} description={article.excerpt} canonical={canonicalUrl} ogImage={article.heroImage?.src || '/assets/priceleap-logo.png'} jsonLd={jsonLd}>
+  <div class="bp-progress" aria-hidden="true"><div class="bp-progress-fill" data-progress></div></div>
 
-<SiteLayout title={`${article.title} | PriceLeap`} description={article.excerpt} canonical={`https://priceleap.ai/blog/${article.slug}/`}>
-  <article class="blog-article">
-    <div class="pl-container blog-article__crumbs"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/blog/">Blog</a><span aria-hidden="true">/</span><span>{article.category}</span></div>
+  <section class="bp-hero" data-screen-label="Hero">
+    <div aria-hidden="true" class="bp-hero-grid"></div>
+    <div aria-hidden="true" class="bp-hero-glow"></div>
+    <div class="bp-hero-inner">
+      <nav aria-label="Breadcrumb" class="bp-crumbs">
+        <a href="/">Home</a><span>/</span><a href="/blog">Blog</a><span>/</span><a href="/blog">{article.category}</a><span>/</span><span aria-current="page" class="bp-crumb-cur">{article.title}</span>
+      </nav>
+      <div class="bp-hero-grid2">
+        <div style="min-width:0">
+          <div class="bp-hero-tags">
+            <span class="bp-badge"><span class="bp-diamond"></span>{article.category}</span>
+            <span class="bp-read-label">GUIDE · {article.readTime.toUpperCase()}</span>
+          </div>
+          <h1 class="bp-h1">{article.title}</h1>
+          <p class="bp-intro">{article.excerpt}</p>
+          <div class="bp-hero-cta">
+            <a href="/contact" class="bp-btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Book a demo</a>
+            <a href="/contact" class="bp-btn-ghost"><span class="bp-pulse-dot"></span>Talk to a pricing expert</a>
+          </div>
+          <div class="bp-author-meta">
+            <a href="#author" class="bp-author-chip"><span class="bp-author-ini">{initials(article.author)}</span><span><span class="bp-author-name">{article.author}</span><span class="bp-author-role">PriceLeap</span></span></a>
+            <span class="bp-meta-sep"></span>
+            <div class="bp-meta-items"><span>{article.publishedAt}</span><span>{article.readTime}</span></div>
+          </div>
+        </div>
+        <aside aria-label="Summarize with AI" class="bp-ai">
+          <div class="bp-ai-head">
+            <span class="bp-ai-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path></svg></span>
+            <div><div class="bp-ai-t">Summarize with AI</div><div class="bp-ai-d">Get the key points in your assistant of choice.</div></div>
+          </div>
+          <div class="bp-ai-tools">
+            {[
+              { t: 'ChatGPT', by: 'OPENAI', mk: 'G', bg: 'var(--pl-ink)', c: 'var(--pl-surface)', href: `https://chatgpt.com/?q=${q}` },
+              { t: 'Claude', by: 'ANTHROPIC', mk: 'C', bg: '#F5E6DA', c: '#B4532A', href: `https://claude.ai/new?q=${q}` },
+              { t: 'Perplexity', by: 'PERPLEXITY AI', mk: 'P', bg: '#E3F1F1', c: '#1F6F72', href: `https://www.perplexity.ai/search?q=${q}` },
+              { t: 'Gemini', by: 'GOOGLE', mk: 'G', bg: '#E8EEFB', c: '#2F5BD3', href: `https://www.google.com/search?udm=50&q=${q}` },
+            ].map((a) => (
+              <a href={a.href} target="_blank" rel="noopener" class="bp-ai-tool">
+                <span class="bp-ai-mk" style={`background:${a.bg};color:${a.c}`}>{a.mk}</span>
+                <span style="min-width:0"><span class="bp-ai-tool-t">{a.t}</span><span class="bp-ai-tool-by">{a.by}</span></span>
+                <span class="bp-ai-arrow">↗</span>
+              </a>
+            ))}
+          </div>
+        </aside>
+      </div>
+      {article.heroImage && (<div class="bp-cover"><img src={article.heroImage.src} alt={article.heroImage.alt} width="1280" height="520" loading="eager" /></div>)}
+    </div>
+  </section>
 
-    <header class="pl-container blog-article__header">
-      <div class="blog-article__category">{article.category}</div>
-      <h1>{article.title}</h1>
-      <p class="blog-article__excerpt">{article.excerpt}</p>
-      <div class="blog-article__meta"><span>{article.author}</span><span aria-hidden="true">·</span><time>{article.publishedAt}</time><span aria-hidden="true">·</span><span>{article.readTime}</span></div>
-    </header>
-
-    {article.heroImage?.src && <div class="pl-container blog-article__hero"><img src={article.heroImage.src} alt={article.heroImage.alt || article.title} width="1600" height="900" fetchpriority="high" /></div>}
-
-    <div class="pl-container blog-article__layout">
-      <aside class="blog-article__toc">
-        <p>In this article</p>
-        <ol>{article.headings.filter((heading) => heading.level === 2).map((heading) => <li><a href={`#${heading.id}`}>{heading.title}</a></li>)}</ol>
+  <div class="bp-body">
+    {toc.length > 0 && (
+      <aside aria-label="Table of contents" class="bp-toc">
+        <div class="bp-toc-card">
+          <div class="bp-toc-head"><span>ON THIS PAGE</span></div>
+          <nav class="bp-toc-nav">
+            {toc.map((t, i) => (
+              <a href={`#${t.id}`} class="bp-toc-link" data-toc-link={t.id}><span class="bp-toc-n">{String(i + 1).padStart(2, '0')}</span>{t.title}</a>
+            ))}
+          </nav>
+        </div>
+        <button type="button" class="bp-totop" data-totop>↑ Back to top</button>
       </aside>
-      <div class="blog-article__content" set:html={article.contentHtml}></div>
+    )}
+
+    <div style="min-width:0">
+      <article class="bp-article">
+        <div class="bp-prose" set:html={article.contentHtml} />
+
+        <div class="bp-sharebar">
+          <div class="bp-tags">
+            <span class="bp-tags-label">TAGS</span>
+            {(article.tags || []).slice(0, 5).map((t) => (<span class="bp-tag">{t}</span>))}
+          </div>
+          <div class="bp-share">
+            <span class="bp-tags-label">SHARE</span>
+            <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener" aria-label="Share on LinkedIn" class="bp-share-btn">in</a>
+            <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(canonicalUrl)}&text=${encodeURIComponent(article.title)}`} target="_blank" rel="noopener" aria-label="Share on X" class="bp-share-btn">X</a>
+            <button type="button" class="bp-copy" data-copy={canonicalUrl}>Copy link</button>
+          </div>
+        </div>
+
+        {article.authorHtml && (<div id="author" class="bp-author-card" set:html={article.authorHtml} />)}
+      </article>
     </div>
 
-    <div class="pl-container blog-article__tags">
-      <span>Topics</span>
-      {article.tags.map((tag) => <span>{tag}</span>)}
-    </div>
-  </article>
+    <aside aria-label="Book a demo" class="bp-cta-aside">
+      <div class="bp-cta-card">
+        <div aria-hidden="true" class="bp-cta-glow"></div>
+        <div class="bp-cta-pad">
+          <div class="bp-cta-title">See it live on your catalog</div>
+          <div class="bp-cta-list">
+            <span class="bp-cta-li"><span class="bp-cta-check">✓</span>Verified matches on your SKUs</span>
+            <span class="bp-cta-li"><span class="bp-cta-check">✓</span>Revenue-weighted by category</span>
+            <span class="bp-cta-li"><span class="bp-cta-check">✓</span>Live in 5 days, no setup on your side</span>
+          </div>
+          <a href="/contact" class="bp-cta-primary">Book a demo</a>
+          <a href="/contact" class="bp-cta-ghost">Talk to an expert</a>
+        </div>
+      </div>
+    </aside>
+  </div>
 
-  {related.length > 0 && (
-    <section class="pl-container blog-related" aria-labelledby="related-heading">
-      <div class="blog-related__heading"><span class="pl-eyebrow"><span class="pl-eyebrow__slash">//</span><span class="pl-eyebrow__label">Keep reading</span></span><h2 id="related-heading">More pricing intelligence</h2></div>
-      <div class="blog-related__grid">{related.map((item) => <BlogCard article={item} />)}</div>
+  {relatedFull.length > 0 && (
+    <section class="bp-related" data-screen-label="Related articles">
+      <div class="bp-related-head">
+        <div>
+          <span class="bp-related-eyebrow"><span class="bp-diamond"></span>RELATED ARTICLES</span>
+          <h2 class="bp-related-h2">Keep reading</h2>
+        </div>
+        <a href="/blog" class="bp-related-all">View all articles →</a>
+      </div>
+      <div class="bp-related-grid">
+        {relatedFull.map((r) => (
+          <a href={`/blog/${r.slug}`} class="bp-related-card">
+            <div class="bp-related-cover">
+              {r.image && (<img src={r.image.src} alt={r.image.alt} width="400" height="200" loading="lazy" />)}
+              <span class="bp-related-cat">{r.category.toUpperCase()}</span>
+            </div>
+            <div class="bp-related-body">
+              <span class="bp-related-title">{r.title}</span>
+              <span class="bp-related-excerpt">{r.excerpt}</span>
+              <span class="bp-related-read">{r.readTime} · Read article →</span>
+            </div>
+          </a>
+        ))}
+      </div>
     </section>
   )}
-
-  <section class="pl-container blog-article-cta">
-    <div><span class="pl-eyebrow"><span class="pl-eyebrow__slash">//</span><span class="pl-eyebrow__label">Apply this in PriceLeap</span></span><h2>See it on your actual catalog.</h2><p>Bring a real pricing question and leave with a clearer next move.</p></div>
-    <a class="pl-btn pl-btn--primary pl-btn--lg" href="/book-a-demo">Book a demo <span aria-hidden="true">→</span></a>
-  </section>
-</SiteLayout>
+</PriceLeapLayout>
 
 <style>
-  .blog-article { background: var(--pl-surface); }
-  .blog-article__crumbs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--pl-line); padding-block: 16px; color: var(--pl-muted); font-family: var(--pl-mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; }
-  .blog-article__crumbs a:hover { color: var(--pl-accent-ink); }
-  .blog-article__header { max-width: 960px; padding-block: clamp(56px, 8vw, 104px) 48px; }
-  .blog-article__category { color: var(--pl-accent-ink); font-family: var(--pl-mono); font-size: 11px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; }
-  .blog-article__header h1 { margin: 18px 0 0; color: var(--pl-ink); font-size: clamp(40px, 6vw, 76px); line-height: 1.02; letter-spacing: -.055em; text-wrap: balance; }
-  .blog-article__excerpt { max-width: 760px; margin: 24px 0 0; color: var(--pl-muted); font-size: 19px; line-height: 1.6; }
-  .blog-article__meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; color: var(--pl-faint); font-family: var(--pl-mono); font-size: 11px; }
-  .blog-article__hero { overflow: hidden; border-radius: var(--pl-radius-xl); background: var(--pl-accent-tint); }
-  .blog-article__hero img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
-  .blog-article__layout { display: grid; grid-template-columns: 220px minmax(0, 760px); justify-content: center; gap: clamp(32px, 6vw, 88px); padding-block: clamp(56px, 8vw, 96px); }
-  .blog-article__toc { align-self: start; position: sticky; top: 100px; }
-  .blog-article__toc p { color: var(--pl-ink); font-family: var(--pl-mono); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
-  .blog-article__toc ol { margin: 16px 0 0; padding: 0; list-style: none; border-left: 1px solid var(--pl-line); }
-  .blog-article__toc li a { display: block; padding: 6px 0 6px 14px; color: var(--pl-muted); font-size: 12px; line-height: 1.45; }
-  .blog-article__toc li a:hover { color: var(--pl-accent-ink); border-left: 2px solid var(--pl-accent); margin-left: -1px; }
-  .blog-article__content { min-width: 0; color: var(--pl-ink-2); font-size: 17px; line-height: 1.78; }
-  .blog-article__content :global(h2) { margin: 54px 0 14px; color: var(--pl-ink); font-size: clamp(26px, 3vw, 38px); line-height: 1.12; letter-spacing: -.035em; }
-  .blog-article__content :global(h2:first-child) { margin-top: 0; }
-  .blog-article__content :global(h3) { margin: 34px 0 10px; color: var(--pl-ink); font-size: 21px; line-height: 1.25; letter-spacing: -.02em; }
-  .blog-article__content :global(p) { margin: 0 0 20px; }
-  .blog-article__content :global(ul), .blog-article__content :global(ol) { margin: 0 0 24px; padding-left: 24px; }
-  .blog-article__content :global(li) { margin: 8px 0; padding-left: 4px; }
-  .blog-article__content :global(a) { color: var(--pl-accent-ink); text-decoration: underline; text-decoration-color: var(--pl-accent-line); text-underline-offset: 3px; }
-  .blog-article__content :global(a:hover) { color: var(--pl-accent); }
-  .blog-article__content :global(strong) { color: var(--pl-ink); font-weight: 600; }
-  .blog-article__tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; border-top: 1px solid var(--pl-line); padding-block: 28px 72px; }
-  .blog-article__tags span { border: 1px solid var(--pl-line); border-radius: 999px; padding: 7px 11px; color: var(--pl-muted); font-size: 12px; }
-  .blog-article__tags span:first-child { border: 0; padding-left: 0; color: var(--pl-ink); font-family: var(--pl-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
-  .blog-related { border-top: 1px solid var(--pl-line); padding-block: 72px; }
-  .blog-related__heading h2 { margin-top: 16px; color: var(--pl-ink); font-size: clamp(30px, 4vw, 48px); letter-spacing: -.04em; }
-  .blog-related__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 32px; }
-  .blog-article-cta { display: flex; align-items: center; justify-content: space-between; gap: 28px; margin-bottom: 72px; border-radius: var(--pl-radius-xl); background: var(--pl-ink); padding: clamp(28px, 5vw, 56px); color: #fff; }
-  .blog-article-cta .pl-eyebrow { color: #fff; }
-  .blog-article-cta h2 { margin-top: 15px; color: #fff; font-size: clamp(28px, 4vw, 52px); letter-spacing: -.045em; }
-  .blog-article-cta p { margin-top: 10px; color: rgba(255,255,255,.65); font-size: 15px; }
-  .blog-article-cta .pl-btn { flex: none; }
-  @media (max-width: 900px) { .blog-article__layout { grid-template-columns: 1fr; } .blog-article__toc { position: static; } .blog-related__grid { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 640px) { .blog-article__header { padding-top: 48px; } .blog-related__grid { grid-template-columns: 1fr; } .blog-article-cta { align-items: flex-start; flex-direction: column; } .blog-article-cta .pl-btn { width: 100%; } }
+  .bp-progress { position: fixed; left: 0; top: 0; z-index: 70; height: 3px; width: 100%; }
+  .bp-progress-fill { height: 100%; width: 0; background: linear-gradient(90deg,var(--pl-accent-start),var(--pl-accent),var(--pl-accent-end)); transition: width .12s linear; }
+  .bp-diamond { width: 6px; height: 6px; border-radius: 2px; background: var(--pl-accent); transform: rotate(45deg); flex: none; }
+
+  .bp-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
+  .bp-hero-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 70% 90% at 80% 20%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 90% at 80% 20%,#000 10%,transparent 70%); pointer-events: none; }
+  .bp-hero-glow { position: absolute; right: -10%; top: -30%; width: 680px; height: 560px; background: radial-gradient(closest-side,rgba(251,138,46,.12),transparent); pointer-events: none; }
+  .bp-hero-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: clamp(28px,4vw,48px) clamp(16px,4vw,40px) clamp(28px,4vw,40px); }
+  .bp-crumbs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--pl-muted); }
+  .bp-crumbs a { color: var(--pl-muted); }
+  .bp-crumbs > span:nth-child(even) { color: var(--pl-line-xstrong); }
+  .bp-crumb-cur { color: var(--pl-ink) !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 320px; }
+  .bp-hero-grid2 { margin-top: clamp(24px,3vw,36px); display: grid; grid-template-columns: 1fr; gap: clamp(28px,4vw,56px); align-items: start; }
+  .bp-hero-tags { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .bp-badge { height: 26px; padding: 0 10px; display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--pl-accent-ink); }
+  .bp-read-label { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .08em; color: var(--pl-faint); }
+  .bp-h1 { margin: 18px 0 0; font-family: Geist, sans-serif; font-size: clamp(34px,5vw,60px); line-height: 1.04; letter-spacing: -.04em; font-weight: 600; color: var(--pl-ink); text-wrap: balance; }
+  .bp-intro { margin: 20px 0 0; max-width: 640px; font-size: clamp(16px,1.6vw,19px); line-height: 1.6; color: var(--pl-ink-2); text-wrap: pretty; }
+  .bp-hero-cta { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .bp-btn-primary { height: 48px; padding: 0 20px; display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; background: var(--pl-gradient); color: var(--pl-surface); font-family: Geist, sans-serif; font-weight: 500; font-size: 15px; box-shadow: 0 12px 24px -12px rgba(247,99,30,.85); }
+  .bp-btn-primary:hover { filter: brightness(.95); color: var(--pl-surface); }
+  .bp-btn-ghost { height: 48px; padding: 0 20px; display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; background: var(--pl-surface); border: 1px solid var(--pl-line); color: var(--pl-ink); font-family: Geist, sans-serif; font-weight: 500; font-size: 15px; }
+  .bp-btn-ghost:hover { border-color: var(--pl-line-xstrong); color: var(--pl-ink); }
+  .bp-pulse-dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--pl-accent); animation: bp-pulse 1.8s infinite; }
+  .bp-author-meta { margin-top: 28px; padding-top: 22px; border-top: 1px dashed var(--pl-line); display: flex; align-items: center; gap: 14px 22px; flex-wrap: wrap; }
+  .bp-author-chip { display: flex; align-items: center; gap: 12px; color: var(--pl-ink); }
+  .bp-author-ini { width: 44px; height: 44px; border-radius: 50%; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-accent-ink); }
+  .bp-author-name { display: block; font-size: 15px; font-weight: 600; }
+  .bp-author-role { display: block; font-size: 13px; color: var(--pl-muted); }
+  .bp-meta-sep { width: 1px; height: 30px; background: var(--pl-line); }
+  .bp-meta-items { display: flex; gap: 18px; flex-wrap: wrap; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-muted); }
+  .bp-ai { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px -42px rgba(60,30,15,.4); }
+  .bp-ai-head { padding: 18px 20px 16px; border-bottom: 1px solid var(--pl-line-soft); display: flex; align-items: center; gap: 12px; }
+  .bp-ai-icon { width: 38px; height: 38px; flex: none; border-radius: 11px; background: var(--pl-ink); color: var(--pl-surface); display: flex; align-items: center; justify-content: center; }
+  .bp-ai-t { font-family: Geist, sans-serif; font-size: 16px; font-weight: 600; color: var(--pl-ink); }
+  .bp-ai-d { font-size: 13px; color: var(--pl-muted); }
+  .bp-ai-tools { padding: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bp-ai-tool { min-height: 52px; padding: 0 12px; display: flex; align-items: center; gap: 10px; border-radius: 12px; border: 1px solid var(--pl-line-soft); background: var(--pl-cream); color: var(--pl-ink); font-size: 14px; font-weight: 500; transition: border-color .2s, background .2s, transform .2s; }
+  .bp-ai-tool:hover { border-color: var(--pl-accent-line); background: var(--pl-surface); transform: translateY(-1px); color: var(--pl-ink); }
+  .bp-ai-mk { width: 28px; height: 28px; flex: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: Geist, sans-serif; font-size: 12px; font-weight: 700; }
+  .bp-ai-tool-t { display: block; line-height: 1.2; }
+  .bp-ai-tool-by { display: block; font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--pl-faint); }
+  .bp-ai-arrow { margin-left: auto; color: var(--pl-line-xstrong); font-size: 12px; }
+  .bp-cover { margin-top: clamp(28px,4vw,40px); border-radius: 20px; overflow: hidden; border: 1px solid var(--pl-line); aspect-ratio: 16 / 7; }
+  .bp-cover img { width: 100%; height: 100%; object-fit: cover; }
+
+  .bp-body { max-width: 1280px; margin: 0 auto; padding: clamp(28px,4vw,48px) clamp(16px,4vw,40px) 0; display: grid; grid-template-columns: 1fr; gap: clamp(24px,3.4vw,48px); align-items: start; }
+  .bp-toc { display: none; }
+  .bp-toc-card { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 18px; overflow: hidden; }
+  .bp-toc-head { padding: 14px 16px; border-bottom: 1px solid var(--pl-line-soft); font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; color: var(--pl-faint); }
+  .bp-toc-nav { padding: 8px; display: flex; flex-direction: column; gap: 1px; max-height: calc(100vh - 160px); overflow-y: auto; }
+  .bp-toc-link { position: relative; padding: 9px 10px 9px 14px; border-radius: 10px; display: grid; grid-template-columns: 22px minmax(0,1fr); gap: 8px; align-items: baseline; color: var(--pl-muted); font-size: 13.5px; line-height: 1.4; transition: background .2s, color .2s; }
+  .bp-toc-link:hover { background: var(--pl-cream); color: var(--pl-ink); }
+  .bp-toc-link.is-active { background: var(--pl-accent-tint); color: var(--pl-ink); font-weight: 600; }
+  .bp-toc-n { font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--pl-faint-2); }
+  .bp-toc-link.is-active .bp-toc-n { color: var(--pl-accent-ink); }
+  .bp-totop { align-self: flex-start; height: 36px; padding: 0 12px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--pl-line); border-radius: 10px; background: var(--pl-surface); cursor: pointer; font-size: 13px; color: var(--pl-ink-2); }
+
+  .bp-article { max-width: 760px; margin: 0 auto; font-size: clamp(16.5px,1.5vw,18px); line-height: 1.8; color: var(--pl-ink-2); }
+  .bp-prose :global(h2) { margin: 48px 0 16px; scroll-margin-top: 96px; font-family: Geist, sans-serif; font-size: clamp(25px,2.8vw,32px); line-height: 1.2; letter-spacing: -.025em; font-weight: 600; color: var(--pl-ink); }
+  .bp-prose :global(h3) { margin: 34px 0 12px; scroll-margin-top: 96px; font-family: Geist, sans-serif; font-size: clamp(20px,2.1vw,23px); font-weight: 600; color: var(--pl-ink); }
+  .bp-prose :global(p) { margin: 0 0 20px; }
+  .bp-prose :global(ul), .bp-prose :global(ol) { margin: 0 0 20px; padding-left: 24px; display: flex; flex-direction: column; gap: 10px; }
+  .bp-prose :global(li) { line-height: 1.75; }
+  .bp-prose :global(a) { color: var(--pl-accent-ink); text-decoration: underline; text-underline-offset: 3px; }
+  .bp-prose :global(a:hover) { color: var(--pl-ink); }
+  .bp-prose :global(strong), .bp-prose :global(b) { color: var(--pl-ink); font-weight: 600; }
+  .bp-prose :global(img) { border-radius: 14px; border: 1px solid var(--pl-line); margin: 10px 0 20px; }
+  .bp-prose :global(code) { font-family: var(--pl-font-mono); font-size: .9em; background: var(--pl-cream); border: 1px solid var(--pl-line-soft); border-radius: 6px; padding: 1px 6px; }
+  .bp-prose :global(blockquote) { margin: 0 0 20px; padding: 14px 20px; border-left: 3px solid var(--pl-accent-line); background: var(--pl-cream); border-radius: 0 12px 12px 0; color: var(--pl-ink-2); }
+  .bp-prose :global(table) { width: 100%; border-collapse: collapse; margin: 0 0 20px; font-size: 15px; display: block; overflow-x: auto; }
+  .bp-prose :global(th), .bp-prose :global(td) { border: 1px solid var(--pl-line); padding: 10px 12px; text-align: left; }
+  .bp-prose :global(th) { background: var(--pl-cream); font-weight: 600; color: var(--pl-ink); }
+  .bp-prose :global(h2:first-child), .bp-prose :global(p:first-child) { margin-top: 0; }
+
+  .bp-sharebar { margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--pl-line); display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .bp-tags { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .bp-tags-label { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; color: var(--pl-faint); }
+  .bp-tag { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid var(--pl-line); background: var(--pl-surface); font-size: 13px; color: var(--pl-ink-2); }
+  .bp-share { display: flex; align-items: center; gap: 8px; }
+  .bp-share-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); display: flex; align-items: center; justify-content: center; font-family: Geist, sans-serif; font-size: 12px; font-weight: 700; color: var(--pl-ink); }
+  .bp-copy { height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); cursor: pointer; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-ink); }
+
+  .bp-author-card { margin-top: 32px; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 20px; padding: clamp(20px,3vw,28px); display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start; }
+  .bp-author-card :global(.author-card-avatar) { width: 64px; height: 64px; border-radius: 16px; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); display: flex; align-items: center; justify-content: center; font-family: Geist, sans-serif; font-size: 20px; font-weight: 700; color: var(--pl-accent-ink); }
+  .bp-author-card :global(.author-card-label) { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--pl-faint); }
+  .bp-author-card :global(.author-card-name) { margin-top: 4px; font-family: Geist, sans-serif; font-size: 20px; font-weight: 600; color: var(--pl-ink); }
+  .bp-author-card :global(.author-card-title) { font-size: 14px; color: var(--pl-muted); }
+  .bp-author-card :global(.author-card-bio), .bp-author-card :global(p) { margin: 10px 0 0; font-size: 15px; line-height: 1.65; color: var(--pl-ink-2); }
+
+  .bp-cta-aside { display: none; }
+  .bp-cta-card { position: relative; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px -44px rgba(60,30,15,.45); }
+  .bp-cta-glow { position: absolute; right: -70px; top: -90px; width: 240px; height: 240px; background: radial-gradient(closest-side,rgba(251,138,46,.16),transparent); pointer-events: none; }
+  .bp-cta-pad { position: relative; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .bp-cta-title { font-family: Geist, sans-serif; font-size: 19px; font-weight: 600; line-height: 1.25; letter-spacing: -.015em; color: var(--pl-ink); }
+  .bp-cta-list { display: flex; flex-direction: column; gap: 8px; }
+  .bp-cta-li { display: flex; gap: 10px; font-size: 13.5px; line-height: 1.45; color: var(--pl-ink-2); }
+  .bp-cta-check { flex: none; margin-top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--pl-ink); color: var(--pl-surface); font-size: 9px; display: flex; align-items: center; justify-content: center; }
+  .bp-cta-primary { height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: var(--pl-gradient); color: var(--pl-surface); font-family: Geist, sans-serif; font-weight: 500; font-size: 15px; box-shadow: 0 12px 24px -12px rgba(247,99,30,.85); }
+  .bp-cta-primary:hover { filter: brightness(.95); color: var(--pl-surface); }
+  .bp-cta-ghost { height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; border: 1px solid var(--pl-line); color: var(--pl-ink); font-size: 14px; font-weight: 500; }
+
+  .bp-related { max-width: 1280px; margin: 0 auto; padding: clamp(56px,7vw,96px) clamp(16px,4vw,40px) clamp(40px,5vw,64px); }
+  .bp-related-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .bp-related-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 11.5px; letter-spacing: .12em; color: var(--pl-accent-ink); }
+  .bp-related-h2 { margin: 12px 0 0; font-family: Geist, sans-serif; font-size: clamp(26px,3.2vw,38px); line-height: 1.1; letter-spacing: -.03em; font-weight: 600; color: var(--pl-ink); }
+  .bp-related-all { height: 40px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); color: var(--pl-ink); font-size: 14px; font-weight: 500; }
+  .bp-related-grid { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,300px),1fr)); gap: 16px; }
+  .bp-related-card { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; color: var(--pl-ink); transition: transform .25s, box-shadow .25s, border-color .25s; }
+  .bp-related-card:hover { transform: translateY(-4px); box-shadow: 0 28px 50px -34px rgba(60,30,15,.5); border-color: var(--pl-accent-line); color: var(--pl-ink); }
+  .bp-related-cover { position: relative; aspect-ratio: 16 / 9; background: var(--pl-sand); border-bottom: 1px solid var(--pl-line-soft); overflow: hidden; }
+  .bp-related-cover img { width: 100%; height: 100%; object-fit: cover; }
+  .bp-related-cat { position: absolute; left: 12px; top: 12px; height: 22px; padding: 0 8px; display: flex; align-items: center; border-radius: 6px; background: var(--pl-surface); border: 1px solid var(--pl-line); font-family: 'Geist Mono', monospace; font-size: 9.5px; letter-spacing: .06em; color: var(--pl-accent-ink); }
+  .bp-related-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .bp-related-title { font-family: Geist, sans-serif; font-size: 17px; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .bp-related-excerpt { font-size: 14px; line-height: 1.55; color: var(--pl-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .bp-related-read { margin-top: auto; padding-top: 8px; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-accent-ink); }
+
+  @media (min-width: 1000px) { .bp-hero-grid2 { grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); } }
+  @media (min-width: 1100px) {
+    .bp-body { grid-template-columns: 240px minmax(0,1fr) 290px; }
+    .bp-toc { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 88px; align-self: start; }
+    .bp-cta-aside { display: block; position: sticky; top: 88px; align-self: start; }
+  }
+  @media (max-width: 720px) { .bp-author-card { grid-template-columns: 1fr; } }
 </style>
+
+<script>
+  const fill = document.querySelector('[data-progress]') as HTMLElement | null;
+  const onScroll = () => {
+    if (!fill) return;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    fill.style.width = (max > 0 ? Math.min(100, (window.scrollY / max) * 100) : 0) + '%';
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  document.querySelector('[data-totop]')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => {
+    navigator.clipboard?.writeText((b as HTMLElement).dataset.copy || '').catch(() => {});
+    b.textContent = 'Copied ✓';
+    setTimeout(() => { b.textContent = 'Copy link'; }, 1600);
+  }));
+
+  const links = Array.from(document.querySelectorAll('[data-toc-link]')) as HTMLElement[];
+  const heads = links.map((l) => document.getElementById(l.dataset.tocLink || '')).filter(Boolean) as HTMLElement[];
+  if (heads.length) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          const id = (e.target as HTMLElement).id;
+          links.forEach((l) => l.classList.toggle('is-active', l.dataset.tocLink === id));
+        }
+      });
+    }, { rootMargin: '-90px 0px -70% 0px' });
+    heads.forEach((h) => io.observe(h));
+  }
+</script>
