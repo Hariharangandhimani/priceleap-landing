@@ -1,0 +1,67 @@
+---
+// Reusable FAQ accordion used across marketing pages. Native port of the design's FAQ.
+interface Props {
+  eyebrow?: string;
+  title?: string;
+  titleBold?: string;
+  items: { q: string; a: string }[];
+  sticky?: boolean;
+}
+const { eyebrow = 'FAQ', title = 'Questions ', titleBold = 'buyers ask us.', items, sticky = true } = Astro.props;
+---
+<section id="faq" class="plfaq" data-screen-label="FAQ">
+  <div class={`plfaq-wrap${sticky ? ' plfaq-wrap--split' : ''}`}>
+    <div class={`plfaq-head${sticky ? ' plfaq-head--sticky' : ''}`}>
+      <span class="plfaq-eyebrow"><span class="plfaq-sq"></span>{eyebrow}</span>
+      <h2 class="plfaq-h2"><span style="font-weight:400">{title}</span><span style="font-weight:700">{titleBold}</span></h2>
+    </div>
+    <div class="plfaq-list">
+      {items.map((q, i) => (
+        <div class="plfaq-item" data-faq-item>
+          <button type="button" class="plfaq-q" aria-expanded="false" data-faq-btn>
+            <span class="plfaq-n">{String(i + 1).padStart(2, '0')}</span>
+            <span class="plfaq-qt">{q.q}</span>
+            <span class="plfaq-plus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"></path></svg></span>
+          </button>
+          <div class="plfaq-panel"><div class="plfaq-panel-inner"><p>{q.a}</p></div></div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .plfaq { border-bottom: 1px solid var(--pl-line); }
+  .plfaq-wrap { max-width: 1280px; margin: 0 auto; padding: clamp(72px,9vw,120px) clamp(20px,4vw,40px); display: grid; grid-template-columns: 1fr; gap: clamp(32px,5vw,72px); align-items: start; }
+  .plfaq-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--pl-accent-ink); }
+  .plfaq-sq { width: 7px; height: 7px; border-radius: 2px; background: var(--pl-gradient); }
+  .plfaq-h2 { margin: 16px 0 0; font-family: Geist, sans-serif; font-size: clamp(30px,4vw,48px); line-height: 1.06; letter-spacing: -.035em; color: var(--pl-ink); }
+  .plfaq-list { display: flex; flex-direction: column; gap: 10px; }
+  .plfaq-item { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 16px; overflow: hidden; transition: border-color .25s, box-shadow .25s; }
+  .plfaq-item.is-open { border-color: var(--pl-accent-line); box-shadow: 0 18px 36px -28px rgba(194,65,12,.5); }
+  .plfaq-q { width: 100%; border: none; background: transparent; cursor: pointer; display: flex; align-items: center; gap: 16px; padding: 20px 22px; text-align: left; }
+  .plfaq-n { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-faint); }
+  .plfaq-item.is-open .plfaq-n { color: var(--pl-accent-ink); }
+  .plfaq-qt { flex: 1; font-family: Geist, sans-serif; font-size: 17px; font-weight: 500; color: var(--pl-ink); }
+  .plfaq-plus { flex: none; width: 30px; height: 30px; border-radius: 9px; background: var(--pl-sand); color: var(--pl-ink); display: flex; align-items: center; justify-content: center; transition: transform .3s, background .3s; }
+  .plfaq-item.is-open .plfaq-plus { background: var(--pl-accent); transform: rotate(45deg); }
+  .plfaq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s ease; }
+  .plfaq-item.is-open .plfaq-panel { grid-template-rows: 1fr; }
+  .plfaq-panel-inner { overflow: hidden; }
+  .plfaq-panel-inner p { margin: 0; padding: 0 22px 22px 58px; font-size: 15px; line-height: 1.65; color: var(--pl-ink-2); }
+
+  @media (min-width: 900px) {
+    .plfaq-wrap--split { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+    .plfaq-head--sticky { position: sticky; top: 96px; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll('[data-faq-btn]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('[data-faq-item]');
+      const open = item?.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', String(!!open));
+    });
+  });
+</script>
