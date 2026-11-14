@@ -1,308 +1,247 @@
 ---
-/**
- * Contact PriceLeap — native light rebuild (replaces the old dark contact page).
- * Content ported 1:1 from contact.html. Vanilla-JS form: validation, progress,
- * honeypot, success state. ContactPage JSON-LD. No support.js.
- */
-import SiteLayout from '@/layouts/SiteLayout.astro';
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
 
-const sizes = ['Under 1,000', '1,000 – 10,000', '10,000 – 50,000', '50,000+'];
-const inquiries = ['Book a demo', 'Pricing & plans', 'Enterprise sales', 'Technical support', 'Partnerships', 'Other'];
+const routes = [
+  { id: 'demo', t: 'See a product demo', d: 'Walk through PriceLeap on your own catalog with a specialist.', who: 'a pricing strategist', shape: '4px', rot: '0' },
+  { id: 'technical', t: 'Technical / API question', d: 'Integrations, data feeds, security and implementation.', who: 'a technical specialist', shape: '2px', rot: '45' },
+  { id: 'sales', t: 'Enterprise & pricing', d: 'Plans, procurement and enterprise rollout.', who: 'our sales team', shape: '50%', rot: '0' },
+];
 
-const contactLd = {
+const jsonLd = [{
   '@context': 'https://schema.org',
   '@type': 'ContactPage',
   name: 'Contact PriceLeap',
-  description: 'Talk to the PriceLeap team about pricing intelligence, enterprise rollouts or support.',
   url: 'https://priceleap.ai/contact',
-};
+}];
 ---
+<PriceLeapLayout title="Contact · PriceLeap" description="Talk to the PriceLeap team about competitor price tracking, pricing intelligence and dynamic pricing for your catalog." jsonLd={jsonLd}>
+  <section class="ct" data-screen-label="Contact">
+    <div aria-hidden="true" class="ct-grid"></div>
+    <div aria-hidden="true" class="ct-glow"></div>
+    <div class="ct-inner">
+      <div class="ct-head">
+        <span class="ct-badge"><span class="ct-badge-dot"></span>Contact</span>
+        <h1 class="ct-h1"><span style="font-weight:400">Let's talk </span><span style="font-weight:700">pricing.</span></h1>
+        <p class="ct-lead">Whether you're evaluating PriceLeap for the first time or ready to scale your catalog — our team is ready to walk you through it.</p>
+        <div class="ct-strip">
+          <span class="ct-strip-item"><span class="ct-badge-dot"></span>Avg. response under 4 hours</span>
+          <a href="mailto:sales_team@priceleap.ai" class="ct-strip-mail">✉ sales_team@priceleap.ai</a>
+        </div>
+      </div>
 
-<SiteLayout
-  title="Contact PriceLeap · Let's talk pricing"
-  description="Talk to the PriceLeap team about pricing intelligence, enterprise rollouts or support."
->
-  <script type="application/ld+json" slot="head" set:html={JSON.stringify(contactLd)} />
-
-  <section class="ct-hero">
-    <div class="ct-hero__grid" aria-hidden="true"></div>
-    <div class="ct-hero__glow" aria-hidden="true"></div>
-    <div class="ct-wrap ct-hero__inner">
-
-      <!-- ── Left: info ── -->
-      <aside class="ct-info">
-        <div>
-          <span class="ct-eyebrow"><span class="ct-eyebrow__dot"></span>Contact</span>
-          <h1 class="ct-h1"><span class="w4">Let's talk </span><b>pricing.</b></h1>
-          <p class="ct-lead">Whether you're evaluating PriceLeap for the first time or ready to scale your catalog — our team is ready to walk you through it.</p>
-          <span class="ct-resp"><span class="ct-resp__ring" aria-hidden="true"></span>Avg. response under 4 hours</span>
+      <div class="ct-card">
+        <div class="ct-left">
+          <div>
+            <span class="ct-mono">01 · Who do you need?</span>
+            <p class="ct-left-p">We'll match you with the right person — whether that's a pricing strategist, a technical specialist, or our sales team.</p>
+          </div>
+          <div role="radiogroup" aria-label="Who do you need" class="ct-routes">
+            {routes.map((r, i) => (
+              <button type="button" role="radio" aria-checked={i === 0 ? 'true' : 'false'} class={`ct-route${i === 0 ? ' is-on' : ''}`} data-route={r.id} data-who={r.who}>
+                <span class="ct-route-ico"><span class="ct-route-dot" style={`border-radius:${r.shape};transform:rotate(${r.rot}deg)`}></span></span>
+                <span><span class="ct-route-t">{r.t}</span><span class="ct-route-d">{r.d}</span></span>
+                <span class="ct-route-radio"></span>
+              </button>
+            ))}
+          </div>
+          <div class="ct-match">
+            <span class="ct-match-ava"><span class="ct-match-a1"></span><span class="ct-match-a2"><img src="/assets/pl-mark.png" alt="" width="14" height="13" /></span></span>
+            <span class="ct-match-txt">You'll be matched with <b data-who-label>a pricing strategist</b></span>
+          </div>
+          <div class="ct-info">
+            <div class="ct-info-row">
+              <span class="ct-info-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></span>
+              <span><span class="ct-info-k">Headquarters</span><span class="ct-info-v">Manhattan, New York</span><span class="ct-info-s">80 Broad St, 5th Floor PMB#1148, NY</span></span>
+            </div>
+            <div class="ct-info-row">
+              <span class="ct-info-ico"><span class="ct-dot-live"></span></span>
+              <span><span class="ct-info-k">Business Hours</span><span class="ct-info-v">Mon–Fri, 8am–6pm PT</span><span class="ct-info-s">Enterprise SLA customers receive 24/7 monitoring alerts.</span></span>
+            </div>
+          </div>
         </div>
 
-        <div class="ct-channels">
-          <a href="mailto:sales_team@priceleap.ai" class="ct-chan">
-            <span class="ct-chan__ic" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
-            </span>
-            <span class="ct-chan__body"><span class="ct-chan__k">Email Us</span><span class="ct-chan__v">sales_team@priceleap.ai</span></span>
-            <span class="ct-chan__go">→</span>
-          </a>
-          <div class="ct-chan ct-chan--static">
-            <span class="ct-chan__ic" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="1.8"><path d="M12 21s-7-5.2-7-11a7 7 0 0 1 14 0c0 5.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-            </span>
-            <span class="ct-chan__body"><span class="ct-chan__k">Headquarters</span><span class="ct-chan__v ct-chan__v--sm">80 Broad St, 5th Floor PMB#1148, NY</span></span>
-          </div>
-          <div class="ct-chan ct-chan--static">
-            <span class="ct-chan__ic" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0A0A0A" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-            </span>
-            <span class="ct-chan__body"><span class="ct-chan__k">Business Hours</span><span class="ct-chan__v ct-chan__v--sm">Mon–Fri · 8:00–18:00 PT <span class="ct-open"><span class="ct-open__dot"></span>All systems operational</span></span></span>
-          </div>
-        </div>
-
-        <div class="ct-notes">
-          <p><b>50K+ SKUs</b> or complex multi-marketplace setups? Talk directly to our enterprise team.</p>
-          <p>Existing customer? Your dedicated onboarding contact has priority access.</p>
-        </div>
-      </aside>
-
-      <!-- ── Right: form ── -->
-      <div class="ct-formwrap">
-        <form class="ct-form" id="ct-form" novalidate aria-describedby="ct-formnote">
-          <div class="ct-form__head">
-            <div>
-              <h2>Send us a message</h2>
-              <p id="ct-formnote">Fill in the form and we'll match you with the right person — a pricing strategist, a technical specialist, or our sales team.</p>
+        <div class="ct-right">
+          <div class="ct-progress"><div class="ct-progress-fill" data-progress></div></div>
+          <form class="ct-form" novalidate data-form>
+            <div class="ct-form-head">
+              <div><span class="ct-mono">02 · Tell us about you</span><h2 class="ct-form-h2">Contact Us</h2></div>
+              <span class="ct-complete" data-complete>0 / 7 complete</span>
             </div>
-          </div>
-
-          <div class="ct-progress" aria-hidden="true"><i id="ct-progress"></i></div>
-          <div class="ct-progress__lbl"><span id="ct-count">0</span> / 7 complete</div>
-
-          <!-- honeypot (spam trap) -->
-          <div class="ct-hp" aria-hidden="true"><label>Company website<input type="text" name="company_website" tabindex="-1" autocomplete="off" /></label></div>
-
-          <div class="ct-grid2">
-            <div class="ct-field">
-              <label for="f-first">First Name</label>
-              <input id="f-first" name="first" required aria-required="true" placeholder="Alex" />
-              <span class="ct-err" data-err-for="first" role="alert"></span>
+            <p class="ct-form-p">Fill in the form and we'll match you with the right person — a pricing strategist, a technical specialist, or our sales team.</p>
+            <div class="ct-pair">
+              <label class="ct-field"><span class="ct-label">First Name</span><input name="first" autocomplete="given-name" placeholder="Alex" required /><span class="ct-err"></span></label>
+              <label class="ct-field"><span class="ct-label">Last Name</span><input name="last" autocomplete="family-name" placeholder="Johnson" required /><span class="ct-err"></span></label>
+              <label class="ct-field"><span class="ct-label">Work Email</span><input name="email" type="email" autocomplete="email" placeholder="alex@company.com" required /><span class="ct-err"></span></label>
+              <label class="ct-field"><span class="ct-label">Company</span><input name="company" autocomplete="organization" placeholder="Acme Corp" required /><span class="ct-err"></span></label>
+              <label class="ct-field"><span class="ct-label">Catalog Size (SKUs)</span><span class="ct-select"><select name="size" required><option value="">Select range</option><option>Under 1,000</option><option>1,000 – 10,000</option><option>10,000 – 50,000</option><option>50,000+</option></select><span class="ct-caret">▾</span></span><span class="ct-err"></span></label>
+              <label class="ct-field"><span class="ct-label">Inquiry Type</span><span class="ct-select"><select name="type" required><option value="">What can we help with?</option><option>Book a demo</option><option>Pricing &amp; plans</option><option>Enterprise sales</option><option>Technical support</option><option>Partnerships</option><option>Other</option></select><span class="ct-caret">▾</span></span><span class="ct-err"></span></label>
             </div>
-            <div class="ct-field">
-              <label for="f-last">Last Name</label>
-              <input id="f-last" name="last" required aria-required="true" placeholder="Johnson" />
-              <span class="ct-err" data-err-for="last" role="alert"></span>
+            <label class="ct-field"><span class="ct-label ct-label-row"><span>Message</span><span class="ct-count" data-msglen>0 chars</span></span><textarea name="msg" rows="5" placeholder="Tell us about your pricing challenges, catalog size, marketplaces you compete on, or anything else that helps us prepare..." required></textarea><span class="ct-err"></span></label>
+            <div class="ct-alert" role="alert" data-alert hidden>Please fix the highlighted fields.</div>
+            <div class="ct-submit-row">
+              <button type="submit" class="ct-submit">Send message</button>
+              <p class="ct-consent">By submitting, you agree to our <a href="/privacy-policy">Privacy Policy</a>. We never share your data with third parties.</p>
             </div>
+          </form>
+          <div class="ct-success" data-success hidden>
+            <span class="ct-success-ico">✓</span>
+            <h2 class="ct-success-h2">Thanks, <span data-success-name>there</span>.</h2>
+            <p class="ct-success-p">We'll match you with <b data-success-who>a pricing strategist</b> and reply to <b data-success-email>your inbox</b> — on average in under 4 hours.</p>
+            <button type="button" class="ct-success-again" data-reset>Send another message</button>
           </div>
-
-          <div class="ct-field">
-            <label for="f-email">Work Email</label>
-            <input id="f-email" name="email" type="email" required aria-required="true" placeholder="alex@company.com" />
-            <span class="ct-err" data-err-for="email" role="alert"></span>
-          </div>
-
-          <div class="ct-field">
-            <label for="f-company">Company</label>
-            <input id="f-company" name="company" required aria-required="true" placeholder="Acme Corp" />
-            <span class="ct-err" data-err-for="company" role="alert"></span>
-          </div>
-
-          <div class="ct-grid2">
-            <div class="ct-field">
-              <label for="f-size">Catalog Size (SKUs)</label>
-              <select id="f-size" name="size" required aria-required="true">
-                <option value="">Select range</option>
-                {sizes.map(s => <option value={s}>{s}</option>)}
-              </select>
-              <span class="ct-err" data-err-for="size" role="alert"></span>
-            </div>
-            <div class="ct-field">
-              <label for="f-type">Inquiry Type</label>
-              <select id="f-type" name="type" required aria-required="true">
-                <option value="">What can we help with?</option>
-                {inquiries.map(s => <option value={s}>{s}</option>)}
-              </select>
-              <span class="ct-err" data-err-for="type" role="alert"></span>
-            </div>
-          </div>
-
-          <div class="ct-field">
-            <label for="f-msg">Message</label>
-            <textarea id="f-msg" name="msg" rows="5" required aria-required="true" placeholder="Tell us about your pricing challenges, catalog size, marketplaces you compete on, or anything else that helps us prepare…"></textarea>
-            <div class="ct-field__foot"><span class="ct-err" data-err-for="msg" role="alert"></span><span class="ct-count" id="ct-msglen">0 chars</span></div>
-          </div>
-
-          <button type="submit" class="ct-submit" id="ct-submit">Submit →</button>
-          <p class="ct-fineprint">By submitting, you agree to our <a href="/privacy-policy">privacy policy</a>. We never share your data with third parties.</p>
-        </form>
-
-        <!-- success state -->
-        <div class="ct-done" id="ct-done" hidden role="status" aria-live="polite">
-          <span class="ct-done__ic">✓</span>
-          <h2>Message sent</h2>
-          <p>Thanks — we'll be in touch, on average in under 4 hours.</p>
-          <button type="button" class="ct-btn-secondary" id="ct-again">Send another message</button>
         </div>
       </div>
     </div>
   </section>
+</PriceLeapLayout>
 
-</SiteLayout>
+<style>
+  .ct { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
+  .ct-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 0%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 55% at 50% 0%,#000 10%,transparent 70%); pointer-events: none; }
+  .ct-glow { position: absolute; left: 50%; top: 260px; width: 1200px; height: 700px; transform: translateX(-50%); background: radial-gradient(closest-side,rgba(247,99,30,.12),transparent); pointer-events: none; }
+  .ct-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: clamp(48px,7vw,88px) clamp(20px,4vw,40px) clamp(56px,7vw,96px); }
+  .ct-head { display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .ct-badge { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; background: var(--pl-surface); border: 1px solid var(--pl-line); font-family: 'Geist Mono', monospace; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--pl-accent-ink); }
+  .ct-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--pl-gradient); animation: plpulse 1.8s infinite; }
+  .ct-h1 { margin: 20px 0 0; font-family: Geist, sans-serif; font-size: clamp(44px,6.4vw,84px); line-height: .98; letter-spacing: -.05em; color: var(--pl-ink); }
+  .ct-lead { margin: 20px 0 0; max-width: 620px; font-size: 18px; line-height: 1.6; color: var(--pl-ink-2); text-wrap: pretty; }
+  .ct-strip { margin-top: 24px; display: flex; flex-wrap: wrap; justify-content: center; border: 1px solid var(--pl-line); border-radius: 12px; background: var(--pl-surface); overflow: hidden; }
+  .ct-strip-item { height: 40px; padding: 0 16px; display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--pl-ink); border-right: 1px solid var(--pl-line-soft); }
+  .ct-strip-mail { height: 40px; padding: 0 16px; display: flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 12.5px; color: var(--pl-ink); }
+  .ct-strip-mail:hover { color: var(--pl-accent-ink); }
+
+  .ct-card { margin-top: clamp(40px,5vw,64px); border: 1px solid var(--pl-line); border-radius: 28px; overflow: hidden; background: var(--pl-line); display: grid; grid-template-columns: 1fr; gap: 1px; box-shadow: 0 50px 100px -60px rgba(60,30,15,.35); }
+  .ct-left { background: var(--pl-cream); padding: clamp(22px,3vw,36px); display: flex; flex-direction: column; gap: 20px; }
+  .ct-mono { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--pl-muted); }
+  .ct-left-p { margin: 8px 0 0; font-size: 14.5px; line-height: 1.55; color: var(--pl-muted); }
+  .ct-routes { display: flex; flex-direction: column; gap: 10px; }
+  .ct-route { text-align: left; cursor: pointer; background: var(--pl-surface); border: 1.5px solid var(--pl-line); border-radius: 16px; padding: 16px; display: grid; grid-template-columns: 40px minmax(0,1fr) 22px; gap: 14px; align-items: start; transition: all .25s; }
+  .ct-route.is-on { border-color: var(--pl-accent); box-shadow: 0 0 0 4px rgba(247,99,30,.12); }
+  .ct-route-ico { width: 40px; height: 40px; border-radius: 11px; background: var(--pl-sand); border: 1px solid var(--pl-line); display: flex; align-items: center; justify-content: center; transition: all .25s; }
+  .ct-route.is-on .ct-route-ico { background: var(--pl-accent-tint); border-color: var(--pl-accent-line); }
+  .ct-route-dot { width: 12px; height: 12px; background: var(--pl-line-xstrong); }
+  .ct-route.is-on .ct-route-dot { background: var(--pl-gradient); }
+  .ct-route-t { display: block; font-family: Geist, sans-serif; font-size: 16px; font-weight: 600; color: var(--pl-ink); }
+  .ct-route-d { display: block; margin-top: 4px; font-size: 13.5px; line-height: 1.5; color: var(--pl-muted); }
+  .ct-route-radio { width: 20px; height: 20px; margin-top: 2px; border-radius: 50%; border: 2px solid var(--pl-line-xstrong); background: var(--pl-surface); transition: all .2s; }
+  .ct-route.is-on .ct-route-radio { border-color: var(--pl-accent); border-width: 6px; }
+  .ct-match { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px; background: var(--pl-surface); border: 1px dashed var(--pl-accent-line); }
+  .ct-match-ava { display: flex; }
+  .ct-match-a1 { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--pl-surface); background: repeating-linear-gradient(135deg,var(--pl-accent-tint) 0 4px,var(--pl-cream) 4px 8px); box-shadow: 0 0 0 1px var(--pl-accent-line); }
+  .ct-match-a2 { width: 30px; height: 30px; margin-left: -10px; border-radius: 50%; border: 2px solid var(--pl-surface); background: var(--pl-gradient); display: flex; align-items: center; justify-content: center; }
+  .ct-match-txt { font-size: 13.5px; line-height: 1.45; color: var(--pl-ink-2); }
+  .ct-match-txt b { color: var(--pl-ink); }
+  .ct-info { margin-top: auto; border-top: 1px solid var(--pl-line); padding-top: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .ct-info-row { display: grid; grid-template-columns: 32px minmax(0,1fr); gap: 12px; }
+  .ct-info-ico { width: 32px; height: 32px; border-radius: 9px; border: 1px solid var(--pl-line); background: var(--pl-surface); display: flex; align-items: center; justify-content: center; }
+  .ct-dot-live { width: 8px; height: 8px; border-radius: 50%; background: var(--pl-accent); animation: plpulse 1.8s infinite; }
+  .ct-info-k { display: block; font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--pl-muted); }
+  .ct-info-v { display: block; margin-top: 2px; font-size: 14.5px; font-weight: 600; color: var(--pl-ink); }
+  .ct-info-s { display: block; font-size: 13.5px; color: var(--pl-muted); }
+
+  .ct-right { background: var(--pl-surface); position: relative; }
+  .ct-progress { height: 4px; background: var(--pl-line-soft); }
+  .ct-progress-fill { height: 100%; width: 0; background: var(--pl-gradient); transition: width .4s cubic-bezier(.2,.7,.2,1); }
+  .ct-form { padding: clamp(22px,3vw,40px); display: flex; flex-direction: column; gap: 18px; }
+  .ct-form-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+  .ct-form-h2 { margin: 6px 0 0; font-family: Geist, sans-serif; font-size: 28px; font-weight: 600; letter-spacing: -.03em; color: var(--pl-ink); }
+  .ct-complete { height: 26px; padding: 0 10px; display: flex; align-items: center; border-radius: 999px; background: var(--pl-sand); font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-ink-2); }
+  .ct-form-p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--pl-muted); }
+  .ct-pair { display: grid; grid-template-columns: 1fr; gap: 14px 16px; }
+  .ct-field { display: flex; flex-direction: column; gap: 6px; }
+  .ct-label { font-size: 13px; font-weight: 500; color: var(--pl-ink); }
+  .ct-label-row { display: flex; justify-content: space-between; }
+  .ct-count { font-family: 'Geist Mono', monospace; font-size: 11px; font-weight: 400; color: var(--pl-faint); }
+  .ct-field input, .ct-field select, .ct-field textarea { height: 48px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--pl-line); background: var(--pl-surface); font-size: 15px; color: var(--pl-ink); outline: none; transition: border-color .2s, box-shadow .2s; }
+  .ct-field textarea { height: auto; padding: 12px 14px; line-height: 1.55; resize: vertical; min-height: 130px; }
+  .ct-field input:focus, .ct-field select:focus, .ct-field textarea:focus { border-color: var(--pl-accent); box-shadow: 0 0 0 4px rgba(247,99,30,.15); }
+  .ct-field.is-invalid input, .ct-field.is-invalid select, .ct-field.is-invalid textarea { border-color: var(--pl-danger); }
+  .ct-select { position: relative; display: block; }
+  .ct-select select { width: 100%; padding-right: 40px; appearance: none; -webkit-appearance: none; cursor: pointer; }
+  .ct-caret { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 11px; color: var(--pl-muted); }
+  .ct-err { font-size: 12px; color: var(--pl-danger-ink); min-height: 14px; }
+  .ct-alert { padding: 11px 14px; border-radius: 11px; background: var(--pl-danger-tint); border: 1px solid var(--pl-danger-line); font-size: 13.5px; color: var(--pl-danger-ink); }
+  .ct-submit-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--pl-line-soft); padding-top: 18px; }
+  .ct-submit { height: 52px; padding: 0 28px; border: none; border-radius: 12px; background: var(--pl-gradient); color: var(--pl-surface); font-family: Geist, sans-serif; font-weight: 500; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 12px 26px -12px rgba(247,99,30,.9); transition: background .2s; }
+  .ct-submit:hover { background: var(--pl-gradient-hover); }
+  .ct-consent { margin: 0; flex: 1; min-width: 220px; font-size: 12.5px; line-height: 1.55; color: var(--pl-muted); }
+  .ct-consent a { color: var(--pl-accent-ink); text-decoration: underline; text-underline-offset: 3px; }
+  .ct-success { padding: clamp(40px,6vw,72px) clamp(22px,3vw,40px); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px; }
+  .ct-success-ico { width: 72px; height: 72px; border-radius: 22px; background: var(--pl-gradient); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--pl-surface); box-shadow: 0 0 0 10px rgba(247,99,30,.14); }
+  .ct-success-h2 { margin: 6px 0 0; font-family: Geist, sans-serif; font-size: 28px; font-weight: 600; letter-spacing: -.03em; color: var(--pl-ink); }
+  .ct-success-p { margin: 0; max-width: 400px; font-size: 15.5px; line-height: 1.6; color: var(--pl-ink-2); }
+  .ct-success-p b { color: var(--pl-ink); }
+  .ct-success-again { height: 44px; padding: 0 18px; border-radius: 11px; border: 1px solid var(--pl-line); background: var(--pl-surface); color: var(--pl-ink); font-size: 14px; font-weight: 500; cursor: pointer; }
+
+  @media (min-width: 900px) {
+    .ct-card { grid-template-columns: minmax(0,0.85fr) minmax(0,1.15fr); }
+    .ct-pair { grid-template-columns: 1fr 1fr; }
+  }
+</style>
 
 <script>
-  // Native contact form: validation, progress, honeypot, success.
-  // To wire a real backend, set ENDPOINT to your POST URL (Astro API route, HubSpot, Formspree, …).
-  const ENDPOINT = import.meta.env.PUBLIC_CONTACT_ENDPOINT ?? '';
-  const form = document.getElementById('ct-form') as HTMLFormElement | null;
+  const form = document.querySelector('[data-form]') as HTMLFormElement | null;
   if (form) {
     const fields = ['first', 'last', 'email', 'company', 'size', 'type', 'msg'];
-    const rules: Record<string, (v: string) => string> = {
-      first: v => v.trim() ? '' : 'Enter your first name.',
-      last: v => v.trim() ? '' : 'Enter your last name.',
-      email: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) ? '' : 'Enter a valid work email.',
-      company: v => v.trim() ? '' : 'Enter your company.',
-      size: v => v ? '' : 'Select a range.',
-      type: v => v ? '' : 'Select an inquiry type.',
-      msg: v => v.trim().length >= 10 ? '' : 'Tell us a little more (10+ characters).',
-    };
-    const el = (n: string) => form.elements.namedItem(n) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-    const errBox = (n: string) => form.querySelector(`[data-err-for="${n}"]`) as HTMLElement | null;
-    const progress = document.getElementById('ct-progress')!;
-    const countEl = document.getElementById('ct-count')!;
-    const msgLen = document.getElementById('ct-msglen')!;
-    let tried = false;
+    const progress = document.querySelector('[data-progress]') as HTMLElement | null;
+    const complete = document.querySelector('[data-complete]') as HTMLElement | null;
+    const msglen = document.querySelector('[data-msglen]') as HTMLElement | null;
+    const alert = document.querySelector('[data-alert]') as HTMLElement | null;
+    const routes = Array.from(document.querySelectorAll('[data-route]')) as HTMLElement[];
+    const whoLabel = document.querySelector('[data-who-label]') as HTMLElement | null;
+    let who = 'a pricing strategist';
 
-    const valid = (n: string) => !rules[n](el(n).value);
-    const refresh = () => {
+    const el = (name: string) => form.querySelector(`[name="${name}"]`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+    const valid = (name: string) => {
+      const v = (el(name)?.value || '').trim();
+      if (name === 'email') return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v);
+      return v.length > 0;
+    };
+    const update = () => {
       const done = fields.filter(valid).length;
-      countEl.textContent = String(done);
-      progress.style.width = Math.round(done / 7 * 100) + '%';
-      const m = el('msg') as HTMLTextAreaElement;
-      msgLen.textContent = m.value.length + ' chars';
+      if (progress) progress.style.width = (done / 7 * 100) + '%';
+      if (complete) complete.textContent = `${done} / 7 complete`;
+      const msg = el('msg') as HTMLTextAreaElement | null;
+      if (msglen && msg) msglen.textContent = `${msg.value.length} chars`;
     };
-    const showErr = (n: string) => {
-      const msg = rules[n](el(n).value);
-      const box = errBox(n); const input = el(n);
-      if (box) box.textContent = msg;
-      input.setAttribute('aria-invalid', msg ? 'true' : 'false');
-      input.classList.toggle('is-err', !!msg);
-      input.classList.toggle('is-ok', !msg && !!input.value);
-      return !msg;
-    };
-    fields.forEach(n => {
-      const input = el(n);
-      input.addEventListener('input', () => { if (tried) showErr(n); refresh(); });
-      input.addEventListener('change', () => { if (tried) showErr(n); refresh(); });
-      input.addEventListener('blur', () => showErr(n));
-    });
-    refresh();
 
-    form.addEventListener('submit', async e => {
+    routes.forEach((r) => r.addEventListener('click', () => {
+      routes.forEach((o) => { o.classList.toggle('is-on', o === r); o.setAttribute('aria-checked', String(o === r)); });
+      who = r.dataset.who || who;
+      if (whoLabel) whoLabel.textContent = who;
+    }));
+    fields.forEach((name) => el(name)?.addEventListener('input', update));
+    update();
+
+    form.addEventListener('submit', (e) => {
       e.preventDefault();
-      // honeypot: silently succeed-ignore if filled
-      const hp = form.elements.namedItem('company_website') as HTMLInputElement;
-      if (hp && hp.value) { return; }
-      tried = true;
-      const ok = fields.map(showErr).every(Boolean);
-      if (!ok) { (form.querySelector('.is-err') as HTMLElement)?.focus(); return; }
-      const btn = document.getElementById('ct-submit') as HTMLButtonElement;
-      btn.disabled = true; btn.textContent = 'Sending…';
-      try {
-        if (!ENDPOINT) throw new Error('Contact endpoint is not configured');
-        const response = await fetch(ENDPOINT, { method: 'POST', body: new FormData(form) });
-        if (!response.ok) throw new Error('Contact request failed');
-      } catch {
-        btn.disabled = false; btn.textContent = 'Submit →';
-        document.getElementById('ct-formnote')!.textContent = 'We could not send your message. Please email sales_team@priceleap.ai or try again.';
-        (window as any).plToast?.('Message could not be sent.', 'error');
-        return;
-      }
-      form.hidden = true;
-      const done = document.getElementById('ct-done')!; done.hidden = false;
-      (window as any).plToast?.('Message sent.');
-      document.getElementById('ct-again')?.addEventListener('click', () => {
-        form.reset(); form.hidden = false; done.hidden = true;
-        btn.disabled = false; btn.textContent = 'Submit →'; tried = false;
-        form.querySelectorAll('.is-err,.is-ok').forEach(x => x.classList.remove('is-err', 'is-ok'));
-        form.querySelectorAll('.ct-err').forEach(x => (x.textContent = ''));
-        refresh();
+      let ok = true;
+      fields.forEach((name) => {
+        const field = el(name)?.closest('.ct-field');
+        const err = field?.querySelector('.ct-err');
+        const good = valid(name);
+        field?.classList.toggle('is-invalid', !good);
+        if (err) err.textContent = good ? '' : (name === 'email' ? 'Enter a valid work email.' : 'This field is required.');
+        if (!good) ok = false;
       });
+      if (alert) alert.hidden = ok;
+      if (!ok) return;
+      // No endpoint yet — show success state (see MIGRATION.md).
+      const name = (el('first')?.value || 'there').trim();
+      const email = (el('email')?.value || 'your inbox').trim();
+      (document.querySelector('[data-success-name]') as HTMLElement).textContent = name;
+      (document.querySelector('[data-success-email]') as HTMLElement).textContent = email;
+      (document.querySelector('[data-success-who]') as HTMLElement).textContent = who;
+      form.hidden = true;
+      (document.querySelector('[data-success]') as HTMLElement).hidden = false;
+      if (progress) progress.style.width = '100%';
+    });
+
+    document.querySelector('[data-reset]')?.addEventListener('click', () => {
+      form.reset();
+      form.hidden = false;
+      (document.querySelector('[data-success]') as HTMLElement).hidden = true;
+      update();
     });
   }
 </script>
-
-<style>
-.ct-wrap { max-width: var(--pl-container); margin: 0 auto; padding-left: var(--pl-gutter); padding-right: var(--pl-gutter); }
-.ct-eyebrow { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 999px; background: #fff; border: 1px solid var(--pl-line); font-family: var(--pl-mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: #B01C1C; }
-.ct-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.8s infinite; }
-
-.ct-hero { position: relative; overflow: hidden; }
-.ct-hero__grid { position: absolute; inset: 0; background-image: linear-gradient(#EEF0EE 1px,transparent 1px),linear-gradient(90deg,#EEF0EE 1px,transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 60% 70% at 20% 20%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 60% 70% at 20% 20%,#000 10%,transparent 70%); pointer-events: none; }
-.ct-hero__glow { position: absolute; right: -10%; top: 10%; width: 760px; height: 700px; background: radial-gradient(closest-side,rgba(255, 49, 49,.13),transparent); pointer-events: none; }
-.ct-hero__inner { position: relative; display: grid; grid-template-columns: minmax(0,.95fr) minmax(0,1.05fr); gap: clamp(36px,5vw,64px); align-items: start; padding-top: clamp(48px,7vw,88px); padding-bottom: clamp(56px,7vw,96px); }
-
-.ct-info { display: flex; flex-direction: column; gap: 28px; }
-.ct-h1 { margin: 22px 0 0; font-family: var(--pl-font); font-size: clamp(44px,6vw,76px); line-height: .98; letter-spacing: -.05em; color: #0A0A0A; font-weight: 700; }
-.ct-h1 .w4 { font-weight: 400; }
-.ct-lead { margin: 22px 0 0; max-width: 520px; font-size: 18px; line-height: 1.6; color: #3A414C; }
-.ct-resp { margin-top: 22px; height: 36px; padding: 0 14px 0 6px; display: inline-flex; align-items: center; gap: 10px; border-radius: 999px; background: #E8FCEF; border: 1px solid #FFD6C8; font-size: 13.5px; color: #0A0A0A; }
-.ct-resp__ring { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #FF3131; border-right-color: transparent; }
-
-.ct-channels { display: flex; flex-direction: column; gap: 10px; }
-.ct-chan { background: #fff; border: 1px solid var(--pl-line); border-radius: 18px; padding: 18px 20px; display: grid; grid-template-columns: 44px minmax(0,1fr) auto; gap: 16px; align-items: center; color: #0A0A0A; transition: border-color .25s, transform .25s, box-shadow .25s; }
-a.ct-chan:hover { border-color: #FF3131; transform: translateX(4px); box-shadow: 0 18px 36px -28px rgba(200, 30, 30,.6); color: #0A0A0A; }
-.ct-chan__ic { width: 44px; height: 44px; border-radius: 12px; background: #FF3131; display: flex; align-items: center; justify-content: center; }
-.ct-chan__k { display: block; font-family: var(--pl-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #5A6373; }
-.ct-chan__v { display: block; margin-top: 2px; font-family: var(--pl-font); font-size: 17px; font-weight: 600; word-break: break-word; }
-.ct-chan__v--sm { font-size: 14px; font-weight: 500; }
-.ct-chan__go { color: #B01C1C; }
-.ct-open { display: inline-flex; align-items: center; gap: 6px; margin-left: 8px; font-family: var(--pl-mono); font-size: 11px; color: #B01C1C; }
-.ct-open__dot { width: 6px; height: 6px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.8s infinite; }
-.ct-notes { display: flex; flex-direction: column; gap: 12px; }
-.ct-notes p { margin: 0; padding-left: 16px; border-left: 2px solid #FFD6C8; font-size: 14px; line-height: 1.55; color: #5A6373; }
-.ct-notes b { color: #0A0A0A; }
-
-/* form */
-.ct-formwrap { position: relative; }
-.ct-form { border: 1px solid var(--pl-line); border-radius: 24px; background: #fff; padding: clamp(24px,3vw,36px); box-shadow: 0 40px 80px -48px rgba(10,10,10,.22); }
-.ct-form__head h2 { margin: 0; font-family: var(--pl-font); font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: #0A0A0A; }
-.ct-form__head p { margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: #5A6373; }
-.ct-progress { margin: 22px 0 8px; height: 6px; border-radius: 6px; background: #F4F5F4; overflow: hidden; }
-.ct-progress i { display: block; height: 100%; width: 0; border-radius: 6px; background: #FF3131; transition: width .3s cubic-bezier(.2,.8,.2,1); }
-.ct-progress__lbl { font-family: var(--pl-mono); font-size: 11px; color: #5A6373; margin-bottom: 20px; }
-.ct-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-.ct-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.ct-field { margin-bottom: 16px; display: flex; flex-direction: column; }
-.ct-grid2 .ct-field { margin-bottom: 0; }
-.ct-field label { font-size: 13px; font-weight: 500; color: #0A0A0A; margin-bottom: 7px; }
-.ct-field input, .ct-field select, .ct-field textarea { width: 100%; border: 1px solid var(--pl-line); border-radius: 12px; padding: 12px 14px; font-size: 15px; color: #0A0A0A; background: #fff; outline: none; transition: border-color .2s, box-shadow .2s; }
-.ct-field textarea { resize: vertical; }
-.ct-field input:focus, .ct-field select:focus, .ct-field textarea:focus { border-color: #FF3131; box-shadow: 0 0 0 4px rgba(255, 49, 49,.14); }
-.ct-field .is-ok { border-color: #FFD6C8; }
-.ct-field .is-err { border-color: #E5483F; }
-.ct-field .is-err:focus { box-shadow: 0 0 0 4px rgba(229,72,63,.14); }
-.ct-err { color: #C9372E; font-size: 12px; min-height: 0; margin-top: 6px; }
-.ct-err:empty { margin-top: 0; }
-.ct-field__foot { display: flex; justify-content: space-between; align-items: center; }
-.ct-count { font-family: var(--pl-mono); font-size: 11px; color: #6E7684; }
-.ct-submit { margin-top: 8px; width: 100%; height: 50px; border: none; border-radius: 12px; background: #FF3131; color: #0A0A0A; font-family: var(--pl-font); font-weight: 600; font-size: 15px; cursor: pointer; box-shadow: 0 12px 26px -12px rgba(255, 49, 49,.9); transition: background .2s; }
-.ct-submit:hover { background: #F23830; }
-.ct-submit:disabled { opacity: .7; cursor: default; }
-.ct-fineprint { margin: 14px 0 0; font-size: 12px; line-height: 1.5; color: #6E7684; text-align: center; }
-
-.ct-done { border: 1.5px solid #FF3131; border-radius: 24px; background: #fff; padding: 48px 32px; text-align: center; box-shadow: 0 0 0 6px rgba(255, 49, 49,.08); display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.ct-done[hidden] { display: none; }
-.ct-done__ic { width: 56px; height: 56px; border-radius: 16px; background: #FF3131; color: #0A0A0A; font-size: 24px; display: flex; align-items: center; justify-content: center; }
-.ct-done h2 { margin: 8px 0 0; font-family: var(--pl-font); font-size: 24px; font-weight: 600; color: #0A0A0A; }
-.ct-done p { margin: 0; font-size: 15px; color: #5A6373; }
-.ct-btn-secondary { margin-top: 10px; height: 44px; padding: 0 20px; border: 1px solid var(--pl-line); border-radius: 11px; background: #fff; font-family: var(--pl-font); font-weight: 500; font-size: 14px; cursor: pointer; }
-.ct-btn-secondary:hover { border-color: #0A0A0A; }
-
-@media (max-width: 999px) {
-  .ct-hero__inner { grid-template-columns: 1fr; }
-}
-@media (max-width: 520px) {
-  .ct-grid2 { grid-template-columns: 1fr; gap: 0; }
-  .ct-grid2 .ct-field { margin-bottom: 16px; }
-}
-</style>
