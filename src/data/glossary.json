@@ -1,0 +1,627 @@
+{
+  "source": "https://priceleap.ai/glossary/",
+  "fetchedAt": "2026-11-13T19:00:33.934Z",
+  "count": 20,
+  "terms": [
+    {
+      "url": "https://priceleap.ai/glossary/asin/",
+      "slug": "asin",
+      "term": "ASIN",
+      "shortDefinition": "Amazon Standard Identification Number. A 10-character alphanumeric identifier Amazon assigns to every product in its catalog.",
+      "category": "Marketplace",
+      "phonetic": "/ˈeɪsɪn/",
+      "contentHtml": "<p>An ASIN (Amazon Standard Identification Number) is a unique product identifier assigned by Amazon. Every product in the Amazon catalog has an ASIN. For books, the ASIN is the ISBN. For all other products, Amazon assigns a proprietary identifier.</p><p>Multiple sellers can list against the same ASIN, which creates the competitive marketplace dynamic that makes repricing necessary. When mapping your catalog in PriceLeap, each internal SKU is matched to its corresponding ASIN to enable competitor monitoring and Buy Box tracking.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/buy-box-suppression/",
+          "slug": "buy-box-suppression",
+          "term": "Buy Box Suppression",
+          "category": "Marketplace"
+        },
+        {
+          "url": "/glossary/buy-box/",
+          "slug": "buy-box",
+          "term": "Buy Box",
+          "category": "Marketplace"
+        },
+        {
+          "url": "/glossary/fulfillment-by-amazon/",
+          "slug": "fulfillment-by-amazon",
+          "term": "Fulfillment by Amazon (FBA)",
+          "category": "Marketplace"
+        }
+      ],
+      "metaDescription": "Amazon Standard Identification Number. A 10-character alphanumeric identifier Amazon assigns to every product in its catalog."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/buy-box/",
+      "slug": "buy-box",
+      "term": "Buy Box",
+      "shortDefinition": "The featured purchase widget on Amazon product pages. Winning the Buy Box typically drives 80–90% of all sales for a given listing.",
+      "category": "Marketplace",
+      "phonetic": "/baɪ bɒks/",
+      "contentHtml": "<p>The Buy Box is the \"Add to Cart\" button on an Amazon product detail page. When multiple sellers offer the same product, Amazon algorithmically selects one seller to feature in the Buy Box at any given time.</p><p>Factors influencing Buy Box ownership include competitive price, seller metrics (shipping speed, defect rate, feedback score), fulfillment method (FBA vs FBM), and inventory availability. Price is the most directly actionable lever for most sellers.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/asin/",
+          "slug": "asin",
+          "term": "ASIN",
+          "category": "Marketplace"
+        },
+        {
+          "url": "/glossary/buy-box-suppression/",
+          "slug": "buy-box-suppression",
+          "term": "Buy Box Suppression",
+          "category": "Marketplace"
+        },
+        {
+          "url": "/glossary/fulfillment-by-amazon/",
+          "slug": "fulfillment-by-amazon",
+          "term": "Fulfillment by Amazon (FBA)",
+          "category": "Marketplace"
+        }
+      ],
+      "metaDescription": "The featured purchase widget on Amazon product pages. Winning the Buy Box typically drives 80–90% of all sales for a given listing."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/buy-box-suppression/",
+      "slug": "buy-box-suppression",
+      "term": "Buy Box Suppression",
+      "shortDefinition": "A state where Amazon removes the Buy Box from a listing entirely, typically because all offers are priced significantly above Amazon's reference price.",
+      "category": "Marketplace",
+      "phonetic": "/baɪ bɒks səˈprɛʃən/",
+      "contentHtml": "<p>Buy Box suppression occurs when Amazon determines that all available offers for a product are priced unreasonably high relative to historical prices or Amazon's own reference price. In this state, the Buy Box is removed from the listing — shoppers can still purchase through the \"See All Buying Options\" link, but conversion rates drop sharply.</p><p>Suppression can occur even if only one seller is listing a product. It acts as Amazon's mechanism for discouraging price gouging. Monitoring for suppression events is an important signal for pricing teams managing large catalogs.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/asin/",
+          "slug": "asin",
+          "term": "ASIN",
+          "category": "Marketplace"
+        },
+        {
+          "url": "/glossary/buy-box/",
+          "slug": "buy-box",
+          "term": "Buy Box",
+          "category": "Marketplace"
+        },
+        {
+          "url": "/glossary/fulfillment-by-amazon/",
+          "slug": "fulfillment-by-amazon",
+          "term": "Fulfillment by Amazon (FBA)",
+          "category": "Marketplace"
+        }
+      ],
+      "metaDescription": "A state where Amazon removes the Buy Box from a listing entirely, typically because all offers are priced significantly above Amazon"
+    },
+    {
+      "url": "https://priceleap.ai/glossary/catalog-repricing/",
+      "slug": "catalog-repricing",
+      "term": "Catalog Repricing",
+      "shortDefinition": "Repricing logic applied across an entire product catalog simultaneously, rather than to individual SKUs managed manually.",
+      "category": "Catalog Management",
+      "phonetic": "/ˈkætəlɒɡ ˌriːˈpraɪsɪŋ/",
+      "contentHtml": "<p>Catalog repricing refers to running automated pricing decisions across an entire product catalog — potentially thousands or tens of thousands of SKUs — rather than setting prices manually for individual products. It is only viable through rule-based automation.</p><p>Effective catalog repricing requires a structured rule hierarchy: broad category-level rules that cover the catalog efficiently, with SKU-level overrides for high-priority or high-margin products. Without this hierarchy, managing rules at catalog scale becomes as labor-intensive as manual pricing.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/sell-through-rate/",
+          "slug": "sell-through-rate",
+          "term": "Sell-Through Rate",
+          "category": "Catalog Management"
+        },
+        {
+          "url": "/glossary/sku/",
+          "slug": "sku",
+          "term": "SKU",
+          "category": "Catalog Management"
+        },
+        {
+          "url": "/glossary/asin/",
+          "slug": "asin",
+          "term": "ASIN",
+          "category": "Marketplace"
+        }
+      ],
+      "metaDescription": "Repricing logic applied across an entire product catalog simultaneously, rather than to individual SKUs managed manually."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/competitive-intelligence/",
+      "slug": "competitive-intelligence",
+      "term": "Competitive Intelligence",
+      "shortDefinition": "Systematic collection and analysis of competitor pricing, availability, and marketplace activity to inform your own pricing decisions.",
+      "category": "Core Concepts",
+      "phonetic": "/ˌkɒmpɪˈtɪtɪv ɪnˈtelɪdʒəns/",
+      "contentHtml": "<p>Competitive intelligence in a pricing context refers to real-time data on competitor prices, stock availability, Buy Box ownership, promotional activity, and seller ratings. This data is the input layer of any repricing system.</p><p>The quality of competitive intelligence depends on collection frequency, source coverage, and deduplication of seller data. PriceLeap collects competitive data continuously — not in periodic batch snapshots — so pricing decisions are triggered by actual market changes rather than stale data.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/competitive-repricing/",
+          "slug": "competitive-repricing",
+          "term": "Competitive Repricing",
+          "category": "Core Concepts"
+        },
+        {
+          "url": "/glossary/dynamic-pricing/",
+          "slug": "dynamic-pricing",
+          "term": "Dynamic Pricing",
+          "category": "Core Concepts"
+        },
+        {
+          "url": "/glossary/repricing/",
+          "slug": "repricing",
+          "term": "Repricing",
+          "category": "Core Concepts"
+        }
+      ],
+      "metaDescription": "Systematic collection and analysis of competitor pricing, availability, and marketplace activity to inform your own pricing decisions."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/competitive-repricing/",
+      "slug": "competitive-repricing",
+      "term": "Competitive Repricing",
+      "shortDefinition": "Adjusting prices specifically in response to competitor price changes, as opposed to demand-based or inventory-based repricing triggers.",
+      "category": "Core Concepts",
+      "phonetic": "/ˌkɒmpɪˈtɪtɪv ˌriːˈpraɪsɪŋ/",
+      "contentHtml": "<p>Competitive repricing is the most common form of repricing in marketplace contexts. It monitors competitor prices and automatically adjusts your own prices to maintain a target position — below the lowest price, at the Buy Box price, or within a defined range of the market.</p><p>The key risk in competitive repricing is reactivity without guardrails. Without a margin floor, competitive repricing can pull prices below profitability. Without velocity limits, it can trigger rapid oscillation when multiple automated systems react to each other.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/competitive-intelligence/",
+          "slug": "competitive-intelligence",
+          "term": "Competitive Intelligence",
+          "category": "Core Concepts"
+        },
+        {
+          "url": "/glossary/dynamic-pricing/",
+          "slug": "dynamic-pricing",
+          "term": "Dynamic Pricing",
+          "category": "Core Concepts"
+        },
+        {
+          "url": "/glossary/repricing/",
+          "slug": "repricing",
+          "term": "Repricing",
+          "category": "Core Concepts"
+        }
+      ],
+      "metaDescription": "Adjusting prices specifically in response to competitor price changes, as opposed to demand-based or inventory-based repricing triggers."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/dynamic-pricing/",
+      "slug": "dynamic-pricing",
+      "term": "Dynamic Pricing",
+      "shortDefinition": "A pricing strategy where prices change in real time based on market conditions, competitor activity, demand, or inventory levels.",
+      "category": "Core Concepts",
+      "phonetic": "/daɪˈnæmɪk ˈpraɪsɪŋ/",
+      "contentHtml": "<p>Dynamic pricing is the practice of continuously adjusting prices in response to real-time market inputs rather than maintaining static price points. It is standard practice across airlines, hotels, ride-sharing, and increasingly across ecommerce and marketplace retail.</p><p>In marketplace contexts, dynamic pricing is primarily driven by competitive signals — a competitor's price change triggers an automated response that stays within your predefined guardrails (margin floors, ceiling prices, and velocity limits).</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/competitive-intelligence/",
+          "slug": "competitive-intelligence",
+          "term": "Competitive Intelligence",
+          "category": "Core Concepts"
+        },
+        {
+          "url": "/glossary/competitive-repricing/",
+          "slug": "competitive-repricing",
+          "term": "Competitive Repricing",
+          "category": "Core Concepts"
+        },
+        {
+          "url": "/glossary/repricing/",
+          "slug": "repricing",
+          "term": "Repricing",
+          "category": "Core Concepts"
+        }
+      ],
+      "metaDescription": "A pricing strategy where prices change in real time based on market conditions, competitor activity, demand, or inventory levels."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/fulfillment-by-amazon/",
+      "slug": "fulfillment-by-amazon",
+      "term": "Fulfillment by Amazon (FBA)",
+      "shortDefinition": "Amazon's service where sellers store inventory in Amazon warehouses and Amazon handles picking, packing, shipping, and customer service.",
+      "category": "Marketplace",
+      "phonetic": "/fʊlˈfɪlmənt baɪ əˈmæzɒn/",
+      "contentHtml": "<p>FBA (Fulfillment by Amazon) is a service where sellers send inventory to Amazon's fulfillment centers and Amazon handles all logistics — storage, picking, packing, shipping, and returns. FBA products qualify for Prime shipping, which significantly improves Buy Box eligibility.</p><p>FBA vs FBM (Fulfilled by Merchant) status affects repricing strategy. FBA sellers generally need less aggressive pricing to win the Buy Box because Amazon's algorithm weights fulfillment reliability heavily. FBM sellers often need to compensate with more competitive pricing.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/asin/",
+          "slug": "asin",
+          "term": "ASIN",
+          "category": "Marketplace"
+        },
+        {
+          "url": "/glossary/buy-box-suppression/",
+          "slug": "buy-box-suppression",
+          "term": "Buy Box Suppression",
+          "category": "Marketplace"
+        },
+        {
+          "url": "/glossary/buy-box/",
+          "slug": "buy-box",
+          "term": "Buy Box",
+          "category": "Marketplace"
+        }
+      ],
+      "metaDescription": "Amazon"
+    },
+    {
+      "url": "https://priceleap.ai/glossary/map-policy/",
+      "slug": "map-policy",
+      "term": "MAP Policy",
+      "shortDefinition": "Minimum Advertised Price. A manufacturer's policy setting the lowest price at which a retailer may publicly advertise a product.",
+      "category": "Pricing Strategy",
+      "phonetic": "/mæp ˈpɒlɪsi/",
+      "contentHtml": "<p>MAP (Minimum Advertised Price) is a unilateral policy set by a brand or manufacturer specifying the lowest price at which authorized resellers may publicly advertise their products. MAP violations can result in loss of authorized dealer status or termination of wholesale agreements.</p><p>MAP differs from a price floor in that it governs advertised price — not necessarily the transactional price at checkout. However, for online marketplaces, the listed price and the checkout price are typically the same, making MAP effectively a floor in practice.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/margin-floor/",
+          "slug": "margin-floor",
+          "term": "Margin Floor",
+          "category": "Pricing Strategy"
+        },
+        {
+          "url": "/glossary/msrp/",
+          "slug": "msrp",
+          "term": "MSRP",
+          "category": "Pricing Strategy"
+        },
+        {
+          "url": "/glossary/price-ceiling/",
+          "slug": "price-ceiling",
+          "term": "Price Ceiling",
+          "category": "Pricing Strategy"
+        }
+      ],
+      "metaDescription": "Minimum Advertised Price. A manufacturer"
+    },
+    {
+      "url": "https://priceleap.ai/glossary/margin-floor/",
+      "slug": "margin-floor",
+      "term": "Margin Floor",
+      "shortDefinition": "The minimum acceptable price for a SKU, calculated from cost of goods and target margin. Repricing rules cannot push prices below this threshold.",
+      "category": "Pricing Strategy",
+      "phonetic": "/ˈmɑːdʒɪn flɔːr/",
+      "contentHtml": "<p>A margin floor is the lowest price you're willing to sell a product for, defined by your cost structure and profitability requirements. It acts as a hard lower bound that repricing logic cannot breach — regardless of what competitors do.</p><p>In PriceLeap, margin floors are set at the SKU level and enforced at the system level, not the rule level. This means even if a rule would otherwise generate a price below the floor, the floor overrides it automatically.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/map-policy/",
+          "slug": "map-policy",
+          "term": "MAP Policy",
+          "category": "Pricing Strategy"
+        },
+        {
+          "url": "/glossary/msrp/",
+          "slug": "msrp",
+          "term": "MSRP",
+          "category": "Pricing Strategy"
+        },
+        {
+          "url": "/glossary/price-ceiling/",
+          "slug": "price-ceiling",
+          "term": "Price Ceiling",
+          "category": "Pricing Strategy"
+        }
+      ],
+      "metaDescription": "The minimum acceptable price for a SKU, calculated from cost of goods and target margin. Repricing rules cannot push prices below this threshold."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/msrp/",
+      "slug": "msrp",
+      "term": "MSRP",
+      "shortDefinition": "Manufacturer's Suggested Retail Price. The price a manufacturer recommends retailers charge for a product.",
+      "category": "Pricing Strategy",
+      "phonetic": "/ɛm ɛs ɑːr piː/",
+      "contentHtml": "<p>MSRP (Manufacturer's Suggested Retail Price) is the price a manufacturer recommends as the retail selling price for a product. Unlike MAP, MSRP is not a minimum — retailers are generally free to price below MSRP. It serves as a reference point for perceived value.</p><p>In repricing strategy, MSRP is often used as a price ceiling rather than a target. Pricing at or near MSRP may signal premium positioning; pricing significantly below MSRP is common in competitive marketplace environments where undercutting drives volume.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/map-policy/",
+          "slug": "map-policy",
+          "term": "MAP Policy",
+          "category": "Pricing Strategy"
+        },
+        {
+          "url": "/glossary/margin-floor/",
+          "slug": "margin-floor",
+          "term": "Margin Floor",
+          "category": "Pricing Strategy"
+        },
+        {
+          "url": "/glossary/price-ceiling/",
+          "slug": "price-ceiling",
+          "term": "Price Ceiling",
+          "category": "Pricing Strategy"
+        }
+      ],
+      "metaDescription": "Manufacturer"
+    },
+    {
+      "url": "https://priceleap.ai/glossary/price-ceiling/",
+      "slug": "price-ceiling",
+      "term": "Price Ceiling",
+      "shortDefinition": "The maximum price set for a SKU. Repricing rules will not push a price above this threshold, protecting brand perception and MAP compliance.",
+      "category": "Pricing Strategy",
+      "phonetic": "/praɪs ˈsiːlɪŋ/",
+      "contentHtml": "<p>A price ceiling is the upper bound on what a product will be priced at within your repricing rules. It prevents automated systems from raising prices to levels that could harm brand perception, violate MAP policies, or alienate customers even when market conditions would technically allow it.</p><p>Ceilings are set alongside margin floors to create a repricing corridor — a safe range within which all automated pricing decisions operate.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/map-policy/",
+          "slug": "map-policy",
+          "term": "MAP Policy",
+          "category": "Pricing Strategy"
+        },
+        {
+          "url": "/glossary/margin-floor/",
+          "slug": "margin-floor",
+          "term": "Margin Floor",
+          "category": "Pricing Strategy"
+        },
+        {
+          "url": "/glossary/msrp/",
+          "slug": "msrp",
+          "term": "MSRP",
+          "category": "Pricing Strategy"
+        }
+      ],
+      "metaDescription": "The maximum price set for a SKU. Repricing rules will not push a price above this threshold, protecting brand perception and MAP compliance."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/price-elasticity/",
+      "slug": "price-elasticity",
+      "term": "Price Elasticity",
+      "shortDefinition": "A measure of how sensitive consumer demand is to changes in price. High elasticity means small price changes produce large changes in sales volume.",
+      "category": "Market Dynamics",
+      "phonetic": "/praɪs ɪˌlæsˈtɪsɪti/",
+      "contentHtml": "<p>Price elasticity of demand measures the percentage change in quantity sold in response to a 1% change in price. A product with high price elasticity sees large swings in sales volume when prices change; a product with low elasticity (inelastic demand) sells at similar volumes regardless of price changes.</p><p>Understanding elasticity helps calibrate how aggressively to reprice. For elastic products, matching or undercutting competitors can meaningfully increase volume. For inelastic products — where customers buy based on brand, necessity, or habit — aggressive price cuts may simply compress margin without lifting volume.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/price-war/",
+          "slug": "price-war",
+          "term": "Price War",
+          "category": "Market Dynamics"
+        },
+        {
+          "url": "/glossary/asin/",
+          "slug": "asin",
+          "term": "ASIN",
+          "category": "Marketplace"
+        },
+        {
+          "url": "/glossary/buy-box-suppression/",
+          "slug": "buy-box-suppression",
+          "term": "Buy Box Suppression",
+          "category": "Marketplace"
+        }
+      ],
+      "metaDescription": "A measure of how sensitive consumer demand is to changes in price. High elasticity means small price changes produce large changes in sales volume."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/price-match/",
+      "slug": "price-match",
+      "term": "Price Match",
+      "shortDefinition": "A repricing rule that automatically sets your price equal to the lowest competitor price, or to a defined offset above or below it.",
+      "category": "Repricing Rules",
+      "phonetic": "/praɪs mætʃ/",
+      "contentHtml": "<p>A price match rule instructs a repricing system to align your price with a reference price — typically the lowest competitor price, the current Buy Box price, or a specific competitor's price. Price matching can be exact (\"match to $X\") or offset-based (\"match to $X − $0.01\").</p><p>Pure price matching is the most common but least sophisticated repricing strategy. Used without margin floors and velocity limits, it creates exposure to price wars. More advanced approaches combine price matching with conditions: match only if the Buy Box is currently held by a competitor, or only if the competitive price is above your floor.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/rule-based-pricing/",
+          "slug": "rule-based-pricing",
+          "term": "Rule-Based Pricing",
+          "category": "Repricing Rules"
+        },
+        {
+          "url": "/glossary/velocity-limit/",
+          "slug": "velocity-limit",
+          "term": "Velocity Limit",
+          "category": "Repricing Rules"
+        },
+        {
+          "url": "/glossary/asin/",
+          "slug": "asin",
+          "term": "ASIN",
+          "category": "Marketplace"
+        }
+      ],
+      "metaDescription": "A repricing rule that automatically sets your price equal to the lowest competitor price, or to a defined offset above or below it."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/price-war/",
+      "slug": "price-war",
+      "term": "Price War",
+      "shortDefinition": "A competitive cycle where multiple sellers continuously undercut each other's prices, often to the detriment of all parties' margins.",
+      "category": "Market Dynamics",
+      "phonetic": "/praɪs wɔːr/",
+      "contentHtml": "<p>A price war occurs when competing sellers respond to each other's price reductions in an escalating cycle, driving prices downward until margins are severely compressed or eliminated. Price wars are particularly common on commoditized listings with multiple sellers using aggressive repricing rules.</p><p>The primary defense against being drawn into a price war is a clearly defined margin floor and velocity limits. When a competitor continues to undercut below your floor, the correct response is to hold position — not match — and compete on other factors such as fulfillment speed or seller rating.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/price-elasticity/",
+          "slug": "price-elasticity",
+          "term": "Price Elasticity",
+          "category": "Market Dynamics"
+        },
+        {
+          "url": "/glossary/asin/",
+          "slug": "asin",
+          "term": "ASIN",
+          "category": "Marketplace"
+        },
+        {
+          "url": "/glossary/buy-box-suppression/",
+          "slug": "buy-box-suppression",
+          "term": "Buy Box Suppression",
+          "category": "Marketplace"
+        }
+      ],
+      "metaDescription": "A competitive cycle where multiple sellers continuously undercut each other"
+    },
+    {
+      "url": "https://priceleap.ai/glossary/repricing/",
+      "slug": "repricing",
+      "term": "Repricing",
+      "shortDefinition": "The process of automatically adjusting product prices in response to competitor activity, demand signals, or internal rules.",
+      "category": "Core Concepts",
+      "phonetic": "/ˌriːˈpraɪsɪŋ/",
+      "contentHtml": "<p>Repricing is the automated or manual adjustment of a product's price based on predefined triggers — such as a competitor lowering their price, a Buy Box ownership change, or an inventory threshold being crossed.</p><p>Modern repricing platforms like PriceLeap go beyond simple rule-following. They evaluate multiple signals simultaneously — competitor price, your margin floor, current Buy Box holder, and channel — to generate a single, margin-safe decision per SKU.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/competitive-intelligence/",
+          "slug": "competitive-intelligence",
+          "term": "Competitive Intelligence",
+          "category": "Core Concepts"
+        },
+        {
+          "url": "/glossary/competitive-repricing/",
+          "slug": "competitive-repricing",
+          "term": "Competitive Repricing",
+          "category": "Core Concepts"
+        },
+        {
+          "url": "/glossary/dynamic-pricing/",
+          "slug": "dynamic-pricing",
+          "term": "Dynamic Pricing",
+          "category": "Core Concepts"
+        }
+      ],
+      "metaDescription": "The process of automatically adjusting product prices in response to competitor activity, demand signals, or internal rules."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/rule-based-pricing/",
+      "slug": "rule-based-pricing",
+      "term": "Rule-Based Pricing",
+      "shortDefinition": "A pricing approach where prices are automatically set or adjusted according to predefined conditional logic rather than manual intervention.",
+      "category": "Repricing Rules",
+      "phonetic": "/ruːl beɪst ˈpraɪsɪŋ/",
+      "contentHtml": "<p>Rule-based pricing uses if-then logic to automate pricing decisions. A rule might read: \"If the lowest competitor price drops below my current price by more than $2, match to $0.01 below them — unless that price would be below my margin floor.\"</p><p>Rules can be stacked, prioritized, and scoped to specific categories, channels, or SKUs. The sophistication of a rule-based system is determined by how many variables it can evaluate simultaneously and how it resolves rule conflicts when multiple conditions are true at once.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/price-match/",
+          "slug": "price-match",
+          "term": "Price Match",
+          "category": "Repricing Rules"
+        },
+        {
+          "url": "/glossary/velocity-limit/",
+          "slug": "velocity-limit",
+          "term": "Velocity Limit",
+          "category": "Repricing Rules"
+        },
+        {
+          "url": "/glossary/asin/",
+          "slug": "asin",
+          "term": "ASIN",
+          "category": "Marketplace"
+        }
+      ],
+      "metaDescription": "A pricing approach where prices are automatically set or adjusted according to predefined conditional logic rather than manual intervention."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/sell-through-rate/",
+      "slug": "sell-through-rate",
+      "term": "Sell-Through Rate",
+      "shortDefinition": "The percentage of available inventory sold within a given period. A key input for demand-based pricing adjustments.",
+      "category": "Catalog Management",
+      "phonetic": "/sɛl θruː reɪt/",
+      "contentHtml": "<p>Sell-through rate measures what percentage of your available inventory has been sold within a specific time period. It is calculated as units sold divided by total units available. A high sell-through rate indicates strong demand; a low rate may indicate overstocking or pricing that is too high relative to the market.</p><p>Sell-through rate is an important signal for inventory-sensitive pricing rules. As sell-through rate falls, a repricing rule might lower prices to accelerate movement. As inventory depletes and sell-through accelerates, a rule might raise prices to protect remaining stock margin.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/catalog-repricing/",
+          "slug": "catalog-repricing",
+          "term": "Catalog Repricing",
+          "category": "Catalog Management"
+        },
+        {
+          "url": "/glossary/sku/",
+          "slug": "sku",
+          "term": "SKU",
+          "category": "Catalog Management"
+        },
+        {
+          "url": "/glossary/asin/",
+          "slug": "asin",
+          "term": "ASIN",
+          "category": "Marketplace"
+        }
+      ],
+      "metaDescription": "The percentage of available inventory sold within a given period. A key input for demand-based pricing adjustments."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/sku/",
+      "slug": "sku",
+      "term": "SKU",
+      "shortDefinition": "Stock Keeping Unit. A unique identifier assigned to each distinct product variant in your catalog for inventory and pricing management.",
+      "category": "Catalog Management",
+      "phonetic": "/ɛs keɪ juː/",
+      "contentHtml": "<p>A SKU (Stock Keeping Unit) is an internal identifier assigned to a specific product variant — including all attributes that make it distinct: size, color, bundle configuration, and condition. Two products that are identical except for color have different SKUs.</p><p>In repricing and pricing intelligence, SKU-level granularity is important because each variant may have a different cost basis, competitive landscape, and margin requirement. Treating all variants of a parent ASIN identically can lead to pricing decisions that are unprofitable for some variants while correct for others.</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/catalog-repricing/",
+          "slug": "catalog-repricing",
+          "term": "Catalog Repricing",
+          "category": "Catalog Management"
+        },
+        {
+          "url": "/glossary/sell-through-rate/",
+          "slug": "sell-through-rate",
+          "term": "Sell-Through Rate",
+          "category": "Catalog Management"
+        },
+        {
+          "url": "/glossary/asin/",
+          "slug": "asin",
+          "term": "ASIN",
+          "category": "Marketplace"
+        }
+      ],
+      "metaDescription": "Stock Keeping Unit. A unique identifier assigned to each distinct product variant in your catalog for inventory and pricing management."
+    },
+    {
+      "url": "https://priceleap.ai/glossary/velocity-limit/",
+      "slug": "velocity-limit",
+      "term": "Velocity Limit",
+      "shortDefinition": "A rule constraint that caps how frequently or how much a price can change within a given time window, preventing erratic pricing behavior.",
+      "category": "Repricing Rules",
+      "phonetic": "/vəˈlɒsɪti ˈlɪmɪt/",
+      "contentHtml": "<p>A velocity limit prevents a repricing system from making too many price changes too quickly. This protects against race-to-the-bottom spirals when multiple sellers are all using automated repricing systems that react to each other in real time.</p><p>Velocity limits can be configured in two dimensions: change frequency (e.g. no more than 3 price changes per hour per SKU) and change magnitude (e.g. no single change may exceed 5% of the current price).</p>",
+      "internalLinks": [],
+      "relatedTerms": [
+        {
+          "url": "/glossary/price-match/",
+          "slug": "price-match",
+          "term": "Price Match",
+          "category": "Repricing Rules"
+        },
+        {
+          "url": "/glossary/rule-based-pricing/",
+          "slug": "rule-based-pricing",
+          "term": "Rule-Based Pricing",
+          "category": "Repricing Rules"
+        },
+        {
+          "url": "/glossary/asin/",
+          "slug": "asin",
+          "term": "ASIN",
+          "category": "Marketplace"
+        }
+      ],
+      "metaDescription": "A rule constraint that caps how frequently or how much a price can change within a given time window, preventing erratic pricing behavior."
+    }
+  ]
+}

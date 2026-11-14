@@ -1,0 +1,97 @@
+---
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import BlogCard from '@/components/blog/BlogCard.astro';
+import blogData from '@/data/blog.json';
+
+export function getStaticPaths() {
+  return blogData.articles.map((article) => ({ params: { slug: article.slug }, props: { article } }));
+}
+
+const { article } = Astro.props;
+const related = article.relatedArticles
+  .map((item) => blogData.articles.find((candidate) => candidate.slug === item.slug))
+  .filter((item): item is (typeof blogData.articles)[number] => Boolean(item))
+  .slice(0, 3);
+---
+
+<SiteLayout title={`${article.title} | PriceLeap`} description={article.excerpt} canonical={`https://priceleap.ai/blog/${article.slug}/`}>
+  <article class="blog-article">
+    <div class="pl-container blog-article__crumbs"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/blog/">Blog</a><span aria-hidden="true">/</span><span>{article.category}</span></div>
+
+    <header class="pl-container blog-article__header">
+      <div class="blog-article__category">{article.category}</div>
+      <h1>{article.title}</h1>
+      <p class="blog-article__excerpt">{article.excerpt}</p>
+      <div class="blog-article__meta"><span>{article.author}</span><span aria-hidden="true">·</span><time>{article.publishedAt}</time><span aria-hidden="true">·</span><span>{article.readTime}</span></div>
+    </header>
+
+    {article.heroImage?.src && <div class="pl-container blog-article__hero"><img src={article.heroImage.src} alt={article.heroImage.alt || article.title} width="1600" height="900" fetchpriority="high" /></div>}
+
+    <div class="pl-container blog-article__layout">
+      <aside class="blog-article__toc">
+        <p>In this article</p>
+        <ol>{article.headings.filter((heading) => heading.level === 2).map((heading) => <li><a href={`#${heading.id}`}>{heading.title}</a></li>)}</ol>
+      </aside>
+      <div class="blog-article__content" set:html={article.contentHtml}></div>
+    </div>
+
+    <div class="pl-container blog-article__tags">
+      <span>Topics</span>
+      {article.tags.map((tag) => <span>{tag}</span>)}
+    </div>
+  </article>
+
+  {related.length > 0 && (
+    <section class="pl-container blog-related" aria-labelledby="related-heading">
+      <div class="blog-related__heading"><span class="pl-eyebrow"><span class="pl-eyebrow__slash">//</span><span class="pl-eyebrow__label">Keep reading</span></span><h2 id="related-heading">More pricing intelligence</h2></div>
+      <div class="blog-related__grid">{related.map((item) => <BlogCard article={item} />)}</div>
+    </section>
+  )}
+
+  <section class="pl-container blog-article-cta">
+    <div><span class="pl-eyebrow"><span class="pl-eyebrow__slash">//</span><span class="pl-eyebrow__label">Apply this in PriceLeap</span></span><h2>See it on your actual catalog.</h2><p>Bring a real pricing question and leave with a clearer next move.</p></div>
+    <a class="pl-btn pl-btn--primary pl-btn--lg" href="/book-a-demo">Book a demo <span aria-hidden="true">→</span></a>
+  </section>
+</SiteLayout>
+
+<style>
+  .blog-article { background: var(--pl-surface); }
+  .blog-article__crumbs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--pl-line); padding-block: 16px; color: var(--pl-muted); font-family: var(--pl-mono); font-size: 10px; letter-spacing: .05em; text-transform: uppercase; }
+  .blog-article__crumbs a:hover { color: var(--pl-accent-ink); }
+  .blog-article__header { max-width: 960px; padding-block: clamp(56px, 8vw, 104px) 48px; }
+  .blog-article__category { color: var(--pl-accent-ink); font-family: var(--pl-mono); font-size: 11px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; }
+  .blog-article__header h1 { margin: 18px 0 0; color: var(--pl-ink); font-size: clamp(40px, 6vw, 76px); line-height: 1.02; letter-spacing: -.055em; text-wrap: balance; }
+  .blog-article__excerpt { max-width: 760px; margin: 24px 0 0; color: var(--pl-muted); font-size: 19px; line-height: 1.6; }
+  .blog-article__meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; color: var(--pl-faint); font-family: var(--pl-mono); font-size: 11px; }
+  .blog-article__hero { overflow: hidden; border-radius: var(--pl-radius-xl); background: var(--pl-accent-tint); }
+  .blog-article__hero img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+  .blog-article__layout { display: grid; grid-template-columns: 220px minmax(0, 760px); justify-content: center; gap: clamp(32px, 6vw, 88px); padding-block: clamp(56px, 8vw, 96px); }
+  .blog-article__toc { align-self: start; position: sticky; top: 100px; }
+  .blog-article__toc p { color: var(--pl-ink); font-family: var(--pl-mono); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  .blog-article__toc ol { margin: 16px 0 0; padding: 0; list-style: none; border-left: 1px solid var(--pl-line); }
+  .blog-article__toc li a { display: block; padding: 6px 0 6px 14px; color: var(--pl-muted); font-size: 12px; line-height: 1.45; }
+  .blog-article__toc li a:hover { color: var(--pl-accent-ink); border-left: 2px solid var(--pl-accent); margin-left: -1px; }
+  .blog-article__content { min-width: 0; color: var(--pl-ink-2); font-size: 17px; line-height: 1.78; }
+  .blog-article__content :global(h2) { margin: 54px 0 14px; color: var(--pl-ink); font-size: clamp(26px, 3vw, 38px); line-height: 1.12; letter-spacing: -.035em; }
+  .blog-article__content :global(h2:first-child) { margin-top: 0; }
+  .blog-article__content :global(h3) { margin: 34px 0 10px; color: var(--pl-ink); font-size: 21px; line-height: 1.25; letter-spacing: -.02em; }
+  .blog-article__content :global(p) { margin: 0 0 20px; }
+  .blog-article__content :global(ul), .blog-article__content :global(ol) { margin: 0 0 24px; padding-left: 24px; }
+  .blog-article__content :global(li) { margin: 8px 0; padding-left: 4px; }
+  .blog-article__content :global(a) { color: var(--pl-accent-ink); text-decoration: underline; text-decoration-color: var(--pl-accent-line); text-underline-offset: 3px; }
+  .blog-article__content :global(a:hover) { color: var(--pl-accent); }
+  .blog-article__content :global(strong) { color: var(--pl-ink); font-weight: 600; }
+  .blog-article__tags { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; border-top: 1px solid var(--pl-line); padding-block: 28px 72px; }
+  .blog-article__tags span { border: 1px solid var(--pl-line); border-radius: 999px; padding: 7px 11px; color: var(--pl-muted); font-size: 12px; }
+  .blog-article__tags span:first-child { border: 0; padding-left: 0; color: var(--pl-ink); font-family: var(--pl-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+  .blog-related { border-top: 1px solid var(--pl-line); padding-block: 72px; }
+  .blog-related__heading h2 { margin-top: 16px; color: var(--pl-ink); font-size: clamp(30px, 4vw, 48px); letter-spacing: -.04em; }
+  .blog-related__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 32px; }
+  .blog-article-cta { display: flex; align-items: center; justify-content: space-between; gap: 28px; margin-bottom: 72px; border-radius: var(--pl-radius-xl); background: var(--pl-ink); padding: clamp(28px, 5vw, 56px); color: #fff; }
+  .blog-article-cta .pl-eyebrow { color: #fff; }
+  .blog-article-cta h2 { margin-top: 15px; color: #fff; font-size: clamp(28px, 4vw, 52px); letter-spacing: -.045em; }
+  .blog-article-cta p { margin-top: 10px; color: rgba(255,255,255,.65); font-size: 15px; }
+  .blog-article-cta .pl-btn { flex: none; }
+  @media (max-width: 900px) { .blog-article__layout { grid-template-columns: 1fr; } .blog-article__toc { position: static; } .blog-related__grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 640px) { .blog-article__header { padding-top: 48px; } .blog-related__grid { grid-template-columns: 1fr; } .blog-article-cta { align-items: flex-start; flex-direction: column; } .blog-article-cta .pl-btn { width: 100%; } }
+</style>

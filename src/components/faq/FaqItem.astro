@@ -1,0 +1,30 @@
+---
+interface Props {
+  item: { slug: string; question: string; shortAnswer: string; categoryId: string; categoryLabel: string };
+  topics: string[];
+  active?: boolean;
+}
+
+const { item, topics, active = false } = Astro.props;
+---
+
+<details class="faq-item" data-faq-item data-category={item.categoryId} data-topics={topics.join('|')} data-search={`${item.question} ${item.shortAnswer} ${item.categoryLabel}`.toLowerCase()} open={active}>
+  <summary>
+    <span>{item.question}</span>
+    <span class="faq-item__icon" aria-hidden="true">+</span>
+  </summary>
+  <div class="faq-item__answer"><p>{item.shortAnswer}</p><a href="/book-a-demo">Talk to a pricing specialist →</a></div>
+</details>
+
+<style>
+  .faq-item { border-bottom: 1px solid var(--pl-line); }
+  .faq-item:first-child { border-top: 1px solid var(--pl-line); }
+  summary { display: flex; align-items: center; justify-content: space-between; gap: 20px; cursor: pointer; list-style: none; padding: 22px 0; color: var(--pl-ink); font-size: 16px; font-weight: 600; line-height: 1.4; }
+  summary::-webkit-details-marker { display: none; }
+  .faq-item__icon { display: grid; flex: none; height: 30px; width: 30px; place-items: center; border: 1px solid var(--pl-accent-line); border-radius: 9px; color: var(--pl-accent-ink); font-size: 21px; font-weight: 400; line-height: 1; transition: transform .2s, background .2s, color .2s; }
+  .faq-item[open] .faq-item__icon { transform: rotate(45deg); background: var(--pl-accent); color: white; }
+  .faq-item__answer { padding: 0 50px 24px 0; color: var(--pl-muted); font-size: 15px; line-height: 1.7; }
+  .faq-item__answer p { margin: 0; }
+  .faq-item__answer a { display: inline-flex; margin-top: 14px; color: var(--pl-accent-ink); font-size: 13px; font-weight: 600; }
+  .faq-item__answer a:hover { color: var(--pl-accent); }
+</style>

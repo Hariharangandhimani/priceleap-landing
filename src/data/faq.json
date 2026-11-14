@@ -1,0 +1,185 @@
+{
+  "source": "https://priceleap.ai/faq/",
+  "fetchedAt": "2026-11-13T18:48:19.503Z",
+  "count": 17,
+  "topics": [
+    "All",
+    "Repricing Strategy",
+    "Amazon Strategy",
+    "Competitive Intelligence",
+    "Margin Management"
+  ],
+  "categories": [
+    {
+      "id": "integrations",
+      "label": "Integrations",
+      "desc": "Connecting PriceLeap to your existing tools and channels.",
+      "items": [
+        {
+          "slug": "amazon-push",
+          "question": "Can PriceLeap push prices back to Amazon automatically?",
+          "shortAnswer": "Yes. On Growth and Enterprise plans, PriceLeap can push approved price changes directly to Amazon Seller Central via the SP-API.",
+          "categoryId": "integrations",
+          "categoryLabel": "Integrations",
+          "categoryDescription": "Connecting PriceLeap to your existing tools and channels."
+        },
+        {
+          "slug": "erp-integration",
+          "question": "Does PriceLeap integrate with ERP systems?",
+          "shortAnswer": "Enterprise plans support custom ERP and OMS integrations. Common integrations include NetSuite, SAP, and custom REST connections.",
+          "categoryId": "integrations",
+          "categoryLabel": "Integrations",
+          "categoryDescription": "Connecting PriceLeap to your existing tools and channels."
+        },
+        {
+          "slug": "shopify-integration",
+          "question": "Does PriceLeap integrate with Shopify?",
+          "shortAnswer": "Yes. PriceLeap integrates directly with Shopify to sync price updates back to your storefront in real time.",
+          "categoryId": "integrations",
+          "categoryLabel": "Integrations",
+          "categoryDescription": "Connecting PriceLeap to your existing tools and channels."
+        }
+      ]
+    },
+    {
+      "id": "platform",
+      "label": "Platform & Features",
+      "desc": "How PriceLeap's pricing intelligence engine works.",
+      "items": [
+        {
+          "slug": "automate-vs-review",
+          "question": "Is pricing automated or does my team review decisions?",
+          "shortAnswer": "Both modes are available. You control how much autonomy the system has — per rule, per category, or per SKU.",
+          "categoryId": "platform",
+          "categoryLabel": "Platform & Features",
+          "categoryDescription": "How PriceLeap's pricing intelligence engine works."
+        },
+        {
+          "slug": "how-many-skus",
+          "question": "How many SKUs can PriceLeap handle?",
+          "shortAnswer": "Starter covers up to 1,000 SKUs. Growth covers up to 10,000. Enterprise handles 50,000–100,000+ SKUs without performance loss.",
+          "categoryId": "platform",
+          "categoryLabel": "Platform & Features",
+          "categoryDescription": "How PriceLeap's pricing intelligence engine works."
+        },
+        {
+          "slug": "marketplace-coverage",
+          "question": "What marketplaces does PriceLeap cover?",
+          "shortAnswer": "Amazon, Walmart, and eBay are covered natively. Additional marketplaces are available on Growth and Enterprise plans.",
+          "categoryId": "platform",
+          "categoryLabel": "Platform & Features",
+          "categoryDescription": "How PriceLeap's pricing intelligence engine works."
+        },
+        {
+          "slug": "priceleap-vs-monitoring",
+          "question": "How is PriceLeap different from price monitoring tools?",
+          "shortAnswer": "Price monitoring tools show you data. PriceLeap converts that data into specific pricing decisions using rule-based logic with built-in margin protection.",
+          "categoryId": "platform",
+          "categoryLabel": "Platform & Features",
+          "categoryDescription": "How PriceLeap's pricing intelligence engine works."
+        },
+        {
+          "slug": "what-is-priceleap",
+          "question": "What is PriceLeap?",
+          "shortAnswer": "PriceLeap is a pricing infrastructure engine that combines real-time competitor monitoring, rule-based decision logic, and margin protection into one system.",
+          "categoryId": "platform",
+          "categoryLabel": "Platform & Features",
+          "categoryDescription": "How PriceLeap's pricing intelligence engine works."
+        }
+      ]
+    },
+    {
+      "id": "pricing",
+      "label": "Pricing & Plans",
+      "desc": "Plan details, billing, and what's included at each tier.",
+      "items": [
+        {
+          "slug": "cancel-anytime",
+          "question": "Can I cancel or change plans at any time?",
+          "shortAnswer": "Yes. You can upgrade, downgrade, or cancel at any time. Upgrades take effect immediately; downgrades and cancellations apply at your next billing cycle.",
+          "categoryId": "pricing",
+          "categoryLabel": "Pricing & Plans",
+          "categoryDescription": "Plan details, billing, and what's included at each tier."
+        },
+        {
+          "slug": "free-trial",
+          "question": "Is there a free trial?",
+          "shortAnswer": "Yes — all plans include a 14-day free trial with no credit card required and access to the full feature set.",
+          "categoryId": "pricing",
+          "categoryLabel": "Pricing & Plans",
+          "categoryDescription": "Plan details, billing, and what's included at each tier."
+        },
+        {
+          "slug": "how-much",
+          "question": "How much does PriceLeap cost?",
+          "shortAnswer": "Plans start at $299/month (Starter), $799/month (Growth), and custom pricing for Enterprise. All billed annually with a 14-day free trial.",
+          "categoryId": "pricing",
+          "categoryLabel": "Pricing & Plans",
+          "categoryDescription": "Plan details, billing, and what's included at each tier."
+        },
+        {
+          "slug": "setup-fees",
+          "question": "Are there setup fees or hidden costs?",
+          "shortAnswer": "No. There are no setup fees on any plan. Onboarding is included, and there are no per-seat, per-SKU overage, or hidden charges.",
+          "categoryId": "pricing",
+          "categoryLabel": "Pricing & Plans",
+          "categoryDescription": "Plan details, billing, and what's included at each tier."
+        }
+      ]
+    },
+    {
+      "id": "onboarding",
+      "label": "Onboarding & Setup",
+      "desc": "Getting up and running with PriceLeap quickly.",
+      "items": [
+        {
+          "slug": "catalog-connect",
+          "question": "How do I connect my catalog?",
+          "shortAnswer": "Via CSV upload or REST API. Marketplace sellers can also connect directly through Amazon Seller Central and Walmart Seller Center integration.",
+          "categoryId": "onboarding",
+          "categoryLabel": "Onboarding & Setup",
+          "categoryDescription": "Getting up and running with PriceLeap quickly."
+        },
+        {
+          "slug": "technical-required",
+          "question": "Do I need technical resources to set up PriceLeap?",
+          "shortAnswer": "No. PriceLeap is a fully no-code platform. API access is available but never required for standard use.",
+          "categoryId": "onboarding",
+          "categoryLabel": "Onboarding & Setup",
+          "categoryDescription": "Getting up and running with PriceLeap quickly."
+        },
+        {
+          "slug": "time-to-start",
+          "question": "How long does it take to get started?",
+          "shortAnswer": "Most teams are live within 48–72 hours. Catalog import, SKU matching, and first rules can all be completed in the first session.",
+          "categoryId": "onboarding",
+          "categoryLabel": "Onboarding & Setup",
+          "categoryDescription": "Getting up and running with PriceLeap quickly."
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "label": "Data & Security",
+      "desc": "How PriceLeap handles your pricing data and security.",
+      "items": [
+        {
+          "slug": "data-collection",
+          "question": "How does PriceLeap collect competitor pricing data?",
+          "shortAnswer": "PriceLeap collects competitor data through proprietary monitoring technology across Amazon, Walmart, and eBay, refreshed continuously.",
+          "categoryId": "data",
+          "categoryLabel": "Data & Security",
+          "categoryDescription": "How PriceLeap handles your pricing data and security."
+        },
+        {
+          "slug": "data-security",
+          "question": "Is my pricing data secure?",
+          "shortAnswer": "Yes. PriceLeap is SOC 2 Type II compliant. All data is encrypted at rest and in transit. Your data is never shared with other customers.",
+          "categoryId": "data",
+          "categoryLabel": "Data & Security",
+          "categoryDescription": "How PriceLeap handles your pricing data and security."
+        }
+      ]
+    }
+  ]
+}

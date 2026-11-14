@@ -93,7 +93,7 @@ export const MEGA_MENUS: MegaMenu[] = [
     intro: 'Practical resources for pricing teams building a stronger competitive edge.',
     columns: [
       { title: 'Resources', links: [
-        { label: 'Blog', href: '/design-system#blog' }, { label: 'Case Studies', href: '/about' }, { label: 'Glossary', href: '/design-system#glossary' }, { label: 'Ebooks & Guides', href: '/book-a-demo' }, { label: 'Help Center', href: '/contact' }, { label: 'Academy', href: '/design-system' },
+        { label: 'Blog', href: '/blog/' }, { label: 'Case Studies', href: '/about' }, { label: 'Glossary', href: '/glossary/' }, { label: 'Ebooks & Guides', href: '/book-a-demo' }, { label: 'Help Center', href: '/contact' }, { label: 'Academy', href: '/design-system' },
       ] },
       { title: 'Company', links: [
         { label: 'About Us', href: '/about' }, { label: 'Customer Testimonials', href: '/about' }, { label: 'Data Compliance', href: '/privacy-policy' }, { label: 'Careers', href: '/contact' }, { label: 'Partners', href: '/contact' }, { label: 'Contact Us', href: '/contact' },

@@ -1,0 +1,19 @@
+---
+interface Props { term: { slug: string; term: string; shortDefinition: string; category: string } }
+const { term } = Astro.props;
+---
+<a class="glossary-card" href={'/glossary/' + term.slug + '/'} data-glossary-card data-category={term.category} data-search={(term.term + ' ' + term.shortDefinition + ' ' + term.category).toLowerCase()}>
+  <span class="glossary-card__category">{term.category}</span>
+  <h2>{term.term}</h2>
+  <p>{term.shortDefinition}</p>
+  <span class="glossary-card__link">Explore definition <span aria-hidden="true">↗</span></span>
+</a>
+<style>
+  .glossary-card { position: relative; display: flex; min-height: 220px; flex-direction: column; border: 1px solid var(--pl-line); border-radius: var(--pl-radius-lg); background: var(--pl-surface); padding: 24px; transition: transform .25s var(--pl-ease), border-color .25s var(--pl-ease), box-shadow .25s var(--pl-ease); }
+  .glossary-card:hover { transform: translateY(-4px); border-color: var(--pl-accent-line); box-shadow: var(--pl-shadow-lg); }
+  .glossary-card__category { color: var(--pl-accent-ink); font-family: var(--pl-mono); font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+  .glossary-card h2 { margin-top: 14px; color: var(--pl-ink); font-size: 24px; line-height: 1.1; letter-spacing: -.04em; }
+  .glossary-card p { margin-top: 12px; color: var(--pl-muted); font-size: 14px; line-height: 1.55; }
+  .glossary-card__link { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: auto; padding-top: 22px; color: var(--pl-ink); font-family: var(--pl-mono); font-size: 10px; letter-spacing: .04em; }
+  .glossary-card__link span { color: var(--pl-accent-ink); font-size: 18px; }
+</style>

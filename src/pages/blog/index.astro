@@ -1,0 +1,117 @@
+---
+import SiteLayout from '@/layouts/SiteLayout.astro';
+import BlogCard from '@/components/blog/BlogCard.astro';
+import blogData from '@/data/blog.json';
+
+const articles = blogData.articles;
+const categories = ['All', ...new Set(articles.map((article) => article.category))];
+---
+
+<SiteLayout title="Blog | PriceLeap pricing intelligence insights" description="Practical pricing intelligence, repricing, margin management, and marketplace strategy insights from PriceLeap.">
+  <section class="blog-hub-hero">
+    <div class="blog-hub-hero__grid" aria-hidden="true"></div>
+    <div class="pl-container blog-hub-hero__inner">
+      <div>
+        <span class="pl-eyebrow"><span class="pl-eyebrow__slash">//</span><span class="pl-eyebrow__label">PriceLeap journal</span></span>
+        <h1>Pricing intelligence for teams that compete on price.</h1>
+        <p>Deep dives on competitive repricing, Buy Box strategy, margin management, and marketplace pricing—written for teams who need better decisions at scale.</p>
+      </div>
+      <div class="blog-hub-hero__stat"><strong>{articles.length}</strong><span>articles<br />to sharpen your next pricing move</span></div>
+    </div>
+  </section>
+
+  <section class="pl-container blog-hub" aria-labelledby="blog-heading">
+    <div class="blog-hub__toolbar">
+      <div>
+        <p class="blog-hub__eyebrow" id="blog-heading">Latest thinking</p>
+        <p class="blog-hub__count" data-blog-count>{articles.length} articles</p>
+      </div>
+      <label class="blog-search">
+        <span class="sr-only">Search articles</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 5 5"></path></svg>
+        <input type="search" placeholder="Search the journal" data-blog-search />
+      </label>
+    </div>
+
+    <div class="blog-filters" role="tablist" aria-label="Filter articles by category">
+      {categories.map((category, index) => <button type="button" role="tab" aria-selected={index === 0 ? 'true' : 'false'} data-blog-filter={category}>{category}</button>)}
+    </div>
+
+    <div class="blog-grid" data-blog-grid>
+      {articles.map((article, index) => <BlogCard article={article} featured={index === 0} />)}
+    </div>
+    <p class="blog-empty" data-blog-empty hidden>No articles match that search. Try another term or category.</p>
+  </section>
+
+  <section class="pl-container blog-hub-cta">
+    <div>
+      <span class="pl-eyebrow"><span class="pl-eyebrow__slash">//</span><span class="pl-eyebrow__label">Put it into practice</span></span>
+      <h2>Bring a real pricing question.</h2>
+      <p>We’ll show you the data, workflow, and next step on your actual catalog.</p>
+    </div>
+    <a class="pl-btn pl-btn--primary pl-btn--lg" href="/book-a-demo">Book a demo <span aria-hidden="true">→</span></a>
+  </section>
+</SiteLayout>
+
+<script>
+  const search = document.querySelector<HTMLInputElement>('[data-blog-search]');
+  const filters = [...document.querySelectorAll<HTMLButtonElement>('[data-blog-filter]')];
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-blog-card]')];
+  const count = document.querySelector<HTMLElement>('[data-blog-count]');
+  const empty = document.querySelector<HTMLElement>('[data-blog-empty]');
+  let activeCategory = 'All';
+
+  const render = () => {
+    const query = search?.value.trim().toLowerCase() ?? '';
+    let visible = 0;
+    cards.forEach((card) => {
+      const matchesCategory = activeCategory === 'All' || card.dataset.category === activeCategory;
+      const matchesSearch = !query || (card.dataset.search ?? '').includes(query);
+      const show = matchesCategory && matchesSearch;
+      card.hidden = !show;
+      if (show) visible += 1;
+    });
+    if (count) count.textContent = `${visible} ${visible === 1 ? 'article' : 'articles'}`;
+    if (empty) empty.hidden = visible > 0;
+  };
+
+  search?.addEventListener('input', render);
+  filters.forEach((filter) => filter.addEventListener('click', () => {
+    activeCategory = filter.dataset.blogFilter ?? 'All';
+    filters.forEach((item) => item.setAttribute('aria-selected', String(item === filter)));
+    render();
+  }));
+</script>
+
+<style>
+  .blog-hub-hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--pl-line); background: var(--pl-surface); }
+  .blog-hub-hero__grid { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--pl-line-soft) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse 70% 100% at 75% 30%, #000 10%, transparent 78%); opacity: .65; }
+  .blog-hub-hero__inner { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 40px; padding-block: clamp(64px, 9vw, 120px); }
+  h1 { max-width: 820px; margin: 24px 0 0; color: var(--pl-ink); font-size: clamp(42px, 6vw, 78px); line-height: 1.02; letter-spacing: -.055em; text-wrap: balance; }
+  .blog-hub-hero p { max-width: 680px; margin: 24px 0 0; color: var(--pl-muted); font-size: 18px; line-height: 1.6; }
+  .blog-hub-hero__stat { display: flex; align-items: baseline; gap: 12px; max-width: 190px; border-top: 1px solid var(--pl-accent-line); padding-top: 14px; color: var(--pl-muted); font-size: 12px; line-height: 1.45; }
+  .blog-hub-hero__stat strong { color: var(--pl-accent); font-family: var(--pl-mono); font-size: 42px; line-height: 1; }
+  .blog-hub { padding-block: clamp(48px, 7vw, 88px); }
+  .blog-hub__toolbar { display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+  .blog-hub__eyebrow { color: var(--pl-ink); font-family: var(--pl-mono); font-size: 12px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; }
+  .blog-hub__count { margin-top: 7px; color: var(--pl-muted); font-size: 14px; }
+  .blog-search { display: flex; align-items: center; gap: 10px; width: min(100%, 280px); border: 1px solid var(--pl-line); border-radius: 10px; background: var(--pl-surface); padding: 0 13px; }
+  .blog-search svg { width: 18px; flex: none; fill: none; stroke: var(--pl-muted); stroke-width: 1.7; }
+  .blog-search input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--pl-ink); padding: 12px 0; font: inherit; font-size: 13px; }
+  .blog-filters { display: flex; gap: 8px; overflow-x: auto; padding-block: 24px 32px; scrollbar-width: none; }
+  .blog-filters button { flex: none; border: 1px solid var(--pl-line); border-radius: 999px; background: var(--pl-surface); color: var(--pl-muted); padding: 9px 14px; font: inherit; font-size: 12px; cursor: pointer; transition: color .2s, background .2s, border-color .2s; }
+  .blog-filters button:hover, .blog-filters button[aria-selected='true'] { border-color: var(--pl-ink); background: var(--pl-ink); color: #fff; }
+  .blog-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .blog-grid [hidden] { display: none; }
+  .blog-empty { padding: 56px 0; text-align: center; color: var(--pl-muted); }
+  .blog-hub-cta { display: flex; align-items: center; justify-content: space-between; gap: 28px; margin-bottom: clamp(48px, 7vw, 88px); border: 1px solid var(--pl-line); border-radius: var(--pl-radius-xl); background: var(--pl-surface); padding: clamp(28px, 5vw, 52px); }
+  .blog-hub-cta h2 { margin-top: 14px; color: var(--pl-ink); font-size: clamp(28px, 4vw, 46px); letter-spacing: -.04em; }
+  .blog-hub-cta p { margin-top: 10px; color: var(--pl-muted); font-size: 15px; }
+  @media (max-width: 900px) { .blog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 640px) {
+    .blog-hub-hero__inner, .blog-hub__toolbar, .blog-hub-cta { align-items: flex-start; flex-direction: column; grid-template-columns: 1fr; }
+    .blog-search { width: 100%; }
+    .blog-grid { grid-template-columns: 1fr; }
+    .blog-hub-cta .pl-btn { width: 100%; }
+  }
+</style>
