@@ -1,8 +1,9 @@
 ---
-import SiteLayout from '@/layouts/SiteLayout.astro';
-import LegalDoc from '@/components/legal/LegalDoc.astro';
-import { privacy } from '@/data/legal';
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+import LegalDoc from '../components/pl/LegalDoc.astro';
+import legal from '../data/pllegal.json';
+const doc = legal.privacy;
 ---
-<SiteLayout title={`${privacy.title} · PriceLeap`} description={privacy.description}>
-  <LegalDoc doc={privacy} />
-</SiteLayout>
+<PriceLeapLayout title="Privacy Policy · PriceLeap" description="How PriceLeap collects, uses, and protects information across our pricing infrastructure platform.">
+  <LegalDoc doc={doc} />
+</PriceLeapLayout>

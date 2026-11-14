@@ -1,8 +1,9 @@
 ---
-import SiteLayout from '@/layouts/SiteLayout.astro';
-import LegalDoc from '@/components/legal/LegalDoc.astro';
-import { terms } from '@/data/legal';
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+import LegalDoc from '../components/pl/LegalDoc.astro';
+import legal from '../data/pllegal.json';
+const doc = legal.terms;
 ---
-<SiteLayout title={`${terms.title} · PriceLeap`} description={terms.description}>
-  <LegalDoc doc={terms} />
-</SiteLayout>
+<PriceLeapLayout title="Terms of Service · PriceLeap" description="The terms that govern the service agreement between PriceLeap and its clients.">
+  <LegalDoc doc={doc} />
+</PriceLeapLayout>

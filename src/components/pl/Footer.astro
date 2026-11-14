@@ -1,0 +1,90 @@
+---
+// PriceLeap site footer. Native Astro port of the design package footer.
+import { FOOTER_COLS, L } from '../../data/plnav';
+const badges = ['ISO 27001-aligned', 'SSO & SAML', 'Role-based access', 'GDPR ready', '99.9% uptime SLA'];
+---
+<footer class="pl-ft">
+  <div class="pl-ft-shell">
+    <div class="pl-ft-top">
+      <div class="pl-ft-brand">
+        <div aria-hidden="true" class="pl-ft-dots"></div>
+        <a href="/" class="pl-ft-logo"><img src="/assets/priceleap-logo.png" alt="PriceLeap" width="158" height="30" /></a>
+        <p class="pl-ft-blurb">Pricing intelligence software for e-commerce and marketplace teams. Competitor price tracking, verified accuracy and dynamic pricing in one workspace.</p>
+        <div class="pl-ft-status"><span class="pl-ft-dot"></span>All systems operational</div>
+      </div>
+      <div class="pl-ft-news">
+        <div>
+          <div class="pl-ft-news-t">Pricing insights, every other week.</div>
+          <div class="pl-ft-news-d">Market moves, MAP trends and product updates. No spam.</div>
+        </div>
+        <form class="pl-ft-news-form" data-newsletter>
+          <input type="email" required placeholder="you@company.com" aria-label="Email address" class="pl-ft-input" />
+          <button type="submit" class="pl-ft-sub">Subscribe</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="pl-ft-cols">
+      {FOOTER_COLS.map((col) => (
+        <div class="pl-ft-col">
+          <div class="pl-ft-col-t">{col.t}</div>
+          <div class="pl-ft-col-links">{col.items.map((i) => (<a href={i.href}>{i.t}</a>))}</div>
+        </div>
+      ))}
+    </div>
+
+    <div class="pl-ft-badges">
+      {badges.map((b) => (<div class="pl-ft-badge"><span class="pl-ft-check">✓</span>{b}</div>))}
+    </div>
+  </div>
+
+  <div class="pl-ft-wordmark">PriceLeap</div>
+  <div class="pl-ft-bottom">
+    <span class="pl-ft-copy">© 2026 PriceLeap. All rights reserved.</span>
+    <span class="pl-ft-social">
+      <a href="#" aria-label="LinkedIn">in</a><a href="#" aria-label="X">X</a><a href="#" aria-label="YouTube">YT</a><a href="#" aria-label="GitHub">GH</a>
+    </span>
+    <span class="pl-ft-copy">Made for pricing teams · ₹ INR</span>
+  </div>
+</footer>
+
+<style>
+  .pl-ft { padding: 28px clamp(16px,4vw,28px) 0; }
+  .pl-ft-shell { border: 1px solid var(--pl-line); border-radius: 22px; overflow: hidden; background: var(--pl-line); display: grid; gap: 1px; }
+  .pl-ft-top { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,300px),1fr)); gap: 1px; }
+  .pl-ft-brand { background: var(--pl-surface); padding: 32px 28px; display: flex; flex-direction: column; gap: 18px; position: relative; overflow: hidden; }
+  .pl-ft-dots { position: absolute; inset: 0; background-image: radial-gradient(var(--pl-line) 1px,transparent 1px); background-size: 18px 18px; -webkit-mask-image: linear-gradient(135deg,transparent 40%,#000); mask-image: linear-gradient(135deg,transparent 40%,#000); pointer-events: none; }
+  .pl-ft-logo { position: relative; display: flex; align-items: center; gap: 9px; }
+  .pl-ft-logo img { display: block; height: 30px; width: auto; }
+  .pl-ft-blurb { position: relative; margin: 0; font-size: 15px; line-height: 1.6; color: var(--pl-muted); max-width: 320px; }
+  .pl-ft-status { position: relative; display: flex; align-items: center; gap: 8px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: var(--pl-ink-2); }
+  .pl-ft-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--pl-accent); animation: plpulse 1.6s infinite; }
+  .pl-ft-news { background: var(--pl-surface); padding: 32px 28px; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; }
+  .pl-ft-news-t { font-size: 22px; font-weight: 500; letter-spacing: -.02em; line-height: 1.25; }
+  .pl-ft-news-d { font-size: 14px; color: var(--pl-muted); margin-top: 8px; }
+  .pl-ft-news-form { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pl-ft-input { flex: 1; min-width: 180px; border: 1px solid var(--pl-line); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--pl-ink); background: var(--pl-cream); }
+  .pl-ft-input::placeholder { color: var(--pl-faint-2); }
+  .pl-ft-sub { background: var(--pl-gradient); color: var(--pl-surface); font-weight: 500; font-size: 14px; padding: 12px 18px; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 10px 22px -12px rgba(247,99,30,.8); }
+  .pl-ft-cols { display: grid; grid-template-columns: repeat(auto-fit,minmax(170px,1fr)); gap: 1px; }
+  .pl-ft-col { background: var(--pl-surface); padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .pl-ft-col-t { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; letter-spacing: .14em; color: var(--pl-faint-2); }
+  .pl-ft-col-links { display: flex; flex-direction: column; gap: 11px; font-size: 14px; }
+  .pl-ft-col-links a { color: var(--pl-ink-2); }
+  .pl-ft-col-links a:hover { color: var(--pl-accent-ink); }
+  .pl-ft-badges { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 1px; }
+  .pl-ft-badge { background: var(--pl-cream); padding: 14px 20px; display: flex; align-items: center; gap: 10px; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; color: var(--pl-ink-2); }
+  .pl-ft-check { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--pl-accent-line); color: var(--pl-accent-ink); font-size: 9px; display: flex; align-items: center; justify-content: center; }
+  .pl-ft-wordmark { overflow: hidden; margin-top: 28px; line-height: .78; text-align: center; font-size: clamp(80px,19vw,236px); font-weight: 600; letter-spacing: -.06em; background: linear-gradient(180deg,var(--pl-line) 0%,var(--pl-surface) 92%); -webkit-background-clip: text; background-clip: text; color: transparent; user-select: none; }
+  .pl-ft-bottom { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--pl-line); padding: 20px clamp(16px,4vw,28px) 24px; font-size: 13px; color: var(--pl-faint); }
+  .pl-ft-copy { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; }
+  .pl-ft-social { display: flex; gap: 8px; }
+  .pl-ft-social a { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', ui-monospace, monospace; font-size: 11px; color: var(--pl-ink-2); }
+</style>
+
+<script>
+  // Newsletter is client-validated only; no endpoint yet (see MIGRATION.md).
+  document.querySelectorAll('[data-newsletter]').forEach((f) => {
+    f.addEventListener('submit', (e) => { e.preventDefault(); const i = (f as HTMLFormElement).querySelector('input'); if (i) { (i as HTMLInputElement).value = ''; i.setAttribute('placeholder', 'Thanks — you’re subscribed ✓'); } });
+  });
+</script>

@@ -1,0 +1,58 @@
+---
+// Base layout for all native PriceLeap pages built on the --pl-* tokens.
+import '../styles/pl-global.css';
+import Header from '../components/pl/Header.astro';
+import Footer from '../components/pl/Footer.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  canonical?: string;
+  ogImage?: string;
+  jsonLd?: Record<string, unknown>[];
+  bodyClass?: string;
+}
+const {
+  title,
+  description = 'PriceLeap — pricing intelligence for e-commerce and marketplaces. Competitor price tracking, verified accuracy and dynamic pricing in one workspace.',
+  canonical,
+  ogImage = '/assets/priceleap-logo.png',
+  jsonLd = [],
+  bodyClass = '',
+} = Astro.props;
+
+const site = 'https://priceleap.ai';
+const canonicalUrl = canonical ?? new URL(Astro.url.pathname, site).href;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={new URL(ogImage, site).href} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" type="image/png" href="/assets/pl-mark.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+    {jsonLd.map((data) => (
+      <script type="application/ld+json" set:html={JSON.stringify(data)} />
+    ))}
+    <slot name="head" />
+  </head>
+  <body class={bodyClass}>
+    <Header />
+    <main id="main"><slot /></main>
+    <Footer />
+  </body>
+</html>

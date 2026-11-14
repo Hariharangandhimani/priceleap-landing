@@ -1,0 +1,93 @@
+/* PriceLeap design tokens — single source of truth.
+   Every page style references these via var(--pl-*), so editing a value here rethemes the whole site. */
+:root {
+  /* Color */
+  --pl-ink: #1C130E;
+  --pl-ink-2: #3A302A;
+  --pl-ink-hover: #3A2C24;
+  --pl-ink-deep: #1A0A06;
+  --pl-muted: #665A51;
+  --pl-muted-2: #5C5048;
+  --pl-faint: #7F7066;
+  --pl-faint-2: #9C8C80;
+  --pl-line: #EFE3DA;
+  --pl-line-soft: #F5ECE5;
+  --pl-line-strong: #E2D3C8;
+  --pl-line-xstrong: #D7C6BA;
+  --pl-line-alt: #E9DCD2;
+  --pl-surface: #FFFFFF;
+  --pl-canvas: #FFFCF9;
+  --pl-cream: #FFFAF6;
+  --pl-cream-2: #FFF9F4;
+  --pl-sand: #FBF3EC;
+  --pl-sand-2: #FDF6F0;
+  --pl-sand-3: #F8EFE8;
+  --pl-accent: #F7631E;
+  --pl-accent-start: #F2421B;
+  --pl-accent-end: #FB8A2E;
+  --pl-accent-ink: #C2410C;
+  --pl-accent-tint: #FFF4EC;
+  --pl-accent-line: #FFD8BE;
+  --pl-accent-line-2: #FFBE8C;
+  --pl-accent-hover-start: #DB3612;
+  --pl-accent-hover-mid: #EA5516;
+  --pl-accent-hover-end: #F27A22;
+  --pl-red: #FF3131;
+  --pl-orange: #FF914D;
+  --pl-red-mid: #FF5A3C;
+  --pl-red-ink: #C2361C;
+  --pl-red-tint: #FFF1EB;
+  --pl-red-line: #FFD3C2;
+  --pl-red-strong: #F04A2A;
+  --pl-danger: #E5483F;
+  --pl-danger-ink: #C9372E;
+  --pl-danger-tint: #FDECEB;
+  --pl-danger-line: #F5C6C3;
+  --pl-success-tint: #F2FDF6;
+  --pl-success-line: #D1F9DF;
+  --pl-warn-ink: #8A5A00;
+  --pl-warn-tint: #FFF8EB;
+  --pl-warn-line: #F4DDAE;
+
+  /* Gradients */
+  --pl-gradient: linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);
+  --pl-gradient-hover: linear-gradient(135deg,#DB3612 0%,#EA5516 50%,#F27A22 100%);
+  --pl-gradient-legacy: linear-gradient(90deg,#FF3131,#FF914D);
+  --pl-gradient-text: linear-gradient(90deg,#E23A0E 0%,#F2601A 55%,#F7801F 100%);
+
+  /* Type */
+  --pl-font-display: 'Geist', system-ui, sans-serif;
+  --pl-font-body: 'Geist', system-ui, sans-serif;
+  --pl-font-mono: 'Geist Mono', ui-monospace, monospace;
+  --pl-fs-display: clamp(44px, 7vw, 84px);
+  --pl-fs-h1: clamp(36px, 5vw, 60px);
+  --pl-fs-h2: clamp(30px, 4.2vw, 48px);
+  --pl-fs-h3: 22px;
+  --pl-fs-body-lg: 18px;
+  --pl-fs-body: 15px;
+  --pl-fs-small: 13px;
+  --pl-fs-label: 11px;
+  --pl-tracking-tight: -0.035em;
+  --pl-tracking-label: 0.12em;
+
+  /* Space */
+  --pl-space-1: 4px; --pl-space-2: 8px; --pl-space-3: 12px; --pl-space-4: 16px; --pl-space-5: 20px;
+  --pl-space-6: 24px; --pl-space-8: 32px; --pl-space-10: 40px; --pl-space-12: 48px; --pl-space-16: 64px; --pl-space-24: 96px;
+  --pl-container: 1280px;
+  --pl-gutter: clamp(16px, 4vw, 40px);
+
+  /* Radius */
+  --pl-radius-sm: 8px; --pl-radius-md: 12px; --pl-radius-lg: 16px; --pl-radius-xl: 20px; --pl-radius-2xl: 24px; --pl-radius-pill: 999px;
+
+  /* Shadow */
+  --pl-shadow-sm: 0 1px 2px rgba(60, 30, 15, .05);
+  --pl-shadow-md: 0 12px 26px -14px rgba(60, 30, 15, .35);
+  --pl-shadow-lg: 0 40px 80px -56px rgba(60, 30, 15, .35);
+  --pl-shadow-accent: 0 12px 26px -12px rgba(247, 99, 30, .75);
+  --pl-ring: 0 0 0 4px rgba(247, 99, 30, .16);
+
+  /* Motion */
+  --pl-ease: cubic-bezier(.2, .7, .2, 1);
+  --pl-dur-fast: 200ms;
+  --pl-dur: 350ms;
+}
