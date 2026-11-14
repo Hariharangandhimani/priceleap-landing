@@ -1,42 +1,317 @@
 ---
-import SiteLayout from '@/layouts/SiteLayout.astro';
-import GlossaryCard from '@/components/glossary/GlossaryCard.astro';
-import glossaryData from '@/data/glossary.json';
-const terms = glossaryData.terms;
-const letters = [...new Set(terms.map((term) => term.term.charAt(0).toUpperCase()))].sort();
-const categories = [...new Set(terms.map((term) => term.category))].sort();
-const glossarySchema = { '@context': 'https://schema.org', '@type': 'DefinedTermSet', name: 'PriceLeap Pricing Intelligence Glossary', description: 'Definitions for competitive pricing, marketplace strategy, and repricing automation.', url: 'https://priceleap.ai/glossary/', hasDefinedTerm: terms.map((term) => ({ '@type': 'DefinedTerm', name: term.term, description: term.shortDefinition, url: 'https://priceleap.ai/glossary/' + term.slug + '/' })) };
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+import glossaryData from '../../data/glossary.json';
+
+type Term = { slug: string; term: string; shortDefinition: string; category: string; phonetic?: string };
+const terms = (glossaryData.terms as Term[]).slice().sort((a, b) => a.term.localeCompare(b.term));
+const total = terms.length;
+
+const categories = [...new Set(terms.map((t) => t.category))];
+const catCounts = Object.fromEntries(categories.map((c) => [c, terms.filter((t) => t.category === c).length]));
+
+// Group A–Z
+const AZ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const letterOf = (t: Term) => (t.term[0] || '#').toUpperCase();
+const present = new Set(terms.map(letterOf));
+const groups = AZ.filter((l) => present.has(l)).map((l) => ({
+  l, id: 'letter-' + l, items: terms.filter((t) => letterOf(t) === l),
+}));
+
+// Featured "term of the week" + starters
+const featured = terms[0];
+const starters = terms.slice(0, 4);
+const popular = terms.slice(0, 5);
+
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'DefinedTermSet',
+  name: 'PriceLeap Pricing Glossary',
+  url: 'https://priceleap.ai/glossary',
+  hasDefinedTerm: terms.map((t) => ({
+    '@type': 'DefinedTerm', name: t.term, description: t.shortDefinition, url: `https://priceleap.ai/glossary/${t.slug}`,
+  })),
+}];
 ---
-<SiteLayout title="Pricing Intelligence Glossary | PriceLeap" description="Clear definitions for competitive pricing, marketplace strategy, pricing rules, and repricing automation.">
-  <script type="application/ld+json" slot="head" set:html={JSON.stringify(glossarySchema)} />
-  <section class="glossary-hero"><div class="glossary-hero__grid" aria-hidden="true"></div><div class="pl-container glossary-hero__inner"><span class="pl-eyebrow"><span class="pl-eyebrow__slash">//</span><span class="pl-eyebrow__label">Pricing intelligence glossary</span></span><h1>The language of <em>better pricing.</em></h1><p>Every term you’ll encounter in competitive pricing, marketplace strategy, and repricing automation—defined clearly.</p><div class="glossary-hero__stats"><strong>{terms.length}</strong><span>terms across pricing, marketplaces, and catalog management</span></div></div></section>
-  <section class="pl-container glossary-page" aria-labelledby="glossary-heading">
-    <div class="glossary-toolbar"><label class="glossary-search"><span class="sr-only">Search glossary terms</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 5 5"></path></svg><input type="search" placeholder="Search terms..." data-glossary-search /><span data-glossary-count>{terms.length} terms</span></label><div class="glossary-filters" role="tablist" aria-label="Filter glossary terms"><button type="button" role="tab" aria-selected="true" data-glossary-filter="All">All</button>{categories.map((category) => <button type="button" role="tab" aria-selected="false" data-glossary-filter={category}>{category}</button>)}</div></div>
-    <div class="glossary-alpha" aria-label="Jump to letter">{letters.map((letter) => <a href={'#glossary-' + letter} data-glossary-letter={letter}>{letter}</a>)}</div>
-    <div class="glossary-results" data-glossary-results>{letters.map((letter) => <section class="glossary-letter" id={'glossary-' + letter} data-glossary-section={letter}><div class="glossary-letter__head"><span>{letter}</span><i aria-hidden="true"></i></div><div class="glossary-grid">{terms.filter((term) => term.term.startsWith(letter)).map((term) => <GlossaryCard term={term} />)}</div></section>)}</div>
-    <p class="glossary-empty" data-glossary-empty hidden>No matching terms found. Try a different search or category.</p>
+<PriceLeapLayout
+  title="Pricing Glossary · PriceLeap"
+  description="Plain-English definitions of pricing, competitor intelligence, MAP and e-commerce terms, from the PriceLeap team."
+  jsonLd={jsonLd}
+>
+  <section class="gl-hero" data-screen-label="Hero">
+    <div aria-hidden="true" class="gl-hero-grid"></div>
+    <div aria-hidden="true" class="gl-hero-glow"></div>
+    <div class="gl-hero-inner">
+      <span class="gl-badge"><span class="gl-badge-dot"></span>PRICING GLOSSARY · {total} TERMS</span>
+      <h1 class="gl-h1"><span style="font-weight:400">Every pricing term, </span><span style="font-weight:700">defined.</span></h1>
+      <p class="gl-lead">Plain-English definitions of the pricing, competitor intelligence and e-commerce terms your team uses every day, with formulas and worked examples.</p>
+      <div role="search" class="gl-search">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7F7066" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input type="search" placeholder="Search a term, e.g. MAP" aria-label="Search glossary" data-gl-search />
+        <a href="#terms" class="gl-search-btn">Search</a>
+      </div>
+      <div class="gl-popular">
+        <span class="gl-popular-label">MOST SEARCHED</span>
+        {popular.map((p) => (<a href={`/glossary/${p.slug}`} class="gl-chip">{p.term}</a>))}
+      </div>
+    </div>
   </section>
-  <section class="pl-container glossary-cta"><div><span class="pl-eyebrow"><span class="pl-eyebrow__slash">//</span><span class="pl-eyebrow__label">See the concepts in action</span></span><h2>Turn market data into controlled decisions.</h2><p>PriceLeap puts these strategies to work across your catalog.</p></div><a class="pl-btn pl-btn--primary pl-btn--lg" href="/book-a-demo">Book a demo <span aria-hidden="true">→</span></a></section>
-</SiteLayout>
-<script>
-  const cards = [...document.querySelectorAll<HTMLElement>('[data-glossary-card]')];
-  const sections = [...document.querySelectorAll<HTMLElement>('[data-glossary-section]')];
-  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-glossary-filter]')];
-  const search = document.querySelector<HTMLInputElement>('[data-glossary-search]');
-  const count = document.querySelector<HTMLElement>('[data-glossary-count]');
-  const empty = document.querySelector<HTMLElement>('[data-glossary-empty]');
-  let activeFilter = 'All';
-  const render = () => {
-    const query = search?.value.trim().toLowerCase() ?? '';
-    let visible = 0;
-    cards.forEach((card) => { const show = (activeFilter === 'All' || card.dataset.category === activeFilter) && (!query || (card.dataset.search ?? '').includes(query)); card.hidden = !show; if (show) visible += 1; });
-    sections.forEach((section) => { section.hidden = !section.querySelector('[data-glossary-card]:not([hidden])'); });
-    if (count) count.textContent = visible + ' ' + (visible === 1 ? 'term' : 'terms');
-    if (empty) empty.hidden = visible > 0;
-  };
-  buttons.forEach((button) => button.addEventListener('click', () => { activeFilter = button.dataset.glossaryFilter ?? 'All'; buttons.forEach((item) => item.setAttribute('aria-selected', String(item === button))); render(); }));
-  search?.addEventListener('input', render);
-</script>
+
+  <section class="gl-featured" data-screen-label="Featured terms" data-gl-featured>
+    <div class="gl-featured-grid">
+      <a href={`/glossary/${featured.slug}`} class="gl-feat-card">
+        <div aria-hidden="true" class="gl-feat-glow"></div>
+        <div class="gl-feat-tags"><span class="gl-feat-tag-gradient">TERM OF THE WEEK</span><span class="gl-feat-tag">{featured.category.toUpperCase()}</span></div>
+        <div class="gl-feat-title-row"><span class="gl-feat-title">{featured.term}</span>{featured.phonetic && (<span class="gl-feat-phon">{featured.phonetic} · noun</span>)}</div>
+        <p class="gl-feat-def">{featured.shortDefinition}</p>
+        <span class="gl-feat-foot"><span class="gl-feat-meta">UPDATED NOV 12, 2026</span><span class="gl-feat-read">Read definition<span style="color:var(--pl-accent-end)">→</span></span></span>
+      </a>
+      <div class="gl-start">
+        <div class="gl-start-head"><span>START HERE</span><span class="gl-start-n">{String(starters.length).padStart(2, '0')}</span></div>
+        {starters.map((p, i) => (
+          <a href={`/glossary/${p.slug}`} class="gl-start-item" style={i === starters.length - 1 ? 'border-bottom:none' : ''}>
+            <span class="gl-start-letter">{p.term[0].toUpperCase()}</span>
+            <span style="min-width:0"><span class="gl-start-t">{p.term}</span><span class="gl-start-s">{p.shortDefinition}</span></span>
+            <span style="color:var(--pl-line-xstrong)">→</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section id="terms" class="gl-terms" data-screen-label="All terms">
+    <div class="gl-terms-head">
+      <div>
+        <span class="gl-terms-eyebrow"><span class="gl-diamond"></span>A–Z INDEX</span>
+        <h2 class="gl-terms-title" data-gl-title>All terms, A to Z</h2>
+      </div>
+      <span class="gl-terms-count" data-gl-count>{total} terms</span>
+    </div>
+
+    <div class="gl-sticky">
+      <nav aria-label="Jump to letter" class="gl-letters">
+        {AZ.map((l) => present.has(l) ? (
+          <button type="button" class="gl-letter" data-gl-jump={l} aria-label={`Jump to ${l}`}>{l}</button>
+        ) : (
+          <button type="button" class="gl-letter is-disabled" disabled aria-label={`${l}, no terms`}>{l}</button>
+        ))}
+      </nav>
+      <div role="tablist" aria-label="Categories" class="gl-cats">
+        <button type="button" role="tab" class="gl-cat is-on" data-gl-cat="All" aria-selected="true">All<span class="gl-cat-n">{total}</span></button>
+        {categories.map((c) => (
+          <button type="button" role="tab" class="gl-cat" data-gl-cat={c} aria-selected="false">{c}<span class="gl-cat-n">{catCounts[c]}</span></button>
+        ))}
+      </div>
+    </div>
+
+    <div class="gl-groups" data-gl-groups>
+      {groups.map((g) => (
+        <div id={g.id} class="gl-group" data-gl-group data-letter={g.l}>
+          <div class="gl-group-letter">
+            <span class="gl-big-letter">{g.l}</span>
+            <span class="gl-group-n" data-gl-group-n>{g.items.length} {g.items.length === 1 ? 'term' : 'terms'}</span>
+          </div>
+          <div class="gl-cards">
+            {g.items.map((t) => (
+              <a href={`/glossary/${t.slug}`} class="gl-card" data-gl-card data-name={`${t.term} ${t.shortDefinition}`.toLowerCase()} data-cat={t.category}>
+                <span class="gl-card-top"><span class="gl-card-term">{t.term}</span><span class="gl-card-cat">{t.category.toUpperCase()}</span></span>
+                <span class="gl-card-def">{t.shortDefinition}</span>
+                <span class="gl-card-read">Read definition →</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div class="gl-empty" data-gl-empty hidden>
+      <span class="gl-empty-ico">∅</span>
+      <span class="gl-empty-t">No terms match your search</span>
+      <span class="gl-empty-s">Try another word, or suggest a term for us to add.</span>
+      <div class="gl-empty-actions"><button type="button" class="gl-empty-reset" data-gl-reset>Clear filters</button><a href="/contact" class="gl-empty-suggest">Suggest a term</a></div>
+    </div>
+  </section>
+
+  <section class="gl-cta" data-screen-label="CTA">
+    <div class="gl-cta-grid">
+      <div class="gl-cta-left">
+        <div aria-hidden="true" class="gl-cta-dots"></div>
+        <span class="gl-cta-eyebrow"><span class="gl-diamond"></span>FROM DEFINITION TO DECISION</span>
+        <h2 class="gl-cta-h2"><span style="font-weight:400">See these metrics </span><span style="font-weight:700">live on your catalog.</span></h2>
+        <p class="gl-cta-p">Price index, MAP violations and competitor gaps, calculated on verified matches for your own SKUs.</p>
+        <div class="gl-cta-btns"><a href="/contact" class="gl-btn-primary">Book a demo</a><a href="/contact" class="gl-btn-ghost">Talk to an expert</a></div>
+      </div>
+      <div class="gl-cta-right">
+        <span class="gl-cta-k">KEEP LEARNING</span>
+        <span class="gl-cta-rt">Guides and playbooks on the blog</span>
+        <span class="gl-cta-rs">Step-by-step articles that put these terms to work.</span>
+        <a href="/blog" class="gl-cta-blog">Visit the blog<span style="color:var(--pl-accent-end)">→</span></a>
+      </div>
+    </div>
+  </section>
+</PriceLeapLayout>
+
 <style>
-  .glossary-hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--pl-line); background: var(--pl-surface); } .glossary-hero__grid { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--pl-line-soft) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse 75% 100% at 70% 30%, #000 8%, transparent 78%); opacity: .65; } .glossary-hero__inner { position: relative; display: flex; flex-direction: column; align-items: center; padding-block: clamp(64px, 9vw, 112px); text-align: center; } .glossary-hero h1 { margin-top: 22px; color: var(--pl-ink); font-size: clamp(42px, 6vw, 76px); line-height: 1; letter-spacing: -.055em; } .glossary-hero h1 em { color: var(--pl-accent-ink); font-style: normal; } .glossary-hero p { max-width: 650px; margin-top: 22px; color: var(--pl-muted); font-size: 18px; line-height: 1.6; } .glossary-hero__stats { display: flex; align-items: center; gap: 12px; margin-top: 28px; color: var(--pl-muted); font-family: var(--pl-mono); font-size: 11px; text-align: left; } .glossary-hero__stats strong { color: var(--pl-accent-ink); font-size: 28px; letter-spacing: -.05em; } .glossary-page { padding-block: clamp(44px, 7vw, 84px); } .glossary-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 24px; } .glossary-search { display: flex; width: min(100%, 400px); align-items: center; gap: 10px; border: 1px solid var(--pl-line-strong); border-radius: 12px; background: #fff; padding: 0 15px; box-shadow: var(--pl-shadow-sm); } .glossary-search svg { width: 18px; flex: none; fill: none; stroke: var(--pl-muted); stroke-width: 1.7; } .glossary-search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--pl-ink); padding: 14px 0; font: inherit; font-size: 13px; } .glossary-search > span:last-child { color: var(--pl-faint); font-family: var(--pl-mono); font-size: 10px; white-space: nowrap; } .glossary-filters { display: flex; flex-wrap: wrap; justify-content: end; gap: 8px; } .glossary-filters button { border: 1px solid var(--pl-line); border-radius: 999px; background: var(--pl-surface); color: var(--pl-muted); padding: 8px 12px; font: inherit; font-size: 11px; cursor: pointer; } .glossary-filters button:hover, .glossary-filters button[aria-selected='true'] { border-color: var(--pl-ink); background: var(--pl-ink); color: #fff; } .glossary-alpha { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 36px; border-top: 1px solid var(--pl-line); border-bottom: 1px solid var(--pl-line); padding-block: 16px; } .glossary-alpha a { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; color: var(--pl-muted); font-family: var(--pl-mono); font-size: 11px; } .glossary-alpha a:hover { background: var(--pl-accent-tint); color: var(--pl-accent-ink); } .glossary-letter { padding-top: 46px; } .glossary-letter[hidden], .glossary-card[hidden] { display: none; } .glossary-letter__head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; color: var(--pl-ink); font-family: var(--pl-mono); font-size: 14px; font-weight: 600; } .glossary-letter__head span { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 50%; background: var(--pl-ink); color: #fff; } .glossary-letter__head i { height: 1px; flex: 1; background: var(--pl-line); } .glossary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; } .glossary-empty { padding: 60px 0; color: var(--pl-muted); text-align: center; } .glossary-cta { display: flex; align-items: center; justify-content: space-between; gap: 28px; margin-bottom: 72px; border-radius: var(--pl-radius-xl); background: var(--pl-ink); padding: clamp(28px, 5vw, 56px); color: #fff; } .glossary-cta .pl-eyebrow { color: #fff; } .glossary-cta h2 { max-width: 620px; margin-top: 15px; color: #fff; font-size: clamp(28px, 4vw, 50px); letter-spacing: -.045em; } .glossary-cta p { margin-top: 10px; color: rgba(255,255,255,.65); font-size: 15px; } @media (max-width: 900px) { .glossary-toolbar { align-items: flex-start; flex-direction: column; } .glossary-search { width: 100%; } .glossary-filters { justify-content: start; } .glossary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } } @media (max-width: 600px) { .glossary-grid { grid-template-columns: 1fr; } .glossary-cta { align-items: flex-start; flex-direction: column; } }
+  .gl-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
+  .gl-hero-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 70% 90% at 50% 0%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 90% at 50% 0%,#000 10%,transparent 70%); pointer-events: none; }
+  .gl-hero-glow { position: absolute; left: 50%; top: -260px; width: 820px; height: 520px; transform: translateX(-50%); background: radial-gradient(closest-side,rgba(251,138,46,.12),transparent); pointer-events: none; }
+  .gl-hero-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: clamp(48px,7vw,88px) clamp(16px,4vw,40px) clamp(40px,5vw,60px); display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .gl-badge { height: 28px; padding: 0 12px; display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; background: var(--pl-surface); border: 1px solid var(--pl-line); font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .1em; color: var(--pl-ink-2); }
+  .gl-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pl-accent); animation: plpulse 1.8s infinite; }
+  .gl-h1 { margin: 20px 0 0; font-family: Geist, sans-serif; font-size: clamp(38px,6vw,72px); line-height: 1.02; letter-spacing: -.045em; color: var(--pl-ink); text-wrap: balance; max-width: 900px; }
+  .gl-lead { margin: 18px 0 0; max-width: 620px; font-size: clamp(16px,1.6vw,18px); line-height: 1.6; color: var(--pl-ink-2); text-wrap: pretty; }
+  .gl-search { margin-top: 28px; width: min(100%,560px); display: flex; align-items: center; gap: 10px; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 14px; padding: 6px 6px 6px 16px; box-shadow: 0 20px 40px -30px rgba(60,30,15,.4); transition: border-color .2s, box-shadow .2s; }
+  .gl-search:focus-within { border-color: var(--pl-accent-line); box-shadow: 0 0 0 4px rgba(247,99,30,.12); }
+  .gl-search svg { flex: none; }
+  .gl-search input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; font-size: 15px; color: var(--pl-ink); padding: 10px 0; }
+  .gl-search-btn { height: 40px; padding: 0 16px; display: flex; align-items: center; border-radius: 10px; background: var(--pl-ink); color: var(--pl-surface); font-size: 14px; font-weight: 500; white-space: nowrap; }
+  .gl-search-btn:hover { background: var(--pl-ink-hover); color: var(--pl-surface); }
+  .gl-popular { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .gl-popular-label { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .08em; color: var(--pl-faint); }
+  .gl-chip { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid var(--pl-line); background: var(--pl-surface); font-size: 13px; color: var(--pl-ink-2); transition: border-color .2s, color .2s; }
+  .gl-chip:hover { border-color: var(--pl-accent-line); color: var(--pl-accent-ink); }
+
+  .gl-featured { max-width: 1280px; margin: 0 auto; padding: clamp(36px,5vw,56px) clamp(16px,4vw,40px) 0; }
+  .gl-featured-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: stretch; }
+  .gl-feat-card { position: relative; overflow: hidden; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 24px; padding: clamp(22px,3vw,32px); display: flex; flex-direction: column; gap: 14px; color: var(--pl-ink); transition: box-shadow .25s, border-color .25s; }
+  .gl-feat-card:hover { box-shadow: 0 36px 70px -46px rgba(60,30,15,.55); border-color: var(--pl-accent-line); color: var(--pl-ink); }
+  .gl-feat-glow { position: absolute; right: -80px; top: -100px; width: 300px; height: 300px; background: radial-gradient(closest-side,rgba(251,138,46,.14),transparent); }
+  .gl-feat-tags { position: relative; display: flex; gap: 6px; flex-wrap: wrap; }
+  .gl-feat-tag-gradient { height: 26px; padding: 0 10px; display: flex; align-items: center; border-radius: 7px; background: var(--pl-gradient); font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .08em; color: var(--pl-surface); }
+  .gl-feat-tag { height: 26px; padding: 0 10px; display: flex; align-items: center; border-radius: 7px; background: var(--pl-surface); border: 1px solid var(--pl-line); font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .08em; color: var(--pl-accent-ink); }
+  .gl-feat-title-row { position: relative; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .gl-feat-title { font-family: Geist, sans-serif; font-size: clamp(34px,4.4vw,52px); font-weight: 700; letter-spacing: -.04em; line-height: 1; }
+  .gl-feat-phon { font-family: 'Geist Mono', monospace; font-size: 13px; color: var(--pl-faint); }
+  .gl-feat-def { position: relative; margin: 0; font-size: 17px; line-height: 1.6; color: var(--pl-ink-2); max-width: 640px; }
+  .gl-feat-foot { position: relative; margin-top: auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 6px; }
+  .gl-feat-meta { font-family: 'Geist Mono', monospace; font-size: 11.5px; color: var(--pl-faint); }
+  .gl-feat-read { margin-left: auto; height: 38px; padding: 0 14px; display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; background: var(--pl-ink); color: var(--pl-surface); font-size: 13.5px; font-weight: 500; }
+  .gl-start { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; }
+  .gl-start-head { padding: 16px 20px; border-bottom: 1px solid var(--pl-line-soft); background: var(--pl-cream); display: flex; justify-content: space-between; align-items: center; font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; color: var(--pl-faint); }
+  .gl-start-n { color: var(--pl-accent-ink); letter-spacing: 0; }
+  .gl-start-item { flex: 1; padding: 16px 20px; border-bottom: 1px solid var(--pl-line-soft); display: grid; grid-template-columns: 40px minmax(0,1fr) auto; gap: 12px; align-items: center; color: var(--pl-ink); transition: background .2s; }
+  .gl-start-item:hover { background: var(--pl-cream); color: var(--pl-ink); }
+  .gl-start-letter { width: 40px; height: 40px; border-radius: 11px; background: var(--pl-sand); border: 1px solid var(--pl-line); display: flex; align-items: center; justify-content: center; font-family: Geist, sans-serif; font-size: 16px; font-weight: 700; color: var(--pl-ink); }
+  .gl-start-t { display: block; font-size: 15px; font-weight: 600; }
+  .gl-start-s { display: block; margin-top: 2px; font-size: 13px; line-height: 1.45; color: var(--pl-muted); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+
+  .gl-terms { max-width: 1280px; margin: 0 auto; padding: clamp(48px,6vw,80px) clamp(16px,4vw,40px) 0; scroll-margin-top: 80px; }
+  .gl-terms-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .gl-terms-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 11.5px; letter-spacing: .12em; color: var(--pl-accent-ink); }
+  .gl-diamond { width: 6px; height: 6px; border-radius: 2px; background: var(--pl-accent); transform: rotate(45deg); }
+  .gl-terms-title { margin: 12px 0 0; font-family: Geist, sans-serif; font-size: clamp(26px,3.2vw,38px); line-height: 1.1; letter-spacing: -.03em; font-weight: 600; color: var(--pl-ink); }
+  .gl-terms-count { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-muted); }
+  .gl-sticky { position: sticky; top: 64px; z-index: 10; margin: 22px calc(-1 * clamp(16px,4vw,40px)) 0; padding: 10px clamp(16px,4vw,40px); background: rgba(255,252,249,.94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--pl-line-soft); display: flex; flex-direction: column; gap: 10px; }
+  .gl-letters { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .gl-letters::-webkit-scrollbar { display: none; }
+  .gl-letter { flex: none; width: 36px; height: 34px; border-radius: 9px; border: 1px solid var(--pl-line); background: var(--pl-surface); color: var(--pl-ink); cursor: pointer; font-family: Geist, sans-serif; font-size: 14px; font-weight: 600; transition: all .2s; }
+  .gl-letter:hover:not(.is-disabled) { border-color: var(--pl-accent-line); color: var(--pl-accent-ink); }
+  .gl-letter.is-disabled { border-color: transparent; background: transparent; color: var(--pl-line-xstrong); cursor: default; }
+  .gl-cats { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  .gl-cats::-webkit-scrollbar { display: none; }
+  .gl-cat { flex: none; height: 34px; padding: 0 12px; display: flex; align-items: center; gap: 8px; border-radius: 999px; border: 1px solid var(--pl-line); background: var(--pl-surface); color: var(--pl-ink-2); cursor: pointer; font-size: 13px; font-weight: 500; white-space: nowrap; transition: all .2s; }
+  .gl-cat.is-on { background: var(--pl-ink); border-color: var(--pl-ink); color: var(--pl-surface); }
+  .gl-cat-n { height: 18px; min-width: 18px; padding: 0 6px; display: flex; align-items: center; justify-content: center; border-radius: 999px; background: var(--pl-sand); font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--pl-muted); }
+  .gl-cat.is-on .gl-cat-n { background: rgba(255,255,255,.16); color: var(--pl-surface); }
+  .gl-groups { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .gl-group { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start; scroll-margin-top: 170px; animation: bp-in .35s ease both; }
+  .gl-group-letter { display: flex; align-items: center; gap: 12px; }
+  .gl-big-letter { width: 48px; height: 48px; border-radius: 16px; background: var(--pl-surface); border: 1px solid var(--pl-line); display: flex; align-items: center; justify-content: center; font-family: Geist, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: -.04em; color: var(--pl-ink); box-shadow: 0 16px 30px -26px rgba(60,30,15,.5); }
+  .gl-group-n { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-faint); }
+  .gl-cards { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,300px),1fr)); gap: 10px; }
+  .gl-card { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; color: var(--pl-ink); transition: transform .2s, box-shadow .2s, border-color .2s; }
+  .gl-card:hover { transform: translateY(-2px); box-shadow: 0 22px 40px -30px rgba(60,30,15,.5); border-color: var(--pl-accent-line); color: var(--pl-ink); }
+  .gl-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .gl-card-term { font-family: Geist, sans-serif; font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+  .gl-card-cat { flex: none; height: 22px; padding: 0 8px; display: flex; align-items: center; border-radius: 6px; background: var(--pl-cream); border: 1px solid var(--pl-line-soft); font-family: 'Geist Mono', monospace; font-size: 9.5px; letter-spacing: .06em; color: var(--pl-muted); }
+  .gl-card-def { font-size: 14px; line-height: 1.55; color: var(--pl-muted); }
+  .gl-card-read { margin-top: 2px; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-accent-ink); }
+  .gl-empty { margin-top: 20px; background: var(--pl-surface); border: 1px dashed var(--pl-line-strong); border-radius: 20px; padding: 48px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+  .gl-empty-ico { width: 48px; height: 48px; border-radius: 14px; background: var(--pl-sand); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--pl-faint); }
+  .gl-empty-t { font-family: Geist, sans-serif; font-size: 18px; font-weight: 600; color: var(--pl-ink); }
+  .gl-empty-s { font-size: 14px; color: var(--pl-muted); }
+  .gl-empty-actions { margin-top: 6px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .gl-empty-reset { height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); cursor: pointer; font-size: 14px; color: var(--pl-ink); }
+  .gl-empty-suggest { height: 40px; padding: 0 16px; display: inline-flex; align-items: center; border-radius: 10px; background: var(--pl-ink); color: var(--pl-surface); font-size: 14px; }
+
+  .gl-cta { max-width: 1280px; margin: 0 auto; padding: clamp(56px,7vw,96px) clamp(16px,4vw,40px) clamp(40px,5vw,64px); }
+  .gl-cta-grid { border: 1px solid var(--pl-line); border-radius: 26px; overflow: hidden; display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--pl-line-soft); }
+  .gl-cta-left { position: relative; background: var(--pl-surface); padding: clamp(24px,4vw,44px); display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+  .gl-cta-dots { position: absolute; inset: 0; background-image: radial-gradient(var(--pl-line) 1px,transparent 1px); background-size: 16px 16px; -webkit-mask-image: linear-gradient(135deg,transparent 40%,#000); mask-image: linear-gradient(135deg,transparent 40%,#000); }
+  .gl-cta-eyebrow { position: relative; display: inline-flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 11.5px; letter-spacing: .12em; color: var(--pl-accent-ink); }
+  .gl-cta-h2 { position: relative; margin: 0; font-family: Geist, sans-serif; font-size: clamp(26px,3.4vw,40px); line-height: 1.08; letter-spacing: -.035em; color: var(--pl-ink); text-wrap: balance; }
+  .gl-cta-p { position: relative; margin: 0; font-size: 16px; line-height: 1.6; color: var(--pl-ink-2); max-width: 460px; }
+  .gl-cta-btns { position: relative; margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .gl-btn-primary { height: 48px; padding: 0 20px; display: inline-flex; align-items: center; border-radius: 12px; background: var(--pl-gradient); color: var(--pl-surface); font-size: 15px; font-weight: 500; box-shadow: 0 12px 24px -12px rgba(247,99,30,.85); }
+  .gl-btn-primary:hover { filter: brightness(.95); color: var(--pl-surface); }
+  .gl-btn-ghost { height: 48px; padding: 0 20px; display: inline-flex; align-items: center; border-radius: 12px; border: 1px solid var(--pl-line); background: var(--pl-surface); color: var(--pl-ink); font-size: 15px; font-weight: 500; }
+  .gl-cta-right { background: var(--pl-cream); padding: clamp(24px,4vw,44px); display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+  .gl-cta-k { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; color: var(--pl-faint); }
+  .gl-cta-rt { font-family: Geist, sans-serif; font-size: 22px; font-weight: 600; line-height: 1.25; letter-spacing: -.02em; color: var(--pl-ink); }
+  .gl-cta-rs { font-size: 15px; line-height: 1.6; color: var(--pl-muted); }
+  .gl-cta-blog { margin-top: 6px; align-self: flex-start; height: 46px; padding: 0 18px; display: inline-flex; align-items: center; gap: 8px; border-radius: 12px; background: var(--pl-ink); color: var(--pl-surface); font-size: 14.5px; font-weight: 500; }
+  .gl-cta-blog:hover { background: var(--pl-ink-hover); color: var(--pl-surface); }
+
+  @media (min-width: 900px) {
+    .gl-group { grid-template-columns: 120px minmax(0,1fr); }
+    .gl-group-letter { position: sticky; top: 178px; }
+    .gl-big-letter { width: 64px; height: 64px; font-size: 30px; }
+  }
+  @media (min-width: 1000px) {
+    .gl-featured-grid { grid-template-columns: minmax(0,1.6fr) minmax(0,1fr); }
+    .gl-cta-grid { grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); }
+  }
+  @media (min-width: 1100px) { .gl-letter { width: calc((100% - 100px) / 26); } }
 </style>
+
+<script>
+  const search = document.querySelector('[data-gl-search]') as HTMLInputElement | null;
+  const cats = Array.from(document.querySelectorAll('[data-gl-cat]')) as HTMLElement[];
+  const cards = Array.from(document.querySelectorAll('[data-gl-card]')) as HTMLElement[];
+  const groups = Array.from(document.querySelectorAll('[data-gl-group]')) as HTMLElement[];
+  const empty = document.querySelector('[data-gl-empty]') as HTMLElement | null;
+  const title = document.querySelector('[data-gl-title]') as HTMLElement | null;
+  const count = document.querySelector('[data-gl-count]') as HTMLElement | null;
+  const featured = document.querySelector('[data-gl-featured]') as HTMLElement | null;
+  let activeCat = 'All';
+
+  const apply = () => {
+    const q = (search?.value || '').trim().toLowerCase();
+    let visible = 0;
+    groups.forEach((g) => {
+      let gv = 0;
+      g.querySelectorAll('[data-gl-card]').forEach((c) => {
+        const el = c as HTMLElement;
+        const matchCat = activeCat === 'All' || el.dataset.cat === activeCat;
+        const matchQ = !q || (el.dataset.name || '').includes(q);
+        const show = matchCat && matchQ;
+        el.style.display = show ? '' : 'none';
+        if (show) { gv++; visible++; }
+      });
+      g.style.display = gv > 0 ? '' : 'none';
+      const n = g.querySelector('[data-gl-group-n]');
+      if (n) n.textContent = `${gv} ${gv === 1 ? 'term' : 'terms'}`;
+    });
+    if (empty) empty.hidden = visible > 0;
+    if (count) count.textContent = `${visible} ${visible === 1 ? 'term' : 'terms'}`;
+    const filtered = q || activeCat !== 'All';
+    if (featured) featured.style.display = filtered ? 'none' : '';
+    if (title) title.textContent = q ? `Results for "${search?.value.trim()}"` : activeCat === 'All' ? 'All terms, A to Z' : activeCat;
+  };
+
+  search?.addEventListener('input', apply);
+  cats.forEach((c) => c.addEventListener('click', () => {
+    activeCat = c.dataset.glCat || 'All';
+    cats.forEach((o) => { o.classList.toggle('is-on', o === c); o.setAttribute('aria-selected', String(o === c)); });
+    apply();
+  }));
+  document.querySelectorAll('[data-gl-jump]').forEach((b) => b.addEventListener('click', () => {
+    const el = document.getElementById('letter-' + (b as HTMLElement).dataset.glJump);
+    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 168, behavior: 'smooth' });
+  }));
+  document.querySelector('[data-gl-reset]')?.addEventListener('click', () => {
+    if (search) search.value = '';
+    activeCat = 'All';
+    cats.forEach((o) => { o.classList.toggle('is-on', o.dataset.glCat === 'All'); o.setAttribute('aria-selected', String(o.dataset.glCat === 'All')); });
+    apply();
+  });
+</script>
