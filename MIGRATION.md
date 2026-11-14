@@ -31,23 +31,27 @@ site keeps the same design + flow while being optimised for Core Web Vitals and 
 ## Route map (old → new)
 | Route | Status |
 |---|---|
-| `/` | ⏳ pending (home) |
-| `/price-intelligence-engine` | ⏳ pending |
-| `/real-time-price-monitoring` | ⏳ pending |
-| `/ecommerce-price-tracking` | ⏳ pending |
-| `/dynamic-pricing-software` | ⏳ pending |
-| `/for-retailers` | ⏳ pending |
-| `/about` | ⏳ pending |
-| `/contact` | ⏳ pending |
 | `/privacy-policy` | ✅ done (native) |
 | `/terms` | ✅ done (native) |
-| `/blog` + `/blog/[slug]` (17) | ⏳ pending |
-| `/glossary` + `/glossary/[slug]` (20) | ⏳ pending |
+| `/glossary` + `/glossary/[slug]` (20) | ✅ done (native, from glossary.json) |
+| `/blog` + `/blog/[slug]` (17) | ✅ done (native, from blog.json) |
+| `/about` | ✅ done (native) |
+| `/contact` | ✅ done (native; form endpoint TODO) |
+| `/` | ⏳ pending (home — heaviest, ~15 animated widgets) |
+| `/price-intelligence-engine` | ⏳ pending (marketing) |
+| `/real-time-price-monitoring` | ⏳ pending (marketing) |
+| `/ecommerce-price-tracking` | ⏳ pending (marketing) |
+| `/dynamic-pricing-software` | ⏳ pending (marketing) |
+| `/for-retailers` | ⏳ pending (marketing) |
 | `/pricing` | keep (old design, re-skin later) |
 | `/faq` | keep (old design, re-skin later) |
 | `/book-a-demo` | keep (old design, re-skin later) |
 | `/404` | keep |
 | `/light`, `/design-system` | to delete |
+
+Done so far: **45 routes** native, server-rendered, building clean, no `support.js` runtime.
+Remaining: home + 5 marketing pages, then wiring (sitemap/redirects), cleanup (delete
+`light`/`design-system` + unused old components/styles), and re-skin of pricing/faq/book-a-demo.
 
 ## Open TODOs
 - Contact form + newsletter submit handlers are client-only — wire to a real endpoint.
