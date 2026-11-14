@@ -1,78 +1,49 @@
 ---
-/**
- * Retail Price Intelligence (/for-retailers) — native rebuild on the shared
- * light design system. Content ported 1:1 from for-retailers.html.
- * [X] / [Client name] placeholders kept verbatim.
- */
-import SiteLayout from '@/layouts/SiteLayout.astro';
-import SectionHeader from '@/components/ds/nav/SectionHeader.astro';
-import Tabs from '@/components/ds/nav/Tabs.astro';
-import FAQ from '@/components/ds/faq/FAQ.astro';
-import CTA from '@/components/ds/cta/CTA.astro';
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+import Faq from '../components/pl/Faq.astro';
+import '../styles/pl-marketing.css';
 
-const logos = ['McAfee', 'Xometry', 'Do it Best', 'Wolt', 'neho', 'apoBank'];
-
+const logos = [...['McAfee', 'Xometry', 'Do it Best', 'Wolt', 'neho', 'apoBank'], ...['McAfee', 'Xometry', 'Do it Best', 'Wolt', 'neho', 'apoBank']];
 const catBars = [
-  { n: 'Grocery', d: '−2.3%', neg: true }, { n: 'Electronics', d: '+4.1%', neg: false },
-  { n: 'Home', d: '−1.0%', neg: true }, { n: 'Beauty', d: '+1.8%', neg: false },
-  { n: 'Toys', d: '−3.2%', neg: true }, { n: 'Apparel', d: '+0.6%', neg: false },
-  { n: 'Garden', d: '−1.6%', neg: true },
+  { n: 'Electronics', d: '96', h: 56, c: 'var(--pl-accent)' }, { n: 'Home', d: '104', h: 66, c: 'var(--pl-danger-line)' },
+  { n: 'Apparel', d: '92', h: 48, c: 'var(--pl-accent)' }, { n: 'Grocery', d: '101', h: 62, c: 'var(--pl-danger-line)' },
+  { n: 'Beauty', d: '88', h: 42, c: 'var(--pl-accent)' }, { n: 'Sports', d: '99', h: 58, c: 'var(--pl-accent-line-2)' }, { n: 'Toys', d: '95', h: 52, c: 'var(--pl-accent)' },
 ];
 const alertFeed = [
-  { t: 'Competitor A cut 34 SKUs · Grocery', d: '−3.8%', down: true, m: 'REGION NORTH · 2M AGO' },
-  { t: 'Marketplace B above you · Electronics', d: '+5.2%', down: false, m: 'MARKETPLACE · 6M AGO' },
-  { t: 'Banner C promo started · Toys', d: '−12%', down: true, m: 'BANNER C · 11M AGO' },
-  { t: 'Out of stock at Competitor D · Home', d: 'OOS', down: null, m: 'ONLINE · 18M AGO' },
+  { t: 'Rival B cut 4K TVs', d: '−6.2%', c: 'var(--pl-danger-ink)', m: 'Electronics · 2m ago' },
+  { t: 'Marketplace A out of stock', d: '0 units', c: 'var(--pl-warn-ink)', m: 'Home · 14m ago' },
+  { t: 'Banner C promo launched', d: '20% off', c: 'var(--pl-accent-ink)', m: 'Beauty · 31m ago' },
+  { t: 'MAP violation detected', d: '≤ MAP', c: 'var(--pl-danger-ink)', m: 'Sports · 1h ago' },
 ];
-
 const problems = [
-  { n: '01', t: 'Your category managers still rebuild competitor price sheets by hand. By the time a sheet is ready, half the prices have already moved.', tag: 'MANUAL' },
-  { n: '02', t: 'Most repricing tools quietly fall over past a few thousand SKUs. Your catalog runs into the millions.', tag: 'SCALE' },
-  { n: '03', t: 'Matching your products to competitor listings is manual, so coverage is patchy and nobody fully trusts the numbers.', tag: 'COVERAGE' },
-  { n: '04', t: "Prices shift by region, marketplace, and banner, and there's no single place to see all of it at once.", tag: 'FRAGMENTED' },
+  { n: '01', t: 'Your category managers still rebuild competitor price sheets by hand. By the time a sheet is ready, half the prices have already moved.' },
+  { n: '02', t: 'Most repricing tools quietly fall over past a few thousand SKUs. Your catalog runs into the millions.' },
+  { n: '03', t: 'Matching your products to competitor listings is manual, so coverage is patchy and nobody fully trusts the numbers.' },
+  { n: '04', t: "Prices shift by region, marketplace, and banner, and there's no single place to see all of it at once." },
 ];
-
 const sol = [
-  { n: '01', t: 'Discover & match', d: 'It locates where your products are sold across competitor sites and marketplaces and matches them at the variant level.', chips: [['Sites found', '214'], ['Variant-level', '✓'], ['Private label', '✓']] },
-  { n: '02', t: 'Monitor competitor prices', d: 'Watches the prices that move your category, as often as you need them, with full price history.', chips: [['Cadence', 'Daily'], ['Regions', 'All'], ['History', 'Full']] },
-  { n: '03', t: 'See your price position', d: 'Shows where you stand against each competitor, by SKU, category, and region.', chips: [['By SKU', '✓'], ['By category', '✓'], ['By region', '✓']] },
-  { n: '04', t: 'Optimize and act', d: 'Surfaces the SKUs where a price change wins margin or share, and feeds clean inputs to your tools.', chips: [['Alerts', 'On'], ['API / BI', '✓'], ['Optimization', 'Feeds']] },
+  { n: '01', t: 'Find', chips: [['Sources', '38'], ['Marketplaces', '12'], ['Regions', '6']] },
+  { n: '02', t: 'Match', chips: [['Exact', '71%'], ['Variant', '22%'], ['Review', '7%']] },
+  { n: '03', t: 'Monitor', chips: [['Daily', 'core'], ['Intraday', 'priority'], ['Weekly', 'long-tail']] },
+  { n: '04', t: 'Deliver', chips: [['API', 'live'], ['BI', 'push'], ['ERP/PIM', 'feed']] },
 ];
-
 const audit = [
-  { n: 'Store brand Oat Milk 1L', k: 'PRIVATE LABEL', v: '0.87', bg: '#FFF8EB', bc: '#F4DDAE', c: '#8A5A00' },
-  { n: 'Sonix ANC 700 · Black', k: 'EXACT · EAN', v: '0.99', bg: '#E8FCEF', bc: '#FFD6C8', c: '#B01C1C' },
-  { n: 'Detergent Pods 42ct → 60ct', k: 'VARIANT · PACK SIZE', v: '0.93', bg: '#E8FCEF', bc: '#FFD6C8', c: '#B01C1C' },
+  { n: 'Aurora 55" 4K TV', k: 'EXACT MATCH', v: '99.4%', bg: 'var(--pl-accent-tint)', bc: 'var(--pl-accent-line)', c: 'var(--pl-accent-ink)' },
+  { n: 'NovaBook Air 14', k: 'VARIANT MATCH', v: '96.1%', bg: 'var(--pl-cream)', bc: 'var(--pl-line)', c: 'var(--pl-ink-2)' },
+  { n: 'House-brand kettle', k: 'PRIVATE LABEL', v: '91.8%', bg: 'var(--pl-cream)', bc: 'var(--pl-line)', c: 'var(--pl-ink-2)' },
 ];
-
-const bList = ['Category managers rebuild competitor price sheets by hand every week.', "Coverage stops at a sample of SKUs because matching doesn't scale.", 'Mismatched variants make teams second-guess the numbers.', 'Regional, marketplace, and banner prices live in separate files.'];
-const aList = ['Competitor prices arrive automatically on the cadence you set.', 'Your full catalog is monitored, into the millions of SKUs.', 'Products are matched down to the variant, so teams trust what they see.', 'Every region, marketplace, and banner sits in one view.'];
-
+const baList = [
+  { mk: '✓', t: 'Every price matched to the right product, down to the variant.' },
+  { mk: '✓', t: 'Full catalog refreshed on the cadence you set — no manual sheets.' },
+  { mk: '✓', t: 'One live view across regions, marketplaces and banners.' },
+  { mk: '✓', t: 'Clean data pushed into your BI, ERP/PIM or API.' },
+];
 const features = [
-  { t: 'Competitor price monitoring', d: 'Watches the prices that move your category, as often as you need them.', points: ['Coverage across competitor sites, marketplaces, and channels', "Full price history, so you see patterns, not just today's number.", 'Alerts when a competitor crosses a threshold you care about'] },
-  { t: 'Matching you can actually audit', d: 'Matches your catalog to competitor listings automatically, then keeps it accurate as listings change.', points: ['Exact, variant, and private-label matches, each with a confidence score, not a black-box guess.', 'Handles exact matches, variants, and private-label / similar products', 'Low-confidence matches route to a human QA reviewer.'] },
-  { t: 'Price position, ready to act on', d: 'Shows where you stand against each competitor, by SKU, category, and region — and turns it into pricing moves.', points: ['Surfaces the SKUs where a price change wins margin or share.', 'Clean inputs for your retail price optimization software.', 'Already use the Decision or Margin Protection Engine? Data flows straight in.'] },
-  { t: 'Data delivery & integrations', d: 'Gets competitive data into your stack with no copy-paste. Lands where your team already works.', points: ['API, BI connectors, and scheduled feeds', 'Pipes cleanly into your pricing, ERP, PIM, and reporting tools.', 'Pushes into your BI, ERP/PIM, or systems by API. Not one more dashboard.'] },
+  { n: '01', t: 'AI product matching', d: 'Exact, variant and private-label matches across competitor sites and marketplaces, each with a confidence score and human review on the rest.' },
+  { n: '02', t: 'Competitor price monitoring', d: 'Daily or intraday refresh per category and competitor — promotions, stock status and shelf vs promo price tracked separately.' },
+  { n: '03', t: 'Price position, ready to act on', d: 'Revenue-weighted price index by category, gap analysis and alerts, surfaced where your team already works.' },
+  { n: '04', t: 'Data delivery & integrations', d: 'Push clean competitive data into your BI, ERP/PIM, or any system by API — not one more dashboard to check.' },
 ];
-const matchBars = [
-  { n: 'Exact matches', v: 98, label: '98% exact', bar: '#FF3131', tc: '#B01C1C' },
-  { n: 'Variant matches', v: 91, label: '91% variant', bar: '#FF3131', tc: '#B01C1C' },
-  { n: 'Private-label / similar', v: 74, label: '74% review', bar: '#F0B44C', tc: '#8A5A00' },
-];
-
-const proof = [
-  '[X]% data-accuracy commitment and [X]% uptime SLA',
-  'SOC 2 Type II and ISO 27001 certified',
-  'A named solutions architect, not a ticket queue.',
-  'Clear data governance and access controls.',
-];
-
-const scopeInputs = [
-  { k: 'Catalog size', v: '1K – 5M+ SKUs' },
-  { k: 'Competitor set', v: 'Up to 50+ competitors' },
-  { k: 'Refresh cadence', v: 'Daily · 4× daily · hourly' },
-];
-
 const faqs = [
   { q: 'How accurate is your product matching?', a: '[X]% on exact and variant matches, with confidence scores and human review on the rest.' },
   { q: 'How often does the data refresh?', a: 'As often as daily or intraday, set per category or competitor.' },
@@ -82,420 +53,340 @@ const faqs = [
   { q: 'How long does onboarding take?', a: 'Typically a few weeks, with a named solutions architect through go-live.' },
   { q: 'Is our data secure?', a: 'SOC 2 / ISO 27001 certified with full access controls.' },
 ];
+const jsonLd = [
+  { '@context': 'https://schema.org', '@type': 'Service', name: 'Retail Price Intelligence for Retailers', provider: { '@type': 'Organization', name: 'PriceLeap' }, url: 'https://priceleap.ai/for-retailers' },
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+];
 ---
-
-<SiteLayout
-  title="Retail Price Intelligence · PriceLeap"
-  description="Competitor prices for your entire catalog, matched accurately and refreshed every day."
->
-
-  <!-- ══ HERO ══ -->
-  <section class="fr-hero">
-    <div class="fr-hero__grid" aria-hidden="true"></div>
-    <div class="fr-hero__glow" aria-hidden="true"></div>
-    <div class="fr-wrap fr-hero__inner">
-      <div class="fr-hero__copy">
-        <nav class="fr-crumb"><a href="/light">Solutions</a><span>/</span><span>For Retailers</span></nav>
-        <span class="fr-eyebrow"><span class="fr-eyebrow__dot"></span>Retail Price Intelligence</span>
-        <h1 class="fr-h1"><span class="w4">Competitor prices for your entire catalog, </span><b>matched accurately and refreshed every day.</b></h1>
-        <p class="fr-lead">Retail Price Intelligence finds your products across competitor sites and marketplaces, matches them down to the variant, and shows your category teams exactly where they stand on price.</p>
-        <div class="fr-hero__btns">
-          <a href="/book-a-demo" class="fr-btn fr-btn--primary">Get a demo</a>
-          <a href="#solution" class="fr-btn fr-btn--secondary">See how it works <span>→</span></a>
+<PriceLeapLayout title="For Retailers · Retail Price Intelligence · PriceLeap" description="Competitor prices for your entire catalog, matched accurately and refreshed every day. The clean competitive data your retail price optimization has been missing." jsonLd={jsonLd}>
+  <!-- Hero -->
+  <section id="top" class="fr-hero">
+    <div aria-hidden="true" class="fr-hero-dots"></div>
+    <div aria-hidden="true" class="fr-hero-glow"></div>
+    <div class="fr-hero-inner">
+      <nav class="fr-crumbs"><a href="/">Solutions</a><span>/</span><span class="fr-crumb-cur">For Retailers</span></nav>
+      <span class="fr-badge"><span class="fr-badge-dot"></span>Retail Price Intelligence<span class="fr-badge-tag">FOR RETAILERS</span></span>
+      <h1 class="fr-h1"><span style="font-weight:700">Competitor prices for your entire catalog,</span><span style="font-weight:400"> matched accurately and refreshed every day.</span></h1>
+      <p class="fr-lead">Retail Price Intelligence finds your products across competitor sites and marketplaces, matches them down to the variant, and shows your category teams exactly where they stand on price.</p>
+      <p class="fr-lead fr-lead--muted">The clean competitive data your retail price optimization software has been missing.</p>
+      <div class="mk-hero-cta" style="justify-content:center"><a href="/contact" class="mk-btn-primary">Book a demo</a><a href="/contact" class="mk-btn-ghost">Talk to sales<span style="color:var(--pl-accent-ink)">→</span></a></div>
+      <div class="fr-stats">
+        {['1M+ SKUs tracked', '[X]% match accuracy', 'Refreshed daily'].map((t) => (<span class="fr-stat"><span class="fr-stat-dot"></span>{t}</span>))}
+      </div>
+      <div class="fr-dash">
+        <div class="fr-dash-bar">
+          <span class="fr-dots3"><span></span><span></span><span></span></span>
+          <span class="fr-url">app.priceleap.io/price-position</span>
+          <span class="fr-dash-live"><span class="mk-live-dot"></span>LIVE</span>
         </div>
-        <div class="fr-hero__ticks">
-          {['Matched down to the variant', 'Millions of SKUs, no slowdown', 'Confidence-scored matches'].map(t => (
-            <span class="fr-tick"><span class="fr-tick__ic">✓</span>{t}</span>
-          ))}
-        </div>
-      </div>
-
-      <!-- Dashboard card -->
-      <div class="fr-hero__card-wrap">
-        <div class="fr-card">
-          <div class="fr-card__head">
-            <span class="fr-dots"><i></i><i></i><i></i></span>
-            <span class="fr-card__title">Category price index</span>
-            <span class="fr-live"><span class="fr-live__dot"></span>LIVE</span>
-          </div>
-          <div class="fr-card__kpis">
-            <div><span class="fr-k">PRICE INDEX</span><span class="fr-v">98.4</span></div>
-            <div><span class="fr-k">OPEN ALERTS</span><span class="fr-v">12</span></div>
-            <div><span class="fr-k">COVERAGE</span><span class="fr-v" style="color:#B01C1C">100%</span></div>
-          </div>
-          <div class="fr-card__bars">
-            {catBars.map(c => (
-              <div class="fr-bar">
-                <span class="fr-bar__col" style={`height:${c.neg ? 70 : 92}px;background:${c.neg ? '#FF3131' : '#E5483F'}`}></span>
-                <span class="fr-bar__n">{c.n.slice(0,4)}</span>
-                <span class="fr-bar__d" style={`color:${c.neg ? '#B01C1C' : '#C9372E'}`}>{c.d}</span>
-              </div>
-            ))}
-          </div>
-          <div class="fr-card__feed">
-            {alertFeed.map(a => (
-              <div class="fr-feed__row">
-                <span class="fr-feed__dot" style={`background:${a.down === null ? '#F4F5F4' : a.down ? '#FDECEB' : '#E8FCEF'};color:${a.down === null ? '#5A6373' : a.down ? '#C9372E' : '#B01C1C'}`}>{a.down === null ? '○' : a.down ? '▼' : '▲'}</span>
-                <span class="fr-feed__t">{a.t}</span>
-                <span class="fr-feed__d" style={`color:${a.down === null ? '#5A6373' : a.down ? '#C9372E' : '#B01C1C'}`}>{a.d}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══ LOGOS ══ -->
-  <section class="fr-logos">
-    <div class="fr-wrap fr-logos__inner">
-      <div class="fr-logos__label">Trusted by enterprise retail teams</div>
-      <div class="fr-logos__track"><div class="fr-logos__marquee">{[...logos, ...logos].map(l => <span class="fr-logo">{l}</span>)}</div></div>
-    </div>
-  </section>
-
-  <!-- ══ PROBLEM ══ -->
-  <section id="problem" class="fr-sec fr-sec--tint">
-    <div class="fr-wrap fr-problem">
-      <div class="fr-problem__head" data-reveal>
-        <span class="fr-eyebrow fr-eyebrow--red"><span class="fr-eyebrow__sq" style="background:#E5483F"></span>The problem</span>
-        <h2 class="fr-h2"><span class="w4">Pricing at your scale </span><b>breaks the tools built for small stores.</b></h2>
-      </div>
-      <div class="fr-problem__list">
-        {problems.map(p => (
-          <div class="fr-prob" data-reveal>
-            <span class="fr-prob__n">{p.n}</span>
-            <span class="fr-prob__t">{p.t}</span>
-            <span class="fr-prob__tag">{p.tag}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  </section>
-
-  <!-- ══ SOLUTION ══ -->
-  <section id="solution" class="fr-sec">
-    <div class="fr-wrap">
-      <div data-reveal>
-        <SectionHeader eyebrow="Solution" title="Retail Price Intelligence does the matching and monitoring" accent="so your team doesn't." lead="It locates where your products are sold across competitor sites and marketplaces, matches them at the variant level, and refreshes pricing on the cadence you set — a live view of where you sit on price, accurate enough to feed straight into your decisions." align="center" />
-      </div>
-      <div class="fr-sol" data-reveal>
-        <Tabs tabs={sol.map(x => `${x.n} ${x.t}`)} id="fr-sol" variant="underline">
-          <div slot="panel-0"><div class="fr-step"><p>{sol[0].d}</p><div class="fr-chips">{sol[0].chips.map(([k,v]) => <span class="fr-chip"><b>{k}</b>{v}</span>)}</div></div></div>
-          <div slot="panel-1"><div class="fr-step"><p>{sol[1].d}</p><div class="fr-chips">{sol[1].chips.map(([k,v]) => <span class="fr-chip"><b>{k}</b>{v}</span>)}</div></div></div>
-          <div slot="panel-2"><div class="fr-step"><p>{sol[2].d}</p><div class="fr-chips">{sol[2].chips.map(([k,v]) => <span class="fr-chip"><b>{k}</b>{v}</span>)}</div></div></div>
-          <div slot="panel-3"><div class="fr-step"><p>{sol[3].d}</p><div class="fr-chips">{sol[3].chips.map(([k,v]) => <span class="fr-chip"><b>{k}</b>{v}</span>)}</div></div></div>
-        </Tabs>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══ WHY TEAMS PICK US ══ -->
-  <section id="why" class="fr-sec fr-sec--tint">
-    <div class="fr-wrap">
-      <div data-reveal>
-        <SectionHeader eyebrow="Why teams pick us" title="Built for enterprise catalogs," accent="not corner shops." align="center" />
-      </div>
-      <div class="fr-why" data-reveal>
-        <div class="fr-why__scale">
-          <span class="fr-why__num">1M+</span>
-          <p>Millions of SKUs across regions and marketplaces, without the refresh slowing down.</p>
-        </div>
-        <div class="fr-why__audit">
-          <div class="fr-why__audit-t">Matching you can actually audit</div>
-          {audit.map(a => (
-            <div class="fr-audit__row">
-              <span class="fr-audit__n">{a.n}</span>
-              <span class="fr-audit__k" style={`background:${a.bg};border-color:${a.bc};color:${a.c}`}>{a.k}</span>
-              <span class="fr-audit__v" style={`color:${a.c}`}>{a.v}</span>
+        <div class="fr-dash-body">
+          <div class="fr-dash-main">
+            <div class="fr-kpis">
+              <div class="fr-kpi"><div class="fr-kpi-k">PRICE INDEX</div><div class="fr-kpi-v">97.4</div></div>
+              <div class="fr-kpi"><div class="fr-kpi-k">BELOW MKT</div><div class="fr-kpi-v" style="color:var(--pl-accent-ink)">41%</div></div>
+              <div class="fr-kpi"><div class="fr-kpi-k">ALERTS</div><div class="fr-kpi-v">12<span class="fr-kpi-dot"></span></div></div>
             </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══ BEFORE & AFTER ══ -->
-  <section id="compare" class="fr-sec">
-    <div class="fr-wrap">
-      <div data-reveal>
-        <SectionHeader eyebrow="Before and after" title="What changes when your team switches to" accent="PriceLeap." align="center" />
-      </div>
-      <div class="fr-ba" data-reveal>
-        <div class="fr-ba__col fr-ba__col--before">
-          <div class="fr-ba__tag">BEFORE PRICELEAP</div>
-          <div class="fr-ba__title">Manual, partial, and always behind.</div>
-          <div class="fr-ba__meter"><span class="fr-ba__meter-k">Coverage</span><span class="fr-ba__meter-bar"><i style="width:8%;background:#C9372E"></i></span><span class="fr-ba__meter-v" style="color:#C9372E">~8%</span></div>
-          <ul class="fr-ba__list">{bList.map(t => <li><span class="fr-ba__x">✕</span>{t}</li>)}</ul>
-        </div>
-        <div class="fr-ba__col fr-ba__col--after">
-          <div class="fr-ba__tag fr-ba__tag--on">WITH PRICELEAP</div>
-          <div class="fr-ba__title">Accurate, complete, and refreshed daily.</div>
-          <div class="fr-ba__meter"><span class="fr-ba__meter-k">Coverage</span><span class="fr-ba__meter-bar"><i style="width:100%;background:#FF3131"></i></span><span class="fr-ba__meter-v" style="color:#B01C1C">100%</span></div>
-          <ul class="fr-ba__list">{aList.map(t => <li><span class="fr-ba__check">✓</span>{t}</li>)}</ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══ CORE FEATURES ══ -->
-  <section class="fr-sec fr-sec--tint">
-    <div class="fr-wrap">
-      <div data-reveal>
-        <SectionHeader eyebrow="Core features" title="Everything from match to action," accent="in one layer." align="center" />
-      </div>
-      <div class="fr-feats" data-reveal>
-        {features.map((f, i) => (
-          <div class="fr-feat">
-            <div class="fr-feat__n">0{i + 1}</div>
-            <h3 class="fr-feat__t">{f.t}</h3>
-            <p class="fr-feat__d">{f.d}</p>
-            <ul class="fr-feat__list">{f.points.map(pt => <li><span class="fr-tick__ic">✓</span>{pt}</li>)}</ul>
-            {i === 1 && (
-              <div class="fr-match">
-                {matchBars.map(m => (
-                  <div class="fr-match__row">
-                    <span class="fr-match__n">{m.n}</span>
-                    <span class="fr-match__track"><i style={`width:${m.v}%;background:${m.bar}`}></i></span>
-                    <span class="fr-match__v" style={`color:${m.tc}`}>{m.label}</span>
-                  </div>
-                ))}
+            <div class="fr-chart-wrap">
+              <div class="fr-chart-head"><span>Price index by category</span><span class="fr-chart-sub">this week</span></div>
+              <div class="fr-chart">
+                <span class="fr-chart-line"></span><span class="fr-chart-mkt">MARKET 100</span>
+                {catBars.map((b) => (<div class="fr-bar-col"><span class="fr-bar-d" style={`color:${b.c === 'var(--pl-danger-line)' ? 'var(--pl-danger-ink)' : 'var(--pl-accent-ink)'}`}>{b.d}</span><span class="fr-bar" style={`height:${b.h}%;background:${b.c}`}></span></div>))}
               </div>
-            )}
+              <div class="fr-chart-labels">{catBars.map((b) => (<span>{b.n}</span>))}</div>
+            </div>
+          </div>
+          <div class="fr-dash-side">
+            <div class="fr-side-head"><span>ALERTS</span><span style="color:var(--pl-accent-ink)">12 OPEN</span></div>
+            {alertFeed.map((a) => (
+              <div class="fr-alert"><span class="fr-alert-top"><span class="fr-alert-t">{a.t}</span><span class="fr-alert-d" style={`color:${a.c}`}>{a.d}</span></span><span class="fr-alert-m">{a.m}</span></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Logos -->
+  <section class="mk-logos mk-cream">
+    <div class="mk-logos-wrap"><div class="mk-logos-label">Trusted by teams at</div><div class="mk-logos-marq-wrap"><div class="mk-logos-marq">{logos.map((l) => (<div class="mk-logo">{l}</div>))}</div></div></div>
+  </section>
+
+  <!-- Problem -->
+  <section id="problem" class="mk-sec">
+    <div class="mk-wrap">
+      <div data-reveal class="fr-prob-head">
+        <div>
+          <span class="mk-eyebrow mk-eyebrow--danger"><span class="mk-sq mk-sq--danger"></span>The problem</span>
+          <h2 class="mk-h2"><span style="font-weight:400">Pricing at your scale </span><span style="font-weight:700">breaks the tools built for small stores.</span></h2>
+        </div>
+        <div class="fr-scale">
+          <div class="fr-scale-labels"><span>100 SKUs</span><span>1K</span><span>10K</span><span>100K</span><span style="color:var(--pl-ink)">1M+</span></div>
+          <div class="fr-scale-bar"><span class="fr-scale-mark"></span><span class="fr-scale-stop">MOST TOOLS STOP HERE</span><span class="fr-scale-you"></span></div>
+          <span class="fr-scale-cat">YOUR CATALOG</span>
+        </div>
+      </div>
+      <div data-reveal class="fr-probs">
+        {problems.map((p) => (<div class="fr-prob"><span class="fr-prob-n">{p.n}</span><p>{p.t}</p></div>))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Solution -->
+  <section id="solution" class="mk-sec mk-cream fr-sol-sec">
+    <div aria-hidden="true" class="fr-sol-grid"></div>
+    <div class="mk-wrap" style="position:relative">
+      <div data-reveal class="mk-center">
+        <span class="mk-eyebrow"><span class="mk-sq"></span>The solution</span>
+        <h2 class="mk-h2" style="max-width:900px"><span style="font-weight:700">Retail Price Intelligence</span><span style="font-weight:400"> does the matching and monitoring so your team doesn't.</span></h2>
+        <p class="mk-center-p">It locates where your products are sold across competitor sites and marketplaces, matches them at the variant level, and refreshes pricing on the cadence you set — a live view of where you sit on price.</p>
+      </div>
+      <div data-reveal class="fr-sol">
+        {sol.map((s) => (
+          <div class="fr-sol-step">
+            <span class="fr-sol-n">{s.n}</span>
+            <div class="fr-sol-card">
+              <span class="fr-sol-t">{s.t}</span>
+              <div class="fr-sol-chips">{s.chips.map(([k, v]) => (<span class="fr-sol-chip">{k}<span style="color:var(--pl-accent-ink)">{v}</span></span>))}</div>
+            </div>
           </div>
         ))}
       </div>
+      <div data-reveal class="fr-sol-note"><span class="fr-sol-note-ico">⇢</span><span>Already use PriceLeap's Pricing Decision Engine or Margin Protection Engine? The competitive data flows straight in.</span></div>
     </div>
   </section>
 
-  <!-- ══ PROOF ══ -->
-  <section id="proof" class="fr-sec">
-    <div class="fr-wrap fr-proof">
-      <div class="fr-proof__quote" data-reveal>
-        <span class="fr-eyebrow"><span class="fr-eyebrow__sq"></span>Proof</span>
-        <blockquote>[Client name] cut competitor-price research from [X hours/week] to near zero.</blockquote>
-        <p class="fr-proof__sub">[Two or three lines: what they sell, what was breaking, what changed. End on a hard number.]</p>
+  <!-- Why -->
+  <section id="why" class="mk-sec">
+    <div class="mk-wrap">
+      <div data-reveal style="max-width:820px">
+        <span class="mk-eyebrow"><span class="mk-sq"></span>Why teams pick us</span>
+        <h2 class="mk-h2"><span style="font-weight:700">Built for enterprise catalogs,</span><span style="font-weight:400"> not corner shops.</span></h2>
       </div>
-      <div class="fr-proof__points" data-reveal>
-        <div class="fr-proof__title">Enterprise-grade by default.</div>
-        <ul>{proof.map(p => <li><span class="fr-tick__ic">✓</span>{p}</li>)}</ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══ PRICING ══ -->
-  <section id="pricing" class="fr-sec fr-sec--tint">
-    <div class="fr-wrap">
-      <div data-reveal>
-        <SectionHeader eyebrow="Pricing" title="Pricing scales with your catalog, your competitor set," accent="and how often you need data." align="center" />
-      </div>
-      <div class="fr-scope" data-reveal>
-        <div class="fr-scope__inputs">
-          {scopeInputs.map(s => (
-            <div class="fr-scope__in"><span class="fr-scope__k">{s.k}</span><span class="fr-scope__v">{s.v}</span></div>
-          ))}
+      <div data-reveal class="fr-bento">
+        <div class="fr-bento-wide">
+          <div class="fr-bento-wide-l"><span class="fr-bento-n">01</span><h3>Matching you can actually audit.</h3><p>Exact, variant, and private-label matches, each with a confidence score, not a black-box guess.</p></div>
+          <div class="fr-bento-wide-r">{audit.map((a) => (<div class="fr-audit"><span style="min-width:0"><span class="fr-audit-n">{a.n}</span><span class="fr-audit-k">{a.k}</span></span><span class="fr-audit-v" style={`background:${a.bg};border-color:${a.bc};color:${a.c}`}>{a.v}</span></div>))}</div>
         </div>
-        <div class="fr-scope__cta">
-          <div class="fr-scope__cta-t">Scoped to your setup. We'll quote on this.</div>
-          <p>Tell us your setup and we'll scope it to your business. No tiers to outgrow.</p>
-          <a href="/book-a-demo" class="fr-btn fr-btn--primary">Get a custom quote</a>
+        <div class="fr-bento-card"><span class="fr-bento-n">02</span><span class="fr-bento-big">1M+</span><h3>Built for catalog scale.</h3><p>Millions of SKUs across regions and marketplaces, without the refresh slowing down.</p></div>
+        <div class="fr-bento-card"><span class="fr-bento-n">03</span><div class="fr-int"><span class="fr-int-pl">PL</span><span class="fr-int-dash"></span><span class="fr-int-chip">BI</span><span class="fr-int-chip">ERP/PIM</span><span class="fr-int-chip">API</span></div><h3>Lands where your team already works.</h3><p>Pushes into your BI, ERP/PIM, or systems by API. Not one more dashboard.</p></div>
+        <div class="fr-bento-card"><span class="fr-bento-n">04</span><div class="fr-sa"><span class="fr-sa-ava"></span><span style="min-width:0"><span class="fr-sa-n">Your solutions architect</span><span class="fr-sa-s">ONLINE · REPLIES IN MINUTES</span></span></div><h3>A real person during onboarding.</h3><p>A named solutions architect, not a ticket queue.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Before / After (static "with PriceLeap" state) -->
+  <section id="compare" class="mk-sec mk-cream">
+    <div class="mk-wrap">
+      <div data-reveal class="mk-center">
+        <span class="mk-eyebrow"><span class="mk-sq"></span>Before and after</span>
+        <h2 class="mk-h2"><span style="font-weight:400">What changes when your team </span><span style="font-weight:700">switches to PriceLeap.</span></h2>
+      </div>
+      <div data-reveal class="fr-ba">
+        <div class="fr-ba-left">
+          <span class="fr-ba-tag">WITH PRICELEAP</span>
+          <h3 class="fr-ba-title">One live view, matched and refreshed for you.</h3>
+          <div class="fr-ba-meter"><span class="fr-ba-cov">98%</span><span class="fr-ba-cov-l">of catalog<br>monitored</span></div>
+          <div class="fr-ba-track"><span style="width:98%"></span></div>
+        </div>
+        <div class="fr-ba-list">
+          {baList.map((r) => (<div class="fr-ba-row"><span class="fr-ba-check">{r.mk}</span><span>{r.t}</span></div>))}
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ══ FAQ ══ -->
-  <section id="faq" class="fr-sec">
-    <div class="fr-wrap fr-faq">
-      <div data-reveal>
-        <SectionHeader eyebrow="FAQ" title="Frequently asked" accent="questions" align="center" />
+  <!-- Core features -->
+  <section id="features" class="mk-sec">
+    <div class="mk-wrap">
+      <div data-reveal class="mk-center">
+        <span class="mk-eyebrow"><span class="mk-sq"></span>Core features</span>
+        <h2 class="mk-h2"><span style="font-weight:400">Everything from </span><span style="font-weight:700">match to action, in one layer.</span></h2>
       </div>
-      <div data-reveal style="margin-top:36px">
-        <FAQ items={faqs} variant="list" />
+      <div data-reveal class="fr-feat">
+        {features.map((f) => (<div class="fr-feat-card"><span class="fr-feat-n">{f.n}</span><h3>{f.t}</h3><p>{f.d}</p></div>))}
       </div>
     </div>
   </section>
 
-  <!-- ══ CTA ══ -->
-  <div class="fr-wrap" style="padding-bottom:96px">
-    <CTA
-      variant="primary"
-      title="See your real price position in a"
-      accent="20-minute demo."
-      body="We'll show Retail Price Intelligence on your own catalog and competitor set — matched, scored, and refreshed."
-      primary={{ label: 'Get a demo', href: '/book-a-demo' }}
-      secondary={{ label: 'See pricing', href: '#pricing' }}
-    />
-  </div>
+  <!-- Proof -->
+  <section id="proof" class="mk-sec mk-cream">
+    <div class="mk-wrap">
+      <div data-reveal class="fr-proof">
+        <span class="fr-proof-chip">[ CUSTOMER RESULT ]</span>
+        <p class="fr-proof-q">[Client name] cut competitor-price research from [X hours/week] to near zero.</p>
+        <span class="fr-proof-note">— confirm quote &amp; stat before publish</span>
+      </div>
+    </div>
+  </section>
 
-</SiteLayout>
+  <!-- Pricing -->
+  <section id="pricing" class="mk-sec">
+    <div class="mk-wrap fr-price">
+      <span class="mk-eyebrow"><span class="mk-sq"></span>Pricing</span>
+      <h2 class="mk-h2" style="font-size:clamp(34px,4.6vw,56px)"><span style="font-weight:400">Enterprise-grade </span><span style="font-weight:700">by default.</span></h2>
+      <p class="fr-price-p">Pricing scales with your catalog, your competitor set, and how often you need data.</p>
+      <div class="mk-hero-cta"><a href="/contact" class="mk-btn-primary">Book a demo</a><a href="/contact" class="mk-btn-ghost">Contact sales for a custom quote</a></div>
+    </div>
+  </section>
+
+  <Faq items={faqs} title="Frequently asked " titleBold="questions." />
+
+  <!-- CTA -->
+  <section id="demo" class="mk-cta-sec">
+    <div class="mk-cta">
+      <div aria-hidden="true" class="mk-cta-glow"></div>
+      <div data-reveal class="mk-cta-inner">
+        <h2 class="mk-cta-h2"><span style="font-weight:400">See your real price position in a </span><span style="font-weight:700">20-minute demo.</span></h2>
+        <a href="/contact" class="mk-btn-primary mk-btn-lg">Book a demo</a>
+      </div>
+    </div>
+  </section>
+</PriceLeapLayout>
 
 <style>
-.fr-wrap { max-width: var(--pl-container); margin: 0 auto; padding-left: var(--pl-gutter); padding-right: var(--pl-gutter); }
-.fr-sec { padding: clamp(64px,8vw,112px) 0; border-bottom: 1px solid var(--pl-line); }
-.fr-sec--tint { background: #FBFBFA; }
-.fr-h1 { margin: 24px 0 0; font-family: var(--pl-font); font-size: clamp(36px,5vw,64px); line-height: 1.03; letter-spacing: -.045em; color: #0A0A0A; text-wrap: balance; font-weight: 700; }
-.fr-h1 .w4 { font-weight: 400; }
-.fr-h2 { margin: 16px 0 0; font-family: var(--pl-font); font-size: clamp(30px,4vw,48px); line-height: 1.06; letter-spacing: -.035em; color: #0A0A0A; text-wrap: balance; font-weight: 700; }
-.fr-h2 .w4 { font-weight: 400; }
-.fr-lead { margin: 22px 0 0; max-width: 560px; font-size: 18px; line-height: 1.6; color: #3A414C; }
-.fr-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: var(--pl-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #B01C1C; }
-.fr-eyebrow--red { color: #C9372E; }
-.fr-eyebrow__dot { width: 7px; height: 7px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.8s ease-out infinite; }
-.fr-eyebrow__sq { width: 7px; height: 7px; border-radius: 2px; background: #FF3131; }
+  .fr-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
+  .fr-hero-dots { position: absolute; inset: 0; background-image: radial-gradient(var(--pl-line-alt) 1px,transparent 1px); background-size: 22px 22px; -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 20%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 60% 70% at 50% 20%,#000 10%,transparent 70%); pointer-events: none; }
+  .fr-hero-glow { position: absolute; left: 50%; bottom: -260px; width: 1100px; height: 560px; transform: translateX(-50%); background: radial-gradient(closest-side,rgba(247,99,30,.16),transparent); pointer-events: none; }
+  .fr-hero-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: clamp(48px,7vw,96px) clamp(20px,4vw,40px) 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .fr-crumbs { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--pl-muted); }
+  .fr-crumbs a { color: var(--pl-muted); }
+  .fr-crumbs span:nth-child(even) { color: var(--pl-line-xstrong); }
+  .fr-crumb-cur { color: var(--pl-ink) !important; }
+  .fr-badge { margin-top: 24px; height: 32px; padding: 0 6px 0 14px; display: inline-flex; align-items: center; gap: 10px; border-radius: 999px; background: var(--pl-surface); border: 1px solid var(--pl-line); font-family: 'Geist Mono', monospace; font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--pl-accent-ink); box-shadow: 0 8px 20px -14px rgba(60,30,15,.3); }
+  .fr-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--pl-gradient); animation: plpulse 1.8s infinite; }
+  .fr-badge-tag { height: 22px; padding: 0 8px; display: flex; align-items: center; border-radius: 999px; background: var(--pl-ink); color: var(--pl-surface); font-size: 10px; letter-spacing: .06em; }
+  .fr-h1 { margin: 22px 0 0; font-family: Geist, sans-serif; font-size: clamp(38px,5.6vw,72px); line-height: 1.02; letter-spacing: -.045em; color: var(--pl-ink); max-width: 1040px; text-wrap: balance; }
+  .fr-lead { margin: 22px 0 0; max-width: 720px; font-size: 18px; line-height: 1.6; color: var(--pl-ink-2); text-wrap: pretty; }
+  .fr-lead--muted { margin-top: 10px; font-size: 15px; color: var(--pl-muted); }
+  .fr-stats { margin-top: 28px; display: flex; flex-wrap: wrap; justify-content: center; border: 1px solid var(--pl-line); border-radius: 12px; background: var(--pl-surface); overflow: hidden; }
+  .fr-stat { height: 38px; padding: 0 16px; display: flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-ink); border-right: 1px solid var(--pl-line-soft); }
+  .fr-stat:last-child { border-right: none; }
+  .fr-stat-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pl-gradient); }
+  .fr-dash { position: relative; margin-top: 56px; width: 100%; max-width: 1080px; background: var(--pl-surface); border: 1px solid var(--pl-line); border-bottom: none; border-radius: 20px 20px 0 0; box-shadow: 0 -10px 60px -30px rgba(60,30,15,.25); overflow: hidden; text-align: left; }
+  .fr-dash-bar { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--pl-line-soft); background: var(--pl-cream); }
+  .fr-dots3 { display: flex; gap: 5px; }
+  .fr-dots3 span { width: 9px; height: 9px; border-radius: 50%; background: var(--pl-line); }
+  .fr-url { flex: 1; max-width: 340px; margin: 0 auto; height: 26px; border-radius: 8px; background: var(--pl-surface); border: 1px solid var(--pl-line); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-muted); }
+  .fr-dash-live { display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .08em; color: var(--pl-accent-ink); }
+  .fr-dash-body { display: grid; grid-template-columns: 1fr; gap: 1px; background: var(--pl-line-soft); }
+  .fr-dash-main { background: var(--pl-surface); display: grid; grid-template-rows: auto 1fr; }
+  .fr-kpis { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1px; background: var(--pl-line-soft); border-bottom: 1px solid var(--pl-line-soft); }
+  .fr-kpi { background: var(--pl-surface); padding: 16px 18px; }
+  .fr-kpi-k { font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .08em; color: var(--pl-faint); }
+  .fr-kpi-v { margin-top: 4px; font-family: Geist, sans-serif; font-size: 30px; font-weight: 600; letter-spacing: -.04em; color: var(--pl-ink); display: flex; align-items: center; gap: 8px; }
+  .fr-kpi-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pl-danger); }
+  .fr-chart-wrap { padding: 18px; }
+  .fr-chart-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 14px; font-weight: 600; color: var(--pl-ink); }
+  .fr-chart-sub { font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--pl-faint); font-weight: 400; }
+  .fr-chart { margin-top: 16px; display: flex; align-items: flex-end; gap: clamp(8px,2vw,18px); height: 150px; border-bottom: 1px solid var(--pl-line-soft); position: relative; }
+  .fr-chart-line { position: absolute; left: 0; right: 0; bottom: 60%; border-top: 1px dashed var(--pl-line-xstrong); }
+  .fr-chart-mkt { position: absolute; right: 0; bottom: calc(60% + 4px); font-family: 'Geist Mono', monospace; font-size: 9.5px; color: var(--pl-faint); }
+  .fr-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 6px; }
+  .fr-bar-d { font-family: 'Geist Mono', monospace; font-size: 10px; }
+  .fr-bar { width: 100%; max-width: 44px; border-radius: 6px 6px 0 0; }
+  .fr-chart-labels { display: flex; gap: clamp(8px,2vw,18px); margin-top: 8px; }
+  .fr-chart-labels span { flex: 1; text-align: center; font-size: 11px; color: var(--pl-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fr-dash-side { background: var(--pl-cream); padding: 16px; display: none; flex-direction: column; gap: 8px; }
+  .fr-side-head { display: flex; justify-content: space-between; font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .08em; color: var(--pl-faint); }
+  .fr-alert { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .fr-alert-top { display: flex; justify-content: space-between; gap: 8px; }
+  .fr-alert-t { font-size: 12px; font-weight: 600; color: var(--pl-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fr-alert-d { font-family: 'Geist Mono', monospace; font-size: 11px; }
+  .fr-alert-m { font-family: 'Geist Mono', monospace; font-size: 9.5px; color: var(--pl-faint); }
 
-.fr-btn { height: 48px; padding: 0 22px; display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; font-family: var(--pl-font); font-weight: 500; font-size: 15px; transition: all .2s; }
-.fr-btn--primary { background: #FF3131; color: #0A0A0A; box-shadow: 0 12px 26px -12px rgba(255, 49, 49,.9); }
-.fr-btn--primary:hover { background: #F23830; color: #0A0A0A; }
-.fr-btn--secondary { background: #fff; border: 1px solid var(--pl-line); color: #0A0A0A; }
-.fr-btn--secondary:hover { border-color: #C4CAC4; }
-.fr-btn--secondary span { color: #B01C1C; }
+  .fr-prob-head { display: grid; grid-template-columns: 1fr; gap: 28px 64px; align-items: end; }
+  .fr-scale { display: flex; flex-direction: column; gap: 8px; }
+  .fr-scale-labels { display: flex; justify-content: space-between; font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .06em; color: var(--pl-faint); }
+  .fr-scale-bar { position: relative; height: 10px; border-radius: 10px; background: linear-gradient(90deg,var(--pl-accent) 0 34%,var(--pl-danger-line) 34% 100%); margin-bottom: 30px; }
+  .fr-scale-mark { position: absolute; left: 34%; top: -8px; bottom: -8px; width: 2px; background: var(--pl-danger-ink); }
+  .fr-scale-stop { position: absolute; left: 34%; top: calc(100% + 12px); transform: translateX(-50%); height: 22px; padding: 0 8px; display: flex; align-items: center; border-radius: 6px; background: var(--pl-danger-tint); border: 1px solid var(--pl-danger-line); font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--pl-danger-ink); white-space: nowrap; }
+  .fr-scale-you { position: absolute; right: 0; top: 50%; width: 16px; height: 16px; margin-top: -8px; border-radius: 50%; background: var(--pl-ink); border: 3px solid var(--pl-surface); box-shadow: 0 0 0 1px var(--pl-ink); }
+  .fr-scale-cat { align-self: flex-end; font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--pl-ink); }
+  .fr-probs { margin-top: 48px; border: 1px solid var(--pl-line); border-radius: 24px; overflow: hidden; background: var(--pl-line); display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); gap: 1px; }
+  .fr-prob { background: var(--pl-surface); padding: 28px; display: flex; flex-direction: column; gap: 12px; }
+  .fr-prob-n { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-danger-ink); }
+  .fr-prob p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--pl-ink); }
 
-/* hero */
-.fr-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
-.fr-hero__grid { position: absolute; inset: 0; background-image: linear-gradient(#EEF0EE 1px,transparent 1px),linear-gradient(90deg,#EEF0EE 1px,transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%); pointer-events: none; }
-.fr-hero__glow { position: absolute; right: -10%; top: -20%; width: 720px; height: 620px; background: radial-gradient(closest-side,rgba(255, 49, 49,.14),transparent); pointer-events: none; }
-.fr-hero__inner { position: relative; display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: clamp(40px,5vw,64px); align-items: center; padding-top: clamp(48px,7vw,96px); padding-bottom: clamp(48px,6vw,80px); }
-.fr-crumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5A6373; margin-bottom: 24px; }
-.fr-crumb a { color: #5A6373; }
-.fr-crumb span:last-child { color: #0A0A0A; }
-.fr-hero__btns { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
-.fr-hero__ticks { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
-.fr-tick { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #3A414C; }
-.fr-tick__ic { flex: none; width: 18px; height: 18px; border-radius: 50%; background: #E8FCEF; border: 1px solid #FFD6C8; color: #B01C1C; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+  .fr-sol-sec { position: relative; overflow: hidden; }
+  .fr-sol-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 70%,#000,transparent 75%); mask-image: radial-gradient(ellipse 70% 60% at 50% 70%,#000,transparent 75%); }
+  .fr-sol { position: relative; margin-top: 56px; display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .fr-sol-step { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .fr-sol-n { width: 72px; height: 72px; border-radius: 22px; background: var(--pl-surface); border: 1.5px solid var(--pl-line); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 14px; color: var(--pl-ink); }
+  .fr-sol-step:first-child .fr-sol-n { background: var(--pl-accent-tint); border-color: var(--pl-accent-line); color: var(--pl-accent-ink); box-shadow: 0 0 0 8px rgba(247,99,30,.08); }
+  .fr-sol-card { width: 100%; min-height: 150px; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+  .fr-sol-t { font-family: Geist, sans-serif; font-size: 17px; font-weight: 600; color: var(--pl-ink); }
+  .fr-sol-chips { display: flex; flex-direction: column; gap: 6px; }
+  .fr-sol-chip { height: 26px; padding: 0 9px; display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 7px; background: var(--pl-cream); border: 1px solid var(--pl-line-soft); font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--pl-ink-2); }
+  .fr-sol-note { margin: 28px auto 0; max-width: 760px; display: flex; align-items: center; gap: 14px; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 14px; padding: 14px 18px; font-size: 14px; line-height: 1.55; color: var(--pl-ink-2); }
+  .fr-sol-note-ico { flex: none; width: 32px; height: 32px; border-radius: 9px; background: var(--pl-ink); color: var(--pl-accent); display: flex; align-items: center; justify-content: center; font-size: 14px; }
 
-.fr-hero__card-wrap { position: relative; min-width: 0; }
-.fr-card { background: #fff; border: 1px solid var(--pl-line); border-radius: 20px; box-shadow: 0 40px 80px -40px rgba(10,10,10,.28); overflow: hidden; }
-.fr-card__head { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #EEF0EE; background: #FBFBFA; }
-.fr-dots { display: flex; gap: 5px; }
-.fr-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--pl-line); }
-.fr-card__title { font-size: 13px; font-weight: 500; color: #0A0A0A; }
-.fr-live { margin-left: auto; display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; background: #E8FCEF; border: 1px solid #FFD6C8; font-family: var(--pl-mono); font-size: 10px; color: #B01C1C; }
-.fr-live__dot { width: 6px; height: 6px; border-radius: 50%; background: #FF3131; animation: pl-pulse 1.6s infinite; }
-.fr-card__kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: #EEF0EE; border-bottom: 1px solid #EEF0EE; }
-.fr-card__kpis > div { background: #fff; padding: 12px 14px; display: flex; flex-direction: column; gap: 3px; }
-.fr-k { font-family: var(--pl-mono); font-size: 9px; letter-spacing: .06em; color: #6E7684; }
-.fr-v { font-family: var(--pl-font); font-size: 20px; font-weight: 600; letter-spacing: -.03em; color: #0A0A0A; }
-.fr-card__bars { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; padding: 18px 16px 12px; height: 140px; }
-.fr-bar { display: flex; flex-direction: column; align-items: center; gap: 4px; justify-content: flex-end; }
-.fr-bar__col { width: 16px; border-radius: 4px 4px 0 0; }
-.fr-bar__n { font-family: var(--pl-mono); font-size: 8px; color: #6E7684; }
-.fr-bar__d { font-family: var(--pl-mono); font-size: 8px; }
-.fr-card__feed { border-top: 1px solid #EEF0EE; padding: 8px 12px 12px; }
-.fr-feed__row { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; padding: 7px 0; border-top: 1px solid #F4F5F4; }
-.fr-feed__row:first-child { border-top: none; }
-.fr-feed__dot { width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; }
-.fr-feed__t { font-size: 11px; color: #3A414C; line-height: 1.3; }
-.fr-feed__d { font-family: var(--pl-mono); font-size: 11px; }
+  .fr-bento { margin-top: 48px; display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .fr-bento-wide { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 22px; overflow: hidden; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,280px),1fr)); }
+  .fr-bento-wide-l { padding: 28px; display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+  .fr-bento-wide-r { background: var(--pl-cream); border-left: 1px solid var(--pl-line-soft); padding: 22px; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+  .fr-bento-n { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-accent-ink); }
+  .fr-bento h3 { margin: 0; font-family: Geist, sans-serif; font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: var(--pl-ink); }
+  .fr-bento p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--pl-muted); }
+  .fr-audit { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px; align-items: center; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 11px; padding: 10px 12px; }
+  .fr-audit-n { display: block; font-size: 12.5px; color: var(--pl-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fr-audit-k { font-family: 'Geist Mono', monospace; font-size: 9.5px; letter-spacing: .06em; color: var(--pl-faint); }
+  .fr-audit-v { height: 24px; padding: 0 8px; display: flex; align-items: center; border-radius: 6px; border: 1px solid; font-family: 'Geist Mono', monospace; font-size: 11px; }
+  .fr-bento-card { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 10px; }
+  .fr-bento-card h3 { font-size: 20px; }
+  .fr-bento-big { font-family: Geist, sans-serif; font-size: clamp(44px,5vw,64px); font-weight: 600; letter-spacing: -.05em; line-height: 1; color: var(--pl-ink); }
+  .fr-int { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 8px; }
+  .fr-int-pl { height: 34px; padding: 0 12px; display: flex; align-items: center; border-radius: 10px; background: var(--pl-gradient); font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-surface); }
+  .fr-int-dash { width: 28px; height: 2px; background: repeating-linear-gradient(90deg,var(--pl-accent) 0 5px,transparent 5px 10px); background-size: 20px 2px; }
+  .fr-int-chip { height: 34px; padding: 0 10px; display: flex; align-items: center; border-radius: 10px; border: 1px solid var(--pl-line); font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-ink); }
+  .fr-sa { display: flex; align-items: center; gap: 12px; margin: 4px 0 8px; background: var(--pl-cream); border: 1px solid var(--pl-line-soft); border-radius: 14px; padding: 10px 12px; }
+  .fr-sa-ava { position: relative; width: 40px; height: 40px; flex: none; border-radius: 50%; border: 1px dashed var(--pl-line-xstrong); background: repeating-linear-gradient(135deg,var(--pl-sand) 0 5px,var(--pl-cream) 5px 10px); }
+  .fr-sa-n { display: block; font-size: 13px; font-weight: 600; color: var(--pl-ink); }
+  .fr-sa-s { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--pl-accent-ink); }
 
-/* logos */
-.fr-logos { border-bottom: 1px solid var(--pl-line); }
-.fr-logos__inner { display: grid; grid-template-columns: 280px minmax(0,1fr); }
-.fr-logos__label { padding: 22px 0; display: flex; align-items: center; border-right: 1px solid var(--pl-line); font-family: var(--pl-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #5A6373; }
-.fr-logos__track { overflow: hidden; -webkit-mask-image: linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); mask-image: linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent); }
-.fr-logos__marquee { display: flex; width: max-content; animation: pl-marquee 32s linear infinite; }
-.fr-logo { flex: none; width: 200px; height: 84px; display: flex; align-items: center; justify-content: center; border-right: 1px solid #EEF0EE; font-family: var(--pl-font); font-size: 21px; font-weight: 600; color: #6E7684; }
+  .fr-ba { margin-top: 36px; display: grid; grid-template-columns: 1fr; background: var(--pl-surface); border: 1.5px solid var(--pl-accent); border-radius: 24px; overflow: hidden; box-shadow: 0 30px 60px -40px rgba(194,65,12,.5); }
+  .fr-ba-left { padding: clamp(24px,4vw,44px); display: flex; flex-direction: column; gap: 14px; background: var(--pl-accent-tint); border-right: 1px solid var(--pl-accent-line); }
+  .fr-ba-tag { align-self: flex-start; height: 26px; padding: 0 10px; display: flex; align-items: center; border-radius: 7px; background: var(--pl-gradient); font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .08em; color: var(--pl-surface); }
+  .fr-ba-title { margin: 0; font-family: Geist, sans-serif; font-size: clamp(26px,3vw,38px); font-weight: 600; letter-spacing: -.03em; line-height: 1.1; color: var(--pl-ink); }
+  .fr-ba-meter { margin-top: 10px; display: flex; align-items: center; gap: 14px; }
+  .fr-ba-cov { font-family: Geist, sans-serif; font-size: 56px; font-weight: 600; letter-spacing: -.05em; line-height: 1; color: var(--pl-accent-ink); }
+  .fr-ba-cov-l { font-size: 14px; line-height: 1.45; color: var(--pl-muted); }
+  .fr-ba-track { height: 8px; border-radius: 8px; background: var(--pl-line-soft); overflow: hidden; }
+  .fr-ba-track span { display: block; height: 100%; border-radius: 8px; background: var(--pl-gradient); }
+  .fr-ba-list { display: flex; flex-direction: column; }
+  .fr-ba-row { display: flex; gap: 14px; align-items: flex-start; padding: 22px clamp(20px,3vw,32px); border-bottom: 1px solid var(--pl-line-soft); font-size: 16px; line-height: 1.55; color: var(--pl-ink); }
+  .fr-ba-row:last-child { border-bottom: none; }
+  .fr-ba-check { flex: none; margin-top: 2px; width: 22px; height: 22px; border-radius: 50%; background: var(--pl-gradient); color: var(--pl-surface); font-size: 11px; display: flex; align-items: center; justify-content: center; }
 
-/* problem */
-.fr-problem { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); gap: clamp(36px,5vw,72px); align-items: start; }
-.fr-problem__head { position: sticky; top: 100px; }
-.fr-problem__list { display: flex; flex-direction: column; gap: 12px; }
-.fr-prob { background: #fff; border: 1px solid var(--pl-line); border-radius: 16px; padding: 22px 24px; display: grid; grid-template-columns: 44px minmax(0,1fr) auto; gap: 16px; align-items: center; transition: border-color .25s, box-shadow .25s; }
-.fr-prob:hover { border-color: #F5C6C3; box-shadow: 0 18px 36px -26px rgba(201,55,46,.45); }
-.fr-prob__n { width: 44px; height: 44px; border-radius: 12px; background: #FDECEB; border: 1px solid #F5C6C3; color: #C9372E; font-family: var(--pl-mono); font-size: 12px; display: flex; align-items: center; justify-content: center; align-self: flex-start; }
-.fr-prob__t { font-size: 16px; line-height: 1.5; color: #0A0A0A; }
-.fr-prob__tag { height: 24px; padding: 0 9px; display: inline-flex; align-items: center; border-radius: 6px; border: 1px dashed #F5C6C3; font-family: var(--pl-mono); font-size: 10px; letter-spacing: .08em; color: #C9372E; white-space: nowrap; align-self: flex-start; }
+  .fr-feat { margin-top: 48px; display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .fr-feat-card { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 22px; padding: 28px; display: flex; flex-direction: column; gap: 10px; }
+  .fr-feat-n { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-accent-ink); }
+  .fr-feat-card h3 { margin: 0; font-family: Geist, sans-serif; font-size: 21px; font-weight: 600; letter-spacing: -.02em; color: var(--pl-ink); }
+  .fr-feat-card p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--pl-muted); }
 
-/* solution tabs */
-.fr-sol { margin-top: 48px; border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: clamp(20px,3vw,32px); }
-.fr-step p { margin: 0; font-size: 17px; line-height: 1.6; color: #3A414C; max-width: 680px; }
-.fr-chips { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
-.fr-chip { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border: 1px solid var(--pl-line); border-radius: 10px; font-size: 14px; color: #0A0A0A; }
-.fr-chip b { font-family: var(--pl-mono); font-size: 10px; letter-spacing: .06em; color: #6E7684; font-weight: 500; }
+  .fr-proof { border: 1px dashed var(--pl-line-xstrong); border-radius: 24px; padding: clamp(32px,5vw,56px); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+  .fr-proof-chip { height: 22px; padding: 0 8px; display: flex; align-items: center; border-radius: 6px; border: 1px dashed var(--pl-line-xstrong); font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .06em; color: var(--pl-muted); }
+  .fr-proof-q { margin: 0; font-family: Geist, sans-serif; font-size: clamp(22px,3vw,34px); font-weight: 500; line-height: 1.3; letter-spacing: -.02em; color: var(--pl-ink); max-width: 820px; }
+  .fr-proof-note { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-warn-ink); }
 
-/* why */
-.fr-why { margin-top: 48px; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.3fr); gap: 16px; }
-.fr-why__scale { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 32px; display: flex; flex-direction: column; justify-content: center; }
-.fr-why__num { font-family: var(--pl-font); font-size: clamp(56px,8vw,88px); font-weight: 600; letter-spacing: -.04em; color: #0A0A0A; line-height: 1; }
-.fr-why__scale p { margin: 16px 0 0; font-size: 16px; line-height: 1.55; color: #5A6373; }
-.fr-why__audit { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 28px; }
-.fr-why__audit-t { font-size: 16px; font-weight: 600; color: #0A0A0A; margin-bottom: 18px; }
-.fr-audit__row { display: grid; grid-template-columns: 1fr auto 44px; gap: 12px; align-items: center; padding: 14px 0; border-top: 1px solid #EEF0EE; }
-.fr-audit__row:first-of-type { border-top: none; }
-.fr-audit__n { font-size: 14px; color: #0A0A0A; }
-.fr-audit__k { height: 22px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: 6px; border: 1px solid; font-family: var(--pl-mono); font-size: 9px; letter-spacing: .04em; }
-.fr-audit__v { font-family: var(--pl-mono); font-size: 13px; text-align: right; }
+  .fr-price { text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .fr-price-p { margin: 18px 0 0; max-width: 620px; font-size: 17px; line-height: 1.6; color: var(--pl-ink-2); }
+  .fr-price .mk-hero-cta { justify-content: center; margin-top: 28px; }
 
-/* before & after */
-.fr-ba { margin-top: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.fr-ba__col { border: 1px solid var(--pl-line); border-radius: 20px; padding: 28px; background: #FBFBFA; }
-.fr-ba__col--after { border: 1.5px solid #FF3131; background: #fff; box-shadow: 0 0 0 6px rgba(255, 49, 49,.08),0 30px 60px -40px rgba(200, 30, 30,.5); }
-.fr-ba__tag { height: 22px; padding: 0 10px; display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid var(--pl-line); background: #fff; font-family: var(--pl-mono); font-size: 10px; color: #5A6373; }
-.fr-ba__tag--on { background: #FF3131; border-color: #FF3131; color: #0A0A0A; }
-.fr-ba__title { margin: 14px 0 0; font-family: var(--pl-font); font-size: 20px; font-weight: 600; letter-spacing: -.02em; color: #0A0A0A; }
-.fr-ba__meter { margin: 16px 0 0; display: flex; align-items: center; gap: 10px; }
-.fr-ba__meter-k { font-family: var(--pl-mono); font-size: 10px; color: #6E7684; }
-.fr-ba__meter-bar { flex: 1; height: 8px; border-radius: 8px; background: #F4F5F4; overflow: hidden; }
-.fr-ba__meter-bar i { display: block; height: 100%; border-radius: 8px; }
-.fr-ba__meter-v { font-family: var(--pl-mono); font-size: 12px; }
-.fr-ba__list { margin: 20px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
-.fr-ba__list li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.5; color: #0A0A0A; }
-.fr-ba__x { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #FDECEB; border: 1px solid #F5C6C3; color: #C9372E; font-size: 10px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-.fr-ba__check { flex: none; width: 20px; height: 20px; border-radius: 50%; background: #FF3131; color: #0A0A0A; font-size: 10px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
-
-/* features */
-.fr-feats { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,360px),1fr)); gap: 16px; }
-.fr-feat { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 28px; }
-.fr-feat__n { font-family: var(--pl-mono); font-size: 12px; color: #B01C1C; }
-.fr-feat__t { margin: 10px 0 0; font-family: var(--pl-font); font-size: 20px; font-weight: 600; letter-spacing: -.02em; color: #0A0A0A; }
-.fr-feat__d { margin: 10px 0 0; font-size: 15px; line-height: 1.55; color: #5A6373; }
-.fr-feat__list { margin: 18px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
-.fr-feat__list li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.5; color: #3A414C; }
-.fr-match { margin-top: 18px; padding-top: 18px; border-top: 1px solid #EEF0EE; display: flex; flex-direction: column; gap: 12px; }
-.fr-match__row { display: grid; grid-template-columns: 130px 1fr auto; gap: 10px; align-items: center; }
-.fr-match__n { font-size: 12px; color: #5A6373; }
-.fr-match__track { height: 8px; border-radius: 8px; background: #F4F5F4; overflow: hidden; }
-.fr-match__track i { display: block; height: 100%; border-radius: 8px; }
-.fr-match__v { font-family: var(--pl-mono); font-size: 11px; }
-
-/* proof */
-.fr-proof { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); gap: clamp(32px,5vw,56px); align-items: center; }
-.fr-proof__quote blockquote { margin: 18px 0 0; font-family: var(--pl-font); font-size: clamp(24px,3vw,34px); font-weight: 600; line-height: 1.2; letter-spacing: -.02em; color: #0A0A0A; }
-.fr-proof__sub { margin: 18px 0 0; font-size: 15px; line-height: 1.6; color: #5A6373; }
-.fr-proof__points { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 28px; }
-.fr-proof__title { font-size: 17px; font-weight: 600; color: #0A0A0A; margin-bottom: 18px; }
-.fr-proof__points ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
-.fr-proof__points li { display: flex; align-items: flex-start; gap: 10px; font-size: 15px; line-height: 1.5; color: #3A414C; }
-
-/* pricing scope */
-.fr-scope { margin-top: 48px; display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; align-items: stretch; }
-.fr-scope__inputs { border: 1px solid var(--pl-line); border-radius: 20px; background: #fff; padding: 12px; display: flex; flex-direction: column; justify-content: center; gap: 1px; }
-.fr-scope__in { display: flex; justify-content: space-between; align-items: center; padding: 18px; }
-.fr-scope__k { font-size: 15px; color: #5A6373; }
-.fr-scope__v { font-family: var(--pl-font); font-size: 16px; font-weight: 600; color: #0A0A0A; }
-.fr-scope__cta { border: 1.5px solid #FF3131; border-radius: 20px; background: #fff; padding: 32px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 0 0 6px rgba(255, 49, 49,.08); }
-.fr-scope__cta-t { font-family: var(--pl-font); font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: #0A0A0A; }
-.fr-scope__cta p { margin: 12px 0 20px; font-size: 15px; line-height: 1.55; color: #5A6373; }
-.fr-scope__cta .fr-btn { align-self: flex-start; }
-
-.fr-faq { max-width: 860px; }
-
-.pl-js [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
-.pl-js [data-reveal].is-in { opacity: 1; transform: none; }
-
-@media (max-width: 999px) {
-  .fr-hero__inner { grid-template-columns: 1fr; }
-  .fr-problem { grid-template-columns: 1fr; }
-  .fr-problem__head { position: relative; top: 0; }
-  .fr-logos__inner { grid-template-columns: 1fr; }
-  .fr-logos__label { border-right: none; border-bottom: 1px solid var(--pl-line); }
-  .fr-why { grid-template-columns: 1fr; }
-  .fr-ba { grid-template-columns: 1fr; }
-  .fr-proof { grid-template-columns: 1fr; }
-  .fr-scope { grid-template-columns: 1fr; }
-}
-@media (prefers-reduced-motion: reduce) {
-  [data-reveal] { opacity: 1 !important; transform: none !important; }
-  .fr-logos__marquee { animation: none; }
-}
+  @media (min-width: 860px) {
+    .fr-dash-body { grid-template-columns: minmax(0,1fr) 280px; }
+    .fr-dash-side { display: flex; }
+    .fr-prob-head { grid-template-columns: repeat(auto-fit,minmax(min(100%,420px),1fr)); }
+    .fr-sol { grid-template-columns: repeat(4,minmax(0,1fr)); }
+    .fr-bento { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .fr-bento-wide { grid-column: 1 / -1; }
+    .fr-ba { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+    .fr-feat { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  }
 </style>
+
+<script>
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('mk-in'); io.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+</script>
