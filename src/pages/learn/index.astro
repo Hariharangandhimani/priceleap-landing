@@ -1,0 +1,200 @@
+---
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+import learnData from '../../data/learn.json';
+
+type Article = {
+  slug: string; category: string; difficulty: string; title: string; excerpt: string;
+  author: string; publishedAt: string; readTime: string; heroImage?: { src: string; alt: string };
+};
+const articles = learnData.articles as Article[];
+const total = articles.length;
+const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+
+const tracks = [
+  { key: 'beginner', label: 'Beginner', d: 'Start here — the fundamentals of repricing and monitoring.' },
+  { key: 'intermediate', label: 'Intermediate', d: 'Build real pricing strategy: rules, margins and MAP.' },
+  { key: 'advanced', label: 'Advanced', d: 'Scale and automate pricing safely across large catalogs.' },
+];
+const byTrack = Object.fromEntries(tracks.map((t) => [t.key, articles.filter((a) => a.difficulty === t.key)]));
+const categories = [...new Set(articles.map((a) => a.category))];
+const featured = articles[0];
+
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'PriceLeap Learn',
+  url: 'https://priceleap.ai/learn',
+  description: 'Guides on repricing, competitor monitoring, dynamic pricing, MAP and margin strategy.',
+}];
+---
+<PriceLeapLayout
+  title="Learn · PriceLeap"
+  description="Guides on repricing, competitor monitoring, dynamic pricing, MAP compliance and margin strategy — from beginner to advanced."
+  jsonLd={jsonLd}
+>
+  <section class="ln-hero" data-screen-label="Hero">
+    <div aria-hidden="true" class="ln-hero-grid"></div>
+    <div aria-hidden="true" class="ln-hero-glow"></div>
+    <div class="ln-hero-inner">
+      <span class="ln-badge"><span class="ln-badge-dot"></span>PRICELEAP LEARN · {total} GUIDES</span>
+      <h1 class="ln-h1"><span style="font-weight:400">Learn pricing, </span><span style="font-weight:700">step by step.</span></h1>
+      <p class="ln-lead">Practical guides on repricing, competitor monitoring, dynamic pricing, MAP compliance and margin strategy — organized from beginner to advanced.</p>
+      <div role="search" class="ln-search">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7F7066" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+        <input type="search" placeholder="Search guides, e.g. Buy Box" aria-label="Search learn guides" data-ln-search />
+        <a href="#guides" class="ln-search-btn">Search</a>
+      </div>
+      <div class="ln-cats">
+        <span class="ln-cats-label">TOPICS</span>
+        {categories.map((c) => (<span class="ln-chip">{c}</span>))}
+      </div>
+    </div>
+  </section>
+
+  <section class="ln-featured" data-screen-label="Featured" data-ln-featured>
+    <a href={`/learn/${featured.slug}`} class="ln-feat-card">
+      <div class="ln-feat-cover">{featured.heroImage && (<img src={featured.heroImage.src} alt={featured.heroImage.alt} width="760" height="330" loading="eager" />)}
+        <span class="ln-feat-tags"><span class="ln-feat-tag-grad">START HERE</span><span class="ln-feat-tag">{featured.category.toUpperCase()}</span></span>
+      </div>
+      <div class="ln-feat-body">
+        <span class="ln-feat-level" data-level={featured.difficulty}>{featured.difficulty}</span>
+        <span class="ln-feat-title">{featured.title}</span>
+        <span class="ln-feat-excerpt">{featured.excerpt}</span>
+        <span class="ln-feat-meta"><span class="ln-ini">{initials(featured.author)}</span><span class="ln-feat-author">{featured.author}</span><span class="ln-feat-rt">{featured.readTime}</span><span class="ln-feat-read">Read guide →</span></span>
+      </div>
+    </a>
+  </section>
+
+  <section id="guides" class="ln-tracks" data-screen-label="Guides" data-ln-tracks>
+    {tracks.map((t) => (
+      <div class="ln-track" data-ln-track>
+        <div class="ln-track-head">
+          <span class={`ln-track-pill ln-track-pill--${t.key}`}>{t.label}</span>
+          <span class="ln-track-d">{t.d}</span>
+          <span class="ln-track-n">{byTrack[t.key].length} guides</span>
+        </div>
+        <div class="ln-grid">
+          {byTrack[t.key].map((a) => (
+            <a href={`/learn/${a.slug}`} class="ln-card" data-ln-card data-name={`${a.title} ${a.excerpt} ${a.category}`.toLowerCase()}>
+              <div class="ln-card-cover">{a.heroImage && (<img src={a.heroImage.src} alt={a.heroImage.alt} width="400" height="175" loading="lazy" />)}<span class="ln-card-cat">{a.category.toUpperCase()}</span></div>
+              <div class="ln-card-body">
+                <span class="ln-card-title">{a.title}</span>
+                <span class="ln-card-excerpt">{a.excerpt}</span>
+                <span class="ln-card-meta"><span class="ln-ini">{initials(a.author)}</span><span class="ln-card-author">{a.author}</span><span class="ln-card-rt">{a.readTime}</span></span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    ))}
+    <div class="ln-empty" data-ln-empty hidden><span class="ln-empty-ico">∅</span><span class="ln-empty-t">No guides match your search</span><button type="button" class="ln-empty-reset" data-ln-reset>Clear search</button></div>
+  </section>
+
+  <section class="ln-cta" data-screen-label="CTA">
+    <div class="ln-cta-card">
+      <div aria-hidden="true" class="ln-cta-dots"></div>
+      <div class="ln-cta-left">
+        <span class="ln-cta-eyebrow"><span class="ln-diamond"></span>FROM LEARNING TO DOING</span>
+        <h2 class="ln-cta-h2"><span style="font-weight:400">Put these guides to work </span><span style="font-weight:700">on your own catalog.</span></h2>
+        <p class="ln-cta-p">See live competitor prices and a repricing plan built around your SKUs.</p>
+        <div class="ln-cta-btns"><a href="/contact" class="ln-btn-primary">Book a demo</a><a href="/blog" class="ln-btn-ghost">Read the blog</a></div>
+      </div>
+    </div>
+  </section>
+</PriceLeapLayout>
+
+<style>
+  .ln-diamond { width: 6px; height: 6px; border-radius: 2px; background: var(--pl-accent); transform: rotate(45deg); }
+  .ln-ini { width: 28px; height: 28px; border-radius: 50%; background: var(--pl-sand); border: 1px solid var(--pl-line); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 9.5px; color: var(--pl-ink-2); flex: none; }
+
+  .ln-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
+  .ln-hero-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 70% 90% at 50% 0%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 90% at 50% 0%,#000 10%,transparent 70%); }
+  .ln-hero-glow { position: absolute; left: 50%; top: -260px; width: 820px; height: 520px; transform: translateX(-50%); background: radial-gradient(closest-side,rgba(251,138,46,.12),transparent); }
+  .ln-hero-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: clamp(48px,7vw,88px) clamp(16px,4vw,40px) clamp(40px,5vw,60px); display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .ln-badge { height: 28px; padding: 0 12px; display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; background: var(--pl-surface); border: 1px solid var(--pl-line); font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .1em; color: var(--pl-ink-2); }
+  .ln-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pl-accent); animation: plpulse 1.8s infinite; }
+  .ln-h1 { margin: 20px 0 0; font-family: Geist, sans-serif; font-size: clamp(38px,6vw,72px); line-height: 1.02; letter-spacing: -.045em; color: var(--pl-ink); text-wrap: balance; }
+  .ln-lead { margin: 18px 0 0; max-width: 640px; font-size: clamp(16px,1.6vw,18px); line-height: 1.6; color: var(--pl-ink-2); text-wrap: pretty; }
+  .ln-search { margin-top: 28px; width: min(100%,560px); display: flex; align-items: center; gap: 10px; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 14px; padding: 6px 6px 6px 16px; box-shadow: 0 20px 40px -30px rgba(60,30,15,.4); transition: border-color .2s, box-shadow .2s; }
+  .ln-search:focus-within { border-color: var(--pl-accent-line); box-shadow: 0 0 0 4px rgba(247,99,30,.12); }
+  .ln-search input { flex: 1; min-width: 0; border: none; outline: none; background: transparent; font-size: 15px; color: var(--pl-ink); padding: 10px 0; }
+  .ln-search-btn { height: 40px; padding: 0 16px; display: flex; align-items: center; border-radius: 10px; background: var(--pl-ink); color: var(--pl-surface); font-size: 14px; font-weight: 500; white-space: nowrap; }
+  .ln-cats { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .ln-cats-label { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .08em; color: var(--pl-faint); }
+  .ln-chip { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid var(--pl-line); background: var(--pl-surface); font-size: 13px; color: var(--pl-ink-2); }
+
+  .ln-featured { max-width: 1280px; margin: 0 auto; padding: clamp(36px,5vw,56px) clamp(16px,4vw,40px) 0; }
+  .ln-feat-card { display: grid; grid-template-columns: 1fr; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 24px; overflow: hidden; color: var(--pl-ink); transition: box-shadow .25s, border-color .25s; }
+  .ln-feat-card:hover { box-shadow: 0 36px 70px -46px rgba(60,30,15,.55); border-color: var(--pl-accent-line); color: var(--pl-ink); }
+  .ln-feat-cover { position: relative; aspect-ratio: 16 / 8; background: var(--pl-sand); overflow: hidden; }
+  .ln-feat-cover img { width: 100%; height: 100%; object-fit: cover; }
+  .ln-feat-tags { position: absolute; left: 16px; top: 16px; display: flex; gap: 6px; }
+  .ln-feat-tag-grad { height: 26px; padding: 0 10px; display: flex; align-items: center; border-radius: 7px; background: var(--pl-gradient); font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .08em; color: var(--pl-surface); }
+  .ln-feat-tag { height: 26px; padding: 0 10px; display: flex; align-items: center; border-radius: 7px; background: var(--pl-surface); border: 1px solid var(--pl-line); font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .08em; color: var(--pl-accent-ink); }
+  .ln-feat-body { padding: clamp(20px,3vw,30px); display: flex; flex-direction: column; gap: 12px; }
+  .ln-feat-level { align-self: flex-start; height: 22px; padding: 0 9px; display: flex; align-items: center; border-radius: 6px; font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+  .ln-feat-title { font-family: Geist, sans-serif; font-size: clamp(24px,2.8vw,32px); font-weight: 600; line-height: 1.15; letter-spacing: -.03em; }
+  .ln-feat-excerpt { font-size: 16px; line-height: 1.6; color: var(--pl-muted); max-width: 640px; }
+  .ln-feat-meta { margin-top: auto; padding-top: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .ln-feat-author { font-size: 14px; font-weight: 600; }
+  .ln-feat-rt { font-family: 'Geist Mono', monospace; font-size: 11.5px; color: var(--pl-faint); }
+  .ln-feat-read { margin-left: auto; height: 38px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 10px; background: var(--pl-ink); color: var(--pl-surface); font-size: 13.5px; font-weight: 500; }
+
+  .ln-tracks { max-width: 1280px; margin: 0 auto; padding: clamp(40px,5vw,64px) clamp(16px,4vw,40px) 0; display: flex; flex-direction: column; gap: clamp(36px,5vw,56px); }
+  .ln-track-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+  .ln-track-pill { height: 26px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 999px; font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; }
+  .ln-track-pill--beginner, .ln-feat-level[data-level="beginner"] { background: var(--pl-success-tint); border: 1px solid var(--pl-success-line); color: #1f7a44; }
+  .ln-track-pill--intermediate, .ln-feat-level[data-level="intermediate"] { background: var(--pl-warn-tint); border: 1px solid var(--pl-warn-line); color: var(--pl-warn-ink); }
+  .ln-track-pill--advanced, .ln-feat-level[data-level="advanced"] { background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); color: var(--pl-accent-ink); }
+  .ln-track-d { font-size: 14.5px; color: var(--pl-muted); }
+  .ln-track-n { margin-left: auto; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-faint); }
+  .ln-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,300px),1fr)); gap: 16px; }
+  .ln-card { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; color: var(--pl-ink); transition: transform .25s, box-shadow .25s, border-color .25s; }
+  .ln-card:hover { transform: translateY(-4px); box-shadow: 0 28px 50px -34px rgba(60,30,15,.5); border-color: var(--pl-accent-line); color: var(--pl-ink); }
+  .ln-card-cover { position: relative; aspect-ratio: 16 / 9; background: var(--pl-sand); overflow: hidden; border-bottom: 1px solid var(--pl-line-soft); }
+  .ln-card-cover img { width: 100%; height: 100%; object-fit: cover; }
+  .ln-card-cat { position: absolute; left: 12px; top: 12px; height: 24px; padding: 0 9px; display: flex; align-items: center; border-radius: 7px; background: var(--pl-surface); border: 1px solid var(--pl-line); font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .08em; color: var(--pl-accent-ink); }
+  .ln-card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+  .ln-card-title { font-family: Geist, sans-serif; font-size: 18px; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .ln-card-excerpt { font-size: 14px; line-height: 1.55; color: var(--pl-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .ln-card-meta { margin-top: auto; padding-top: 12px; border-top: 1px dashed var(--pl-line-soft); display: flex; align-items: center; gap: 10px; }
+  .ln-card-author { font-size: 13px; font-weight: 500; color: var(--pl-ink); }
+  .ln-card-rt { margin-left: auto; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-faint); }
+  .ln-empty { background: var(--pl-surface); border: 1px dashed var(--pl-line-strong); border-radius: 20px; padding: 48px 20px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+  .ln-empty-ico { width: 48px; height: 48px; border-radius: 14px; background: var(--pl-sand); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--pl-faint); }
+  .ln-empty-t { font-family: Geist, sans-serif; font-size: 18px; font-weight: 600; color: var(--pl-ink); }
+  .ln-empty-reset { margin-top: 6px; height: 40px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); cursor: pointer; font-size: 14px; color: var(--pl-ink); }
+
+  .ln-cta { max-width: 1280px; margin: 0 auto; padding: clamp(56px,7vw,96px) clamp(16px,4vw,40px) clamp(40px,5vw,64px); }
+  .ln-cta-card { position: relative; overflow: hidden; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 26px; }
+  .ln-cta-dots { position: absolute; inset: 0; background-image: radial-gradient(var(--pl-line) 1px,transparent 1px); background-size: 16px 16px; -webkit-mask-image: linear-gradient(135deg,transparent 40%,#000); mask-image: linear-gradient(135deg,transparent 40%,#000); }
+  .ln-cta-left { position: relative; padding: clamp(28px,4vw,48px); display: flex; flex-direction: column; gap: 14px; }
+  .ln-cta-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 11.5px; letter-spacing: .12em; color: var(--pl-accent-ink); }
+  .ln-cta-h2 { margin: 0; font-family: Geist, sans-serif; font-size: clamp(26px,3.4vw,40px); line-height: 1.08; letter-spacing: -.035em; color: var(--pl-ink); text-wrap: balance; }
+  .ln-cta-p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--pl-ink-2); max-width: 460px; }
+  .ln-cta-btns { margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .ln-btn-primary { height: 48px; padding: 0 20px; display: inline-flex; align-items: center; border-radius: 12px; background: var(--pl-gradient); color: var(--pl-surface); font-size: 15px; font-weight: 500; box-shadow: 0 12px 24px -12px rgba(247,99,30,.85); }
+  .ln-btn-primary:hover { filter: brightness(.95); color: var(--pl-surface); }
+  .ln-btn-ghost { height: 48px; padding: 0 20px; display: inline-flex; align-items: center; border-radius: 12px; border: 1px solid var(--pl-line); background: var(--pl-surface); color: var(--pl-ink); font-size: 15px; font-weight: 500; }
+
+  @media (min-width: 900px) { .ln-feat-card { grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); } .ln-feat-cover { aspect-ratio: auto; } }
+</style>
+
+<script>
+  const search = document.querySelector('[data-ln-search]') as HTMLInputElement | null;
+  const cards = Array.from(document.querySelectorAll('[data-ln-card]')) as HTMLElement[];
+  const trackEls = Array.from(document.querySelectorAll('[data-ln-track]')) as HTMLElement[];
+  const empty = document.querySelector('[data-ln-empty]') as HTMLElement | null;
+  const featured = document.querySelector('[data-ln-featured]') as HTMLElement | null;
+
+  const apply = () => {
+    const q = (search?.value || '').trim().toLowerCase();
+    let visible = 0;
+    cards.forEach((c) => { const show = !q || (c.dataset.name || '').includes(q); c.style.display = show ? '' : 'none'; if (show) visible++; });
+    trackEls.forEach((t) => { const any = Array.from(t.querySelectorAll('[data-ln-card]')).some((c) => (c as HTMLElement).style.display !== 'none'); t.style.display = any ? '' : 'none'; });
+    if (empty) empty.hidden = visible > 0;
+    if (featured) featured.style.display = q ? 'none' : '';
+  };
+  search?.addEventListener('input', apply);
+  document.querySelector('[data-ln-reset]')?.addEventListener('click', () => { if (search) search.value = ''; apply(); });
+</script>

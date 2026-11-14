@@ -1,0 +1,233 @@
+---
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+import learnData from '../../data/learn.json';
+
+type Heading = { level: number; id: string; title: string };
+type Article = {
+  slug: string; category: string; difficulty: string; title: string; excerpt: string;
+  author: string; publishedAt: string; readTime: string; heroImage?: { src: string; alt: string };
+  headings: Heading[]; contentHtml: string; metaTitle?: string; metaDescription?: string;
+};
+
+export function getStaticPaths() {
+  const articles = learnData.articles as Article[];
+  return articles.map((article) => ({ params: { slug: article.slug }, props: { article } }));
+}
+
+const { article } = Astro.props as { article: Article };
+const articles = learnData.articles as Article[];
+
+const toc = (article.headings || []).filter((h) => h.level === 2 || h.level === 3);
+const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+
+// Related: same difficulty first, then same category.
+let related = articles.filter((a) => a.slug !== article.slug && a.difficulty === article.difficulty).slice(0, 3);
+if (related.length < 3) {
+  const extra = articles.filter((a) => a.slug !== article.slug && a.category === article.category && !related.some((r) => r.slug === a.slug));
+  related = [...related, ...extra].slice(0, 3);
+}
+if (related.length < 3) related = [...related, ...articles.filter((a) => a.slug !== article.slug && !related.some((r) => r.slug === a.slug))].slice(0, 3);
+
+const canonicalUrl = `https://priceleap.ai/learn/${article.slug}`;
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: article.title,
+  description: article.metaDescription || article.excerpt,
+  image: article.heroImage ? `https://priceleap.ai${article.heroImage.src}` : undefined,
+  author: { '@type': 'Person', name: article.author },
+  publisher: { '@type': 'Organization', name: 'PriceLeap' },
+  mainEntityOfPage: canonicalUrl,
+}];
+---
+<PriceLeapLayout title={article.metaTitle || `${article.title} · PriceLeap Learn`} description={article.metaDescription || article.excerpt} canonical={canonicalUrl} ogImage={article.heroImage?.src || '/assets/priceleap-logo.png'} jsonLd={jsonLd}>
+  <div class="lp-progress" aria-hidden="true"><div class="lp-progress-fill" data-progress></div></div>
+
+  <section class="lp-hero" data-screen-label="Hero">
+    <div aria-hidden="true" class="lp-hero-grid"></div>
+    <div aria-hidden="true" class="lp-hero-glow"></div>
+    <div class="lp-hero-inner">
+      <nav aria-label="Breadcrumb" class="lp-crumbs">
+        <a href="/">Home</a><span>/</span><a href="/learn">Learn</a><span>/</span><a href="/learn">{article.category}</a><span>/</span><span aria-current="page" class="lp-crumb-cur">{article.title}</span>
+      </nav>
+      <div class="lp-hero-tags">
+        <span class={`lp-level lp-level--${article.difficulty}`}>{article.difficulty}</span>
+        <span class="lp-badge"><span class="lp-diamond"></span>{article.category}</span>
+        <span class="lp-rt">{article.readTime.toUpperCase()}</span>
+      </div>
+      <h1 class="lp-h1">{article.title}</h1>
+      <p class="lp-intro">{article.excerpt}</p>
+      <div class="lp-author-meta">
+        <span class="lp-author-chip"><span class="lp-author-ini">{initials(article.author)}</span><span><span class="lp-author-name">{article.author}</span><span class="lp-author-role">PriceLeap</span></span></span>
+        <span class="lp-meta-sep"></span>
+        <div class="lp-meta-items"><span>{article.publishedAt.replace(/^Published\s*/,'')}</span><span>{article.readTime}</span></div>
+      </div>
+      {article.heroImage && (<div class="lp-cover"><img src={article.heroImage.src} alt={article.heroImage.alt} width="1280" height="520" loading="eager" /></div>)}
+    </div>
+  </section>
+
+  <div class="lp-body">
+    {toc.length > 0 && (
+      <aside aria-label="Table of contents" class="lp-toc">
+        <div class="lp-toc-card">
+          <div class="lp-toc-head"><span>ON THIS PAGE</span></div>
+          <nav class="lp-toc-nav">
+            {toc.map((t, i) => (<a href={`#${t.id}`} class="lp-toc-link" data-toc-link={t.id} style={t.level === 3 ? 'padding-left:26px' : ''}><span class="lp-toc-n">{String(i + 1).padStart(2, '0')}</span>{t.title}</a>))}
+          </nav>
+        </div>
+        <button type="button" class="lp-totop" data-totop>↑ Back to top</button>
+      </aside>
+    )}
+
+    <div style="min-width:0">
+      <article class="lp-article">
+        <div class="lp-prose" set:html={article.contentHtml} />
+        <div class="lp-sharebar">
+          <span class="lp-tags-label">SHARE</span>
+          <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener" aria-label="Share on LinkedIn" class="lp-share-btn">in</a>
+          <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(canonicalUrl)}&text=${encodeURIComponent(article.title)}`} target="_blank" rel="noopener" aria-label="Share on X" class="lp-share-btn">X</a>
+          <button type="button" class="lp-copy" data-copy={canonicalUrl}>Copy link</button>
+        </div>
+      </article>
+    </div>
+
+    <aside aria-label="Book a demo" class="lp-cta-aside">
+      <div class="lp-cta-card">
+        <div aria-hidden="true" class="lp-cta-glow"></div>
+        <div class="lp-cta-pad">
+          <div class="lp-cta-title">See it live on your catalog</div>
+          <div class="lp-cta-list"><span class="lp-cta-li"><span class="lp-cta-check">✓</span>Verified competitor matches</span><span class="lp-cta-li"><span class="lp-cta-check">✓</span>A repricing plan for your SKUs</span><span class="lp-cta-li"><span class="lp-cta-check">✓</span>Live in days, not quarters</span></div>
+          <a href="/contact" class="lp-cta-primary">Book a demo</a>
+          <a href="/learn" class="lp-cta-ghost">More guides</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  {related.length > 0 && (
+    <section class="lp-related" data-screen-label="Related guides">
+      <div class="lp-related-head">
+        <div><span class="lp-related-eyebrow"><span class="lp-diamond"></span>KEEP LEARNING</span><h2 class="lp-related-h2">Related guides</h2></div>
+        <a href="/learn" class="lp-related-all">All guides →</a>
+      </div>
+      <div class="lp-related-grid">
+        {related.map((r) => (
+          <a href={`/learn/${r.slug}`} class="lp-related-card">
+            <div class="lp-related-cover">{r.heroImage && (<img src={r.heroImage.src} alt={r.heroImage.alt} width="400" height="200" loading="lazy" />)}<span class="lp-related-cat">{r.category.toUpperCase()}</span></div>
+            <div class="lp-related-body"><span class="lp-related-title">{r.title}</span><span class="lp-related-read">{r.readTime} · Read →</span></div>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+</PriceLeapLayout>
+
+<style>
+  .lp-progress { position: fixed; left: 0; top: 0; z-index: 70; height: 3px; width: 100%; }
+  .lp-progress-fill { height: 100%; width: 0; background: linear-gradient(90deg,var(--pl-accent-start),var(--pl-accent),var(--pl-accent-end)); transition: width .12s linear; }
+  .lp-diamond { width: 6px; height: 6px; border-radius: 2px; background: var(--pl-accent); transform: rotate(45deg); flex: none; }
+
+  .lp-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
+  .lp-hero-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 70% 90% at 80% 20%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 90% at 80% 20%,#000 10%,transparent 70%); }
+  .lp-hero-glow { position: absolute; right: -10%; top: -30%; width: 680px; height: 560px; background: radial-gradient(closest-side,rgba(251,138,46,.12),transparent); }
+  .lp-hero-inner { position: relative; max-width: 900px; margin: 0 auto; padding: clamp(28px,4vw,48px) clamp(16px,4vw,40px) clamp(28px,4vw,40px); }
+  .lp-crumbs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--pl-muted); }
+  .lp-crumbs a { color: var(--pl-muted); }
+  .lp-crumbs > span:nth-child(even) { color: var(--pl-line-xstrong); }
+  .lp-crumb-cur { color: var(--pl-ink) !important; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 280px; }
+  .lp-hero-tags { margin-top: clamp(20px,3vw,30px); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .lp-level { height: 24px; padding: 0 10px; display: inline-flex; align-items: center; border-radius: 6px; font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+  .lp-level--beginner { background: var(--pl-success-tint); border: 1px solid var(--pl-success-line); color: #1f7a44; }
+  .lp-level--intermediate { background: var(--pl-warn-tint); border: 1px solid var(--pl-warn-line); color: var(--pl-warn-ink); }
+  .lp-level--advanced { background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); color: var(--pl-accent-ink); }
+  .lp-badge { height: 24px; padding: 0 10px; display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; background: var(--pl-surface); border: 1px solid var(--pl-line); font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .06em; color: var(--pl-ink-2); }
+  .lp-rt { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .08em; color: var(--pl-faint); }
+  .lp-h1 { margin: 18px 0 0; font-family: Geist, sans-serif; font-size: clamp(32px,4.6vw,52px); line-height: 1.06; letter-spacing: -.04em; font-weight: 600; color: var(--pl-ink); text-wrap: balance; }
+  .lp-intro { margin: 18px 0 0; max-width: 680px; font-size: clamp(16px,1.6vw,18px); line-height: 1.6; color: var(--pl-ink-2); text-wrap: pretty; }
+  .lp-author-meta { margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--pl-line); display: flex; align-items: center; gap: 14px 22px; flex-wrap: wrap; }
+  .lp-author-chip { display: flex; align-items: center; gap: 12px; color: var(--pl-ink); }
+  .lp-author-ini { width: 42px; height: 42px; border-radius: 50%; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-accent-ink); }
+  .lp-author-name { display: block; font-size: 15px; font-weight: 600; }
+  .lp-author-role { display: block; font-size: 13px; color: var(--pl-muted); }
+  .lp-meta-sep { width: 1px; height: 28px; background: var(--pl-line); }
+  .lp-meta-items { display: flex; gap: 18px; flex-wrap: wrap; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-muted); }
+  .lp-cover { margin-top: clamp(24px,3vw,36px); border-radius: 20px; overflow: hidden; border: 1px solid var(--pl-line); aspect-ratio: 16 / 7; }
+  .lp-cover img { width: 100%; height: 100%; object-fit: cover; }
+
+  .lp-body { max-width: 1280px; margin: 0 auto; padding: clamp(28px,4vw,48px) clamp(16px,4vw,40px) 0; display: grid; grid-template-columns: 1fr; gap: clamp(24px,3.4vw,48px); align-items: start; }
+  .lp-toc { display: none; }
+  .lp-toc-card { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 18px; overflow: hidden; }
+  .lp-toc-head { padding: 14px 16px; border-bottom: 1px solid var(--pl-line-soft); font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; color: var(--pl-faint); }
+  .lp-toc-nav { padding: 8px; display: flex; flex-direction: column; gap: 1px; }
+  .lp-toc-link { position: relative; padding: 9px 10px 9px 14px; border-radius: 10px; display: grid; grid-template-columns: 22px minmax(0,1fr); gap: 8px; align-items: baseline; color: var(--pl-muted); font-size: 13.5px; line-height: 1.4; transition: background .2s, color .2s; }
+  .lp-toc-link:hover { background: var(--pl-cream); color: var(--pl-ink); }
+  .lp-toc-link.is-active { background: var(--pl-accent-tint); color: var(--pl-ink); font-weight: 600; }
+  .lp-toc-n { font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--pl-faint-2); }
+  .lp-toc-link.is-active .lp-toc-n { color: var(--pl-accent-ink); }
+  .lp-totop { align-self: flex-start; height: 36px; padding: 0 12px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--pl-line); border-radius: 10px; background: var(--pl-surface); cursor: pointer; font-size: 13px; color: var(--pl-ink-2); }
+
+  .lp-article { max-width: 760px; margin: 0 auto; font-size: clamp(16.5px,1.5vw,18px); line-height: 1.8; color: var(--pl-ink-2); }
+  .lp-prose :global(h2) { margin: 44px 0 16px; scroll-margin-top: 96px; font-family: Geist, sans-serif; font-size: clamp(24px,2.8vw,32px); line-height: 1.2; letter-spacing: -.025em; font-weight: 600; color: var(--pl-ink); }
+  .lp-prose :global(h3) { margin: 32px 0 12px; scroll-margin-top: 96px; font-family: Geist, sans-serif; font-size: clamp(19px,2.1vw,22px); font-weight: 600; color: var(--pl-ink); }
+  .lp-prose :global(p) { margin: 0 0 20px; }
+  .lp-prose :global(ul), .lp-prose :global(ol) { margin: 0 0 20px; padding-left: 24px; display: flex; flex-direction: column; gap: 10px; }
+  .lp-prose :global(li) { line-height: 1.75; }
+  .lp-prose :global(a) { color: var(--pl-accent-ink); text-decoration: underline; text-underline-offset: 3px; }
+  .lp-prose :global(a:hover) { color: var(--pl-ink); }
+  .lp-prose :global(strong), .lp-prose :global(b) { color: var(--pl-ink); font-weight: 600; }
+  .lp-prose :global(img) { width: 100%; border-radius: 14px; border: 1px solid var(--pl-line); margin: 10px 0 20px; }
+  .lp-prose :global(blockquote) { margin: 0 0 20px; padding: 14px 20px; border-left: 3px solid var(--pl-accent-line); background: var(--pl-cream); border-radius: 0 12px 12px 0; color: var(--pl-ink-2); }
+  .lp-prose :global(h2:first-child), .lp-prose :global(p:first-child) { margin-top: 0; }
+
+  .lp-sharebar { margin-top: 36px; padding: 18px 0; border-top: 1px solid var(--pl-line); border-bottom: 1px solid var(--pl-line); display: flex; align-items: center; gap: 8px; }
+  .lp-tags-label { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; color: var(--pl-faint); margin-right: 4px; }
+  .lp-share-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); display: flex; align-items: center; justify-content: center; font-family: Geist, sans-serif; font-size: 12px; font-weight: 700; color: var(--pl-ink); }
+  .lp-copy { height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); cursor: pointer; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-ink); }
+
+  .lp-cta-aside { display: none; }
+  .lp-cta-card { position: relative; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px -44px rgba(60,30,15,.45); }
+  .lp-cta-glow { position: absolute; right: -70px; top: -90px; width: 240px; height: 240px; background: radial-gradient(closest-side,rgba(251,138,46,.16),transparent); }
+  .lp-cta-pad { position: relative; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .lp-cta-title { font-family: Geist, sans-serif; font-size: 19px; font-weight: 600; line-height: 1.25; letter-spacing: -.015em; color: var(--pl-ink); }
+  .lp-cta-list { display: flex; flex-direction: column; gap: 8px; }
+  .lp-cta-li { display: flex; gap: 10px; font-size: 13.5px; line-height: 1.45; color: var(--pl-ink-2); }
+  .lp-cta-check { flex: none; margin-top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--pl-ink); color: var(--pl-surface); font-size: 9px; display: flex; align-items: center; justify-content: center; }
+  .lp-cta-primary { height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: var(--pl-gradient); color: var(--pl-surface); font-family: Geist, sans-serif; font-weight: 500; font-size: 15px; box-shadow: 0 12px 24px -12px rgba(247,99,30,.85); }
+  .lp-cta-primary:hover { filter: brightness(.95); color: var(--pl-surface); }
+  .lp-cta-ghost { height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--pl-line); color: var(--pl-ink); font-size: 14px; font-weight: 500; }
+
+  .lp-related { max-width: 1280px; margin: 0 auto; padding: clamp(56px,7vw,96px) clamp(16px,4vw,40px) clamp(40px,5vw,64px); }
+  .lp-related-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .lp-related-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 11.5px; letter-spacing: .12em; color: var(--pl-accent-ink); }
+  .lp-related-h2 { margin: 12px 0 0; font-family: Geist, sans-serif; font-size: clamp(26px,3.2vw,38px); line-height: 1.1; letter-spacing: -.03em; font-weight: 600; color: var(--pl-ink); }
+  .lp-related-all { height: 40px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); color: var(--pl-ink); font-size: 14px; font-weight: 500; }
+  .lp-related-grid { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,300px),1fr)); gap: 16px; }
+  .lp-related-card { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; color: var(--pl-ink); transition: transform .25s, box-shadow .25s, border-color .25s; }
+  .lp-related-card:hover { transform: translateY(-4px); box-shadow: 0 28px 50px -34px rgba(60,30,15,.5); border-color: var(--pl-accent-line); color: var(--pl-ink); }
+  .lp-related-cover { position: relative; aspect-ratio: 16 / 9; background: var(--pl-sand); overflow: hidden; border-bottom: 1px solid var(--pl-line-soft); }
+  .lp-related-cover img { width: 100%; height: 100%; object-fit: cover; }
+  .lp-related-cat { position: absolute; left: 12px; top: 12px; height: 22px; padding: 0 8px; display: flex; align-items: center; border-radius: 6px; background: var(--pl-surface); border: 1px solid var(--pl-line); font-family: 'Geist Mono', monospace; font-size: 9.5px; letter-spacing: .06em; color: var(--pl-accent-ink); }
+  .lp-related-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .lp-related-title { font-family: Geist, sans-serif; font-size: 17px; font-weight: 600; line-height: 1.3; letter-spacing: -.01em; }
+  .lp-related-read { margin-top: auto; padding-top: 8px; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-accent-ink); }
+
+  @media (min-width: 1100px) {
+    .lp-body { grid-template-columns: 240px minmax(0,1fr) 290px; }
+    .lp-toc { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 88px; align-self: start; }
+    .lp-cta-aside { display: block; position: sticky; top: 88px; align-self: start; }
+  }
+</style>
+
+<script>
+  const fill = document.querySelector('[data-progress]') as HTMLElement | null;
+  const onScroll = () => { if (!fill) return; const max = document.documentElement.scrollHeight - window.innerHeight; fill.style.width = (max > 0 ? Math.min(100, (window.scrollY / max) * 100) : 0) + '%'; };
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  document.querySelector('[data-totop]')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => { navigator.clipboard?.writeText((b as HTMLElement).dataset.copy || '').catch(() => {}); b.textContent = 'Copied ✓'; setTimeout(() => { b.textContent = 'Copy link'; }, 1600); }));
+  const links = Array.from(document.querySelectorAll('[data-toc-link]')) as HTMLElement[];
+  const heads = links.map((l) => document.getElementById(l.dataset.tocLink || '')).filter(Boolean) as HTMLElement[];
+  if (heads.length) {
+    const io = new IntersectionObserver((entries) => { entries.forEach((e) => { if (e.isIntersecting) { const id = (e.target as HTMLElement).id; links.forEach((l) => l.classList.toggle('is-active', l.dataset.tocLink === id)); } }); }, { rootMargin: '-90px 0px -70% 0px' });
+    heads.forEach((h) => io.observe(h));
+  }
+</script>

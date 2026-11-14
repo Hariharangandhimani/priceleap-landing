@@ -1,0 +1,311 @@
+{
+  "source": "https://priceleap.ai/learn/",
+  "count": 10,
+  "articles": [
+    {
+      "url": "https://priceleap.ai/learn/avoiding-price-wars/",
+      "slug": "avoiding-price-wars",
+      "title": "How to Avoid Price Wars",
+      "category": "Pricing Strategy",
+      "difficulty": "intermediate",
+      "excerpt": "Why price wars happen, how automated repricing can accelerate them, and the specific rule configurations that prevent a race to the bottom.",
+      "author": "Maya Okonkwo",
+      "publishedAt": "Published Feb 17, 2026",
+      "readTime": "6 min read",
+      "heroImage": {
+        "src": "/assets/learn/avoiding-price-wars/img-1.jpg",
+        "alt": "How to Avoid Price Wars"
+      },
+      "headings": [
+        {
+          "level": 3,
+          "id": "how-repricing-tools-create-price-wars",
+          "title": "How repricing tools create price wars"
+        },
+        {
+          "level": 3,
+          "id": "apply-this-in-priceleap",
+          "title": "Apply this in PriceLeap"
+        }
+      ],
+      "contentHtml": "<p>Price wars are the most common failure mode of automated repricing. They happen when two or more sellers running match-to-lowest rules react to each other in a loop — each undercut triggers the other to undercut further, until both are pricing below profitability.</p><h3 id=\"how-repricing-tools-create-price-wars\">How repricing tools create price wars</h3><p>A basic \"match to lowest\" rule with no velocity limit and no floor threshold will automatically participate in every price spiral. The rule does exactly what you told it to — it just doesn't know when to stop.</p><div class=\"learn-step\"><div class=\"learn-step-num\">01</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Set a velocity limit</div><div class=\"learn-step-desc\">Cap how often your price can change. If a competitor is cycling through prices rapidly, you'll trigger a maximum of N changes per hour instead of matching every micro-move.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">02</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Set a minimum margin threshold for matching</div><div class=\"learn-step-desc\">Don't match a competitor below your floor. When their price dips below your minimum, hold your position instead of following them down.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">03</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Don't match FBM sellers if you're on FBA</div><div class=\"learn-step-desc\">FBM sellers have different cost structures. Matching them can mean pricing below your own profitability to \"compete\" with someone whose economics are completely different.</div></div></div><div class=\"callout\"><div class=\"cl-lbl\">Rule of Thumb</div><p>If a competitor's price drops more than 15% in a single day, treat it as a signal to investigate — not automatically match. Aggressive drops often indicate liquidation, not sustainable competitive pricing.</p></div><div class=\"learn-key-box\"><div class=\"learn-key-lbl\">Key Concepts</div><div class=\"learn-key-list\"><span class=\"learn-key-tag\">Price War</span><span class=\"learn-key-tag\">Velocity Limit</span><span class=\"learn-key-tag\">Margin Floor</span></div></div></div> <div class=\"art-cta\" style=\"margin-top:32px\"> <h3 id=\"apply-this-in-priceleap\">Apply this in PriceLeap</h3> <p>Everything in this guide is built into PriceLeap - real-time competitor monitoring, rule-based decision logic, and margin protection. See it on your actual catalog.</p> <a href=\"https://app.priceleap.ai\" class=\"btn-acc\">Try For Free →</a> </div> <div class=\"author-card\"> <div class=\"author-card-avatar\">MO</div> <div class=\"author-card-body\"> <div class=\"author-card-label\">About the Author</div> <div class=\"author-card-name\">Maya Okonkwo</div> <div class=\"author-card-title\">Senior Marketplace Strategist, PriceLeap</div> <div class=\"author-card-bio\">Maya specialises in Buy Box optimisation and cross-marketplace pricing strategy across Amazon, Walmart, and eBay. She previously led pricing operations at a top-200 Amazon seller before joining PriceLeap to help brands scale competitive pricing without sacrificing margin.</div> <div class=\"author-card-stats\"> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">6</span><span class=\"author-card-stat-lbl\">Years Experience</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">11</span><span class=\"author-card-stat-lbl\">Articles Published</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">Marketplace &amp; Buy Box</span><span class=\"author-card-stat-lbl\">Specialisation</span></div> </div> </div> </div>",
+      "metaTitle": "How to Avoid Price Wars | PriceLeap",
+      "metaDescription": "Why price wars happen, how automated repricing can accelerate them, and the specific rule configurations that prevent a race to the bottom."
+    },
+    {
+      "url": "https://priceleap.ai/learn/catalog-scale-pricing/",
+      "slug": "catalog-scale-pricing",
+      "title": "Pricing at Catalog Scale",
+      "category": "Advanced",
+      "difficulty": "advanced",
+      "excerpt": "How to structure a rule hierarchy, SKU segmentation strategy, and automation thresholds when managing 10,000+ SKUs.",
+      "author": "Jordan Reed",
+      "publishedAt": "Published Feb 24, 2026",
+      "readTime": "9 min read",
+      "heroImage": {
+        "src": "/assets/learn/catalog-scale-pricing/img-2.jpg",
+        "alt": "Pricing at Catalog Scale"
+      },
+      "headings": [
+        {
+          "level": 3,
+          "id": "the-80-20-of-catalog-pricing",
+          "title": "The 80/20 of catalog pricing"
+        },
+        {
+          "level": 3,
+          "id": "apply-this-in-priceleap",
+          "title": "Apply this in PriceLeap"
+        }
+      ],
+      "contentHtml": "<p>Pricing 10,000 SKUs individually is not a strategy — it's a maintenance burden that compounds daily. Catalog-scale pricing requires a different architecture: a rule hierarchy where broad rules handle most SKUs efficiently, with targeted overrides for the SKUs that actually drive your business.</p><h3 id=\"the-80-20-of-catalog-pricing\">The 80/20 of catalog pricing</h3><p>In most catalogs, 20% of SKUs generate 80% of revenue. Your pricing strategy should reflect this asymmetry: high-effort, SKU-level rule precision for your top SKUs; efficient category-level rules for the long tail.</p><div class=\"learn-step\"><div class=\"learn-step-num\">01</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Segment your catalog by priority</div><div class=\"learn-step-desc\">Tier 1: top 20% by revenue — individual SKU rules, reviewed regularly. Tier 2: next 30% — category rules with SKU-level floor overrides. Tier 3: remaining 50% — broad category rules, automated.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">02</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Build category-level defaults first</div><div class=\"learn-step-desc\">Set a default rule for each category: match to Buy Box price, subject to a category-level margin floor. This covers the long tail without manual effort.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">03</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Override at the SKU level where it matters</div><div class=\"learn-step-desc\">For Tier 1 SKUs, define specific rules: which competitors to track, what position to target, custom floors, custom velocity limits.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">04</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Review rule performance monthly</div><div class=\"learn-step-desc\">Track Buy Box ownership rate and average margin per SKU tier. Rules that aren't improving both metrics need adjustment.</div></div></div><div class=\"learn-key-box\"><div class=\"learn-key-lbl\">Key Concepts</div><div class=\"learn-key-list\"><span class=\"learn-key-tag\">Catalog Repricing</span><span class=\"learn-key-tag\">SKU</span><span class=\"learn-key-tag\">Rule-Based Pricing</span><span class=\"learn-key-tag\">Competitive Intelligence</span></div></div></div> <div class=\"art-cta\" style=\"margin-top:32px\"> <h3 id=\"apply-this-in-priceleap\">Apply this in PriceLeap</h3> <p>Everything in this guide is built into PriceLeap - real-time competitor monitoring, rule-based decision logic, and margin protection. See it on your actual catalog.</p> <a href=\"https://app.priceleap.ai\" class=\"btn-acc\">Try For Free →</a> </div> <div class=\"author-card\"> <div class=\"author-card-avatar\">JR</div> <div class=\"author-card-body\"> <div class=\"author-card-label\">About the Author</div> <div class=\"author-card-name\">Jordan Reed</div> <div class=\"author-card-title\">Head of Pricing Strategy, PriceLeap</div> <div class=\"author-card-bio\">Jordan has spent 8 years working with ecommerce brands on marketplace pricing strategy — from single-channel Amazon sellers to omnichannel retailers managing 100K+ SKU catalogs. At PriceLeap, he leads strategy content and works directly with enterprise customers on repricing architecture.</div> <div class=\"author-card-stats\"> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">8</span><span class=\"author-card-stat-lbl\">Years Experience</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">14</span><span class=\"author-card-stat-lbl\">Articles Published</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">Repricing &amp; Margin</span><span class=\"author-card-stat-lbl\">Specialisation</span></div> </div> </div> </div>",
+      "metaTitle": "Pricing at Catalog Scale | PriceLeap",
+      "metaDescription": "How to structure a rule hierarchy, SKU segmentation strategy, and automation thresholds when managing 10,000+ SKUs."
+    },
+    {
+      "url": "https://priceleap.ai/learn/competitor-monitoring-setup/",
+      "slug": "competitor-monitoring-setup",
+      "title": "Setting Up Competitor Monitoring",
+      "category": "Getting Started",
+      "difficulty": "beginner",
+      "excerpt": "How to identify which competitors to track, what signals matter, and how to structure monitoring across different SKU tiers.",
+      "author": "Maya Okonkwo",
+      "publishedAt": "Published Jan 22, 2026",
+      "readTime": "6 min read",
+      "heroImage": {
+        "src": "/assets/learn/competitor-monitoring-setup/img-3.jpg",
+        "alt": "Setting Up Competitor Monitoring"
+      },
+      "headings": [
+        {
+          "level": 3,
+          "id": "who-to-track-and-why-it-matters",
+          "title": "Who to track and why it matters"
+        },
+        {
+          "level": 3,
+          "id": "apply-this-in-priceleap",
+          "title": "Apply this in PriceLeap"
+        }
+      ],
+      "contentHtml": "<p>Competitor monitoring is the data foundation your pricing rules run on. Garbage in, garbage out — if your competitive intelligence is stale, incorrect, or tracking the wrong sellers, every automated decision downstream is compromised.</p><h3 id=\"who-to-track-and-why-it-matters\">Who to track and why it matters</h3><p>Not every seller on a listing is a meaningful competitor. FBA sellers compete differently than FBM sellers. New entrants with artificially low intro prices aren't representative of sustainable market pricing. Your monitoring setup should distinguish between these — and weight signals accordingly.</p><div class=\"learn-step\"><div class=\"learn-step-num\">01</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Map your ASINs to competitor sellers</div><div class=\"learn-step-desc\">For each ASIN, identify the 3–5 sellers who consistently appear in the Buy Box rotation. These are your real competitors — not every seller on the listing.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">02</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Filter by fulfillment method</div><div class=\"learn-step-desc\">If you're FBA, track FBA competitors separately from FBM. Competing with FBM pricing can mean undercutting your own margin to match someone with a completely different cost structure.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">03</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Set alert thresholds for significant moves</div><div class=\"learn-step-desc\">Flag when a competitor drops more than 10% in a single day, or when a new seller enters a listing at a price significantly below the current range.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">04</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Review data freshness by SKU tier</div><div class=\"learn-step-desc\">High-velocity Tier 1 SKUs need near-real-time monitoring (sub-15 min). Slower-moving long-tail SKUs can run on hourly or daily refresh without meaningful impact.</div></div></div><div class=\"learn-key-box\"><div class=\"learn-key-lbl\">Key Concepts</div><div class=\"learn-key-list\"><span class=\"learn-key-tag\">Competitive Intelligence</span><span class=\"learn-key-tag\">ASIN</span><span class=\"learn-key-tag\">Buy Box</span></div></div></div> <div class=\"art-cta\" style=\"margin-top:32px\"> <h3 id=\"apply-this-in-priceleap\">Apply this in PriceLeap</h3> <p>Everything in this guide is built into PriceLeap - real-time competitor monitoring, rule-based decision logic, and margin protection. See it on your actual catalog.</p> <a href=\"https://app.priceleap.ai\" class=\"btn-acc\">Try For Free →</a> </div> <div class=\"author-card\"> <div class=\"author-card-avatar\">MO</div> <div class=\"author-card-body\"> <div class=\"author-card-label\">About the Author</div> <div class=\"author-card-name\">Maya Okonkwo</div> <div class=\"author-card-title\">Senior Marketplace Strategist, PriceLeap</div> <div class=\"author-card-bio\">Maya specialises in Buy Box optimisation and cross-marketplace pricing strategy across Amazon, Walmart, and eBay. She previously led pricing operations at a top-200 Amazon seller before joining PriceLeap to help brands scale competitive pricing without sacrificing margin.</div> <div class=\"author-card-stats\"> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">6</span><span class=\"author-card-stat-lbl\">Years Experience</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">11</span><span class=\"author-card-stat-lbl\">Articles Published</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">Marketplace &amp; Buy Box</span><span class=\"author-card-stat-lbl\">Specialisation</span></div> </div> </div> </div>",
+      "metaTitle": "Setting Up Competitor Monitoring | PriceLeap",
+      "metaDescription": "How to identify which competitors to track, what signals matter, and how to structure monitoring across different SKU tiers."
+    },
+    {
+      "url": "https://priceleap.ai/learn/building-pricing-rules/",
+      "slug": "building-pricing-rules",
+      "title": "Building Effective Pricing Rules",
+      "category": "Getting Started",
+      "difficulty": "beginner",
+      "excerpt": "How to structure if-then pricing logic that responds to market conditions automatically while staying within your margin guardrails.",
+      "author": "Jordan Reed",
+      "publishedAt": "Published Jan 20, 2026",
+      "readTime": "7 min read",
+      "heroImage": {
+        "src": "/assets/learn/building-pricing-rules/img-4.jpg",
+        "alt": "Building Effective Pricing Rules"
+      },
+      "headings": [
+        {
+          "level": 3,
+          "id": "anatomy-of-a-good-rule",
+          "title": "Anatomy of a good rule"
+        },
+        {
+          "level": 3,
+          "id": "apply-this-in-priceleap",
+          "title": "Apply this in PriceLeap"
+        }
+      ],
+      "contentHtml": "<p>A pricing rule is a conditional instruction: if some market condition is true, take some pricing action — subject to constraints. The power of rule-based pricing comes from combining multiple conditions and layering rules in a clear hierarchy.</p><h3 id=\"anatomy-of-a-good-rule\">Anatomy of a good rule</h3><p>Every rule has three parts: a <strong>trigger</strong> (what condition activates it), an <strong>action</strong> (what price change to make), and <strong>guardrails</strong> (margin floors, ceilings, and velocity limits that bound the action).</p><div class=\"learn-step\"><div class=\"learn-step-num\">01</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Define the trigger condition</div><div class=\"learn-step-desc\">Examples: competitor price drops below yours, you lose the Buy Box, competitor goes out of stock, your price exceeds MSRP.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">02</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Define the action</div><div class=\"learn-step-desc\">Examples: match to competitor price, undercut by $0.01, raise to ceiling, hold current price.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">03</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Add guardrails</div><div class=\"learn-step-desc\">Set a margin floor (never go below $X), a price ceiling (never exceed $Y), and a velocity limit (no more than N changes per hour).</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">04</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Test in review mode first</div><div class=\"learn-step-desc\">Run the rule in review-only mode for 1–2 weeks. Examine every decision it would have made. Only automate once you're confident in its logic.</div></div></div><div class=\"learn-key-box\"><div class=\"learn-key-lbl\">Key Concepts</div><div class=\"learn-key-list\"><span class=\"learn-key-tag\">Rule-Based Pricing</span><span class=\"learn-key-tag\">Velocity Limit</span><span class=\"learn-key-tag\">Price Ceiling</span><span class=\"learn-key-tag\">Margin Floor</span></div></div></div> <div class=\"art-cta\" style=\"margin-top:32px\"> <h3 id=\"apply-this-in-priceleap\">Apply this in PriceLeap</h3> <p>Everything in this guide is built into PriceLeap - real-time competitor monitoring, rule-based decision logic, and margin protection. See it on your actual catalog.</p> <a href=\"https://app.priceleap.ai\" class=\"btn-acc\">Try For Free →</a> </div> <div class=\"author-card\"> <div class=\"author-card-avatar\">JR</div> <div class=\"author-card-body\"> <div class=\"author-card-label\">About the Author</div> <div class=\"author-card-name\">Jordan Reed</div> <div class=\"author-card-title\">Head of Pricing Strategy, PriceLeap</div> <div class=\"author-card-bio\">Jordan has spent 8 years working with ecommerce brands on marketplace pricing strategy — from single-channel Amazon sellers to omnichannel retailers managing 100K+ SKU catalogs. At PriceLeap, he leads strategy content and works directly with enterprise customers on repricing architecture.</div> <div class=\"author-card-stats\"> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">8</span><span class=\"author-card-stat-lbl\">Years Experience</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">14</span><span class=\"author-card-stat-lbl\">Articles Published</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">Repricing &amp; Margin</span><span class=\"author-card-stat-lbl\">Specialisation</span></div> </div> </div> </div>",
+      "metaTitle": "Building Effective Pricing Rules | PriceLeap",
+      "metaDescription": "How to structure if-then pricing logic that responds to market conditions automatically while staying within your margin guardrails."
+    },
+    {
+      "url": "https://priceleap.ai/learn/dynamic-pricing-intro/",
+      "slug": "dynamic-pricing-intro",
+      "title": "Understanding Dynamic Pricing",
+      "category": "Getting Started",
+      "difficulty": "beginner",
+      "excerpt": "What dynamic pricing actually means, how it differs from manual pricing, and when it creates value versus when it creates risk.",
+      "author": "Jordan Reed",
+      "publishedAt": "Published Jan 15, 2026",
+      "readTime": "5 min read",
+      "heroImage": {
+        "src": "/assets/learn/dynamic-pricing-intro/img-5.jpg",
+        "alt": "Understanding Dynamic Pricing"
+      },
+      "headings": [
+        {
+          "level": 3,
+          "id": "static-pricing-s-hidden-cost",
+          "title": "Static pricing's hidden cost"
+        },
+        {
+          "level": 3,
+          "id": "apply-this-in-priceleap",
+          "title": "Apply this in PriceLeap"
+        }
+      ],
+      "contentHtml": "<p>Dynamic pricing is not chaos — it's structured responsiveness. It means your prices move with the market rather than sitting static until someone remembers to update a spreadsheet. Done well, dynamic pricing captures margin opportunity when competition softens and defends volume when it intensifies.</p><h3 id=\"static-pricing-s-hidden-cost\">Static pricing's hidden cost</h3><p>Most sellers who think they're \"managing prices\" are actually reacting to last week's data. By the time a human reviews a competitor price drop and responds, dozens of buying decisions have already been made at the wrong price point. Dynamic pricing closes that gap to minutes.</p><div class=\"learn-step\"><div class=\"learn-step-num\">01</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Understand what triggers price changes</div><div class=\"learn-step-desc\">Dynamic systems respond to triggers: competitor price changes, Buy Box ownership shifts, stock level thresholds, time-of-day patterns, or demand velocity signals.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">02</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Know where dynamic pricing helps most</div><div class=\"learn-step-desc\">High-competition SKUs with multiple sellers — where Buy Box rotates frequently — gain the most from dynamic pricing. Low-competition or MAP-locked SKUs gain less.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">03</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Set the guardrails before enabling automation</div><div class=\"learn-step-desc\">Dynamic does not mean unconstrained. Margin floors, price ceilings, and velocity limits are what separate profitable dynamic pricing from a race to the bottom.</div></div></div><div class=\"learn-key-box\"><div class=\"learn-key-lbl\">Key Concepts</div><div class=\"learn-key-list\"><span class=\"learn-key-tag\">Dynamic Pricing</span><span class=\"learn-key-tag\">Price Elasticity</span><span class=\"learn-key-tag\">Velocity Limit</span></div></div></div> <div class=\"art-cta\" style=\"margin-top:32px\"> <h3 id=\"apply-this-in-priceleap\">Apply this in PriceLeap</h3> <p>Everything in this guide is built into PriceLeap - real-time competitor monitoring, rule-based decision logic, and margin protection. See it on your actual catalog.</p> <a href=\"https://app.priceleap.ai\" class=\"btn-acc\">Try For Free →</a> </div> <div class=\"author-card\"> <div class=\"author-card-avatar\">JR</div> <div class=\"author-card-body\"> <div class=\"author-card-label\">About the Author</div> <div class=\"author-card-name\">Jordan Reed</div> <div class=\"author-card-title\">Head of Pricing Strategy, PriceLeap</div> <div class=\"author-card-bio\">Jordan has spent 8 years working with ecommerce brands on marketplace pricing strategy — from single-channel Amazon sellers to omnichannel retailers managing 100K+ SKU catalogs. At PriceLeap, he leads strategy content and works directly with enterprise customers on repricing architecture.</div> <div class=\"author-card-stats\"> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">8</span><span class=\"author-card-stat-lbl\">Years Experience</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">14</span><span class=\"author-card-stat-lbl\">Articles Published</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">Repricing &amp; Margin</span><span class=\"author-card-stat-lbl\">Specialisation</span></div> </div> </div> </div>",
+      "metaTitle": "Understanding Dynamic Pricing | PriceLeap",
+      "metaDescription": "What dynamic pricing actually means, how it differs from manual pricing, and when it creates value versus when it creates risk."
+    },
+    {
+      "url": "https://priceleap.ai/learn/intro-to-repricing/",
+      "slug": "intro-to-repricing",
+      "title": "Introduction to Repricing",
+      "category": "Getting Started",
+      "difficulty": "beginner",
+      "excerpt": "What repricing is, why it matters for marketplace sellers, and how automated repricing differs from manual price management.",
+      "author": "Jordan Reed",
+      "publishedAt": "Published Jan 12, 2026",
+      "readTime": "5 min read",
+      "heroImage": {
+        "src": "/assets/learn/intro-to-repricing/img-6.jpg",
+        "alt": "Introduction to Repricing"
+      },
+      "headings": [
+        {
+          "level": 3,
+          "id": "why-prices-change-constantly",
+          "title": "Why prices change constantly"
+        },
+        {
+          "level": 3,
+          "id": "apply-this-in-priceleap",
+          "title": "Apply this in PriceLeap"
+        }
+      ],
+      "contentHtml": "<p>Repricing is the practice of adjusting your product prices in response to changes in the competitive marketplace — competitor price moves, Buy Box shifts, inventory changes, or demand signals. For any seller managing more than a handful of SKUs, doing this manually is impossible at the speed markets move.</p><h3 id=\"why-prices-change-constantly\">Why prices change constantly</h3><p>On Amazon alone, prices for competitive listings can change hundreds of times per day. Every time a competitor adjusts their price, your competitive position shifts. If you're priced above the new low, you risk losing the Buy Box. If you're priced too far below, you're leaving margin on the table.</p><div class=\"learn-step\"><div class=\"learn-step-num\">01</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Understand your competitive position</div><div class=\"learn-step-desc\">For each SKU, identify who you're competing against, what their typical price range is, and how price-sensitive the category tends to be.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">02</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Set your margin floors first</div><div class=\"learn-step-desc\">Before writing any repricing rules, define the lowest price you can sell each product at and still hit your margin target. This is non-negotiable.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">03</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Start with a simple match rule</div><div class=\"learn-step-desc\">Match to the lowest competitive price, subject to your floor. Review decisions for the first two weeks before enabling automation.</div></div></div><div class=\"learn-key-box\"><div class=\"learn-key-lbl\">Key Concepts</div><div class=\"learn-key-list\"><span class=\"learn-key-tag\">Repricing</span><span class=\"learn-key-tag\">Buy Box</span><span class=\"learn-key-tag\">Margin Floor</span><span class=\"learn-key-tag\">Price Match</span></div></div></div> <div class=\"art-cta\" style=\"margin-top:32px\"> <h3 id=\"apply-this-in-priceleap\">Apply this in PriceLeap</h3> <p>Everything in this guide is built into PriceLeap - real-time competitor monitoring, rule-based decision logic, and margin protection. See it on your actual catalog.</p> <a href=\"https://app.priceleap.ai\" class=\"btn-acc\">Try For Free →</a> </div> <div class=\"author-card\"> <div class=\"author-card-avatar\">JR</div> <div class=\"author-card-body\"> <div class=\"author-card-label\">About the Author</div> <div class=\"author-card-name\">Jordan Reed</div> <div class=\"author-card-title\">Head of Pricing Strategy, PriceLeap</div> <div class=\"author-card-bio\">Jordan has spent 8 years working with ecommerce brands on marketplace pricing strategy — from single-channel Amazon sellers to omnichannel retailers managing 100K+ SKU catalogs. At PriceLeap, he leads strategy content and works directly with enterprise customers on repricing architecture.</div> <div class=\"author-card-stats\"> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">8</span><span class=\"author-card-stat-lbl\">Years Experience</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">14</span><span class=\"author-card-stat-lbl\">Articles Published</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">Repricing &amp; Margin</span><span class=\"author-card-stat-lbl\">Specialisation</span></div> </div> </div> </div>",
+      "metaTitle": "Introduction to Repricing | PriceLeap",
+      "metaDescription": "What repricing is, why it matters for marketplace sellers, and how automated repricing differs from manual price management."
+    },
+    {
+      "url": "https://priceleap.ai/learn/map-compliance/",
+      "slug": "map-compliance",
+      "title": "MAP Compliance in a Repricing System",
+      "category": "Pricing Strategy",
+      "difficulty": "intermediate",
+      "excerpt": "How to enforce Minimum Advertised Price policies across your catalog without blocking competitive repricing in non-MAP categories.",
+      "author": "Maya Okonkwo",
+      "publishedAt": "Published Jan 28, 2026",
+      "readTime": "5 min read",
+      "heroImage": {
+        "src": "/assets/learn/map-compliance/img-7.jpg",
+        "alt": "MAP Compliance in a Repricing System"
+      },
+      "headings": [
+        {
+          "level": 3,
+          "id": "structuring-map-enforcement-in-rules",
+          "title": "Structuring MAP enforcement in rules"
+        },
+        {
+          "level": 3,
+          "id": "apply-this-in-priceleap",
+          "title": "Apply this in PriceLeap"
+        }
+      ],
+      "contentHtml": "<p>MAP (Minimum Advertised Price) compliance is often treated as a constraint on pricing — but in a well-configured repricing system, MAP becomes a floor, not a ceiling. The challenge is enforcing MAP without preventing competitive repricing in categories where MAP doesn't apply.</p><h3 id=\"structuring-map-enforcement-in-rules\">Structuring MAP enforcement in rules</h3><p>MAP should be embedded directly into your floor configuration for MAP-restricted SKUs — not treated as a separate overlay. When your pricing rule checks the margin floor before executing, and the floor is set to MAP, compliance is automatic.</p><div class=\"learn-step\"><div class=\"learn-step-num\">01</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Tag MAP SKUs in your catalog</div><div class=\"learn-step-desc\">Create a SKU attribute for MAP status and MAP price. This lets your repricing system apply MAP logic selectively — only where it applies.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">02</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Set floor = MAX(cost floor, MAP price)</div><div class=\"learn-step-desc\">Your effective floor for a MAP SKU is the higher of your profitability floor and the MAP price. This ensures both constraints are respected simultaneously.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">03</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Monitor for competitor MAP violations</div><div class=\"learn-step-desc\">If competitors are pricing below MAP, flag it — don't match it. Matching a MAP violation exposes you to brand consequences and doesn't help long-term.</div></div></div><div class=\"learn-key-box\"><div class=\"learn-key-lbl\">Key Concepts</div><div class=\"learn-key-list\"><span class=\"learn-key-tag\">MAP Policy</span><span class=\"learn-key-tag\">Price Ceiling</span><span class=\"learn-key-tag\">Margin Floor</span></div></div></div> <div class=\"art-cta\" style=\"margin-top:32px\"> <h3 id=\"apply-this-in-priceleap\">Apply this in PriceLeap</h3> <p>Everything in this guide is built into PriceLeap - real-time competitor monitoring, rule-based decision logic, and margin protection. See it on your actual catalog.</p> <a href=\"https://app.priceleap.ai\" class=\"btn-acc\">Try For Free →</a> </div> <div class=\"author-card\"> <div class=\"author-card-avatar\">MO</div> <div class=\"author-card-body\"> <div class=\"author-card-label\">About the Author</div> <div class=\"author-card-name\">Maya Okonkwo</div> <div class=\"author-card-title\">Senior Marketplace Strategist, PriceLeap</div> <div class=\"author-card-bio\">Maya specialises in Buy Box optimisation and cross-marketplace pricing strategy across Amazon, Walmart, and eBay. She previously led pricing operations at a top-200 Amazon seller before joining PriceLeap to help brands scale competitive pricing without sacrificing margin.</div> <div class=\"author-card-stats\"> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">6</span><span class=\"author-card-stat-lbl\">Years Experience</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">11</span><span class=\"author-card-stat-lbl\">Articles Published</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">Marketplace &amp; Buy Box</span><span class=\"author-card-stat-lbl\">Specialisation</span></div> </div> </div> </div>",
+      "metaTitle": "MAP Compliance in a Repricing System | PriceLeap",
+      "metaDescription": "How to enforce Minimum Advertised Price policies across your catalog without blocking competitive repricing in non-MAP categories."
+    },
+    {
+      "url": "https://priceleap.ai/learn/margin-floor-strategy/",
+      "slug": "margin-floor-strategy",
+      "title": "Setting Margin Floors That Actually Protect You",
+      "category": "Pricing Strategy",
+      "difficulty": "intermediate",
+      "excerpt": "How to calculate margin floors from real cost data, why most sellers set them wrong, and how to structure floors across a large catalog.",
+      "author": "Jordan Reed",
+      "publishedAt": "Published Feb 10, 2026",
+      "readTime": "6 min read",
+      "heroImage": {
+        "src": "/assets/learn/margin-floor-strategy/img-8.jpg",
+        "alt": "Setting Margin Floors That Actually Protect You"
+      },
+      "headings": [
+        {
+          "level": 3,
+          "id": "what-goes-into-a-correct-floor",
+          "title": "What goes into a correct floor"
+        },
+        {
+          "level": 3,
+          "id": "apply-this-in-priceleap",
+          "title": "Apply this in PriceLeap"
+        }
+      ],
+      "contentHtml": "<p>A margin floor is only as good as the cost data behind it. Most sellers set floors too conservatively (missing revenue) or too loosely (getting automated into unprofitability). Getting this right is the most important configuration decision in any repricing setup.</p><h3 id=\"what-goes-into-a-correct-floor\">What goes into a correct floor</h3><p>Your margin floor must account for: <strong>COGS</strong> (cost of goods sold), <strong>marketplace fees</strong> (Amazon referral fee, FBA fee or shipping cost for FBM), <strong>return rate cost</strong>, and your <strong>target gross margin</strong>. Missing any of these produces a floor that doesn't actually protect you.</p><div class=\"learn-step\"><div class=\"learn-step-num\">01</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Calculate landed cost per SKU</div><div class=\"learn-step-desc\">COGS + inbound freight + prep costs + storage fees (if FBA). This is your true cost basis per unit before any fees.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">02</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Add marketplace fees</div><div class=\"learn-step-desc\">Amazon referral fee (typically 8–15%) + FBA fulfillment fee (varies by size/weight) or your FBM shipping cost.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">03</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Add your minimum acceptable margin</div><div class=\"learn-step-desc\">Floor = landed cost ÷ (1 − target gross margin %). At a 20% gross margin target on a $12 landed cost product: floor = $12 ÷ 0.80 = $15.00.</div></div></div><div class=\"callout\"><div class=\"cl-lbl\">Common Mistake</div><p>Setting one floor for an entire category instead of per-SKU. Two products in the same category can have radically different cost structures. Category-level floors always overprice your cheapest items or underprice your most expensive ones.</p></div><div class=\"learn-key-box\"><div class=\"learn-key-lbl\">Key Concepts</div><div class=\"learn-key-list\"><span class=\"learn-key-tag\">Margin Floor</span><span class=\"learn-key-tag\">SKU</span><span class=\"learn-key-tag\">MSRP</span></div></div></div> <div class=\"art-cta\" style=\"margin-top:32px\"> <h3 id=\"apply-this-in-priceleap\">Apply this in PriceLeap</h3> <p>Everything in this guide is built into PriceLeap - real-time competitor monitoring, rule-based decision logic, and margin protection. See it on your actual catalog.</p> <a href=\"https://app.priceleap.ai\" class=\"btn-acc\">Try For Free →</a> </div> <div class=\"author-card\"> <div class=\"author-card-avatar\">JR</div> <div class=\"author-card-body\"> <div class=\"author-card-label\">About the Author</div> <div class=\"author-card-name\">Jordan Reed</div> <div class=\"author-card-title\">Head of Pricing Strategy, PriceLeap</div> <div class=\"author-card-bio\">Jordan has spent 8 years working with ecommerce brands on marketplace pricing strategy — from single-channel Amazon sellers to omnichannel retailers managing 100K+ SKU catalogs. At PriceLeap, he leads strategy content and works directly with enterprise customers on repricing architecture.</div> <div class=\"author-card-stats\"> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">8</span><span class=\"author-card-stat-lbl\">Years Experience</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">14</span><span class=\"author-card-stat-lbl\">Articles Published</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">Repricing &amp; Margin</span><span class=\"author-card-stat-lbl\">Specialisation</span></div> </div> </div> </div>",
+      "metaTitle": "Setting Margin Floors That Actually Protect You | PriceLeap",
+      "metaDescription": "How to calculate margin floors from real cost data, why most sellers set them wrong, and how to structure floors across a large catalog."
+    },
+    {
+      "url": "https://priceleap.ai/learn/winning-the-buy-box/",
+      "slug": "winning-the-buy-box",
+      "title": "Winning the Buy Box",
+      "category": "Amazon Strategy",
+      "difficulty": "intermediate",
+      "excerpt": "A practical breakdown of how Amazon's Buy Box algorithm works and which levers pricing teams can pull to improve Buy Box ownership rate.",
+      "author": "Maya Okonkwo",
+      "publishedAt": "Published Feb 3, 2026",
+      "readTime": "8 min read",
+      "heroImage": {
+        "src": "/assets/learn/winning-the-buy-box/img-9.jpg",
+        "alt": "Winning the Buy Box"
+      },
+      "headings": [
+        {
+          "level": 3,
+          "id": "what-the-algorithm-actually-weighs",
+          "title": "What the algorithm actually weighs"
+        },
+        {
+          "level": 3,
+          "id": "pricing-strategy-for-buy-box-ownership",
+          "title": "Pricing strategy for Buy Box ownership"
+        },
+        {
+          "level": 3,
+          "id": "apply-this-in-priceleap",
+          "title": "Apply this in PriceLeap"
+        }
+      ],
+      "contentHtml": "<p>The Buy Box is the single most important piece of real estate on any Amazon listing. Winning it — and holding it — is the primary goal of pricing strategy for most marketplace sellers. But price is only one factor in Amazon's algorithm.</p><h3 id=\"what-the-algorithm-actually-weighs\">What the algorithm actually weighs</h3><p>Amazon's Buy Box algorithm is a composite score. Price is the most directly actionable variable, but the algorithm also weighs: fulfillment method (FBA vs FBM), seller metrics (order defect rate, late shipment rate, feedback score), shipping speed, and stock availability.</p><div class=\"callout\"><div class=\"cl-lbl\">Key Insight</div><p>FBA sellers typically win the Buy Box at prices 5–10% higher than FBM competitors because Amazon's algorithm values guaranteed delivery speed. Don't reprice as aggressively as FBM sellers if you're on FBA.</p></div><h3 id=\"pricing-strategy-for-buy-box-ownership\">Pricing strategy for Buy Box ownership</h3><div class=\"learn-step\"><div class=\"learn-step-num\">01</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Monitor Buy Box ownership continuously</div><div class=\"learn-step-desc\">Track what percentage of time you hold the Buy Box per SKU. Below 70% on a competitive listing warrants rule adjustment.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">02</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Price to the Buy Box, not to the lowest offer</div><div class=\"learn-step-desc\">The Buy Box price is often not the absolute lowest offer. Matching the Buy Box price — not the floor — is usually sufficient and preserves more margin.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">03</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Raise prices when you own the Buy Box</div><div class=\"learn-step-desc\">If you've held the Buy Box for 48+ hours, test raising your price in small increments. You may hold it at a higher price — many sellers never test this.</div></div></div><div class=\"learn-key-box\"><div class=\"learn-key-lbl\">Key Concepts</div><div class=\"learn-key-list\"><span class=\"learn-key-tag\">Buy Box</span><span class=\"learn-key-tag\">FBA</span><span class=\"learn-key-tag\">Competitive Repricing</span></div></div></div> <div class=\"art-cta\" style=\"margin-top:32px\"> <h3 id=\"apply-this-in-priceleap\">Apply this in PriceLeap</h3> <p>Everything in this guide is built into PriceLeap - real-time competitor monitoring, rule-based decision logic, and margin protection. See it on your actual catalog.</p> <a href=\"https://app.priceleap.ai\" class=\"btn-acc\">Try For Free →</a> </div> <div class=\"author-card\"> <div class=\"author-card-avatar\">MO</div> <div class=\"author-card-body\"> <div class=\"author-card-label\">About the Author</div> <div class=\"author-card-name\">Maya Okonkwo</div> <div class=\"author-card-title\">Senior Marketplace Strategist, PriceLeap</div> <div class=\"author-card-bio\">Maya specialises in Buy Box optimisation and cross-marketplace pricing strategy across Amazon, Walmart, and eBay. She previously led pricing operations at a top-200 Amazon seller before joining PriceLeap to help brands scale competitive pricing without sacrificing margin.</div> <div class=\"author-card-stats\"> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">6</span><span class=\"author-card-stat-lbl\">Years Experience</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">11</span><span class=\"author-card-stat-lbl\">Articles Published</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">Marketplace &amp; Buy Box</span><span class=\"author-card-stat-lbl\">Specialisation</span></div> </div> </div> </div>",
+      "metaTitle": "Winning the Buy Box | PriceLeap",
+      "metaDescription": "A practical breakdown of how Amazon's Buy Box algorithm works and which levers pricing teams can pull to improve Buy Box ownership rate."
+    },
+    {
+      "url": "https://priceleap.ai/learn/repricing-automation-rollout/",
+      "slug": "repricing-automation-rollout",
+      "title": "Rolling Out Repricing Automation Safely",
+      "category": "Advanced",
+      "difficulty": "advanced",
+      "excerpt": "A phased approach to moving from manual pricing to full automation — without exposing your catalog to pricing errors at scale.",
+      "author": "Jordan Reed",
+      "publishedAt": "Published Mar 1, 2026",
+      "readTime": "8 min read",
+      "heroImage": {
+        "src": "/assets/learn/repricing-automation-rollout/img-10.jpg",
+        "alt": "Rolling Out Repricing Automation Safely"
+      },
+      "headings": [
+        {
+          "level": 3,
+          "id": "the-four-phases-of-safe-automation",
+          "title": "The four phases of safe automation"
+        },
+        {
+          "level": 3,
+          "id": "apply-this-in-priceleap",
+          "title": "Apply this in PriceLeap"
+        }
+      ],
+      "contentHtml": "<p>The biggest risk in repricing automation isn't a bad rule — it's a good rule applied to the wrong SKUs at the wrong time. Automation failures are silent and fast: a misconfigured floor or a missing ceiling can generate hundreds of bad decisions before anyone notices. A phased rollout eliminates this risk.</p><h3 id=\"the-four-phases-of-safe-automation\">The four phases of safe automation</h3><p>Think of automation rollout as progressively expanding the scope of decisions you're comfortable handing off — starting with the safest, lowest-stakes decisions and expanding as confidence builds.</p><div class=\"learn-step\"><div class=\"learn-step-num\">01</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Phase 1 — Review mode only (weeks 1–2)</div><div class=\"learn-step-desc\">Run all rules in review mode. Every decision the system would make is logged but not executed. Review every decision daily. This reveals misconfigured floors, unexpected triggers, and rules that fire too aggressively.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">02</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Phase 2 — Automate Tier 3 SKUs (weeks 3–4)</div><div class=\"learn-step-desc\">Enable automation only for your lowest-priority, lowest-revenue SKUs. These have the least financial impact if a rule fires incorrectly. Monitor daily for anomalies.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">03</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Phase 3 — Expand to Tier 2 (weeks 5–8)</div><div class=\"learn-step-desc\">Once Tier 3 runs cleanly for two weeks, expand automation to Tier 2. Add stricter velocity limits for higher-value SKUs — no more than 2 changes per hour.</div></div></div><div class=\"learn-step\"><div class=\"learn-step-num\">04</div><div class=\"learn-step-body\"><div class=\"learn-step-title\">Phase 4 — Selective Tier 1 automation</div><div class=\"learn-step-desc\">For Tier 1 SKUs, automate only the most conservative rules. Keep price-reduction decisions in review queue indefinitely for high-value items.</div></div></div><div class=\"callout\"><div class=\"cl-lbl\">Critical Rule</div><p>Never automate a SKU whose floor hasn't been validated against current COGS data. Cost structures change. An outdated floor turns automation from an asset into a liability.</p></div><div class=\"learn-key-box\"><div class=\"learn-key-lbl\">Key Concepts</div><div class=\"learn-key-list\"><span class=\"learn-key-tag\">Catalog Repricing</span><span class=\"learn-key-tag\">Rule-Based Pricing</span><span class=\"learn-key-tag\">Velocity Limit</span><span class=\"learn-key-tag\">Margin Floor</span></div></div></div> <div class=\"art-cta\" style=\"margin-top:32px\"> <h3 id=\"apply-this-in-priceleap\">Apply this in PriceLeap</h3> <p>Everything in this guide is built into PriceLeap - real-time competitor monitoring, rule-based decision logic, and margin protection. See it on your actual catalog.</p> <a href=\"https://app.priceleap.ai\" class=\"btn-acc\">Try For Free →</a> </div> <div class=\"author-card\"> <div class=\"author-card-avatar\">JR</div> <div class=\"author-card-body\"> <div class=\"author-card-label\">About the Author</div> <div class=\"author-card-name\">Jordan Reed</div> <div class=\"author-card-title\">Head of Pricing Strategy, PriceLeap</div> <div class=\"author-card-bio\">Jordan has spent 8 years working with ecommerce brands on marketplace pricing strategy — from single-channel Amazon sellers to omnichannel retailers managing 100K+ SKU catalogs. At PriceLeap, he leads strategy content and works directly with enterprise customers on repricing architecture.</div> <div class=\"author-card-stats\"> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">8</span><span class=\"author-card-stat-lbl\">Years Experience</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">14</span><span class=\"author-card-stat-lbl\">Articles Published</span></div> <div class=\"author-card-stat\"><span class=\"author-card-stat-val\">Repricing &amp; Margin</span><span class=\"author-card-stat-lbl\">Specialisation</span></div> </div> </div> </div>",
+      "metaTitle": "Rolling Out Repricing Automation Safely | PriceLeap",
+      "metaDescription": "A phased approach to moving from manual pricing to full automation — without exposing your catalog to pricing errors at scale."
+    }
+  ]
+}
