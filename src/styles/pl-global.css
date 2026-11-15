@@ -1,6 +1,9 @@
 @import './pl-tokens.css';
 
 *, *::before, *::after { box-sizing: border-box; }
+/* Ensure the HTML [hidden] attribute always wins over class display rules
+   (empty states, toggled panels use [hidden] to hide). */
+[hidden] { display: none !important; }
 html { scroll-behavior: smooth; }
 body { margin: 0; background: var(--pl-canvas); color: var(--pl-ink); font-family: var(--pl-font-body); -webkit-font-smoothing: antialiased; overflow-x: clip; }
 a { color: var(--pl-ink); text-decoration: none; }
