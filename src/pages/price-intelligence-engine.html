@@ -557,7 +557,7 @@ button{font:inherit}
       <sc-for list="{{ uses }}" as="u" hint-placeholder-count="6">
         <div style="position:relative;background:var(--pl-surface);padding:28px;display:flex;flex-direction:column;gap:14px;min-height:200px;transition:background .25s" style-hover="background:var(--pl-cream)">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <span style="width:44px;height:44px;border-radius:12px;border:1px solid var(--pl-line);background:var(--pl-surface);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px -12px rgba(247,99,30,.7)"><span style="width:14px;height:14px;background:var(--pl-gradient);border-radius:{{ u.r }};transform:rotate({{ u.rot }}deg)"></span></span>
+            <span style="width:44px;height:44px;border-radius:12px;border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 18px -12px rgba(247,99,30,.7)"><img src="/assets/icons/{{ u.icon }}.svg" alt="" width="20" height="20" style="display:block" onerror="this.style.visibility='hidden'"></span>
             <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-faint)">{{ u.n }}</span>
           </div>
           <div style="margin-top:auto;font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:var(--pl-ink)">{{ u.t }}</div>
@@ -861,8 +861,8 @@ class Component extends DCLogic {
       ['Marketplace position review', 'Compare your standing across each marketplace and channel.'],
       ['Executive pricing updates', 'Share a clean, board-ready snapshot of market position in seconds.']
     ];
-    const shapes = [['4px', 0], ['50%', 0], ['2px', 45], ['50% 50% 4px 50%', 0], ['4px 50% 4px 50%', 0], ['50%', 0]];
-    const uses = usesData.map(([t, d], i) => ({ t, d, n: '0' + (i + 1), r: shapes[i][0], rot: shapes[i][1] }));
+    const useIcons = ['intelligence', 'optimize', 'decision', 'alert', 'compare', 'data'];
+    const uses = usesData.map(([t, d], i) => ({ t, d, n: '0' + (i + 1), icon: useIcons[i] || 'engine' }));
     const p = s.statP;
     const stats = [
       { v: Math.round(8000 * p).toLocaleString('en-US'), l: 'SKUs monitored across a single catalog.', bar: 16 * p * 100 / 16 * 0.16 / 0.16 * 0.16 },
