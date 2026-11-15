@@ -188,7 +188,7 @@ const SHAPES = [['4px', '0'], ['50%', '0'], ['2px', '45']] as const;
   .pl-hd-nav { display: flex; align-items: center; gap: 2px; }
   .pl-hd-link { height: 38px; padding: 0 12px; display: flex; align-items: center; border-radius: 10px; font-size: 14.5px; font-weight: 500; color: var(--pl-ink-2); transition: background .2s, color .2s; }
   .pl-hd-link:hover { background: var(--pl-sand); color: var(--pl-ink); }
-  .pl-nav-group { position: relative; display: flex; align-items: center; }
+  .pl-nav-group { position: static; display: flex; align-items: center; }
   .pl-hd-trigger { position: relative; height: 38px; padding: 0 12px; display: flex; align-items: center; gap: 7px; border: none; border-radius: 10px; background: transparent; font: inherit; font-size: 14.5px; font-weight: 500; color: var(--pl-ink-2); cursor: pointer; transition: background .2s, color .2s; }
   .pl-caret { opacity: .55; transition: transform .25s; }
   .pl-hd-underline { position: absolute; left: 12px; right: 12px; bottom: -13px; height: 2px; border-radius: 2px; background: var(--pl-gradient); opacity: 0; transition: opacity .2s; }
@@ -196,9 +196,9 @@ const SHAPES = [['4px', '0'], ['50%', '0'], ['2px', '45']] as const;
   .pl-nav-group:hover .pl-caret, .pl-nav-group:focus-within .pl-caret { transform: rotate(180deg); }
   .pl-nav-group:hover .pl-hd-underline, .pl-nav-group:focus-within .pl-hd-underline { opacity: 1; }
 
-  .pl-panel-wrap { position: absolute; left: 50%; transform: translateX(-50%); top: 51px; padding-top: 10px; width: min(1200px, calc(100vw - 2 * clamp(16px,4vw,40px))); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .18s; }
+  .pl-panel-wrap { position: absolute; left: 0; right: 0; top: 64px; padding-top: 10px; display: flex; justify-content: center; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .18s; }
   .pl-nav-group:hover .pl-panel-wrap, .pl-nav-group:focus-within .pl-panel-wrap { opacity: 1; visibility: visible; pointer-events: auto; }
-  .pl-panel { background: var(--pl-line); border: 1px solid var(--pl-line); border-radius: 22px; overflow: hidden; box-shadow: 0 40px 80px -40px rgba(60,30,15,.35), 0 12px 24px -18px rgba(60,30,15,.18); display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 1px; animation: sh-in .22s cubic-bezier(.2,.7,.2,1); }
+  .pl-panel { width: min(1200px, 100%); background: var(--pl-line); border: 1px solid var(--pl-line); border-radius: 22px; overflow: hidden; box-shadow: 0 40px 80px -40px rgba(60,30,15,.35), 0 12px 24px -18px rgba(60,30,15,.18); display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 1px; animation: sh-in .22s cubic-bezier(.2,.7,.2,1); }
 
   .pl-mono-eyebrow { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; color: var(--pl-muted); }
   .pl-panel-main { background: var(--pl-surface); display: flex; flex-direction: column; }

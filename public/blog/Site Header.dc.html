@@ -33,7 +33,7 @@
     </sc-if>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
       <sc-if value="{{ isDesk }}" hint-placeholder-val="{{ true }}"><a href="#" style="height:38px;padding:0 12px;display:flex;align-items:center;font-size:14.5px;font-weight:500;color:var(--pl-ink-2)" style-hover="color:var(--pl-ink)">Sign in</a></sc-if>
-      <a href="/contact" style="height:40px;padding:0 16px;display:flex;align-items:center;gap:8px;border-radius:11px;background:var(--pl-gradient);color:var(--pl-surface);font-family:Geist,sans-serif;font-weight:500;font-size:14px;white-space:nowrap;box-shadow:0 8px 18px -10px rgba(247,99,30,.9)" style-hover="background:var(--pl-gradient-hover);color:var(--pl-surface)">Get a demo</a>
+      <a href="/book-a-demo" style="height:40px;padding:0 16px;display:flex;align-items:center;gap:8px;border-radius:11px;background:var(--pl-gradient);color:var(--pl-surface);font-family:Geist,sans-serif;font-weight:500;font-size:14px;white-space:nowrap;box-shadow:0 8px 18px -10px rgba(247,99,30,.9)" style-hover="background:var(--pl-gradient-hover);color:var(--pl-surface)">Get a demo</a>
       <sc-if value="{{ notDesk }}" hint-placeholder-val="{{ false }}">
         <button type="button" onClick="{{ toggleMob }}" aria-label="{{ mobLabel }}" aria-expanded="{{ mob }}" style="position:relative;width:42px;height:42px;border-radius:11px;border:1px solid var(--pl-line);background:var(--pl-surface);cursor:pointer;flex:none">
           <span style="position:absolute;left:12px;width:17px;height:1.6px;border-radius:2px;background:var(--pl-ink);top:{{ b1t }};transform:rotate({{ b1r }}deg);transition:all .25s"></span>
@@ -172,7 +172,7 @@
       </div>
       <div style="padding:14px 16px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--pl-line);display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--pl-surface)">
         <a href="#" style="height:48px;display:flex;align-items:center;justify-content:center;border:1px solid var(--pl-line);border-radius:12px;font-size:15px;font-weight:500;color:var(--pl-ink)">Sign in</a>
-        <a href="/contact" style="height:48px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--pl-gradient);font-size:15px;font-weight:500;color:var(--pl-surface)">Get a demo</a>
+        <a href="/book-a-demo" style="height:48px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--pl-gradient);font-size:15px;font-weight:500;color:var(--pl-surface)">Get a demo</a>
       </div>
     </div>
   </sc-if>
