@@ -1,0 +1,362 @@
+---
+// PriceLeap site header + mega menu. Native Astro port of the design package's "Site Header.dc.html".
+// Desktop panels open on hover/focus (CSS only). Minimal JS drives Solutions tabs + the mobile drawer.
+import { TOP, PRODUCT, SOL, FEAT, PLAT, RES, FEATURED, L } from '../../data/plnav';
+
+const SHAPES = [['4px', '0'], ['50%', '0'], ['2px', '45']] as const;
+---
+<header class="pl-hd">
+  <div aria-hidden="true" class="pl-hd-bar"></div>
+  <div class="pl-hd-inner">
+    <a href="/" aria-label="PriceLeap home" class="pl-hd-logo">
+      <img src="/assets/priceleap-logo.png" alt="PriceLeap" width="147" height="28" />
+    </a>
+
+    <nav aria-label="Main" class="pl-hd-nav">
+      {TOP.map((t) => t.href ? (
+        <a href={t.href} class="pl-hd-link">{t.label}</a>
+      ) : (
+        <div class="pl-nav-group" data-menu={t.key}>
+          <button type="button" class="pl-hd-trigger" aria-haspopup="true" aria-expanded="false">
+            {t.label}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" class="pl-caret"><path d="M6 9l6 6 6-6"></path></svg>
+            <span class="pl-hd-underline"></span>
+          </button>
+
+          <div class="pl-panel-wrap" role="region" aria-label={`${t.label} menu`}>
+            <div class="pl-panel">
+              {t.key === 'product' && (
+                <div class="pl-panel-main">
+                  <div class="pl-panel-head">
+                    <span class="pl-mono-eyebrow">PLATFORM · 9 ENGINES</span>
+                    <a href={L.pie} class="pl-panel-all">Explore the platform →</a>
+                  </div>
+                  <div class="pl-grid-3">
+                    {PRODUCT.map((i, k) => (
+                      <a href={i.href} class="pl-prod-cell">
+                        <span class="pl-prod-ico"><span style={`width:11px;height:11px;background:var(--pl-gradient);border-radius:${SHAPES[k % 3][0]};transform:rotate(${SHAPES[k % 3][1]}deg)`}></span></span>
+                        <span style="min-width:0"><span class="pl-prod-t">{i.t}</span><span class="pl-prod-d">{i.d}</span></span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {t.key === 'solutions' && (
+                <div class="pl-sol" data-sol-root>
+                  <div role="tablist" aria-orientation="vertical" class="pl-sol-tabs">
+                    <span class="pl-mono-eyebrow" style="padding:6px 10px 10px">SOLUTIONS</span>
+                    {SOL.map((g, i) => (
+                      <button type="button" role="tab" class="pl-sol-tab" data-sol-tab={i} aria-selected={i === 0 ? 'true' : 'false'}>
+                        <span class="pl-sol-bar"></span>{g.t}
+                        <span class="pl-sol-n">{String(g.items.length).padStart(2, '0')}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div class="pl-sol-body">
+                    {SOL.map((g, i) => (
+                      <div class="pl-sol-panel" data-sol-panel={i} hidden={i !== 0}>
+                        <div class="pl-sol-panel-head"><span class="pl-sol-title">{g.t}</span><span class="pl-sol-desc">{g.d}</span></div>
+                        <div class="pl-grid-2">
+                          {g.items.map((i2) => (
+                            <a href={i2.href} class="pl-sol-item"><span class="pl-dot-row"><span class="pl-diamond"></span>{i2.t}</span><span class="pl-arrow">→</span></a>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {t.key === 'features' && (
+                <div class="pl-feat">
+                  <div class="pl-feat-left">
+                    <div class="pl-panel-head pl-panel-head--plain">CORE FEATURES</div>
+                    <div class="pl-grid-2 pl-grid-2--tight">
+                      {FEAT.map((i, k) => (
+                        <a href={i.href} class="pl-feat-cell"><span class="pl-feat-t"><span class="pl-feat-n">{String(k + 1).padStart(2, '0')}</span>{i.t}</span><span class="pl-feat-d">{i.d}</span></a>
+                      ))}
+                    </div>
+                  </div>
+                  <div class="pl-feat-right">
+                    <div class="pl-panel-head pl-panel-head--plain">PLATFORM MANAGEMENT</div>
+                    <div class="pl-plat-list">
+                      {PLAT.map((i) => (
+                        <a href="#" class="pl-plat-item"><span class="pl-plat-ab">{i.ab}</span><span><span class="pl-plat-t">{i.t}</span><span class="pl-plat-d">{i.d}</span></span></a>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {t.key === 'resources' && (
+                <div class="pl-res">
+                  {RES.map((g) => (
+                    <div class="pl-res-col">
+                      <div class="pl-panel-head pl-panel-head--plain">{g.t}</div>
+                      <div class="pl-grid-2 pl-grid-2--tight">
+                        {g.items.map((i, k) => (
+                          <a href={i.href} class="pl-res-item"><span class="pl-res-n">{String(k + 1).padStart(2, '0')}</span>{i.t}</a>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div class="pl-featured">
+                <span class="pl-mono-eyebrow" style="position:relative">{FEATURED[t.key].k}</span>
+                <div class="pl-featured-card">
+                  <div class="pl-featured-top"><span class="pl-featured-tag">{FEATURED[t.key].tag}</span><span class="pl-featured-live"><span class="pl-live-dot"></span>LIVE</span></div>
+                  <span class="pl-featured-stat">{FEATURED[t.key].stat}</span>
+                  <div class="pl-spark">{[40,52,46,60,55,68,62,58,72,66,78,70,84,80].map((h, i) => (<span style={`flex:1;height:${h}%;border-radius:3px;background:${i >= 12 ? 'var(--pl-accent)' : i > 9 ? 'var(--pl-accent-line)' : 'var(--pl-line-soft)'}`}></span>))}</div>
+                  <span class="pl-featured-sub">{FEATURED[t.key].sub}</span>
+                </div>
+                <div style="position:relative"><div class="pl-featured-t">{FEATURED[t.key].t}</div><div class="pl-featured-d">{FEATURED[t.key].d}</div></div>
+                <a href={FEATURED[t.key].href} class="pl-featured-cta">{FEATURED[t.key].cta} →</a>
+              </div>
+
+              <div class="pl-panel-foot">
+                <span class="pl-foot-status"><span class="pl-live-dot"></span>ALL SYSTEMS OPERATIONAL</span>
+                <a href={L.contact} class="pl-foot-link" style="margin-left:auto">Talk to sales ↗</a>
+                <a href="#" class="pl-foot-link">Help center ↗</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </nav>
+
+    <div class="pl-hd-actions">
+      <a href="#" class="pl-hd-signin">Sign in</a>
+      <a href={L.contact} class="pl-hd-cta">Get a demo</a>
+      <button type="button" class="pl-burger" aria-label="Open menu" aria-expanded="false" data-burger>
+        <span class="pl-burger-l pl-burger-1"></span>
+        <span class="pl-burger-l pl-burger-2"></span>
+        <span class="pl-burger-l pl-burger-3"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile drawer -->
+  <div class="pl-mob" data-mob hidden>
+    <div class="pl-mob-scroll">
+      {[
+        { key: 'product', t: 'Product', groups: [{ t: '', items: PRODUCT }] },
+        { key: 'solutions', t: 'Solutions', groups: SOL },
+        { key: 'features', t: 'Features', groups: [{ t: 'Core features', items: FEAT }, { t: 'Platform Management', items: PLAT.map(p => ({ t: p.t, href: '#' })) }] },
+        { key: 'pricing', t: 'Pricing', href: L.pricing },
+        { key: 'resources', t: 'Resources', groups: RES.map(r => ({ t: r.t, items: r.items })) },
+      ].map((m) => (
+        <div class="pl-mob-sec">
+          {m.href ? (
+            <a href={m.href} class="pl-mob-link">{m.t}<span style="color:var(--pl-faint)">›</span></a>
+          ) : (
+            <>
+              <button type="button" class="pl-mob-trigger" aria-expanded="false" data-mob-trigger>{m.t}<span class="pl-mob-plus"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span></button>
+              <div class="pl-mob-panel">
+                <div class="pl-mob-panel-inner">
+                  {(m.groups || []).map((g) => (
+                    <div class="pl-mob-group">
+                      {g.t && <span class="pl-mob-group-t">{g.t}</span>}
+                      <div class="pl-mob-items">
+                        {g.items.map((i) => (<a href={i.href || '#'} class="pl-mob-item"><span class="pl-diamond"></span>{i.t}</a>))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+    <div class="pl-mob-foot">
+      <a href="#" class="pl-mob-foot-btn pl-mob-foot-ghost">Sign in</a>
+      <a href={L.contact} class="pl-mob-foot-btn pl-mob-foot-primary">Get a demo</a>
+    </div>
+  </div>
+</header>
+
+<style>
+  .pl-hd { position: sticky; top: 0; z-index: 60; font-family: Inter, system-ui, sans-serif; }
+  .pl-hd-bar { position: absolute; inset: 0; background: rgba(255,255,255,.86); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--pl-line); transition: background .2s; }
+  .pl-hd.is-scrolled .pl-hd-bar, .pl-hd:focus-within .pl-hd-bar { background: rgba(255,255,255,.96); }
+  .pl-hd-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: 0 clamp(16px,4vw,40px); height: 64px; display: flex; align-items: center; gap: clamp(12px,2.4vw,32px); }
+  .pl-hd-logo { display: flex; align-items: center; flex: none; }
+  .pl-hd-logo img { display: block; height: 28px; width: auto; }
+  .pl-hd-nav { display: flex; align-items: center; gap: 2px; }
+  .pl-hd-link { height: 38px; padding: 0 12px; display: flex; align-items: center; border-radius: 10px; font-size: 14.5px; font-weight: 500; color: var(--pl-ink-2); transition: background .2s, color .2s; }
+  .pl-hd-link:hover { background: var(--pl-sand); color: var(--pl-ink); }
+  .pl-nav-group { position: static; display: flex; align-items: center; }
+  .pl-hd-trigger { position: relative; height: 38px; padding: 0 12px; display: flex; align-items: center; gap: 7px; border: none; border-radius: 10px; background: transparent; font: inherit; font-size: 14.5px; font-weight: 500; color: var(--pl-ink-2); cursor: pointer; transition: background .2s, color .2s; }
+  .pl-caret { opacity: .55; transition: transform .25s; }
+  .pl-hd-underline { position: absolute; left: 12px; right: 12px; bottom: -13px; height: 2px; border-radius: 2px; background: var(--pl-gradient); opacity: 0; transition: opacity .2s; }
+  .pl-nav-group:hover .pl-hd-trigger, .pl-nav-group:focus-within .pl-hd-trigger { background: var(--pl-sand); color: var(--pl-ink); }
+  .pl-nav-group:hover .pl-caret, .pl-nav-group:focus-within .pl-caret { transform: rotate(180deg); }
+  .pl-nav-group:hover .pl-hd-underline, .pl-nav-group:focus-within .pl-hd-underline { opacity: 1; }
+
+  .pl-panel-wrap { position: absolute; left: 0; right: 0; top: 64px; padding-top: 10px; display: flex; justify-content: center; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .18s; }
+  .pl-nav-group:hover .pl-panel-wrap, .pl-nav-group:focus-within .pl-panel-wrap { opacity: 1; visibility: visible; pointer-events: auto; }
+  .pl-panel { width: min(1200px, 100%); background: var(--pl-line); border: 1px solid var(--pl-line); border-radius: 22px; overflow: hidden; box-shadow: 0 40px 80px -40px rgba(60,30,15,.35), 0 12px 24px -18px rgba(60,30,15,.18); display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 1px; animation: sh-in .22s cubic-bezier(.2,.7,.2,1); }
+
+  .pl-mono-eyebrow { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; color: var(--pl-muted); }
+  .pl-panel-main { background: var(--pl-surface); display: flex; flex-direction: column; }
+  .pl-panel-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 22px; border-bottom: 1px solid var(--pl-line-soft); background: var(--pl-cream); }
+  .pl-panel-head--plain { color: var(--pl-muted); font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; }
+  .pl-panel-all { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-accent-ink); }
+  .pl-panel-all:hover { color: var(--pl-ink); }
+  .pl-grid-3 { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1px; background: var(--pl-line-soft); }
+  .pl-prod-cell { position: relative; background: var(--pl-surface); padding: 16px 18px; display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 12px; align-items: start; color: var(--pl-ink); transition: background .2s; }
+  .pl-prod-cell:hover { background: var(--pl-cream); color: var(--pl-ink); }
+  .pl-prod-ico { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--pl-line-soft); background: var(--pl-surface); display: flex; align-items: center; justify-content: center; }
+  .pl-prod-t { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; line-height: 1.3; }
+  .pl-prod-d { display: block; margin-top: 4px; font-size: 12.5px; line-height: 1.45; color: var(--pl-muted); }
+
+  .pl-sol { background: var(--pl-surface); display: grid; grid-template-columns: 220px minmax(0,1fr); min-height: 340px; }
+  .pl-sol-tabs { background: var(--pl-cream); border-right: 1px solid var(--pl-line-soft); padding: 12px; display: flex; flex-direction: column; gap: 2px; }
+  .pl-sol-tab { position: relative; height: 42px; padding: 0 12px 0 14px; border: none; border-radius: 10px; background: transparent; display: flex; align-items: center; justify-content: space-between; font: inherit; font-size: 14px; font-weight: 500; color: var(--pl-muted); cursor: pointer; text-align: left; transition: all .2s; }
+  .pl-sol-tab[aria-selected="true"] { background: var(--pl-surface); color: var(--pl-ink); box-shadow: 0 0 0 1px var(--pl-line); }
+  .pl-sol-bar { position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: linear-gradient(180deg,var(--pl-accent-start),var(--pl-accent-end)); opacity: 0; }
+  .pl-sol-tab[aria-selected="true"] .pl-sol-bar { opacity: 1; }
+  .pl-sol-n { font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--pl-faint-2); }
+  .pl-sol-tab[aria-selected="true"] .pl-sol-n { color: var(--pl-accent-ink); }
+  .pl-sol-body { padding: 18px 22px; }
+  .pl-sol-panel { display: flex; flex-direction: column; gap: 12px; animation: sh-fade .2s ease; }
+  .pl-sol-panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .pl-sol-title { font-family: Geist, sans-serif; font-size: 17px; font-weight: 600; color: var(--pl-ink); }
+  .pl-sol-desc { font-size: 12.5px; color: var(--pl-muted); }
+  .pl-grid-2 { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+  .pl-sol-item { min-height: 48px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--pl-line-soft); border-radius: 12px; font-size: 14px; font-weight: 500; color: var(--pl-ink); transition: all .2s; }
+  .pl-sol-item:hover { border-color: var(--pl-accent-line); background: var(--pl-cream); color: var(--pl-ink); }
+  .pl-dot-row { display: flex; align-items: center; gap: 10px; }
+  .pl-diamond { width: 7px; height: 7px; flex: none; border-radius: 2px; background: var(--pl-accent); transform: rotate(45deg); }
+  .pl-arrow { color: var(--pl-accent-ink); font-size: 13px; }
+
+  .pl-feat { background: var(--pl-surface); display: grid; grid-template-columns: minmax(0,1.7fr) minmax(0,1fr); }
+  .pl-feat-left { display: flex; flex-direction: column; border-right: 1px solid var(--pl-line-soft); }
+  .pl-grid-2--tight { gap: 1px; background: var(--pl-line-soft); }
+  .pl-feat-cell { background: var(--pl-surface); padding: 14px 18px; display: flex; flex-direction: column; gap: 3px; color: var(--pl-ink); transition: background .2s; }
+  .pl-feat-cell:hover { background: var(--pl-cream); color: var(--pl-ink); }
+  .pl-feat-t { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; }
+  .pl-feat-n { font-family: 'Geist Mono', monospace; font-size: 10.5px; font-weight: 400; color: var(--pl-accent-ink); }
+  .pl-feat-d { font-size: 12.5px; line-height: 1.45; color: var(--pl-muted); padding-left: 26px; }
+  .pl-feat-right { display: flex; flex-direction: column; }
+  .pl-plat-list { padding: 10px; display: flex; flex-direction: column; gap: 2px; }
+  .pl-plat-item { padding: 12px; border-radius: 12px; display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 12px; align-items: center; color: var(--pl-ink); transition: background .2s; }
+  .pl-plat-item:hover { background: var(--pl-sand); color: var(--pl-ink); }
+  .pl-plat-ab { width: 34px; height: 34px; border-radius: 10px; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-accent-ink); }
+  .pl-plat-t { display: block; font-size: 14.5px; font-weight: 600; }
+  .pl-plat-d { display: block; font-size: 12.5px; color: var(--pl-muted); }
+
+  .pl-res { background: var(--pl-surface); display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .pl-res-col { display: flex; flex-direction: column; border-right: 1px solid var(--pl-line-soft); }
+  .pl-res-col .pl-grid-2 { padding: 10px; gap: 2px; background: transparent; }
+  .pl-res-item { min-height: 46px; padding: 0 12px; border-radius: 11px; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; color: var(--pl-ink); transition: background .2s; }
+  .pl-res-item:hover { background: var(--pl-cream); color: var(--pl-ink); }
+  .pl-res-n { width: 28px; height: 28px; flex: none; border-radius: 8px; border: 1px solid var(--pl-line-soft); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--pl-accent-ink); }
+
+  .pl-featured { position: relative; background: var(--pl-cream); padding: 18px; display: flex; flex-direction: column; gap: 14px; overflow: hidden; }
+  .pl-featured-card { position: relative; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 14px; padding: 14px; box-shadow: 0 18px 34px -26px rgba(60,30,15,.4); display: flex; flex-direction: column; gap: 10px; }
+  .pl-featured-top { display: flex; justify-content: space-between; align-items: center; }
+  .pl-featured-tag { font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .08em; color: var(--pl-accent-ink); }
+  .pl-featured-live { display: flex; align-items: center; gap: 5px; font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--pl-muted); }
+  .pl-live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pl-accent); animation: sh-pulse 1.6s infinite; }
+  .pl-featured-stat { font-family: Geist, sans-serif; font-size: 26px; font-weight: 600; letter-spacing: -.03em; color: var(--pl-ink); }
+  .pl-spark { display: flex; align-items: flex-end; gap: 4px; height: 34px; }
+  .pl-featured-sub { font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--pl-muted); }
+  .pl-featured-t { font-family: Geist, sans-serif; font-size: 15.5px; font-weight: 600; line-height: 1.3; color: var(--pl-ink); }
+  .pl-featured-d { margin-top: 4px; font-size: 13px; line-height: 1.5; color: var(--pl-muted); }
+  .pl-featured-cta { position: relative; margin-top: auto; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 11px; background: var(--pl-ink); color: var(--pl-surface); font-size: 13.5px; font-weight: 500; }
+  .pl-featured-cta:hover { background: var(--pl-ink-hover); color: var(--pl-surface); }
+  .pl-panel-foot { grid-column: 1 / -1; background: var(--pl-cream); padding: 10px 22px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; font-size: 12.5px; color: var(--pl-muted); }
+  .pl-foot-status { display: flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 10.5px; }
+  .pl-foot-link { color: var(--pl-ink); }
+  .pl-foot-link:hover { color: var(--pl-accent-ink); }
+
+  .pl-hd-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .pl-hd-signin { height: 38px; padding: 0 12px; display: flex; align-items: center; font-size: 14.5px; font-weight: 500; color: var(--pl-ink-2); }
+  .pl-hd-signin:hover { color: var(--pl-ink); }
+  .pl-hd-cta { height: 40px; padding: 0 16px; display: flex; align-items: center; gap: 8px; border-radius: 11px; background: var(--pl-gradient); color: var(--pl-surface); font-family: Geist, sans-serif; font-weight: 500; font-size: 14px; white-space: nowrap; box-shadow: 0 8px 18px -10px rgba(247,99,30,.9); }
+  .pl-hd-cta:hover { background: var(--pl-gradient-hover); color: var(--pl-surface); }
+  .pl-burger { display: none; position: relative; width: 42px; height: 42px; border-radius: 11px; border: 1px solid var(--pl-line); background: var(--pl-surface); cursor: pointer; flex: none; }
+  .pl-burger-l { position: absolute; left: 12px; width: 17px; height: 1.6px; border-radius: 2px; background: var(--pl-ink); transition: all .25s; }
+  .pl-burger-1 { top: 14px; }
+  .pl-burger-2 { top: 20px; }
+  .pl-burger-3 { top: 26px; }
+  .pl-hd.is-mob-open .pl-burger-1 { top: 20px; transform: rotate(45deg); }
+  .pl-hd.is-mob-open .pl-burger-2 { opacity: 0; }
+  .pl-hd.is-mob-open .pl-burger-3 { top: 20px; transform: rotate(-45deg); }
+
+  .pl-mob { position: fixed; left: 0; right: 0; top: 64px; bottom: 0; background: var(--pl-surface); border-top: 1px solid var(--pl-line); display: flex; flex-direction: column; animation: sh-fade .2s ease; }
+  .pl-mob[hidden] { display: none; }
+  .pl-mob-scroll { flex: 1; overflow-y: auto; padding: 8px 16px 16px; -webkit-overflow-scrolling: touch; }
+  .pl-mob-sec { border-bottom: 1px solid var(--pl-line-soft); }
+  .pl-mob-link { min-height: 58px; display: flex; align-items: center; justify-content: space-between; font-family: Geist, sans-serif; font-size: 18px; font-weight: 600; color: var(--pl-ink); }
+  .pl-mob-trigger { width: 100%; min-height: 58px; border: none; background: transparent; padding: 0; display: flex; align-items: center; justify-content: space-between; font-family: Geist, sans-serif; font-size: 18px; font-weight: 600; color: var(--pl-ink); cursor: pointer; }
+  .pl-mob-plus { width: 30px; height: 30px; border-radius: 9px; background: var(--pl-sand); color: var(--pl-ink); display: flex; align-items: center; justify-content: center; transition: all .25s; }
+  .pl-mob-trigger[aria-expanded="true"] .pl-mob-plus { background: var(--pl-gradient); color: var(--pl-surface); transform: rotate(45deg); }
+  .pl-mob-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .pl-mob-trigger[aria-expanded="true"] + .pl-mob-panel { grid-template-rows: 1fr; }
+  .pl-mob-panel-inner { overflow: hidden; }
+  .pl-mob-group { display: flex; flex-direction: column; gap: 6px; padding-bottom: 14px; }
+  .pl-mob-group-t { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--pl-accent-ink); padding: 4px 2px 0; }
+  .pl-mob-items { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .pl-mob-item { min-height: 48px; padding: 0 14px; display: flex; align-items: center; gap: 10px; border-radius: 12px; background: var(--pl-cream); border: 1px solid var(--pl-line-soft); font-size: 14.5px; font-weight: 500; color: var(--pl-ink); }
+  .pl-mob-foot { padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--pl-line); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--pl-surface); }
+  .pl-mob-foot-btn { height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-size: 15px; font-weight: 500; }
+  .pl-mob-foot-ghost { border: 1px solid var(--pl-line); color: var(--pl-ink); }
+  .pl-mob-foot-primary { background: var(--pl-gradient); color: var(--pl-surface); }
+
+  @media (max-width: 1079px) {
+    .pl-hd-nav, .pl-hd-signin { display: none; }
+    .pl-burger { display: block; }
+  }
+  @media (min-width: 1080px) { .pl-mob { display: none !important; } }
+  @media (max-width: 639px) { .pl-mob-items { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+  // Solutions tabs (progressive enhancement; first tab shown by default without JS)
+  document.querySelectorAll('[data-sol-root]').forEach((root) => {
+    const tabs = root.querySelectorAll('[data-sol-tab]');
+    const panels = root.querySelectorAll('[data-sol-panel]');
+    const show = (i: number) => {
+      tabs.forEach((t) => t.setAttribute('aria-selected', t.getAttribute('data-sol-tab') === String(i) ? 'true' : 'false'));
+      panels.forEach((p) => { (p as HTMLElement).hidden = p.getAttribute('data-sol-panel') !== String(i); });
+    };
+    tabs.forEach((t) => {
+      const i = Number(t.getAttribute('data-sol-tab'));
+      t.addEventListener('mouseenter', () => show(i));
+      t.addEventListener('focus', () => show(i));
+      t.addEventListener('click', () => show(i));
+    });
+  });
+
+  // Header scroll state
+  const hd = document.querySelector('.pl-hd');
+  const onScroll = () => { if (hd) hd.classList.toggle('is-scrolled', window.scrollY > 8); };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // Mobile drawer
+  const burger = document.querySelector('[data-burger]');
+  const mob = document.querySelector('[data-mob]') as HTMLElement | null;
+  const setMob = (open: boolean) => {
+    if (!mob || !hd) return;
+    mob.hidden = !open;
+    hd.classList.toggle('is-mob-open', open);
+    burger?.setAttribute('aria-expanded', String(open));
+    burger?.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    document.body.style.overflow = open ? 'hidden' : '';
+  };
+  burger?.addEventListener('click', () => setMob(mob?.hidden ?? true));
+  document.querySelectorAll('[data-mob-trigger]').forEach((t) => {
+    t.addEventListener('click', () => {
+      const open = t.getAttribute('aria-expanded') === 'true';
+      document.querySelectorAll('[data-mob-trigger]').forEach((o) => o.setAttribute('aria-expanded', 'false'));
+      t.setAttribute('aria-expanded', String(!open));
+    });
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMob(false); });
+</script>

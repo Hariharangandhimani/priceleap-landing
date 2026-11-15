@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/styles/priceleap-tokens.css">
+<script src="/support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><style>
+@keyframes sh-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes sh-fade{from{opacity:0}to{opacity:1}}
+@keyframes sh-pulse{0%{box-shadow:0 0 0 0 rgba(247,99,30,.55)}100%{box-shadow:0 0 0 8px rgba(247,99,30,0)}}
+</style></helmet>
+<header onMouseLeave="{{ leave }}" onMouseEnter="{{ enter }}" style="position:relative;z-index:60;font-family:Inter,system-ui,sans-serif">
+  <div aria-hidden="true" style="position:absolute;inset:0;background:rgba(255,255,255,{{ barAlpha }});backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--pl-line);transition:background .2s"></div>
+  <div style="position:relative;max-width:1280px;margin:0 auto;padding:0 clamp(16px,4vw,40px);height:64px;display:flex;align-items:center;gap:clamp(12px,2.4vw,32px)">
+    <a href="/" aria-label="PriceLeap home" style="display:flex;align-items:center;flex:none">
+      <img src="/assets/priceleap-logo.png" alt="PriceLeap" width="147" height="28" style="display:block;height:28px;width:auto">
+    </a>
+    <sc-if value="{{ isDesk }}" hint-placeholder-val="{{ true }}">
+      <nav aria-label="Main" style="display:flex;align-items:center;gap:2px">
+        <sc-for list="{{ top }}" as="t" hint-placeholder-count="5">
+          <sc-if value="{{ t.menu }}" hint-placeholder-val="{{ true }}">
+            <button type="button" onMouseEnter="{{ t.hover }}" onClick="{{ t.toggle }}" aria-expanded="{{ t.on }}" aria-haspopup="true" style="position:relative;height:38px;padding:0 12px;display:flex;align-items:center;gap:7px;border:none;border-radius:10px;background:{{ t.bg }};font:inherit;font-size:14.5px;font-weight:500;color:{{ t.c }};cursor:pointer;transition:background .2s,color .2s">{{ t.label }}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" style="transform:rotate({{ t.rot }}deg);transition:transform .25s;opacity:.55"><path d="M6 9l6 6 6-6"></path></svg><span style="position:absolute;left:12px;right:12px;bottom:-13px;height:2px;border-radius:2px;background:var(--pl-gradient);opacity:{{ t.bar }};transition:opacity .2s"></span></button>
+          </sc-if>
+          <sc-if value="{{ t.link }}" hint-placeholder-val="{{ false }}">
+            <a href="{{ t.href }}" onMouseEnter="{{ closeNow }}" style="height:38px;padding:0 12px;display:flex;align-items:center;border-radius:10px;font-size:14.5px;font-weight:500;color:var(--pl-ink-2);transition:background .2s,color .2s" style-hover="background:var(--pl-sand);color:var(--pl-ink)">{{ t.label }}</a>
+          </sc-if>
+        </sc-for>
+      </nav>
+    </sc-if>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <sc-if value="{{ isDesk }}" hint-placeholder-val="{{ true }}"><a href="#" style="height:38px;padding:0 12px;display:flex;align-items:center;font-size:14.5px;font-weight:500;color:var(--pl-ink-2)" style-hover="color:var(--pl-ink)">Sign in</a></sc-if>
+      <a href="/book-a-demo" style="height:40px;padding:0 16px;display:flex;align-items:center;gap:8px;border-radius:11px;background:var(--pl-gradient);color:var(--pl-surface);font-family:Geist,sans-serif;font-weight:500;font-size:14px;white-space:nowrap;box-shadow:0 8px 18px -10px rgba(247,99,30,.9)" style-hover="background:var(--pl-gradient-hover);color:var(--pl-surface)">Get a demo</a>
+      <sc-if value="{{ notDesk }}" hint-placeholder-val="{{ false }}">
+        <button type="button" onClick="{{ toggleMob }}" aria-label="{{ mobLabel }}" aria-expanded="{{ mob }}" style="position:relative;width:42px;height:42px;border-radius:11px;border:1px solid var(--pl-line);background:var(--pl-surface);cursor:pointer;flex:none">
+          <span style="position:absolute;left:12px;width:17px;height:1.6px;border-radius:2px;background:var(--pl-ink);top:{{ b1t }};transform:rotate({{ b1r }}deg);transition:all .25s"></span>
+          <span style="position:absolute;left:12px;top:20px;width:17px;height:1.6px;border-radius:2px;background:var(--pl-ink);opacity:{{ b2o }};transition:opacity .2s"></span>
+          <span style="position:absolute;left:12px;width:17px;height:1.6px;border-radius:2px;background:var(--pl-ink);top:{{ b3t }};transform:rotate({{ b3r }}deg);transition:all .25s"></span>
+        </button>
+      </sc-if>
+    </div>
+  </div>
+
+  <sc-if value="{{ deskOpen }}" hint-placeholder-val="{{ false }}">
+    <div role="region" aria-label="{{ panelLabel }}" style="position:absolute;left:0;right:0;top:64px;padding:10px clamp(16px,4vw,40px) 0">
+      <div key="{{ open }}" style="max-width:1200px;margin:0 auto;background:var(--pl-line);border:1px solid var(--pl-line);border-radius:22px;overflow:hidden;box-shadow:0 40px 80px -40px rgba(60,30,15,.35),0 12px 24px -18px rgba(60,30,15,.18);display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:1px;animation:sh-in .22s cubic-bezier(.2,.7,.2,1)">
+
+        <sc-if value="{{ isProduct }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--pl-surface);display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream)"><span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:var(--pl-muted)">PLATFORM · 9 ENGINES</span><a href="/price-intelligence-engine" style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-accent-ink)" style-hover="color:var(--pl-ink)">Explore the platform →</a></div>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--pl-line-soft)">
+              <sc-for list="{{ product }}" as="i" hint-placeholder-count="9">
+                <a href="{{ i.href }}" style="position:relative;background:var(--pl-surface);padding:16px 18px;display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:start;color:var(--pl-ink);transition:background .2s" style-hover="background:var(--pl-cream);color:var(--pl-ink)">
+                  <span style="width:34px;height:34px;border-radius:10px;border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);display:flex;align-items:center;justify-content:center"><img src="/assets/icons/{{ i.icon }}.svg" alt="" width="18" height="18" style="display:block"></span>
+                  <span style="min-width:0"><span style="display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;line-height:1.3">{{ i.t }}</span><span style="display:block;margin-top:4px;font-size:12.5px;line-height:1.45;color:var(--pl-muted)">{{ i.d }}</span></span>
+                </a>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isSolutions }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--pl-surface);display:grid;grid-template-columns:220px minmax(0,1fr);min-height:340px">
+            <div role="tablist" aria-orientation="vertical" style="background:var(--pl-cream);border-right:1px solid var(--pl-line-soft);padding:12px;display:flex;flex-direction:column;gap:2px">
+              <span style="padding:6px 10px 10px;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:var(--pl-muted)">SOLUTIONS</span>
+              <sc-for list="{{ solTabs }}" as="g" hint-placeholder-count="5">
+                <button type="button" role="tab" aria-selected="{{ g.on }}" onMouseEnter="{{ g.go }}" onFocus="{{ g.go }}" onClick="{{ g.go }}" style="position:relative;height:42px;padding:0 12px 0 14px;border:none;border-radius:10px;background:{{ g.bg }};display:flex;align-items:center;justify-content:space-between;font:inherit;font-size:14px;font-weight:500;color:{{ g.c }};cursor:pointer;text-align:left;box-shadow:{{ g.sh }};transition:all .2s"><span style="position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;background:linear-gradient(180deg,var(--pl-accent-start),var(--pl-accent-end));opacity:{{ g.bar }}"></span>{{ g.t }}<span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:{{ g.nc }}">{{ g.n }}</span></button>
+              </sc-for>
+            </div>
+            <div key="{{ solKey }}" style="padding:18px 22px;display:flex;flex-direction:column;gap:12px;animation:sh-fade .2s ease">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><span style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:var(--pl-ink)">{{ sol.t }}</span><span style="font-size:12.5px;color:var(--pl-muted)">{{ sol.d }}</span></div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px">
+                <sc-for list="{{ sol.items }}" as="i" hint-placeholder-count="6">
+                  <a href="{{ i.href }}" style="min-height:48px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--pl-line-soft);border-radius:12px;font-size:14px;font-weight:500;color:var(--pl-ink);transition:all .2s" style-hover="border-color:var(--pl-accent-line);background:var(--pl-cream);color:var(--pl-ink)"><span style="display:flex;align-items:center;gap:10px"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-accent);transform:rotate(45deg)"></span>{{ i.t }}</span><span style="color:var(--pl-accent-ink);font-size:13px">→</span></a>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isFeatures }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--pl-surface);display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr)">
+            <div style="display:flex;flex-direction:column;border-right:1px solid var(--pl-line-soft)">
+              <div style="padding:14px 22px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream);font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:var(--pl-muted)">CORE FEATURES</div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--pl-line-soft)">
+                <sc-for list="{{ features }}" as="i" hint-placeholder-count="8">
+                  <a href="{{ i.href }}" style="background:var(--pl-surface);padding:14px 18px;display:flex;flex-direction:column;gap:3px;color:var(--pl-ink);transition:background .2s" style-hover="background:var(--pl-cream);color:var(--pl-ink)"><span style="display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600"><span style="font-family:'Geist Mono',monospace;font-size:10.5px;font-weight:400;color:var(--pl-accent-ink)">{{ i.n }}</span>{{ i.t }}</span><span style="font-size:12.5px;line-height:1.45;color:var(--pl-muted);padding-left:26px">{{ i.d }}</span></a>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column">
+              <div style="padding:14px 22px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream);font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:var(--pl-muted)">PLATFORM MANAGEMENT</div>
+              <div style="padding:10px;display:flex;flex-direction:column;gap:2px">
+                <sc-for list="{{ platform }}" as="i" hint-placeholder-count="4">
+                  <a href="#" style="padding:12px;border-radius:12px;display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px;align-items:center;color:var(--pl-ink);transition:background .2s" style-hover="background:var(--pl-sand);color:var(--pl-ink)"><span style="width:34px;height:34px;border-radius:10px;background:var(--pl-accent-tint);border:1px solid var(--pl-accent-line);display:flex;align-items:center;justify-content:center"><img src="/assets/icons/{{ i.icon }}.svg" alt="" width="18" height="18" style="display:block"></span><span><span style="display:block;font-size:14.5px;font-weight:600">{{ i.t }}</span><span style="display:block;font-size:12.5px;color:var(--pl-muted)">{{ i.d }}</span></span></a>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isResources }}" hint-placeholder-val="{{ false }}">
+          <div style="background:var(--pl-surface);display:grid;grid-template-columns:repeat(2,minmax(0,1fr))">
+            <sc-for list="{{ resGroups }}" as="g" hint-placeholder-count="2">
+              <div style="display:flex;flex-direction:column;border-right:1px solid var(--pl-line-soft)">
+                <div style="padding:14px 22px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream);font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:var(--pl-muted)">{{ g.t }}</div>
+                <div style="padding:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px">
+                  <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="6">
+                    <a href="{{ i.href }}" style="min-height:46px;padding:0 12px;border-radius:11px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:var(--pl-ink);transition:background .2s" style-hover="background:var(--pl-cream);color:var(--pl-ink)"><span style="width:28px;height:28px;flex:none;border-radius:8px;border:1px solid var(--pl-line-soft);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-accent-ink)">{{ i.n }}</span>{{ i.t }}</a>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <div style="position:relative;background:var(--pl-cream);padding:18px;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+          <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(var(--pl-line) 1px,transparent 1px);background-size:16px 16px;-webkit-mask-image:linear-gradient(180deg,#000,transparent 70%);mask-image:linear-gradient(180deg,#000,transparent 70%)"></div>
+          <span style="position:relative;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;color:var(--pl-muted)">{{ feat.k }}</span>
+          <div style="position:relative;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:14px;padding:14px;box-shadow:0 18px 34px -26px rgba(60,30,15,.4);display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-accent-ink)">{{ feat.tag }}</span><span style="display:flex;align-items:center;gap:5px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-muted)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-accent);animation:sh-pulse 1.6s infinite"></span>LIVE</span></div>
+            <span style="font-family:Geist,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">{{ feat.stat }}</span>
+            <div style="display:flex;align-items:flex-end;gap:4px;height:34px">
+              <sc-for list="{{ spark }}" as="s" hint-placeholder-count="14"><span style="flex:1;height:{{ s.h }}%;border-radius:3px;background:{{ s.c }};transition:height .4s"></span></sc-for>
+            </div>
+            <span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-muted)">{{ feat.sub }}</span>
+          </div>
+          <div style="position:relative"><div style="font-family:Geist,sans-serif;font-size:15.5px;font-weight:600;line-height:1.3;color:var(--pl-ink)">{{ feat.t }}</div><div style="margin-top:4px;font-size:13px;line-height:1.5;color:var(--pl-muted)">{{ feat.d }}</div></div>
+          <a href="{{ feat.href }}" style="position:relative;margin-top:auto;height:40px;display:flex;align-items:center;justify-content:center;border-radius:11px;background:var(--pl-ink);color:var(--pl-surface);font-size:13.5px;font-weight:500" style-hover="background:var(--pl-ink-hover);color:var(--pl-surface)">{{ feat.cta }} →</a>
+        </div>
+
+        <div style="grid-column:1 / -1;background:var(--pl-cream);padding:10px 22px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;font-size:12.5px;color:var(--pl-muted)">
+          <span style="display:flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:10.5px"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-accent);animation:sh-pulse 1.6s infinite"></span>ALL SYSTEMS OPERATIONAL</span>
+          <a href="/contact" style="margin-left:auto;color:var(--pl-ink)" style-hover="color:var(--pl-accent-ink)">Talk to sales ↗</a>
+          <a href="#" style="color:var(--pl-ink)" style-hover="color:var(--pl-accent-ink)">Help center ↗</a>
+          <span style="display:flex;align-items:center;gap:6px;font-family:'Geist Mono',monospace;font-size:10.5px">Close<span style="height:20px;padding:0 6px;display:flex;align-items:center;border:1px solid var(--pl-line);border-radius:5px;background:var(--pl-surface)">ESC</span></span>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ mobOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:0;right:0;top:64px;bottom:0;background:var(--pl-surface);border-top:1px solid var(--pl-line);display:flex;flex-direction:column;animation:sh-fade .2s ease">
+      <div style="flex:1;overflow-y:auto;padding:8px 16px 16px;-webkit-overflow-scrolling:touch">
+        <sc-for list="{{ mobSecs }}" as="m" hint-placeholder-count="5">
+          <div style="border-bottom:1px solid var(--pl-line-soft)">
+            <sc-if value="{{ m.link }}" hint-placeholder-val="{{ false }}"><a href="{{ m.href }}" style="min-height:58px;display:flex;align-items:center;justify-content:space-between;font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:var(--pl-ink)">{{ m.t }}<span style="color:var(--pl-faint)">›</span></a></sc-if>
+            <sc-if value="{{ m.menu }}" hint-placeholder-val="{{ true }}">
+              <button type="button" onClick="{{ m.go }}" aria-expanded="{{ m.on }}" style="width:100%;min-height:58px;border:none;background:transparent;padding:0;display:flex;align-items:center;justify-content:space-between;font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:var(--pl-ink);cursor:pointer">{{ m.t }}<span style="width:30px;height:30px;border-radius:9px;background:{{ m.ib }};color:{{ m.ic }};display:flex;align-items:center;justify-content:center;transform:rotate({{ m.rot }}deg);transition:all .25s"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span></button>
+              <div style="display:grid;grid-template-rows:{{ m.rows }};transition:grid-template-rows .3s ease">
+                <div style="overflow:hidden">
+                  <div style="padding:0 0 14px;display:flex;flex-direction:column;gap:12px">
+                    <sc-for list="{{ m.groups }}" as="g" hint-placeholder-count="2">
+                      <div style="display:flex;flex-direction:column;gap:6px">
+                        <span style="display:{{ g.hd }};font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--pl-accent-ink);padding:4px 2px 0">{{ g.t }}</span>
+                        <div style="display:grid;grid-template-columns:{{ mobCols }};gap:6px">
+                          <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="4">
+                            <a href="{{ i.href }}" style="min-height:48px;padding:0 14px;display:flex;align-items:center;gap:10px;border-radius:12px;background:var(--pl-cream);border:1px solid var(--pl-line-soft);font-size:14.5px;font-weight:500;color:var(--pl-ink)"><span style="width:6px;height:6px;flex:none;border-radius:2px;background:var(--pl-accent);transform:rotate(45deg)"></span>{{ i.t }}</a>
+                          </sc-for>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+      <div style="padding:14px 16px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--pl-line);display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--pl-surface)">
+        <a href="#" style="height:48px;display:flex;align-items:center;justify-content:center;border:1px solid var(--pl-line);border-radius:12px;font-size:15px;font-weight:500;color:var(--pl-ink)">Sign in</a>
+        <a href="/book-a-demo" style="height:48px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:var(--pl-gradient);font-size:15px;font-weight:500;color:var(--pl-surface)">Get a demo</a>
+      </div>
+    </div>
+  </sc-if>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:&quot;560px&quot;}}">
+const L = { pie: '/price-intelligence-engine', rtm: '/real-time-price-monitoring', dps: '/dynamic-pricing-software', ret: '/for-retailers', ecom: '/ecommerce-price-tracking', about: '/about', contact: '/contact', privacy: '/privacy-policy' };
+const PRODUCT = [
+  ['Price Intelligence Engine', 'Live competitor prices, index and positioning.', L.pie],
+  ['Pricing Decision Engine', 'Rules, floors and ceilings that turn data into moves.', '#'],
+  ['Margin Protection Engine', 'Guardrails that stop prices eroding margin.', '#'],
+  ['Competitive Data', 'Clean, matched competitor data at catalog scale.', '#'],
+  ['Price Scraping', 'Managed extraction from any marketplace or store.', '#'],
+  ['Product Matching', 'AI matching with human QC on every SKU.', '#'],
+  ['Price Engine', 'The core engine behind every price recommendation.', '#'],
+  ['Price Optimization', 'Find the price that balances volume and margin.', '#'],
+  ['Predictive Pricing', 'Forecast market moves before they happen.', '#']
+];
+const SOL = [
+  { t: 'By Industry', d: 'Built for your market', items: [['For Retailers', L.ret], ['For Ecommerce', L.ecom], ['For Brands & Manufacturers', '#'], ['For Marketplace Sellers', '#'], ['For Electronics Retail', '#'], ['Automotive Parts & Accessories', '#'], ['For Drop Shippers', '#']] },
+  { t: 'By Role', d: 'Built for your team', items: [['Category Managers', '#'], ['Pricing Managers', '#'], ['Product Managers', '#'], ['Marketing Managers', '#'], ['Ecommerce Managers', '#'], ['Revenue Managers', '#'], ['Merchandising Managers', '#']] },
+  { t: 'By Need', d: 'Built for your goal', items: [['Price Tracking', L.ecom], ['MAP Monitoring', '#'], ['Price Intelligence', L.pie]] },
+  { t: 'By Size', d: 'Built for your scale', items: [['Small Scale', '#'], ['Medium', '#'], ['Enterprise', '#']] },
+  { t: 'Distributors', d: 'Built for distribution', items: [['For Electronics Distributor', '#'], ['For OEM Distributors', '#']] }
+];
+const FEAT = [
+  ['Real Time Price Monitoring', 'Priority SKUs refreshed through the day.', L.rtm],
+  ['Dynamic Repricing', 'Automatic price moves inside your rules.', L.dps],
+  ['Price Comparison', 'Side-by-side view against every rival.', '#'],
+  ['Competitor Tracking', 'Follow assortment, promos and stock.', '#'],
+  ['Price Alerts', 'Email, Slack and SMS when markets move.', '#'],
+  ['Integrations', 'API, ERP, Shopify, Snowflake and more.', '#'],
+  ['Recommended Retail Price', 'Set and monitor RRP across channels.', '#']
+];
+const PLAT = [['Campaigns / Grouping', 'Group SKUs and run pricing campaigns.', 'CG'], ['Workspace', 'Shared views, filters and saved reports.', 'WS'], ['Team', 'Roles, permissions and approvals.', 'TM'], ['Usage', 'SKU volume, refresh and credits.', 'US']];
+const RES = [
+  { t: 'RESOURCES', items: [['Blog', '/blog'], ['Case studies', '#'], ['Glossary', '/glossary'], ['Ebooks & Guide', '#'], ['Help Center', '#'], ['Learn', '/learn']] },
+  { t: 'COMPANY', items: [['About Us', L.about], ['Customer Testimonials', '#'], ['Data Compliance', L.privacy], ['Careers', '#'], ['Partners', '#'], ['Contact Us', L.contact]] }
+];
+const FEATURED = {
+  product: { k: 'FEATURED', tag: 'PRICE INDEX', stat: '105.4', sub: '▼ 3.6% VS MARKET · 12,480 SKUS', t: 'See where you stand on every SKU', d: 'One index across your full catalog, refreshed in real time.', cta: 'See it on your data', href: L.contact },
+  solutions: { k: 'CUSTOMER RESULT', tag: 'BUY BOX WIN RATE', stat: '28% → 90%+', sub: 'CONSUMER ELECTRONICS · 6 WEEKS', t: 'Win the Buy Box without racing to the bottom', d: 'Automated responses to undercuts, inside the margin floor.', cta: 'Talk to sales', href: L.contact },
+  features: { k: 'MOST USED', tag: 'PRICE ALERT', stat: '−6.2%', sub: 'RIVAL B · 14:32 · SLACK + EMAIL', t: 'Know the minute a competitor moves', d: 'Real-time alerts routed to the right team, with context.', cta: 'Explore monitoring', href: L.rtm },
+  resources: { k: 'START HERE', tag: 'GUIDE', stat: 'Live in days', sub: 'CONNECT · MATCH · PRICE', t: 'The pricing team’s setup guide', d: 'Connect your catalog, set rules and go live.', cta: 'Read the guide', href: '#' }
+};
+const SHAPES = [['4px', 0], ['50%', 0], ['2px', 45]];
+const G = 'var(--pl-gradient)';
+class Component extends DCLogic {
+  state = { w: 1280, open: null, sol: 0, mob: false, mobSec: 'product', scrolled: false, tick: 0 };
+  componentDidMount() {
+    this._r = () => this.setState({ w: window.innerWidth });
+    this._s = () => { const sc = window.scrollY > 8; if (sc !== this.state.scrolled) this.setState({ scrolled: sc }); };
+    this._k = e => { if (e.key === 'Escape') this.setState({ open: null, mob: false }); };
+    this._c = e => { if (this.state.open && !e.target.closest('header')) this.setState({ open: null }); };
+    this._r(); window.addEventListener('resize', this._r); window.addEventListener('scroll', this._s, { passive: true });
+    document.addEventListener('keydown', this._k); document.addEventListener('click', this._c);
+    this._t = setInterval(() => this.state.open && this.setState(s => ({ tick: s.tick + 1 })), 1400);
+  }
+  componentWillUnmount() { window.removeEventListener('resize', this._r); window.removeEventListener('scroll', this._s); document.removeEventListener('keydown', this._k); document.removeEventListener('click', this._c); clearInterval(this._t); clearTimeout(this._lt); document.body.style.overflow = ''; }
+  componentDidUpdate() { if (this._lastMob !== this.state.mob) { this._lastMob = this.state.mob; document.body.style.overflow = this.state.mob ? 'hidden' : ''; } }
+  renderVals() {
+    const s = this.state, isDesk = s.w >= 1080, open = isDesk ? s.open : null;
+    const set = k => this.setState({ open: k });
+    const tops = [['product', 'Product'], ['solutions', 'Solutions'], ['features', 'Features'], ['pricing', 'Pricing', L.pie + '#pricing'], ['resources', 'Resources']];
+    const top = tops.map(([k, label, href]) => { const on = open === k; return { label, menu: !href, link: !!href, href, on, bg: on ? 'var(--pl-sand)' : 'transparent', c: on ? 'var(--pl-ink)' : 'var(--pl-ink-2)', rot: on ? 180 : 0, bar: on ? 1 : 0, hover: () => { clearTimeout(this._lt); set(k); }, toggle: () => set(s.open === k ? null : k) }; });
+    const sg = SOL[s.sol];
+    const tk = s.tick, base = [40, 52, 46, 60, 55, 68, 62, 58, 72, 66, 78, 70, 84, 80];
+    const spark = base.map((h, i) => ({ h: Math.max(20, Math.min(100, h + ((i * 7 + tk * 13) % 17) - 8)), c: i === base.length - 1 ? 'linear-gradient(180deg,var(--pl-accent-start),var(--pl-accent-end))' : i > 9 ? 'var(--pl-accent-line)' : 'var(--pl-line-soft)' }));
+    const mobSecs = [
+      { k: 'product', t: 'Product', groups: [{ t: '', items: PRODUCT.map(([t, , href]) => ({ t, href })) }] },
+      { k: 'solutions', t: 'Solutions', groups: SOL.map(g => ({ t: g.t, items: g.items.map(([t, href]) => ({ t, href })) })) },
+      { k: 'features', t: 'Features', groups: [{ t: 'Core features', items: FEAT.map(([t, , href]) => ({ t, href })) }, { t: 'Platform Management', items: PLAT.map(([t]) => ({ t, href: '#' })) }] },
+      { k: 'pricing', t: 'Pricing', href: L.pie + '#pricing' },
+      { k: 'resources', t: 'Resources', groups: RES.map(g => ({ t: g.t, items: g.items.map(([t, href]) => ({ t, href })) })) }
+    ].map(m => { const on = s.mobSec === m.k; return { ...m, link: !!m.href, menu: !m.href, on, rows: on ? '1fr' : '0fr', rot: on ? 45 : 0, ib: on ? G : 'var(--pl-sand)', ic: on ? 'var(--pl-surface)' : 'var(--pl-ink)', groups: (m.groups || []).map(g => ({ ...g, hd: g.t ? 'block' : 'none' })), go: () => this.setState({ mobSec: on ? null : m.k }) }; });
+    return {
+      isDesk, notDesk: !isDesk, top, open: open || '', deskOpen: !!open && open !== 'pricing',
+      panelLabel: (open || '') + ' menu',
+      enter: () => clearTimeout(this._lt),
+      leave: () => { clearTimeout(this._lt); this._lt = setTimeout(() => this.setState({ open: null }), 180); },
+      closeNow: () => this.setState({ open: null }),
+      barAlpha: s.scrolled || open ? '.96' : '.86',
+      isProduct: open === 'product', isSolutions: open === 'solutions', isFeatures: open === 'features', isResources: open === 'resources',
+      product: PRODUCT.map(([t, d, href], i) => ({ t, d, href, icon: ['intelligence','decision','shield','data','scrape','match','engine','optimize','predict'][i] || 'engine' })),
+      solTabs: SOL.map((g, i) => { const on = s.sol === i; return { t: g.t, n: String(g.items.length).padStart(2, '0'), on, bg: on ? 'var(--pl-surface)' : 'transparent', c: on ? 'var(--pl-ink)' : 'var(--pl-muted)', nc: on ? 'var(--pl-accent-ink)' : 'var(--pl-faint-2)', sh: on ? '0 0 0 1px var(--pl-line)' : 'none', bar: on ? 1 : 0, go: () => this.setState({ sol: i }) }; }),
+      sol: { t: sg.t, d: sg.d, items: sg.items.map(([t, href]) => ({ t, href })) }, solKey: 'sol' + s.sol,
+      features: FEAT.map(([t, d, href], i) => ({ t, d, href, n: String(i + 1).padStart(2, '0') })),
+      platform: PLAT.map(([t, d, ab], i) => ({ t, d, ab, icon: ['campaigns','workspace','team','usage'][i] || 'workspace' })),
+      resGroups: RES.map(g => ({ t: g.t, items: g.items.map(([t, href], i) => ({ t, href, n: String(i + 1).padStart(2, '0') })) })),
+      feat: FEATURED[open] || FEATURED.product, spark,
+      mob: s.mob && !isDesk, mobOpen: s.mob && !isDesk, mobLabel: s.mob ? 'Close menu' : 'Open menu',
+      toggleMob: () => this.setState({ mob: !s.mob }),
+      b1t: s.mob ? '20px' : '14px', b1r: s.mob ? 45 : 0, b2o: s.mob ? 0 : 1, b3t: s.mob ? '20px' : '26px', b3r: s.mob ? -45 : 0,
+      mobSecs, mobCols: s.w >= 640 ? '1fr 1fr' : '1fr'
+    };
+  }
+}
+</script>
+</body>
+</html>

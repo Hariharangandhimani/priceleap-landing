@@ -1,0 +1,217 @@
+---
+// Reusable legal-document template (privacy, terms). Native port of the design package's legal pages.
+type Block =
+  | { p: string }
+  | { h: string }
+  | { n: string; p: string }
+  | { list: string[]; ordered?: number; indent?: number };
+type Sec = { t: string; lab?: string; short?: string; group?: string; b: Block[] };
+export interface LegalDocData {
+  title: string; t1: string; t2: string; lead: string;
+  other: string; otherHref: string; intro: string[]; secs: Sec[];
+}
+interface Props { doc: LegalDocData }
+const { doc } = Astro.props;
+
+const words = (JSON.stringify(doc.secs).split(/\s+/).length + doc.intro.join(' ').split(/\s+/).length);
+const readTime = Math.max(1, Math.round(words / 230)) + ' min';
+
+const secs = doc.secs.map((sec, i) => {
+  const id = 's' + (i + 1);
+  const blocks = sec.b.map((b: any) => {
+    if (b.list) return {
+      kind: 'list' as const,
+      indent: b.indent ? '56px' : '0',
+      items: b.list.map((x: string, k: number) => {
+        const m = x.split(' — ');
+        const ordered = !!b.ordered;
+        return {
+          k: m.length > 1 ? m[0] : '', sep: m.length > 1 ? ' — ' : '',
+          v: m.length > 1 ? m.slice(1).join(' — ') : x,
+          mk: ordered ? String(k + 1) : '→',
+          mb: ordered ? 'var(--pl-sand)' : 'var(--pl-accent-tint)',
+          mc: ordered ? 'var(--pl-ink-2)' : 'var(--pl-accent-ink)',
+        };
+      }),
+    };
+    if (b.h) return { kind: 'h' as const, text: b.h };
+    if (b.n) return { kind: 'sub' as const, num: b.n, text: b.p };
+    return { kind: 'p' as const, text: b.p };
+  });
+  return { id, t: sec.t, short: sec.short || sec.t, hasGroup: !!sec.group, group: sec.group || '', blocks };
+});
+---
+<section class="pl-legal-hero" data-screen-label="Legal hero">
+  <div aria-hidden="true" class="pl-legal-hero-grid"></div>
+  <div class="pl-legal-hero-inner">
+    <div>
+      <nav class="pl-legal-crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span>/</span><span>Legal</span><span>/</span><span class="pl-legal-crumb-cur">{doc.title}</span></nav>
+      <h1 class="pl-legal-h1"><span style="font-weight:400">{doc.t1} </span><span style="font-weight:700">{doc.t2}</span></h1>
+      <p class="pl-legal-lead">{doc.lead}</p>
+    </div>
+    <div class="pl-legal-meta">
+      <div class="pl-legal-meta-grid">
+        <div class="pl-legal-meta-cell"><div class="pl-legal-meta-k">SECTIONS</div><div class="pl-legal-meta-v">{doc.secs.length}</div></div>
+        <div class="pl-legal-meta-cell"><div class="pl-legal-meta-k">READ TIME</div><div class="pl-legal-meta-v">{readTime}</div></div>
+        <div class="pl-legal-meta-note">PriceLeap · a product of Aimleap Pvt Ltd.</div>
+      </div>
+      <button type="button" class="pl-legal-print" data-print><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z"></path></svg>Print / save PDF</button>
+    </div>
+  </div>
+</section>
+
+<div class="pl-legal-progress"><div class="pl-legal-progress-fill" data-progress></div></div>
+
+<section class="pl-legal-body" data-screen-label="Legal body">
+  <div class="pl-legal-wrap">
+    <nav class="pl-legal-toc" aria-label="On this page" data-toc>
+      <div class="pl-legal-toc-label">On this page</div>
+      <div class="pl-legal-toc-list">
+        {secs.map((s, i) => (
+          <a href={`#${s.id}`} class="pl-legal-toc-link" data-toc-link={s.id}><span class="pl-legal-toc-n">{String(i + 1).padStart(2, '0')}</span>{s.short}</a>
+        ))}
+      </div>
+      <div class="pl-legal-help">
+        <span class="pl-legal-help-t">Questions about this policy?</span>
+        <a href="/contact" class="pl-legal-help-link">Contact our team →</a>
+      </div>
+    </nav>
+
+    <article class="pl-legal-article">
+      {doc.intro.length > 0 && (
+        <div class="pl-legal-intro">
+          {doc.intro.map((p) => (<p>{p}</p>))}
+        </div>
+      )}
+      {secs.map((s) => (
+        <div>
+          {s.hasGroup && (<div class="pl-legal-group"><span>{s.group}</span><span class="pl-legal-group-line"></span></div>)}
+          <section id={s.id} class="pl-legal-sec" data-sec={s.id}>
+            <h2 class="pl-legal-h2">{s.t}</h2>
+            <div class="pl-legal-blocks">
+              {s.blocks.map((b) => (
+                <div>
+                  {b.kind === 'p' && (<p class="pl-legal-p">{b.text}</p>)}
+                  {b.kind === 'h' && (<h3 class="pl-legal-h3">{b.text}</h3>)}
+                  {b.kind === 'sub' && (<div class="pl-legal-sub"><span class="pl-legal-sub-n">{b.num}</span><p class="pl-legal-p">{b.text}</p></div>)}
+                  {b.kind === 'list' && (
+                    <div class="pl-legal-list" style={`margin-left:${b.indent}`}>
+                      {b.items.map((it: { k: string; sep: string; v: string; mk: string; mb: string; mc: string }) => (
+                        <div class="pl-legal-list-row">
+                          <span class="pl-legal-list-mk" style={`background:${it.mb};color:${it.mc}`}>{it.mk}</span>
+                          <span class="pl-legal-list-txt">{it.k && (<b>{it.k}</b>)}{it.sep}{it.v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      ))}
+      <div class="pl-legal-related">
+        <a href={doc.otherHref} class="pl-legal-related-card"><span class="pl-legal-related-k">Also read</span><span class="pl-legal-related-t">{doc.other} →</span></a>
+        <a href="/contact" class="pl-legal-related-card pl-legal-related-card--accent"><span class="pl-legal-related-k pl-legal-related-k--accent">Need help?</span><span class="pl-legal-related-t">Contact us →</span></a>
+      </div>
+    </article>
+  </div>
+</section>
+
+<style>
+  .pl-legal-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; background: var(--pl-cream); }
+  .pl-legal-hero-grid { position: absolute; inset: 0; background-image: repeating-linear-gradient(0deg,transparent 0 31px,var(--pl-line-soft) 31px 32px); -webkit-mask-image: linear-gradient(90deg,transparent,#000 40%,#000 70%,transparent); mask-image: linear-gradient(90deg,transparent,#000 40%,#000 70%,transparent); opacity: .8; pointer-events: none; }
+  .pl-legal-hero-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: clamp(48px,7vw,88px) clamp(20px,4vw,40px) clamp(40px,5vw,64px); display: grid; grid-template-columns: 1fr; gap: clamp(28px,4vw,56px); align-items: end; }
+  .pl-legal-crumbs { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--pl-muted); }
+  .pl-legal-crumbs a { color: var(--pl-muted); }
+  .pl-legal-crumbs span:nth-child(even) { color: var(--pl-line-xstrong); }
+  .pl-legal-crumb-cur { color: var(--pl-ink) !important; }
+  .pl-legal-h1 { margin: 24px 0 0; font-family: Geist, sans-serif; font-size: clamp(40px,5.6vw,72px); line-height: 1; letter-spacing: -.05em; color: var(--pl-ink); }
+  .pl-legal-lead { margin: 18px 0 0; max-width: 640px; font-size: 18px; line-height: 1.6; color: var(--pl-ink-2); text-wrap: pretty; }
+  .pl-legal-meta { display: flex; flex-direction: column; gap: 10px; justify-self: start; }
+  .pl-legal-meta-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); border: 1px solid var(--pl-line); border-radius: 14px; overflow: hidden; background: var(--pl-line); gap: 1px; min-width: min(100%,320px); }
+  .pl-legal-meta-cell { background: var(--pl-surface); padding: 12px 16px; }
+  .pl-legal-meta-k { font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .08em; color: var(--pl-faint); }
+  .pl-legal-meta-v { margin-top: 2px; font-family: Geist, sans-serif; font-size: 20px; font-weight: 600; color: var(--pl-ink); }
+  .pl-legal-meta-note { grid-column: span 2; background: var(--pl-surface); padding: 12px 16px; font-size: 13px; color: var(--pl-muted); }
+  .pl-legal-print { align-self: flex-start; height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--pl-ink); }
+
+  .pl-legal-progress { position: sticky; top: 64px; z-index: 40; height: 3px; background: transparent; }
+  .pl-legal-progress-fill { height: 100%; width: 0; background: var(--pl-gradient); transition: width .12s linear; }
+
+  .pl-legal-body { border-bottom: 1px solid var(--pl-line); }
+  .pl-legal-wrap { max-width: 1280px; margin: 0 auto; padding: clamp(40px,6vw,80px) clamp(20px,4vw,40px) clamp(64px,8vw,112px); display: grid; grid-template-columns: 1fr; gap: clamp(32px,5vw,72px); align-items: start; }
+  .pl-legal-toc { position: relative; display: flex; flex-direction: column; gap: 12px; }
+  .pl-legal-toc-label { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--pl-muted); }
+  .pl-legal-toc-list { position: relative; display: flex; flex-direction: column; border-left: 1px solid var(--pl-line); }
+  .pl-legal-toc-link { position: relative; display: flex; gap: 10px; padding: 8px 0 8px 16px; margin-left: -1px; border-left: 2px solid transparent; font-size: 14px; line-height: 1.4; color: var(--pl-muted); transition: color .2s, border-color .2s; }
+  .pl-legal-toc-link:hover { color: var(--pl-ink); }
+  .pl-legal-toc-link.is-active { border-left-color: var(--pl-accent); color: var(--pl-ink); font-weight: 500; }
+  .pl-legal-toc-n { flex: none; font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--pl-faint-2); padding-top: 2px; }
+  .pl-legal-toc-link.is-active .pl-legal-toc-n { color: var(--pl-accent-ink); }
+  .pl-legal-help { margin-top: 8px; background: var(--pl-cream); border: 1px solid var(--pl-line); border-radius: 14px; padding: 14px 16px; display: none; flex-direction: column; gap: 8px; }
+  .pl-legal-help-t { font-size: 14px; font-weight: 600; color: var(--pl-ink); }
+  .pl-legal-help-link { font-size: 13.5px; font-weight: 500; color: var(--pl-accent-ink); }
+
+  .pl-legal-article { min-width: 0; max-width: 780px; }
+  .pl-legal-intro { padding: 0 0 36px; border-bottom: 1px solid var(--pl-line-soft); display: flex; flex-direction: column; gap: 16px; }
+  .pl-legal-intro p { margin: 0; font-size: 17px; line-height: 1.75; color: var(--pl-ink-2); }
+  .pl-legal-group { margin-top: 44px; display: flex; align-items: center; gap: 14px; }
+  .pl-legal-group span:first-child { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--pl-accent-ink); white-space: nowrap; }
+  .pl-legal-group-line { flex: 1; height: 1px; background: repeating-linear-gradient(90deg,var(--pl-accent-line) 0 6px,transparent 6px 12px); }
+  .pl-legal-sec { scroll-margin-top: 110px; padding: 36px 0; border-bottom: 1px solid var(--pl-line-soft); }
+  .pl-legal-h2 { margin: 0; font-family: Geist, sans-serif; font-size: clamp(24px,2.6vw,30px); font-weight: 600; letter-spacing: -.025em; line-height: 1.2; color: var(--pl-ink); }
+  .pl-legal-blocks { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; }
+  .pl-legal-p { margin: 0; font-size: 16px; line-height: 1.75; color: var(--pl-ink-2); }
+  .pl-legal-h3 { margin: 10px 0 0; font-family: Geist, sans-serif; font-size: 18px; font-weight: 600; color: var(--pl-ink); }
+  .pl-legal-sub { display: grid; grid-template-columns: 44px minmax(0,1fr); gap: 12px; align-items: baseline; }
+  .pl-legal-sub-n { font-family: 'Geist Mono', monospace; font-size: 12.5px; font-weight: 500; color: var(--pl-accent-ink); }
+  .pl-legal-list { border: 1px solid var(--pl-line); border-radius: 14px; overflow: hidden; background: var(--pl-surface); }
+  .pl-legal-list-row { display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--pl-sand); transition: background .2s; }
+  .pl-legal-list-row:last-child { border-bottom: none; }
+  .pl-legal-list-row:hover { background: var(--pl-cream); }
+  .pl-legal-list-mk { width: 22px; height: 22px; margin-top: 1px; border-radius: 7px; font-family: 'Geist Mono', monospace; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .pl-legal-list-txt { font-size: 15.5px; line-height: 1.65; color: var(--pl-ink-2); }
+  .pl-legal-list-txt b { font-weight: 600; color: var(--pl-ink); }
+  .pl-legal-related { margin-top: 40px; display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,260px),1fr)); gap: 12px; }
+  .pl-legal-related-card { background: var(--pl-cream); border: 1px solid var(--pl-line); border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; color: var(--pl-ink); transition: border-color .25s; }
+  .pl-legal-related-card:hover { border-color: var(--pl-accent); color: var(--pl-ink); }
+  .pl-legal-related-card--accent { background: var(--pl-accent-tint); border-color: var(--pl-accent-line); }
+  .pl-legal-related-k { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--pl-muted); }
+  .pl-legal-related-k--accent { color: var(--pl-accent-ink); }
+  .pl-legal-related-t { font-family: Geist, sans-serif; font-size: 17px; font-weight: 600; }
+
+  @media (min-width: 1000px) {
+    .pl-legal-hero-inner { grid-template-columns: minmax(0,1fr) auto; }
+    .pl-legal-meta { justify-self: end; }
+    .pl-legal-wrap { grid-template-columns: 260px minmax(0,1fr); }
+    .pl-legal-toc { position: sticky; top: 96px; }
+    .pl-legal-help { display: flex; }
+  }
+  @media print { .pl-legal-toc, .pl-legal-progress { display: none !important; } }
+</style>
+
+<script>
+  document.querySelectorAll('[data-print]').forEach((b) => b.addEventListener('click', () => window.print()));
+
+  const fill = document.querySelector('[data-progress]') as HTMLElement | null;
+  const onScroll = () => {
+    if (!fill) return;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    fill.style.width = (max > 0 ? Math.min(100, (window.scrollY / max) * 100) : 0) + '%';
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  const links = Array.from(document.querySelectorAll('[data-toc-link]')) as HTMLElement[];
+  const secEls = Array.from(document.querySelectorAll('[data-sec]')) as HTMLElement[];
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) {
+        const id = (e.target as HTMLElement).dataset.sec;
+        links.forEach((l) => l.classList.toggle('is-active', l.dataset.tocLink === id));
+      }
+    });
+  }, { rootMargin: '-100px 0px -70% 0px' });
+  secEls.forEach((s) => io.observe(s));
+</script>

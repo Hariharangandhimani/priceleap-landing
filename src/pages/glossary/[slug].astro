@@ -1,21 +1,352 @@
 ---
-import SiteLayout from '@/layouts/SiteLayout.astro';
-import glossaryData from '@/data/glossary.json';
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+import glossaryData from '../../data/glossary.json';
+
+type Related = { slug: string; term: string; category: string };
+type Term = {
+  slug: string; term: string; shortDefinition: string; category: string;
+  phonetic?: string; contentHtml: string; relatedTerms?: Related[]; metaDescription?: string;
+};
+
 export function getStaticPaths() {
-  return glossaryData.terms.map((term) => ({ params: { slug: term.slug }, props: { term } }));
+  const terms = glossaryData.terms as Term[];
+  return terms.map((term) => ({ params: { slug: term.slug }, props: { term } }));
 }
-const { term } = Astro.props;
-const schema = { '@context': 'https://schema.org', '@type': 'DefinedTerm', name: term.term, description: term.metaDescription || term.shortDefinition, termCode: term.slug, inDefinedTermSet: { '@type': 'DefinedTermSet', name: 'PriceLeap Pricing Intelligence Glossary', url: 'https://priceleap.ai/glossary/' } };
+
+const { term } = Astro.props as { term: Term };
+const terms = glossaryData.terms as Term[];
+
+// Inject ids into h2/h3 headings in the content and collect a table of contents.
+const slugify = (s: string) => s.toLowerCase().replace(/<[^>]+>/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'section';
+const toc: { id: string; text: string; level: number }[] = [];
+const used = new Set<string>();
+const contentHtml = term.contentHtml.replace(/<(h2|h3)(\s[^>]*)?>([\s\S]*?)<\/\1>/g, (_m, tag, attrs = '', inner) => {
+  const text = inner.replace(/<[^>]+>/g, '').trim();
+  let id = slugify(text);
+  let n = 2; const base = id;
+  while (used.has(id)) id = `${base}-${n++}`;
+  used.add(id);
+  toc.push({ id, text, level: tag === 'h2' ? 2 : 3 });
+  return `<${tag} id="${id}"${attrs || ''}>${inner}</${tag}>`;
+});
+
+const words = contentHtml.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+const readTime = Math.max(1, Math.round(words / 230)) + ' min read';
+const firstLetter = (term.term[0] || '#').toUpperCase();
+
+// Related terms: prefer data, else same-category fallback.
+let related = (term.relatedTerms || []).slice(0, 3);
+if (related.length < 3) {
+  const extra = terms.filter((t) => t.slug !== term.slug && t.category === term.category && !related.some((r) => r.slug === t.slug))
+    .slice(0, 3 - related.length).map((t) => ({ slug: t.slug, term: t.term, category: t.category }));
+  related = [...related, ...extra];
+}
+const relatedFull = related.map((r) => {
+  const full = terms.find((t) => t.slug === r.slug);
+  return { ...r, def: full?.shortDefinition || '', letter: (r.term[0] || '#').toUpperCase() };
+});
+
+const canonicalUrl = `https://priceleap.ai/glossary/${term.slug}`;
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'DefinedTerm',
+  name: term.term,
+  description: term.shortDefinition,
+  inDefinedTermSet: 'https://priceleap.ai/glossary',
+  url: canonicalUrl,
+}];
 ---
-<SiteLayout title={term.term + ' | PriceLeap Glossary'} description={term.metaDescription || term.shortDefinition}>
-  <script type="application/ld+json" slot="head" set:html={JSON.stringify(schema)} />
-  <section class="term-hero"><div class="term-hero__grid" aria-hidden="true"></div><div class="pl-container term-hero__inner"><a class="term-back" href="/glossary/">← Back to glossary</a><span class="term-category">{term.category}</span><h1>{term.term}</h1>{term.phonetic && <span class="term-phonetic">{term.phonetic}</span>}</div></section>
-  <main class="pl-container term-page"><div class="term-layout"><article class="term-content"><div class="term-content__label">Definition</div><div class="term-content__body" set:html={term.contentHtml}></div><div class="term-cta"><span class="pl-eyebrow"><span class="pl-eyebrow__slash">//</span><span class="pl-eyebrow__label">See it in action</span></span><h2>Make this strategy work across your catalog.</h2><p>Bring your real pricing challenge and we’ll show you the workflow.</p><a class="pl-btn pl-btn--primary" href="/book-a-demo">Book a demo <span aria-hidden="true">→</span></a></div></article><aside class="term-aside"><div class="term-aside__label">Related terms</div><div class="term-related">{term.relatedTerms.map((related) => <a href={'/glossary/' + related.slug + '/'}><span>{related.category}</span><strong>{related.term}</strong><i aria-hidden="true">↗</i></a>)}</div><a class="term-all" href="/glossary/">Browse all terms <span aria-hidden="true">→</span></a></aside></div></main>
-</SiteLayout>
+<PriceLeapLayout title={`${term.term} · PriceLeap Glossary`} description={term.metaDescription || term.shortDefinition} canonical={canonicalUrl} jsonLd={jsonLd}>
+  <div class="gt-progress" aria-hidden="true"><div class="gt-progress-fill" data-progress></div></div>
+
+  <section class="gt-hero" data-screen-label="Hero">
+    <div aria-hidden="true" class="gt-hero-grid"></div>
+    <div aria-hidden="true" class="gt-hero-glow"></div>
+    <div class="gt-hero-inner">
+      <nav aria-label="Breadcrumb" class="gt-crumbs">
+        <a href="/">Home</a><span>/</span><a href="/glossary">Glossary</a><span>/</span><a href="/glossary">{firstLetter}</a><span>/</span><span aria-current="page" class="gt-crumb-cur">{term.term}</span>
+      </nav>
+      <div class="gt-hero-grid2">
+        <div style="min-width:0">
+          <div class="gt-hero-tags">
+            <span class="gt-badge"><span class="gt-diamond"></span>Glossary · {term.category}</span>
+            {term.phonetic && (<span class="gt-phon">{term.phonetic} · NOUN</span>)}
+          </div>
+          <h1 class="gt-h1">What is {term.term}?</h1>
+          <p class="gt-intro">{term.shortDefinition}</p>
+          <div class="gt-hero-cta">
+            <a href="/book-a-demo" class="gt-btn-primary"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Book a demo</a>
+            <a href="/contact" class="gt-btn-ghost"><span class="gt-pulse-dot"></span>Talk to a pricing expert</a>
+          </div>
+          <div class="gt-author-meta">
+            <span class="gt-author-chip"><span class="gt-author-ini">PL</span><span><span class="gt-author-name">PriceLeap Research</span><span class="gt-author-role">Pricing intelligence team</span></span></span>
+            <span class="gt-meta-sep"></span>
+            <div class="gt-meta-items">
+              <span>Reviewed Nov 12, 2026</span>
+              <span>{readTime}</span>
+            </div>
+          </div>
+        </div>
+        <aside aria-label="Summarize with AI" class="gt-ai">
+          <div class="gt-ai-head">
+            <span class="gt-ai-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path></svg></span>
+            <div><div class="gt-ai-t">Summarize with AI</div><div class="gt-ai-d">Get the key points in your assistant of choice.</div></div>
+          </div>
+          <div class="gt-ai-tools">
+            {[
+              { t: 'ChatGPT', by: 'OPENAI', logo: 'openai', bg: 'var(--pl-ink)', href: `https://chatgpt.com/?q=${encodeURIComponent('Summarize this PriceLeap glossary term: ' + canonicalUrl)}` },
+              { t: 'Claude', by: 'ANTHROPIC', logo: 'claude', bg: '#F5E6DA', href: `https://claude.ai/new?q=${encodeURIComponent('Summarize this PriceLeap glossary term: ' + canonicalUrl)}` },
+              { t: 'Perplexity', by: 'PERPLEXITY AI', logo: 'perplexity', bg: '#E3F1F1', href: `https://www.perplexity.ai/search?q=${encodeURIComponent('Summarize ' + canonicalUrl)}` },
+              { t: 'Gemini', by: 'GOOGLE', logo: 'gemini', bg: '#E8EEFB', href: `https://www.google.com/search?udm=50&q=${encodeURIComponent('Summarize ' + canonicalUrl)}` },
+            ].map((a) => (
+              <a href={a.href} target="_blank" rel="noopener" class="gt-ai-tool">
+                <span class="gt-ai-mk" style={`background:${a.bg}`}><img src={`/assets/ai/${a.logo}.svg`} alt="" width="16" height="16" style="display:block" /></span>
+                <span style="min-width:0"><span class="gt-ai-tool-t">{a.t}</span><span class="gt-ai-tool-by">{a.by}</span></span>
+                <span class="gt-ai-arrow">↗</span>
+              </a>
+            ))}
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <div class={`gt-body${toc.length === 0 ? ' gt-body--no-toc' : ''}`}>
+    {toc.length > 0 && (
+      <aside aria-label="Table of contents" class="gt-toc">
+        <div class="gt-toc-card">
+          <div class="gt-toc-head"><span>ON THIS PAGE</span></div>
+          <nav class="gt-toc-nav">
+            {toc.map((t, i) => (
+              <a href={`#${t.id}`} class="gt-toc-link" data-toc-link={t.id} style={t.level === 3 ? 'padding-left:26px' : ''}><span class="gt-toc-n">{String(i + 1).padStart(2, '0')}</span>{t.text}</a>
+            ))}
+          </nav>
+        </div>
+        <button type="button" class="gt-totop" data-totop>↑ Back to top</button>
+      </aside>
+    )}
+
+    <div style="min-width:0">
+      <article class="gt-article">
+        <div class="gt-def-card">
+          <div aria-hidden="true" class="gt-def-glow"></div>
+          <div class="gt-def-top"><span class="gt-def-label"><span class="gt-diamond"></span>DEFINITION</span><span class="gt-def-cat">{term.category.toUpperCase()}</span></div>
+          <p class="gt-def-text">{term.shortDefinition}</p>
+        </div>
+        <div class="gl-prose" set:html={contentHtml} />
+
+        <div class="gt-sharebar">
+          <div class="gt-related-tags">
+            <span class="gt-tags-label">RELATED</span>
+            {relatedFull.map((r) => (<a href={`/glossary/${r.slug}`} class="gt-tag">{r.term}</a>))}
+          </div>
+          <div class="gt-share">
+            <span class="gt-tags-label">SHARE</span>
+            <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener" aria-label="Share on LinkedIn" class="gt-share-btn">in</a>
+            <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(canonicalUrl)}&text=${encodeURIComponent(term.term)}`} target="_blank" rel="noopener" aria-label="Share on X" class="gt-share-btn">X</a>
+            <button type="button" class="gt-copy" data-copy={canonicalUrl}>Copy link</button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <aside aria-label="Book a demo" class="gt-cta-aside">
+      <div class="gt-cta-card">
+        <div aria-hidden="true" class="gt-cta-glow"></div>
+        <div class="gt-cta-pad">
+          <div class="gt-cta-title">See it live on your catalog</div>
+          <div class="gt-cta-list">
+            <span class="gt-cta-li"><span class="gt-cta-check">✓</span>Verified matches on your SKUs</span>
+            <span class="gt-cta-li"><span class="gt-cta-check">✓</span>Revenue-weighted by category</span>
+            <span class="gt-cta-li"><span class="gt-cta-check">✓</span>Live in 5 days, no setup on your side</span>
+          </div>
+          <a href="/book-a-demo" class="gt-cta-primary">Book a demo</a>
+          <a href="/contact" class="gt-cta-ghost">Talk to an expert</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  {relatedFull.length > 0 && (
+    <section class="gt-related" data-screen-label="Related terms">
+      <div class="gt-related-head">
+        <div>
+          <span class="gt-related-eyebrow"><span class="gt-diamond"></span>RELATED TERMS</span>
+          <h2 class="gt-related-h2">Keep exploring the glossary</h2>
+        </div>
+        <a href="/glossary" class="gt-related-all">View all terms →</a>
+      </div>
+      <div class="gt-related-grid">
+        {relatedFull.map((r) => (
+          <a href={`/glossary/${r.slug}`} class="gt-related-card">
+            <span class="gt-related-card-top"><span class="gt-related-letter">{r.letter}</span><span class="gt-related-cat">{r.category.toUpperCase()}</span></span>
+            <span class="gt-related-term">{r.term}</span>
+            <span class="gt-related-def">{r.def}</span>
+            <span class="gt-related-read">Read definition →</span>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+</PriceLeapLayout>
+
 <style>
-  .term-hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--pl-line); background: var(--pl-surface); } .term-hero__grid { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--pl-line-soft) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse 75% 100% at 70% 30%, #000 8%, transparent 78%); opacity: .65; } .term-hero__inner { position: relative; display: flex; flex-direction: column; align-items: center; padding-block: clamp(50px, 8vw, 92px); text-align: center; } .term-back { align-self: flex-start; color: var(--pl-muted); font-family: var(--pl-mono); font-size: 10px; } .term-back:hover { color: var(--pl-accent-ink); } .term-category { margin-top: 48px; color: var(--pl-accent-ink); font-family: var(--pl-mono); font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; } .term-hero h1 { max-width: 900px; margin-top: 16px; color: var(--pl-ink); font-size: clamp(44px, 7vw, 88px); line-height: .98; letter-spacing: -.06em; } .term-phonetic { margin-top: 18px; color: var(--pl-faint); font-family: var(--pl-mono); font-size: 14px; }
-  .term-page { padding-block: clamp(48px, 8vw, 96px); } .term-layout { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: clamp(44px, 9vw, 128px); max-width: 1040px; margin: 0 auto; } .term-content__label, .term-aside__label { color: var(--pl-accent-ink); font-family: var(--pl-mono); font-size: 10px; font-weight: 600; letter-spacing: .13em; text-transform: uppercase; } .term-content__body { margin-top: 24px; color: var(--pl-muted); font-size: 18px; line-height: 1.8; } .term-content__body :global(p) { margin: 0 0 22px; } .term-content__body :global(strong) { color: var(--pl-ink); } .term-content__body :global(a) { color: var(--pl-accent-ink); text-decoration: underline; text-underline-offset: 3px; }
-  .term-cta { margin-top: 54px; border-radius: var(--pl-radius-lg); background: var(--pl-ink); padding: 30px; color: #fff; } .term-cta .pl-eyebrow { color: #fff; } .term-cta h2 { margin-top: 14px; color: #fff; font-size: 28px; line-height: 1.08; letter-spacing: -.04em; } .term-cta p { margin-top: 10px; color: rgba(255,255,255,.65); font-size: 14px; line-height: 1.55; } .term-cta .pl-btn { margin-top: 22px; }
-  .term-aside { align-self: start; position: sticky; top: 100px; } .term-related { display: grid; margin-top: 18px; border-top: 1px solid var(--pl-line); } .term-related a { position: relative; display: grid; gap: 7px; border-bottom: 1px solid var(--pl-line); padding: 16px 28px 16px 0; } .term-related a:hover strong { color: var(--pl-accent-ink); } .term-related span { color: var(--pl-faint); font-family: var(--pl-mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; } .term-related strong { color: var(--pl-ink); font-size: 14px; line-height: 1.25; } .term-related i { position: absolute; top: 18px; right: 0; color: var(--pl-accent-ink); font-size: 18px; font-style: normal; } .term-all { display: flex; justify-content: space-between; margin-top: 20px; color: var(--pl-ink); font-family: var(--pl-mono); font-size: 10px; } .term-all span { color: var(--pl-accent-ink); font-size: 16px; }
-  @media (max-width: 760px) { .term-layout { grid-template-columns: 1fr; } .term-aside { position: static; } .term-back { align-self: auto; } }
+  .gt-progress { position: fixed; left: 0; top: 0; z-index: 70; height: 3px; width: 100%; }
+  .gt-progress-fill { height: 100%; width: 0; background: linear-gradient(90deg,var(--pl-accent-start),var(--pl-accent),var(--pl-accent-end)); transition: width .12s linear; }
+  .gt-diamond { width: 6px; height: 6px; border-radius: 2px; background: var(--pl-accent); transform: rotate(45deg); flex: none; }
+
+  .gt-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
+  .gt-hero-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 70% 90% at 80% 20%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 90% at 80% 20%,#000 10%,transparent 70%); pointer-events: none; }
+  .gt-hero-glow { position: absolute; right: -10%; top: -30%; width: 680px; height: 560px; background: radial-gradient(closest-side,rgba(251,138,46,.12),transparent); pointer-events: none; }
+  .gt-hero-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: clamp(28px,4vw,48px) clamp(16px,4vw,40px) clamp(36px,5vw,56px); }
+  .gt-crumbs { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--pl-muted); }
+  .gt-crumbs a { color: var(--pl-muted); }
+  .gt-crumbs > span:nth-child(even) { color: var(--pl-line-xstrong); }
+  .gt-crumb-cur { color: var(--pl-ink) !important; }
+  .gt-hero-grid2 { margin-top: clamp(24px,3vw,36px); display: grid; grid-template-columns: 1fr; gap: clamp(28px,4vw,56px); align-items: start; }
+  .gt-hero-tags { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .gt-badge { height: 26px; padding: 0 10px; display: inline-flex; align-items: center; gap: 7px; border-radius: 999px; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--pl-accent-ink); }
+  .gt-phon { font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .08em; color: var(--pl-faint); }
+  .gt-h1 { margin: 18px 0 0; font-family: Geist, sans-serif; font-size: clamp(34px,5vw,60px); line-height: 1.04; letter-spacing: -.04em; font-weight: 600; color: var(--pl-ink); text-wrap: balance; }
+  .gt-intro { margin: 20px 0 0; max-width: 640px; font-size: clamp(16px,1.6vw,19px); line-height: 1.6; color: var(--pl-ink-2); text-wrap: pretty; }
+  .gt-hero-cta { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .gt-btn-primary { height: 48px; padding: 0 20px; display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; background: var(--pl-gradient); color: var(--pl-surface); font-family: Geist, sans-serif; font-weight: 500; font-size: 15px; box-shadow: 0 12px 24px -12px rgba(247,99,30,.85); }
+  .gt-btn-primary:hover { filter: brightness(.95); color: var(--pl-surface); }
+  .gt-btn-ghost { height: 48px; padding: 0 20px; display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; background: var(--pl-surface); border: 1px solid var(--pl-line); color: var(--pl-ink); font-family: Geist, sans-serif; font-weight: 500; font-size: 15px; }
+  .gt-btn-ghost:hover { border-color: var(--pl-line-xstrong); color: var(--pl-ink); }
+  .gt-pulse-dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--pl-accent); animation: bp-pulse 1.8s infinite; }
+  .gt-author-meta { margin-top: 28px; padding-top: 22px; border-top: 1px dashed var(--pl-line); display: flex; align-items: center; gap: 14px 22px; flex-wrap: wrap; }
+  .gt-author-chip { display: flex; align-items: center; gap: 12px; color: var(--pl-ink); }
+  .gt-author-ini { width: 44px; height: 44px; border-radius: 50%; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-accent-ink); }
+  .gt-author-name { display: block; font-size: 15px; font-weight: 600; }
+  .gt-author-role { display: block; font-size: 13px; color: var(--pl-muted); }
+  .gt-meta-sep { width: 1px; height: 30px; background: var(--pl-line); }
+  .gt-meta-items { display: flex; gap: 18px; flex-wrap: wrap; font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-muted); }
+  .gt-ai { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px -42px rgba(60,30,15,.4); }
+  .gt-ai-head { padding: 18px 20px 16px; border-bottom: 1px solid var(--pl-line-soft); display: flex; align-items: center; gap: 12px; }
+  .gt-ai-icon { width: 38px; height: 38px; flex: none; border-radius: 11px; background: var(--pl-ink); color: var(--pl-surface); display: flex; align-items: center; justify-content: center; }
+  .gt-ai-t { font-family: Geist, sans-serif; font-size: 16px; font-weight: 600; color: var(--pl-ink); }
+  .gt-ai-d { font-size: 13px; color: var(--pl-muted); }
+  .gt-ai-tools { padding: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .gt-ai-tool { min-height: 52px; padding: 0 12px; display: flex; align-items: center; gap: 10px; border-radius: 12px; border: 1px solid var(--pl-line-soft); background: var(--pl-cream); color: var(--pl-ink); font-size: 14px; font-weight: 500; transition: border-color .2s, background .2s, transform .2s; }
+  .gt-ai-tool:hover { border-color: var(--pl-accent-line); background: var(--pl-surface); transform: translateY(-1px); color: var(--pl-ink); }
+  .gt-ai-mk { width: 28px; height: 28px; flex: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: Geist, sans-serif; font-size: 12px; font-weight: 700; }
+  .gt-ai-tool-t { display: block; line-height: 1.2; }
+  .gt-ai-tool-by { display: block; font-family: 'Geist Mono', monospace; font-size: 10px; color: var(--pl-faint); }
+  .gt-ai-arrow { margin-left: auto; color: var(--pl-line-xstrong); font-size: 12px; }
+
+  .gt-body { max-width: 1280px; margin: 0 auto; padding: clamp(28px,4vw,48px) clamp(16px,4vw,40px) 0; display: grid; grid-template-columns: 1fr; gap: clamp(24px,3.4vw,48px); align-items: start; }
+  .gt-toc { display: none; }
+  .gt-toc-card { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 18px; overflow: hidden; }
+  .gt-toc-head { padding: 14px 16px; border-bottom: 1px solid var(--pl-line-soft); font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; color: var(--pl-faint); }
+  .gt-toc-nav { padding: 8px; display: flex; flex-direction: column; gap: 1px; }
+  .gt-toc-link { position: relative; padding: 9px 10px 9px 14px; border-radius: 10px; display: grid; grid-template-columns: 22px minmax(0,1fr); gap: 8px; align-items: baseline; color: var(--pl-muted); font-size: 13.5px; line-height: 1.4; transition: background .2s, color .2s; }
+  .gt-toc-link:hover { background: var(--pl-cream); color: var(--pl-ink); }
+  .gt-toc-link.is-active { background: var(--pl-accent-tint); color: var(--pl-ink); font-weight: 600; }
+  .gt-toc-n { font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--pl-faint-2); }
+  .gt-toc-link.is-active .gt-toc-n { color: var(--pl-accent-ink); }
+  .gt-totop { align-self: flex-start; height: 36px; padding: 0 12px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--pl-line); border-radius: 10px; background: var(--pl-surface); cursor: pointer; font-size: 13px; color: var(--pl-ink-2); }
+
+  .gt-article { max-width: 740px; margin: 0 auto; font-size: clamp(16.5px,1.5vw,18px); line-height: 1.75; color: var(--pl-ink-2); }
+  .gt-def-card { position: relative; overflow: hidden; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 20px; padding: clamp(20px,3vw,28px); }
+  .gt-def-glow { position: absolute; right: -70px; top: -90px; width: 260px; height: 260px; background: radial-gradient(closest-side,rgba(251,138,46,.14),transparent); }
+  .gt-def-top { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .gt-def-label { display: flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .12em; color: var(--pl-accent-ink); }
+  .gt-def-cat { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-faint); }
+  .gt-def-text { position: relative; margin: 14px 0 0; font-family: Geist, sans-serif; font-size: clamp(19px,2.1vw,23px); line-height: 1.45; letter-spacing: -.01em; font-weight: 500; color: var(--pl-ink); }
+
+  /* Prose for the user's contentHtml */
+  .gl-prose { margin-top: 8px; }
+  .gl-prose h2 { margin: 48px 0 14px; scroll-margin-top: 96px; font-family: Geist, sans-serif; font-size: clamp(24px,2.6vw,30px); line-height: 1.2; letter-spacing: -.025em; font-weight: 600; color: var(--pl-ink); }
+  .gl-prose h3 { margin: 32px 0 10px; scroll-margin-top: 96px; font-family: Geist, sans-serif; font-size: clamp(19px,2vw,22px); font-weight: 600; color: var(--pl-ink); }
+  .gl-prose p { margin: 0 0 18px; }
+  .gl-prose ul, .gl-prose ol { margin: 0 0 18px; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; }
+  .gl-prose li { line-height: 1.7; }
+  .gl-prose a { color: var(--pl-accent-ink); text-decoration: underline; text-underline-offset: 3px; }
+  .gl-prose a:hover { color: var(--pl-ink); }
+  .gl-prose strong, .gl-prose b { color: var(--pl-ink); font-weight: 600; }
+  .gl-prose code { font-family: var(--pl-font-mono); font-size: .9em; background: var(--pl-cream); border: 1px solid var(--pl-line-soft); border-radius: 6px; padding: 1px 6px; }
+  .gl-prose blockquote { margin: 0 0 18px; padding: 12px 18px; border-left: 3px solid var(--pl-accent-line); background: var(--pl-cream); border-radius: 0 12px 12px 0; color: var(--pl-ink-2); }
+  .gl-prose table { width: 100%; border-collapse: collapse; margin: 0 0 18px; font-size: 15px; }
+  .gl-prose th, .gl-prose td { border: 1px solid var(--pl-line); padding: 10px 12px; text-align: left; }
+  .gl-prose th { background: var(--pl-cream); font-weight: 600; color: var(--pl-ink); }
+
+  .gt-sharebar { margin-top: 36px; padding-top: 22px; border-top: 1px solid var(--pl-line); display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .gt-related-tags { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .gt-tags-label { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; color: var(--pl-faint); }
+  .gt-tag { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid var(--pl-line); background: var(--pl-surface); font-size: 13px; color: var(--pl-ink-2); }
+  .gt-tag:hover { border-color: var(--pl-accent-line); color: var(--pl-accent-ink); }
+  .gt-share { display: flex; align-items: center; gap: 8px; }
+  .gt-share-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); display: flex; align-items: center; justify-content: center; font-family: Geist, sans-serif; font-size: 12px; font-weight: 700; color: var(--pl-ink); }
+  .gt-copy { height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); cursor: pointer; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-ink); }
+
+  .gt-cta-aside { display: none; }
+  .gt-cta-card { position: relative; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px -44px rgba(60,30,15,.45); }
+  .gt-cta-glow { position: absolute; right: -70px; top: -90px; width: 240px; height: 240px; background: radial-gradient(closest-side,rgba(251,138,46,.16),transparent); pointer-events: none; }
+  .gt-cta-pad { position: relative; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .gt-cta-title { font-family: Geist, sans-serif; font-size: 19px; font-weight: 600; line-height: 1.25; letter-spacing: -.015em; color: var(--pl-ink); }
+  .gt-cta-list { display: flex; flex-direction: column; gap: 8px; }
+  .gt-cta-li { display: flex; gap: 10px; font-size: 13.5px; line-height: 1.45; color: var(--pl-ink-2); }
+  .gt-cta-check { flex: none; margin-top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--pl-ink); color: var(--pl-surface); font-size: 9px; display: flex; align-items: center; justify-content: center; }
+  .gt-cta-primary { height: 46px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: var(--pl-gradient); color: var(--pl-surface); font-family: Geist, sans-serif; font-weight: 500; font-size: 15px; box-shadow: 0 12px 24px -12px rgba(247,99,30,.85); }
+  .gt-cta-primary:hover { filter: brightness(.95); color: var(--pl-surface); }
+  .gt-cta-ghost { height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; border: 1px solid var(--pl-line); color: var(--pl-ink); font-size: 14px; font-weight: 500; }
+
+  .gt-related { max-width: 1280px; margin: 0 auto; padding: clamp(56px,7vw,96px) clamp(16px,4vw,40px) clamp(40px,5vw,64px); }
+  .gt-related-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .gt-related-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 11.5px; letter-spacing: .12em; color: var(--pl-accent-ink); }
+  .gt-related-h2 { margin: 12px 0 0; font-family: Geist, sans-serif; font-size: clamp(26px,3.2vw,38px); line-height: 1.1; letter-spacing: -.03em; font-weight: 600; color: var(--pl-ink); }
+  .gt-related-all { height: 40px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 10px; border: 1px solid var(--pl-line); background: var(--pl-surface); color: var(--pl-ink); font-size: 14px; font-weight: 500; }
+  .gt-related-grid { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fill,minmax(min(100%,300px),1fr)); gap: 16px; }
+  .gt-related-card { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; color: var(--pl-ink); transition: transform .25s, box-shadow .25s, border-color .25s; }
+  .gt-related-card:hover { transform: translateY(-4px); box-shadow: 0 28px 50px -34px rgba(60,30,15,.5); border-color: var(--pl-accent-line); color: var(--pl-ink); }
+  .gt-related-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .gt-related-letter { width: 44px; height: 44px; border-radius: 12px; background: var(--pl-sand); border: 1px solid var(--pl-line); display: flex; align-items: center; justify-content: center; font-family: Geist, sans-serif; font-size: 20px; font-weight: 700; color: var(--pl-ink); }
+  .gt-related-cat { height: 22px; padding: 0 8px; display: flex; align-items: center; border-radius: 6px; background: var(--pl-cream); border: 1px solid var(--pl-line-soft); font-family: 'Geist Mono', monospace; font-size: 9.5px; letter-spacing: .06em; color: var(--pl-muted); }
+  .gt-related-term { font-family: Geist, sans-serif; font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
+  .gt-related-def { font-size: 14px; line-height: 1.55; color: var(--pl-muted); }
+  .gt-related-read { margin-top: auto; padding-top: 8px; font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-accent-ink); }
+
+  @media (min-width: 1000px) {
+    .gt-hero-grid2 { grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); }
+  }
+  @media (min-width: 1100px) {
+    .gt-body { grid-template-columns: 230px minmax(0,1fr) 290px; }
+    .gt-body--no-toc { grid-template-columns: minmax(0,1fr) 300px; }
+    .gt-toc { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 88px; align-self: start; }
+    .gt-cta-aside { display: block; position: sticky; top: 88px; align-self: start; }
+  }
 </style>
+
+<script>
+  const fill = document.querySelector('[data-progress]') as HTMLElement | null;
+  const onScroll = () => {
+    if (!fill) return;
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    fill.style.width = (max > 0 ? Math.min(100, (window.scrollY / max) * 100) : 0) + '%';
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  document.querySelector('[data-totop]')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  document.querySelectorAll('[data-copy]').forEach((b) => b.addEventListener('click', () => {
+    const url = (b as HTMLElement).dataset.copy || '';
+    navigator.clipboard?.writeText(url).catch(() => {});
+    b.textContent = 'Copied ✓';
+    setTimeout(() => { b.textContent = 'Copy link'; }, 1600);
+  }));
+
+  const links = Array.from(document.querySelectorAll('[data-toc-link]')) as HTMLElement[];
+  const heads = links.map((l) => document.getElementById(l.dataset.tocLink || '')).filter(Boolean) as HTMLElement[];
+  if (heads.length) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          const id = (e.target as HTMLElement).id;
+          links.forEach((l) => l.classList.toggle('is-active', l.dataset.tocLink === id));
+        }
+      });
+    }, { rootMargin: '-90px 0px -70% 0px' });
+    heads.forEach((h) => io.observe(h));
+  }
+</script>
