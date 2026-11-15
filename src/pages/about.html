@@ -182,7 +182,7 @@ button,input,select,textarea{font:inherit}
       <div data-reveal="" style="border:1px solid var(--pl-line);border-radius:22px;overflow:hidden;background:var(--pl-line);display:grid;gap:1px">
         <sc-for list="{{ values }}" as="v" hint-placeholder-count="5">
           <div style="background:var(--pl-surface);padding:20px 22px;display:grid;grid-template-columns:44px minmax(0,1fr);gap:16px;align-items:start;transition:background .25s" style-hover="background:var(--pl-cream)">
-            <span style="width:44px;height:44px;border-radius:12px;border:1px solid var(--pl-line-soft);background:var(--pl-cream);display:flex;align-items:center;justify-content:center"><span style="width:14px;height:14px;background:var(--pl-gradient);border-radius:{{ v.r }};transform:rotate({{ v.rot }}deg)"></span></span>
+            <span style="width:44px;height:44px;border-radius:12px;border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);display:flex;align-items:center;justify-content:center"><img src="/assets/icons/{{ v.icon }}.svg" alt="" width="20" height="20" style="display:block" onerror="this.style.visibility='hidden'"></span>
             <span><span style="display:block;font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:var(--pl-ink)">{{ v.t }}</span><span style="display:block;margin-top:4px;font-size:14.5px;line-height:1.55;color:var(--pl-muted)">{{ v.d }}</span></span>
           </div>
         </sc-for>
@@ -429,7 +429,8 @@ class Component extends DCLogic {
     const sol = solData.map(([k, t, d], i) => { const on = s.sol === i, done = i < s.sol; return { k, t, d, n: '0' + (i + 1), bg: on || done ? 'var(--pl-accent)' : 'var(--pl-surface)', bc: on || done ? 'var(--pl-accent)' : 'var(--pl-line)', sh: on ? '0 0 0 8px rgba(247,99,30,.16)' : 'none', cb: on ? 'var(--pl-accent-line)' : 'var(--pl-line)', csh: on ? '0 24px 44px -28px rgba(194,65,12,.5)' : 'none', y: on && isWide ? -4 : 0, go: () => this.setState({ sol: i }) }; });
     const valData = [['Real-Time Alerts', 'Instant notifications via Email, Slack, and SMS — so you never miss a market move.'], ['Clear Price Positioning', 'Understand exactly where you stand against competitors at any moment.'], ['Margin Protection', 'Rule-based logic ensures your pricing never erodes the margins that matter.'], ['Reduced Manual Effort', 'Eliminate spreadsheet-based tracking and fragmented monitoring tools permanently.'], ['Scalable Across SKUs', 'Apply consistent pricing intelligence across thousands of products simultaneously.']];
     const shapes = [['50%', 0], ['4px', 0], ['2px', 45], ['4px', 0], ['50%', 0]];
-    const values = valData.map(([t, d], i) => ({ t, d, r: shapes[i][0], rot: shapes[i][1] }));
+    const valIcons = ['alert', 'intelligence', 'shield', 'optimize', 'data'];
+    const values = valData.map(([t, d], i) => ({ t, d, icon: valIcons[i] || 'engine' }));
     const vs = [['Track prices', 'Turn data into decisions'], ['Dashboards', 'Strategy enablement'], ['Limited integrations', 'Deep integrations'], ['Reactive alerts', 'Proactive control']].map(([a, b], i) => { const on = s.vsHot === i; return { a, b, enter: () => this.setState({ vsHot: i }), strike: on ? 'line-through' : 'none', line: on ? 'repeating-linear-gradient(90deg,var(--pl-accent) 0 6px,transparent 6px 12px)' : 'repeating-linear-gradient(90deg,var(--pl-line) 0 6px,transparent 6px 12px)', dot: on ? 'var(--pl-accent)' : 'var(--pl-surface)', dotBc: on ? 'var(--pl-accent)' : 'var(--pl-line)', bg: on ? 'var(--pl-accent-tint)' : 'var(--pl-cream)' }; });
     const serve = [
       { t: 'Primary Customers', n: '01', items: ['E-commerce sellers', 'Multi-SKU brands', 'Online retailers', 'Distributors'] },
