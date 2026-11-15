@@ -83,13 +83,13 @@ const jsonLd = [{
           </div>
           <div class="bp-ai-tools">
             {[
-              { t: 'ChatGPT', by: 'OPENAI', mk: 'G', bg: 'var(--pl-ink)', c: 'var(--pl-surface)', href: `https://chatgpt.com/?q=${q}` },
-              { t: 'Claude', by: 'ANTHROPIC', mk: 'C', bg: '#F5E6DA', c: '#B4532A', href: `https://claude.ai/new?q=${q}` },
-              { t: 'Perplexity', by: 'PERPLEXITY AI', mk: 'P', bg: '#E3F1F1', c: '#1F6F72', href: `https://www.perplexity.ai/search?q=${q}` },
-              { t: 'Gemini', by: 'GOOGLE', mk: 'G', bg: '#E8EEFB', c: '#2F5BD3', href: `https://www.google.com/search?udm=50&q=${q}` },
+              { t: 'ChatGPT', by: 'OPENAI', logo: 'openai', bg: 'var(--pl-ink)', href: `https://chatgpt.com/?q=${q}` },
+              { t: 'Claude', by: 'ANTHROPIC', logo: 'claude', bg: '#F5E6DA', href: `https://claude.ai/new?q=${q}` },
+              { t: 'Perplexity', by: 'PERPLEXITY AI', logo: 'perplexity', bg: '#E3F1F1', href: `https://www.perplexity.ai/search?q=${q}` },
+              { t: 'Gemini', by: 'GOOGLE', logo: 'gemini', bg: '#E8EEFB', href: `https://www.google.com/search?udm=50&q=${q}` },
             ].map((a) => (
               <a href={a.href} target="_blank" rel="noopener" class="bp-ai-tool">
-                <span class="bp-ai-mk" style={`background:${a.bg};color:${a.c}`}>{a.mk}</span>
+                <span class="bp-ai-mk" style={`background:${a.bg}`}><img src={`/assets/ai/${a.logo}.svg`} alt="" width="16" height="16" style="display:block" /></span>
                 <span style="min-width:0"><span class="bp-ai-tool-t">{a.t}</span><span class="bp-ai-tool-by">{a.by}</span></span>
                 <span class="bp-ai-arrow">↗</span>
               </a>

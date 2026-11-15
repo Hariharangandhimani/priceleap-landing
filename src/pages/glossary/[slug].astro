@@ -94,13 +94,13 @@ const jsonLd = [{
           </div>
           <div class="gt-ai-tools">
             {[
-              { t: 'ChatGPT', by: 'OPENAI', mk: 'G', bg: 'var(--pl-ink)', c: 'var(--pl-surface)', href: `https://chatgpt.com/?q=${encodeURIComponent('Summarize this PriceLeap glossary term: ' + canonicalUrl)}` },
-              { t: 'Claude', by: 'ANTHROPIC', mk: 'C', bg: '#F5E6DA', c: '#B4532A', href: `https://claude.ai/new?q=${encodeURIComponent('Summarize this PriceLeap glossary term: ' + canonicalUrl)}` },
-              { t: 'Perplexity', by: 'PERPLEXITY AI', mk: 'P', bg: '#E3F1F1', c: '#1F6F72', href: `https://www.perplexity.ai/search?q=${encodeURIComponent('Summarize ' + canonicalUrl)}` },
-              { t: 'Gemini', by: 'GOOGLE', mk: 'G', bg: '#E8EEFB', c: '#2F5BD3', href: `https://www.google.com/search?udm=50&q=${encodeURIComponent('Summarize ' + canonicalUrl)}` },
+              { t: 'ChatGPT', by: 'OPENAI', logo: 'openai', bg: 'var(--pl-ink)', href: `https://chatgpt.com/?q=${encodeURIComponent('Summarize this PriceLeap glossary term: ' + canonicalUrl)}` },
+              { t: 'Claude', by: 'ANTHROPIC', logo: 'claude', bg: '#F5E6DA', href: `https://claude.ai/new?q=${encodeURIComponent('Summarize this PriceLeap glossary term: ' + canonicalUrl)}` },
+              { t: 'Perplexity', by: 'PERPLEXITY AI', logo: 'perplexity', bg: '#E3F1F1', href: `https://www.perplexity.ai/search?q=${encodeURIComponent('Summarize ' + canonicalUrl)}` },
+              { t: 'Gemini', by: 'GOOGLE', logo: 'gemini', bg: '#E8EEFB', href: `https://www.google.com/search?udm=50&q=${encodeURIComponent('Summarize ' + canonicalUrl)}` },
             ].map((a) => (
               <a href={a.href} target="_blank" rel="noopener" class="gt-ai-tool">
-                <span class="gt-ai-mk" style={`background:${a.bg};color:${a.c}`}>{a.mk}</span>
+                <span class="gt-ai-mk" style={`background:${a.bg}`}><img src={`/assets/ai/${a.logo}.svg`} alt="" width="16" height="16" style="display:block" /></span>
                 <span style="min-width:0"><span class="gt-ai-tool-t">{a.t}</span><span class="gt-ai-tool-by">{a.by}</span></span>
                 <span class="gt-ai-arrow">↗</span>
               </a>
@@ -111,7 +111,7 @@ const jsonLd = [{
     </div>
   </section>
 
-  <div class="gt-body">
+  <div class={`gt-body${toc.length === 0 ? ' gt-body--no-toc' : ''}`}>
     {toc.length > 0 && (
       <aside aria-label="Table of contents" class="gt-toc">
         <div class="gt-toc-card">
@@ -312,6 +312,7 @@ const jsonLd = [{
   }
   @media (min-width: 1100px) {
     .gt-body { grid-template-columns: 230px minmax(0,1fr) 290px; }
+    .gt-body--no-toc { grid-template-columns: minmax(0,1fr) 300px; }
     .gt-toc { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 88px; align-self: start; }
     .gt-cta-aside { display: block; position: sticky; top: 88px; align-self: start; }
   }

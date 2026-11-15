@@ -41,9 +41,35 @@ const articles = SLUGS.map((slug) => {
   const author = stripTags(pick(html, /class="blog-pg-author"[^>]*>([\s\S]*?)<\//)) || 'PriceLeap Team';
   const publishedAt = stripTags(pick(html, /class="blog-pg-date"[^>]*>([\s\S]*?)<\//)) || '';
 
-  // Article body: <div class="blog-pg-art"> ... </div> (ends before tags/author/cta)
-  let body = pick(html, /<div class="blog-pg-art"[^>]*>([\s\S]*?)<div class="blog-pg-(?:tags|author)"/);
+  // Article body: <div class="blog-pg-art"> ... </div> ends before the first trailing UI block
+  let body = pick(html, /<div class="blog-pg-art"[^>]*>([\s\S]*?)<div class="(?:art-cta|author-card|share-row|summarize-bar|blog-pg-tags|blog-inline-faq)"/);
   if (!body) body = pick(html, /<div class="blog-pg-art"[^>]*>([\s\S]*?)(?:<div class="blog-pg-|id="learn-pg-cta")/);
+  // strip any stray summarize-bar left inside the body
+  body = body.replace(/<div class="summarize-bar"[\s\S]*?<\/div>\s*(?=<)/g, '');
+  // Balance <div>/</div>: the extracted slice can carry trailing unmatched </div>
+  // from parent wrappers — remove the excess so the markup is self-contained.
+  const balanceDivs = (s) => {
+    let depth = 0; const re = /<div\b[^>]*>|<\/div>/g; let m; const closes = [];
+    while ((m = re.exec(s))) { if (m[0] === '</div>') { depth--; if (depth < 0) closes.push(m.index); } else depth++; }
+    // remove the unmatched closing </div> occurrences (from the end backwards)
+    for (let i = closes.length - 1; i >= 0; i--) s = s.slice(0, closes[i]) + s.slice(closes[i] + 6);
+    // if any divs are still open, close them
+    let open = 0; re.lastIndex = 0; while ((m = re.exec(s))) open += m[0] === '</div>' ? -1 : 1;
+    if (open > 0) s += '</div>'.repeat(open);
+    return s;
+  };
+  body = balanceDivs(body);
+
+  // Extract author card as structured data
+  const acBlock = pick(html, /<div class="author-card">([\s\S]*?)<\/div>\s*<\/div>\s*<\/div>/);
+  const authorCard = acBlock ? {
+    initials: stripTags(pick(acBlock, /class="author-card-avatar"[^>]*>([\s\S]*?)<\//)),
+    name: stripTags(pick(acBlock, /class="author-card-name"[^>]*>([\s\S]*?)<\//)),
+    title: stripTags(pick(acBlock, /class="author-card-title"[^>]*>([\s\S]*?)<\//)),
+    bio: stripTags(pick(acBlock, /class="author-card-bio"[^>]*>([\s\S]*?)<\//)),
+    stats: [...acBlock.matchAll(/class="author-card-stat-val"[^>]*>([\s\S]*?)<\/span><span class="author-card-stat-lbl"[^>]*>([\s\S]*?)<\//g)]
+      .map((m) => ({ val: stripTags(m[1]), label: stripTags(m[2]) })),
+  } : null;
   // hero image lives outside the body (in blog-pg-wrap)
   let heroSrc = pick(html, /<img class="blog-pg-img"[^>]*src="([^"]*)"/) || ogImage;
   // strip any in-page TOC block we re-render ourselves
@@ -81,7 +107,7 @@ const articles = SLUGS.map((slug) => {
 
   return {
     url: `https://priceleap.ai/learn/${slug}/`, slug, title, category, difficulty,
-    excerpt, author, publishedAt, readTime, heroImage, headings,
+    excerpt, author, publishedAt, readTime, heroImage, headings, authorCard,
     contentHtml: body.trim(), metaTitle, metaDescription,
   };
 });

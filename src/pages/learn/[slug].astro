@@ -1,5 +1,6 @@
 ---
 import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+import AuthorCard from '../../components/pl/AuthorCard.astro';
 import learnData from '../../data/learn.json';
 
 type Heading = { level: number; id: string; title: string };
@@ -7,6 +8,7 @@ type Article = {
   slug: string; category: string; difficulty: string; title: string; excerpt: string;
   author: string; publishedAt: string; readTime: string; heroImage?: { src: string; alt: string };
   headings: Heading[]; contentHtml: string; metaTitle?: string; metaDescription?: string;
+  authorCard?: { initials?: string; name: string; title?: string; bio?: string; stats?: { val: string; label: string }[] } | null;
 };
 
 export function getStaticPaths() {
@@ -82,6 +84,7 @@ const jsonLd = [{
     <div style="min-width:0">
       <article class="lp-article">
         <div class="lp-prose" set:html={article.contentHtml} />
+        {article.authorCard && <AuthorCard author={article.authorCard} />}
         <div class="lp-sharebar">
           <span class="lp-tags-label">SHARE</span>
           <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(canonicalUrl)}`} target="_blank" rel="noopener" aria-label="Share on LinkedIn" class="lp-share-btn">in</a>
@@ -178,6 +181,14 @@ const jsonLd = [{
   .lp-prose :global(img) { width: 100%; border-radius: 14px; border: 1px solid var(--pl-line); margin: 10px 0 20px; }
   .lp-prose :global(blockquote) { margin: 0 0 20px; padding: 14px 20px; border-left: 3px solid var(--pl-accent-line); background: var(--pl-cream); border-radius: 0 12px 12px 0; color: var(--pl-ink-2); }
   .lp-prose :global(h2:first-child), .lp-prose :global(p:first-child) { margin-top: 0; }
+  /* Key Concepts block from source */
+  .lp-prose :global(.learn-key-box) { margin: 28px 0; padding: 18px 20px; background: var(--pl-cream); border: 1px solid var(--pl-line); border-left: 3px solid var(--pl-accent); border-radius: 0 14px 14px 0; }
+  .lp-prose :global(.learn-key-lbl) { font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--pl-accent-ink); margin-bottom: 12px; }
+  .lp-prose :global(.learn-key-list) { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lp-prose :global(.learn-key-tag) { height: 30px; padding: 0 12px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--pl-surface); border: 1px solid var(--pl-line); font-size: 13px; color: var(--pl-ink-2); }
+  .lp-prose :global(.callout) { margin: 24px 0; padding: 14px 18px; background: var(--pl-cream); border-left: 3px solid var(--pl-accent-line); border-radius: 0 12px 12px 0; }
+  .lp-prose :global(.cl-lbl) { font-family: 'Geist Mono', monospace; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--pl-accent-ink); margin-bottom: 5px; }
+  .lp-prose :global(.callout p) { margin: 0; }
 
   .lp-sharebar { margin-top: 36px; padding: 18px 0; border-top: 1px solid var(--pl-line); border-bottom: 1px solid var(--pl-line); display: flex; align-items: center; gap: 8px; }
   .lp-tags-label { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .12em; color: var(--pl-faint); margin-right: 4px; }

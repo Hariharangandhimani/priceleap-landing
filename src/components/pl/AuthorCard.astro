@@ -1,0 +1,50 @@
+---
+// Reusable author card (Learn / Blog). Clean new-theme design.
+export interface AuthorCardData {
+  initials?: string;
+  name: string;
+  title?: string;
+  bio?: string;
+  stats?: { val: string; label: string }[];
+}
+interface Props { author: AuthorCardData }
+const { author } = Astro.props;
+const initials = author.initials || author.name.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+---
+<div class="pl-author" id="author">
+  <div class="pl-author-side">
+    <span class="pl-author-avatar">{initials}</span>
+  </div>
+  <div class="pl-author-main">
+    <span class="pl-author-label">About the author</span>
+    <div class="pl-author-nameline">
+      <span class="pl-author-name">{author.name}</span>
+      {author.title && (<span class="pl-author-title">{author.title}</span>)}
+    </div>
+    {author.bio && (<p class="pl-author-bio">{author.bio}</p>)}
+    {author.stats && author.stats.length > 0 && (
+      <div class="pl-author-stats">
+        {author.stats.map((s) => (
+          <div class="pl-author-stat"><span class="pl-author-stat-val">{s.val}</span><span class="pl-author-stat-lbl">{s.label}</span></div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
+<style>
+  .pl-author { margin: 40px 0 0; display: grid; grid-template-columns: auto minmax(0,1fr); gap: 20px; align-items: start; background: var(--pl-surface); border: 1px solid var(--pl-line); border-left: 3px solid var(--pl-accent); border-radius: 18px; padding: clamp(20px,3vw,28px); }
+  .pl-author-side { display: flex; }
+  .pl-author-avatar { width: 64px; height: 64px; flex: none; border-radius: 18px; background: var(--pl-gradient); display: flex; align-items: center; justify-content: center; font-family: Geist, sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -.02em; color: var(--pl-surface); box-shadow: 0 12px 26px -14px rgba(247,99,30,.8); }
+  .pl-author-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .pl-author-label { font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--pl-accent-ink); }
+  .pl-author-nameline { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .pl-author-name { font-family: Geist, sans-serif; font-size: clamp(18px,2vw,20px); font-weight: 600; letter-spacing: -.02em; color: var(--pl-ink); }
+  .pl-author-title { font-size: 13.5px; color: var(--pl-muted); }
+  .pl-author-bio { margin: 6px 0 0; font-size: 14.5px; line-height: 1.7; color: var(--pl-ink-2); }
+  .pl-author-stats { margin-top: 12px; display: flex; gap: 28px; flex-wrap: wrap; }
+  .pl-author-stat { display: flex; flex-direction: column; gap: 2px; }
+  .pl-author-stat-val { font-family: Geist, sans-serif; font-size: 18px; font-weight: 700; color: var(--pl-ink); }
+  .pl-author-stat-lbl { font-family: 'Geist Mono', monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--pl-faint); }
+  @media (max-width: 560px) { .pl-author { grid-template-columns: 1fr; gap: 14px; } }
+</style>
