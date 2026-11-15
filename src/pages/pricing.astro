@@ -1,46 +1,279 @@
 ---
-import SiteLayout from '@/layouts/SiteLayout.astro';
-import PageHero from '@/components/ui/PageHero.astro';
-import BillingToggle from '@/components/pricing/BillingToggle.astro';
-import PlanFinder from '@/components/pricing/PlanFinder.astro';
-import FreePlanCard from '@/components/pricing/FreePlanCard.astro';
-import PlanCard from '@/components/pricing/PlanCard.astro';
-import EnterpriseCard from '@/components/pricing/EnterpriseCard.astro';
-import CompareTable from '@/components/pricing/CompareTable.astro';
-import CTABanner from '@/components/sections/CTABanner.astro';
-import { freePlans, paidPlans, enterprisePlans } from '@/data/pricing';
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+import { ANNUAL_DISCOUNT, freePlans, paidPlans, enterprisePlans, compareCols, compareRows } from '../data/pricing';
+
+const annualPct = Math.round(ANNUAL_DISCOUNT * 100);
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: 'PriceLeap',
+  description: 'Usage-based pricing intelligence plans that scale with your catalog.',
+  offers: paidPlans.map((p) => ({ '@type': 'Offer', name: p.name, price: p.price, priceCurrency: 'USD', url: 'https://priceleap.ai/pricing' })),
+}];
 ---
-<SiteLayout title="Pricing | PriceLeap — pay for what you actually monitor" description="Simple, usage-based PriceLeap plans that scale with your catalog. Start free — no credit card required.">
-  <PageHero pill="Pricing" lede="Simple, usage-based plans that scale with your catalog. Start free — no credit card required.">
-    <span class="light">Pay for what you </span><span class="bold accent">actually monitor.</span>
-    <div slot="after" style="margin-top:12px"><BillingToggle /></div>
-  </PageHero>
-  <PlanFinder />
-
-  <section id="free" class="container group">
-    <div class="group__head"><h2>Start free — no commitment</h2><span>No credit card on either option</span></div>
-    <div class="grid grid--free">{freePlans.map((p) => <FreePlanCard plan={p} />)}</div>
+<PriceLeapLayout title="Pricing · PriceLeap" description="Simple, usage-based PriceLeap plans that scale with your catalog. Start free — no credit card required." jsonLd={jsonLd}>
+  <!-- Hero -->
+  <section class="pr-hero" data-screen-label="Hero">
+    <div aria-hidden="true" class="pr-hero-grid"></div>
+    <div aria-hidden="true" class="pr-hero-glow"></div>
+    <div class="pr-hero-inner">
+      <span class="pr-badge"><span class="pr-badge-dot"></span>PRICING</span>
+      <h1 class="pr-h1"><span style="font-weight:400">Pay for what you </span><span style="font-weight:700">actually monitor.</span></h1>
+      <p class="pr-lead">Simple, usage-based plans that scale with your catalog. Start free — no credit card required.</p>
+      <div class="pr-toggle" role="group" aria-label="Billing period">
+        <button type="button" class="pr-toggle-btn is-on" data-bill="monthly" aria-pressed="true">Monthly</button>
+        <button type="button" class="pr-toggle-btn" data-bill="annual" aria-pressed="false">Annual <span class="pr-toggle-save">−{annualPct}%</span></button>
+      </div>
+    </div>
   </section>
 
-  <section class="container group">
-    <div class="group__head"><h2>Paid plans</h2></div>
-    <div class="grid grid--paid">{paidPlans.map((p) => <PlanCard plan={p} />)}</div>
+  <!-- Free plans -->
+  <section id="free" class="pr-sec">
+    <div class="pr-wrap">
+      <div class="pr-sec-head">
+        <div><span class="pr-eyebrow"><span class="pr-diamond"></span>START FREE</span><h2 class="pr-h2">No commitment to begin.</h2></div>
+        <span class="pr-sec-note">No credit card on either option</span>
+      </div>
+      <div class="pr-free-grid">
+        {freePlans.map((p) => (
+          <div class="pr-free-card">
+            <div class="pr-free-top">
+              <div><span class="pr-free-kicker">{p.kicker}</span><h3 class="pr-free-name">{p.name}</h3></div>
+              <span class="pr-free-tag">{p.tag}</span>
+            </div>
+            <p class="pr-free-desc">{p.desc}</p>
+            <div class="pr-free-stats">
+              {p.stats.map(([v, l]) => (<div class="pr-stat"><span class="pr-stat-v">{v}</span><span class="pr-stat-l">{l}</span></div>))}
+            </div>
+            <a href={p.href} class="pr-btn-ghost">{p.cta}</a>
+          </div>
+        ))}
+      </div>
+    </div>
   </section>
 
-  <section class="container group">
-    <div class="group__head"><h2>For large-scale operations</h2><span>Fully managed · tailored to your stack</span></div>
-    <div class="grid grid--ent">{enterprisePlans.map((p) => <EnterpriseCard plan={p} />)}</div>
+  <!-- Paid plans -->
+  <section class="pr-sec pr-cream">
+    <div class="pr-wrap">
+      <div class="pr-sec-head pr-sec-head--center">
+        <span class="pr-eyebrow"><span class="pr-diamond"></span>PAID PLANS</span>
+        <h2 class="pr-h2">Scale as your catalog grows.</h2>
+      </div>
+      <div class="pr-paid-grid">
+        {paidPlans.map((p) => (
+          <div class={`pr-plan${p.popular ? ' pr-plan--pop' : ''}`}>
+            {p.popular && (<span class="pr-plan-badge">MOST POPULAR</span>)}
+            <div class="pr-plan-head">
+              <h3 class="pr-plan-name">{p.name}</h3>
+              <p class="pr-plan-desc">{p.desc}</p>
+            </div>
+            <div class="pr-plan-price">
+              <span class="pr-plan-amt" data-monthly={p.price} data-annual={Math.round(p.price * (1 - ANNUAL_DISCOUNT))}>${p.price}</span>
+              <span class="pr-plan-per">/mo<span class="pr-plan-billed" data-billed hidden> · billed annually</span></span>
+            </div>
+            <div class="pr-plan-caps">
+              <span class="pr-cap"><b>{p.pm.toLocaleString()}</b> products / mo</span>
+              <span class="pr-cap"><b>{p.comp}</b> competitors</span>
+              <span class="pr-cap"><b>{p.refresh}</b> daily refresh</span>
+              <span class="pr-cap">{p.daily}</span>
+            </div>
+            <a href={p.href} class={p.popular ? 'pr-btn-primary' : 'pr-btn-ghost'}>{p.cta}</a>
+            <div class="pr-plan-feats">
+              {p.features.map((f) => (<span class="pr-feat"><span class="pr-feat-check">✓</span>{f}</span>))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   </section>
 
-  <CompareTable />
-  <CTABanner size="md" title="Not sure which plan fits?" text="Book a 15-minute demo and we'll size it on your real catalog." secondary={{ label: 'Start free', href: '#free' }} />
-</SiteLayout>
+  <!-- Enterprise -->
+  <section class="pr-sec">
+    <div class="pr-wrap">
+      <div class="pr-sec-head">
+        <div><span class="pr-eyebrow"><span class="pr-diamond"></span>LARGE-SCALE</span><h2 class="pr-h2">Fully managed, tailored to your stack.</h2></div>
+        <span class="pr-sec-note">High-volume · high-frequency</span>
+      </div>
+      <div class="pr-ent-grid">
+        {enterprisePlans.map((p) => (
+          <div class="pr-ent-card">
+            <span class="pr-ent-kicker">{p.kicker}</span>
+            <div class="pr-ent-top">
+              <h3 class="pr-ent-name">{p.name}</h3>
+              <div class="pr-ent-price"><span class="pr-ent-amt">{p.price}</span><span class="pr-ent-note">{p.priceNote}</span></div>
+            </div>
+            <p class="pr-ent-desc">{p.desc}</p>
+            <div class="pr-ent-stats">
+              {p.stats.map(([v, l]) => (<div class="pr-stat"><span class="pr-stat-v">{v}</span><span class="pr-stat-l">{l}</span></div>))}
+            </div>
+            <div class="pr-ent-feats">
+              {p.features.map((f) => (<span class="pr-feat"><span class="pr-feat-check">✓</span>{f}</span>))}
+            </div>
+            <a href={p.href} class="pr-btn-primary pr-btn-wide">{p.cta}</a>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison table -->
+  <section class="pr-sec pr-cream">
+    <div class="pr-wrap">
+      <div class="pr-sec-head pr-sec-head--center">
+        <span class="pr-eyebrow"><span class="pr-diamond"></span>COMPARE</span>
+        <h2 class="pr-h2">Every plan, side by side.</h2>
+      </div>
+      <div class="pr-table-wrap">
+        <table class="pr-table">
+          <thead>
+            <tr>
+              <th class="pr-th-feature">Feature</th>
+              {compareCols.map((c) => (<th class={c.popular ? 'pr-th-pop' : ''}>{c.label}{c.popular && (<span class="pr-th-tag">POPULAR</span>)}</th>))}
+            </tr>
+          </thead>
+          <tbody>
+            {compareRows.map(([label, vals]) => (
+              <tr>
+                <td class="pr-td-feature">{label}</td>
+                {vals.map((v, i) => (<td class={compareCols[i]?.popular ? 'pr-td-pop' : ''}>{v === '✓' ? (<span class="pr-yes">✓</span>) : v === '—' ? (<span class="pr-no">—</span>) : v}</td>))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="pr-cta-sec">
+    <div class="pr-cta">
+      <div aria-hidden="true" class="pr-cta-glow"></div>
+      <div class="pr-cta-inner">
+        <h2 class="pr-cta-h2"><span style="font-weight:400">Not sure which plan fits? </span><span style="font-weight:700">We'll size it on your catalog.</span></h2>
+        <div class="pr-cta-btns"><a href="/book-a-demo" class="pr-btn-primary pr-btn-lg">Book a demo</a><a href="#free" class="pr-btn-ghost pr-btn-lg">Start free</a></div>
+      </div>
+    </div>
+  </section>
+</PriceLeapLayout>
+
 <style>
-  .group { padding-top: 56px; scroll-margin-top: 80px; }
-  .group__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .group__head h2 { font-size: 22px; font-weight: 600; letter-spacing: -.02em; } .group__head span { font-size: 13.5px; color: var(--muted); }
-  .grid { margin-top: 18px; display: grid; gap: 16px; align-items: stretch; }
-  .grid--free { grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
-  .grid--paid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
-  .grid--ent { grid-template-columns: repeat(auto-fit, minmax(min(100%, 480px), 1fr)); }
+  .pr-diamond { width: 6px; height: 6px; border-radius: 2px; background: var(--pl-accent); transform: rotate(45deg); }
+  .pr-sec { border-bottom: 1px solid var(--pl-line); }
+  .pr-cream { background: var(--pl-cream); }
+  .pr-wrap { max-width: 1280px; margin: 0 auto; padding: clamp(56px,7vw,88px) clamp(16px,4vw,40px); }
+  .pr-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'Geist Mono', monospace; font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--pl-accent-ink); }
+  .pr-h2 { margin: 14px 0 0; font-family: Geist, sans-serif; font-size: clamp(26px,3.4vw,40px); line-height: 1.08; letter-spacing: -.035em; font-weight: 600; color: var(--pl-ink); text-wrap: balance; }
+  .pr-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 40px; }
+  .pr-sec-head--center { flex-direction: column; align-items: center; text-align: center; }
+  .pr-sec-note { font-family: 'Geist Mono', monospace; font-size: 12px; color: var(--pl-muted); }
+
+  .pr-btn-primary { height: 46px; padding: 0 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; background: var(--pl-gradient); color: var(--pl-surface); font-family: Geist, sans-serif; font-weight: 500; font-size: 15px; box-shadow: 0 12px 24px -12px rgba(247,99,30,.85); }
+  .pr-btn-primary:hover { filter: brightness(.95); color: var(--pl-surface); }
+  .pr-btn-ghost { height: 46px; padding: 0 20px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid var(--pl-line); background: var(--pl-surface); color: var(--pl-ink); font-family: Geist, sans-serif; font-weight: 500; font-size: 15px; }
+  .pr-btn-ghost:hover { border-color: var(--pl-line-xstrong); color: var(--pl-ink); }
+  .pr-btn-wide { width: 100%; }
+  .pr-btn-lg { height: 52px; padding: 0 26px; font-size: 16px; }
+
+  /* Hero */
+  .pr-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
+  .pr-hero-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px); background-size: 48px 48px; -webkit-mask-image: radial-gradient(ellipse 70% 90% at 50% 0%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 90% at 50% 0%,#000 10%,transparent 70%); }
+  .pr-hero-glow { position: absolute; left: 50%; top: -260px; width: 820px; height: 520px; transform: translateX(-50%); background: radial-gradient(closest-side,rgba(251,138,46,.12),transparent); }
+  .pr-hero-inner { position: relative; max-width: 1280px; margin: 0 auto; padding: clamp(48px,7vw,88px) clamp(16px,4vw,40px) clamp(32px,4vw,44px); display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .pr-badge { height: 28px; padding: 0 12px; display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; background: var(--pl-surface); border: 1px solid var(--pl-line); font-family: 'Geist Mono', monospace; font-size: 11px; letter-spacing: .1em; color: var(--pl-accent-ink); }
+  .pr-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pl-accent); animation: plpulse 1.8s infinite; }
+  .pr-h1 { margin: 20px 0 0; font-family: Geist, sans-serif; font-size: clamp(38px,6vw,72px); line-height: 1.02; letter-spacing: -.045em; color: var(--pl-ink); text-wrap: balance; }
+  .pr-lead { margin: 18px 0 0; max-width: 560px; font-size: clamp(16px,1.6vw,18px); line-height: 1.6; color: var(--pl-ink-2); text-wrap: pretty; }
+  .pr-toggle { margin-top: 26px; display: inline-flex; padding: 5px; border: 1px solid var(--pl-line); border-radius: 12px; background: var(--pl-surface); gap: 4px; }
+  .pr-toggle-btn { height: 38px; padding: 0 18px; display: inline-flex; align-items: center; gap: 8px; border: none; border-radius: 9px; background: transparent; font-family: Geist, sans-serif; font-size: 14px; font-weight: 500; color: var(--pl-muted); cursor: pointer; transition: all .2s; }
+  .pr-toggle-btn.is-on { background: var(--pl-ink); color: var(--pl-surface); }
+  .pr-toggle-save { height: 20px; padding: 0 7px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--pl-accent-tint); color: var(--pl-accent-ink); font-family: 'Geist Mono', monospace; font-size: 10px; }
+  .pr-toggle-btn.is-on .pr-toggle-save { background: rgba(255,255,255,.18); color: var(--pl-surface); }
+
+  /* Free plans */
+  .pr-free-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .pr-free-card { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 22px; padding: clamp(24px,3vw,32px); display: flex; flex-direction: column; gap: 16px; }
+  .pr-free-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .pr-free-kicker { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .1em; color: var(--pl-accent-ink); }
+  .pr-free-name { margin: 6px 0 0; font-family: Geist, sans-serif; font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: var(--pl-ink); }
+  .pr-free-tag { height: 24px; padding: 0 10px; display: flex; align-items: center; border-radius: 999px; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); font-family: 'Geist Mono', monospace; font-size: 10.5px; color: var(--pl-accent-ink); white-space: nowrap; }
+  .pr-free-desc { margin: 0; font-size: 15px; line-height: 1.6; color: var(--pl-muted); }
+  .pr-free-stats { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1px; background: var(--pl-line-soft); border: 1px solid var(--pl-line-soft); border-radius: 14px; overflow: hidden; }
+  .pr-stat { background: var(--pl-cream); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; }
+  .pr-stat-v { font-family: Geist, sans-serif; font-size: 22px; font-weight: 600; letter-spacing: -.03em; color: var(--pl-ink); }
+  .pr-stat-l { font-size: 12.5px; color: var(--pl-muted); }
+  .pr-free-card .pr-btn-ghost { align-self: flex-start; }
+
+  /* Paid plans */
+  .pr-paid-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+  .pr-plan { position: relative; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 22px; padding: clamp(24px,3vw,30px); display: flex; flex-direction: column; gap: 6px; }
+  .pr-plan--pop { border: 1.5px solid var(--pl-accent); box-shadow: 0 0 0 6px rgba(247,99,30,.08),0 30px 60px -36px rgba(194,65,12,.4); }
+  .pr-plan-badge { position: absolute; top: -11px; left: 30px; height: 22px; padding: 0 10px; display: flex; align-items: center; border-radius: 999px; background: var(--pl-gradient); color: var(--pl-surface); font-family: 'Geist Mono', monospace; font-size: 10px; letter-spacing: .08em; }
+  .pr-plan-name { margin: 0; font-family: Geist, sans-serif; font-size: 20px; font-weight: 600; color: var(--pl-ink); }
+  .pr-plan-desc { margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: var(--pl-muted); min-height: 44px; }
+  .pr-plan-price { margin-top: 14px; display: flex; align-items: baseline; gap: 4px; }
+  .pr-plan-amt { font-family: Geist, sans-serif; font-size: 44px; font-weight: 600; letter-spacing: -.045em; color: var(--pl-ink); }
+  .pr-plan-per { font-size: 14px; color: var(--pl-muted); }
+  .pr-plan-billed { color: var(--pl-accent-ink); }
+  .pr-plan-caps { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .pr-cap { font-size: 13px; color: var(--pl-ink-2); }
+  .pr-cap b { font-family: 'Geist Mono', monospace; font-weight: 500; color: var(--pl-ink); }
+  .pr-plan .pr-btn-primary, .pr-plan .pr-btn-ghost { margin-top: 18px; width: 100%; }
+  .pr-plan-feats { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--pl-line-soft); display: flex; flex-direction: column; gap: 10px; }
+  .pr-feat { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.5; color: var(--pl-ink-2); }
+  .pr-feat-check { flex: none; margin-top: 1px; width: 18px; height: 18px; border-radius: 50%; background: var(--pl-accent-tint); border: 1px solid var(--pl-accent-line); color: var(--pl-accent-ink); font-size: 10px; display: flex; align-items: center; justify-content: center; }
+
+  /* Enterprise */
+  .pr-ent-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .pr-ent-card { background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 22px; padding: clamp(24px,3vw,32px); display: flex; flex-direction: column; gap: 14px; }
+  .pr-ent-kicker { font-family: 'Geist Mono', monospace; font-size: 10.5px; letter-spacing: .1em; color: var(--pl-accent-ink); }
+  .pr-ent-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+  .pr-ent-name { margin: 0; font-family: Geist, sans-serif; font-size: 24px; font-weight: 600; letter-spacing: -.02em; color: var(--pl-ink); }
+  .pr-ent-price { text-align: right; }
+  .pr-ent-amt { display: block; font-family: Geist, sans-serif; font-size: 22px; font-weight: 600; color: var(--pl-ink); }
+  .pr-ent-note { font-family: 'Geist Mono', monospace; font-size: 11px; color: var(--pl-faint); }
+  .pr-ent-desc { margin: 0; font-size: 15px; line-height: 1.6; color: var(--pl-muted); }
+  .pr-ent-stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1px; background: var(--pl-line-soft); border: 1px solid var(--pl-line-soft); border-radius: 14px; overflow: hidden; }
+  .pr-ent-feats { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Table */
+  .pr-table-wrap { overflow-x: auto; border: 1px solid var(--pl-line); border-radius: 20px; background: var(--pl-surface); }
+  .pr-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+  .pr-table th, .pr-table td { padding: 14px 16px; text-align: center; border-bottom: 1px solid var(--pl-line-soft); font-size: 14px; }
+  .pr-table thead th { position: sticky; top: 0; background: var(--pl-cream); font-family: Geist, sans-serif; font-weight: 600; color: var(--pl-ink); border-bottom: 1px solid var(--pl-line); }
+  .pr-th-feature, .pr-td-feature { text-align: left; font-weight: 500; color: var(--pl-ink); position: sticky; left: 0; background: var(--pl-surface); }
+  .pr-table thead .pr-th-feature { background: var(--pl-cream); }
+  .pr-th-pop, .pr-td-pop { background: var(--pl-accent-tint); }
+  .pr-table thead .pr-th-pop { background: var(--pl-accent-tint); color: var(--pl-accent-ink); }
+  .pr-th-tag { display: block; font-family: 'Geist Mono', monospace; font-size: 8.5px; letter-spacing: .08em; color: var(--pl-accent-ink); margin-top: 2px; }
+  .pr-td-feature { font-size: 13.5px; }
+  .pr-yes { color: var(--pl-accent-ink); font-weight: 700; }
+  .pr-no { color: var(--pl-line-xstrong); }
+
+  /* CTA */
+  .pr-cta-sec { padding: clamp(20px,3vw,28px); }
+  .pr-cta { position: relative; max-width: 1280px; margin: 0 auto; overflow: hidden; background: var(--pl-surface); border: 1px solid var(--pl-line); border-radius: 28px; padding: clamp(56px,8vw,96px) clamp(20px,4vw,40px); text-align: center; }
+  .pr-cta-glow { position: absolute; left: 50%; bottom: -180px; width: 680px; height: 360px; transform: translateX(-50%); background: radial-gradient(closest-side,rgba(247,99,30,.18),transparent); }
+  .pr-cta-inner { position: relative; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+  .pr-cta-h2 { margin: 0; font-family: Geist, sans-serif; font-size: clamp(28px,4vw,48px); line-height: 1.06; letter-spacing: -.04em; color: var(--pl-ink); max-width: 760px; text-wrap: balance; }
+  .pr-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+  @media (min-width: 720px) {
+    .pr-free-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .pr-ent-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  }
+  @media (min-width: 960px) {
+    .pr-paid-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  }
 </style>
+
+<script>
+  const btns = Array.from(document.querySelectorAll('[data-bill]')) as HTMLElement[];
+  const amts = Array.from(document.querySelectorAll('.pr-plan-amt')) as HTMLElement[];
+  const billeds = Array.from(document.querySelectorAll('[data-billed]')) as HTMLElement[];
+  btns.forEach((b) => b.addEventListener('click', () => {
+    const annual = b.dataset.bill === 'annual';
+    btns.forEach((o) => { o.classList.toggle('is-on', o === b); o.setAttribute('aria-pressed', String(o === b)); });
+    amts.forEach((a) => { a.textContent = '$' + (annual ? a.dataset.annual : a.dataset.monthly); });
+    billeds.forEach((el) => { el.hidden = !annual; });
+  }));
+</script>
