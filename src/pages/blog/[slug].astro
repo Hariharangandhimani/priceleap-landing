@@ -8,7 +8,7 @@ type Article = {
   slug: string; category: string; title: string; excerpt: string; author: string;
   publishedAt: string; readTime: string; heroImage?: { src: string; alt: string };
   headings: Heading[]; contentHtml: string; relatedArticles?: Related[];
-  tags?: string[]; authorHtml?: string;
+  tags?: string[]; authorHtml?: string; metaTitle?: string; metaDescription?: string;
 };
 
 export function getStaticPaths() {
@@ -48,7 +48,7 @@ const jsonLd = [{
   mainEntityOfPage: canonicalUrl,
 }];
 ---
-<PriceLeapLayout title={`${article.title} · PriceLeap Blog`} description={article.excerpt} canonical={canonicalUrl} ogImage={article.heroImage?.src || '/assets/priceleap-logo.png'} jsonLd={jsonLd}>
+<PriceLeapLayout title={article.metaTitle || `${article.title} · PriceLeap Blog`} description={article.metaDescription || article.excerpt} canonical={canonicalUrl} ogImage={article.heroImage?.src || '/assets/priceleap-logo.png'} jsonLd={jsonLd}>
   <div class="bp-progress" aria-hidden="true"><div class="bp-progress-fill" data-progress></div></div>
 
   <section class="bp-hero" data-screen-label="Hero">
