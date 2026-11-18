@@ -5,7 +5,7 @@ import glossaryData from '../../data/glossary.json';
 type Related = { slug: string; term: string; category: string };
 type Term = {
   slug: string; term: string; shortDefinition: string; category: string;
-  phonetic?: string; contentHtml: string; relatedTerms?: Related[]; metaDescription?: string;
+  phonetic?: string; contentHtml: string; relatedTerms?: Related[]; metaDescription?: string; metaTitle?: string;
 };
 
 export function getStaticPaths() {
@@ -56,7 +56,7 @@ const jsonLd = [{
   url: canonicalUrl,
 }];
 ---
-<PriceLeapLayout title={`${term.term} · PriceLeap Glossary`} description={term.metaDescription || term.shortDefinition} canonical={canonicalUrl} jsonLd={jsonLd}>
+<PriceLeapLayout title={term.metaTitle || `${term.term} · PriceLeap Glossary`} description={term.metaDescription || term.shortDefinition} canonical={canonicalUrl} jsonLd={jsonLd}>
   <div class="gt-progress" aria-hidden="true"><div class="gt-progress-fill" data-progress></div></div>
 
   <section class="gt-hero" data-screen-label="Hero">

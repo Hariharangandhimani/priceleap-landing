@@ -32,7 +32,10 @@
           "category": "Marketplace"
         }
       ],
-      "metaDescription": "Amazon Standard Identification Number. A 10-character alphanumeric identifier Amazon assigns to every product in its catalog."
+      "metaDescription": "Amazon Standard Identification Number. A 10-character alphanumeric identifier Amazon assigns to every product in its catalog.",
+      "metaTitle": "ASIN | PriceLeap",
+      "ogTitle": "ASIN | PriceLeap",
+      "ogDescription": "Amazon Standard Identification Number. A 10-character alphanumeric identifier Amazon assigns to every product in its catalog."
     },
     {
       "url": "https://priceleap.ai/glossary/buy-box/",
@@ -63,7 +66,10 @@
           "category": "Marketplace"
         }
       ],
-      "metaDescription": "The featured purchase widget on Amazon product pages. Winning the Buy Box typically drives 80–90% of all sales for a given listing."
+      "metaDescription": "The featured purchase widget on Amazon product pages. Winning the Buy Box typically drives 80–90% of all sales for a given listing.",
+      "metaTitle": "Buy Box | PriceLeap",
+      "ogTitle": "Buy Box | PriceLeap",
+      "ogDescription": "The featured purchase widget on Amazon product pages. Winning the Buy Box typically drives 80–90% of all sales for a given listing."
     },
     {
       "url": "https://priceleap.ai/glossary/buy-box-suppression/",
@@ -94,7 +100,10 @@
           "category": "Marketplace"
         }
       ],
-      "metaDescription": "A state where Amazon removes the Buy Box from a listing entirely, typically because all offers are priced significantly above Amazon"
+      "metaDescription": "A state where Amazon removes the Buy Box from a listing entirely, typically because all offers are priced significantly above Amazon",
+      "metaTitle": "Buy Box Suppression | PriceLeap",
+      "ogTitle": "Buy Box Suppression | PriceLeap",
+      "ogDescription": "A state where Amazon removes the Buy Box from a listing entirely, typically because all offers are priced significantly above Amazon"
     },
     {
       "url": "https://priceleap.ai/glossary/catalog-repricing/",
@@ -125,7 +134,10 @@
           "category": "Marketplace"
         }
       ],
-      "metaDescription": "Repricing logic applied across an entire product catalog simultaneously, rather than to individual SKUs managed manually."
+      "metaDescription": "Repricing logic applied across an entire product catalog simultaneously, rather than to individual SKUs managed manually.",
+      "metaTitle": "Catalog Repricing | PriceLeap",
+      "ogTitle": "Catalog Repricing | PriceLeap",
+      "ogDescription": "Repricing logic applied across an entire product catalog simultaneously, rather than to individual SKUs managed manually."
     },
     {
       "url": "https://priceleap.ai/glossary/competitive-intelligence/",
@@ -156,7 +168,10 @@
           "category": "Core Concepts"
         }
       ],
-      "metaDescription": "Systematic collection and analysis of competitor pricing, availability, and marketplace activity to inform your own pricing decisions."
+      "metaDescription": "Systematic collection and analysis of competitor pricing, availability, and marketplace activity to inform your own pricing decisions.",
+      "metaTitle": "Competitive Intelligence | PriceLeap",
+      "ogTitle": "Competitive Intelligence | PriceLeap",
+      "ogDescription": "Systematic collection and analysis of competitor pricing, availability, and marketplace activity to inform your own pricing decisions."
     },
     {
       "url": "https://priceleap.ai/glossary/competitive-repricing/",
@@ -187,7 +202,10 @@
           "category": "Core Concepts"
         }
       ],
-      "metaDescription": "Adjusting prices specifically in response to competitor price changes, as opposed to demand-based or inventory-based repricing triggers."
+      "metaDescription": "Adjusting prices specifically in response to competitor price changes, as opposed to demand-based or inventory-based repricing triggers.",
+      "metaTitle": "Competitive Repricing | PriceLeap",
+      "ogTitle": "Competitive Repricing | PriceLeap",
+      "ogDescription": "Adjusting prices specifically in response to competitor price changes, as opposed to demand-based or inventory-based repricing triggers."
     },
     {
       "url": "https://priceleap.ai/glossary/dynamic-pricing/",
@@ -218,7 +236,10 @@
           "category": "Core Concepts"
         }
       ],
-      "metaDescription": "A pricing strategy where prices change in real time based on market conditions, competitor activity, demand, or inventory levels."
+      "metaDescription": "A pricing strategy where prices change in real time based on market conditions, competitor activity, demand, or inventory levels.",
+      "metaTitle": "Dynamic Pricing | PriceLeap",
+      "ogTitle": "Dynamic Pricing | PriceLeap",
+      "ogDescription": "A pricing strategy where prices change in real time based on market conditions, competitor activity, demand, or inventory levels."
     },
     {
       "url": "https://priceleap.ai/glossary/fulfillment-by-amazon/",
@@ -249,7 +270,10 @@
           "category": "Marketplace"
         }
       ],
-      "metaDescription": "Amazon"
+      "metaDescription": "Amazon",
+      "metaTitle": "Fulfillment by Amazon (FBA) | PriceLeap",
+      "ogTitle": "Fulfillment by Amazon (FBA) | PriceLeap",
+      "ogDescription": "Amazon"
     },
     {
       "url": "https://priceleap.ai/glossary/map-policy/",
@@ -280,7 +304,10 @@
           "category": "Pricing Strategy"
         }
       ],
-      "metaDescription": "Minimum Advertised Price. A manufacturer"
+      "metaDescription": "Minimum Advertised Price. A manufacturer",
+      "metaTitle": "MAP Policy | PriceLeap",
+      "ogTitle": "MAP Policy | PriceLeap",
+      "ogDescription": "Minimum Advertised Price. A manufacturer"
     },
     {
       "url": "https://priceleap.ai/glossary/margin-floor/",
@@ -311,7 +338,10 @@
           "category": "Pricing Strategy"
         }
       ],
-      "metaDescription": "The minimum acceptable price for a SKU, calculated from cost of goods and target margin. Repricing rules cannot push prices below this threshold."
+      "metaDescription": "The minimum acceptable price for a SKU, calculated from cost of goods and target margin. Repricing rules cannot push prices below this threshold.",
+      "metaTitle": "Margin Floor | PriceLeap",
+      "ogTitle": "Margin Floor | PriceLeap",
+      "ogDescription": "The minimum acceptable price for a SKU, calculated from cost of goods and target margin. Repricing rules cannot push prices below this threshold."
     },
     {
       "url": "https://priceleap.ai/glossary/msrp/",
@@ -342,7 +372,10 @@
           "category": "Pricing Strategy"
         }
       ],
-      "metaDescription": "Manufacturer"
+      "metaDescription": "Manufacturer",
+      "metaTitle": "MSRP | PriceLeap",
+      "ogTitle": "MSRP | PriceLeap",
+      "ogDescription": "Manufacturer"
     },
     {
       "url": "https://priceleap.ai/glossary/price-ceiling/",
@@ -373,7 +406,10 @@
           "category": "Pricing Strategy"
         }
       ],
-      "metaDescription": "The maximum price set for a SKU. Repricing rules will not push a price above this threshold, protecting brand perception and MAP compliance."
+      "metaDescription": "The maximum price set for a SKU. Repricing rules will not push a price above this threshold, protecting brand perception and MAP compliance.",
+      "metaTitle": "Price Ceiling | PriceLeap",
+      "ogTitle": "Price Ceiling | PriceLeap",
+      "ogDescription": "The maximum price set for a SKU. Repricing rules will not push a price above this threshold, protecting brand perception and MAP compliance."
     },
     {
       "url": "https://priceleap.ai/glossary/price-elasticity/",
@@ -404,7 +440,10 @@
           "category": "Marketplace"
         }
       ],
-      "metaDescription": "A measure of how sensitive consumer demand is to changes in price. High elasticity means small price changes produce large changes in sales volume."
+      "metaDescription": "A measure of how sensitive consumer demand is to changes in price. High elasticity means small price changes produce large changes in sales volume.",
+      "metaTitle": "Price Elasticity | PriceLeap",
+      "ogTitle": "Price Elasticity | PriceLeap",
+      "ogDescription": "A measure of how sensitive consumer demand is to changes in price. High elasticity means small price changes produce large changes in sales volume."
     },
     {
       "url": "https://priceleap.ai/glossary/price-match/",
@@ -435,7 +474,10 @@
           "category": "Marketplace"
         }
       ],
-      "metaDescription": "A repricing rule that automatically sets your price equal to the lowest competitor price, or to a defined offset above or below it."
+      "metaDescription": "A repricing rule that automatically sets your price equal to the lowest competitor price, or to a defined offset above or below it.",
+      "metaTitle": "Price Match | PriceLeap",
+      "ogTitle": "Price Match | PriceLeap",
+      "ogDescription": "A repricing rule that automatically sets your price equal to the lowest competitor price, or to a defined offset above or below it."
     },
     {
       "url": "https://priceleap.ai/glossary/price-war/",
@@ -466,7 +508,10 @@
           "category": "Marketplace"
         }
       ],
-      "metaDescription": "A competitive cycle where multiple sellers continuously undercut each other"
+      "metaDescription": "A competitive cycle where multiple sellers continuously undercut each other",
+      "metaTitle": "Price War | PriceLeap",
+      "ogTitle": "Price War | PriceLeap",
+      "ogDescription": "A competitive cycle where multiple sellers continuously undercut each other"
     },
     {
       "url": "https://priceleap.ai/glossary/repricing/",
@@ -497,7 +542,10 @@
           "category": "Core Concepts"
         }
       ],
-      "metaDescription": "The process of automatically adjusting product prices in response to competitor activity, demand signals, or internal rules."
+      "metaDescription": "The process of automatically adjusting product prices in response to competitor activity, demand signals, or internal rules.",
+      "metaTitle": "Repricing | PriceLeap",
+      "ogTitle": "Repricing | PriceLeap",
+      "ogDescription": "The process of automatically adjusting product prices in response to competitor activity, demand signals, or internal rules."
     },
     {
       "url": "https://priceleap.ai/glossary/rule-based-pricing/",
@@ -528,7 +576,10 @@
           "category": "Marketplace"
         }
       ],
-      "metaDescription": "A pricing approach where prices are automatically set or adjusted according to predefined conditional logic rather than manual intervention."
+      "metaDescription": "A pricing approach where prices are automatically set or adjusted according to predefined conditional logic rather than manual intervention.",
+      "metaTitle": "Rule-Based Pricing | PriceLeap",
+      "ogTitle": "Rule-Based Pricing | PriceLeap",
+      "ogDescription": "A pricing approach where prices are automatically set or adjusted according to predefined conditional logic rather than manual intervention."
     },
     {
       "url": "https://priceleap.ai/glossary/sell-through-rate/",
@@ -559,7 +610,10 @@
           "category": "Marketplace"
         }
       ],
-      "metaDescription": "The percentage of available inventory sold within a given period. A key input for demand-based pricing adjustments."
+      "metaDescription": "The percentage of available inventory sold within a given period. A key input for demand-based pricing adjustments.",
+      "metaTitle": "Sell-Through Rate | PriceLeap",
+      "ogTitle": "Sell-Through Rate | PriceLeap",
+      "ogDescription": "The percentage of available inventory sold within a given period. A key input for demand-based pricing adjustments."
     },
     {
       "url": "https://priceleap.ai/glossary/sku/",
@@ -590,7 +644,10 @@
           "category": "Marketplace"
         }
       ],
-      "metaDescription": "Stock Keeping Unit. A unique identifier assigned to each distinct product variant in your catalog for inventory and pricing management."
+      "metaDescription": "Stock Keeping Unit. A unique identifier assigned to each distinct product variant in your catalog for inventory and pricing management.",
+      "metaTitle": "SKU | PriceLeap",
+      "ogTitle": "SKU | PriceLeap",
+      "ogDescription": "Stock Keeping Unit. A unique identifier assigned to each distinct product variant in your catalog for inventory and pricing management."
     },
     {
       "url": "https://priceleap.ai/glossary/velocity-limit/",
@@ -621,7 +678,10 @@
           "category": "Marketplace"
         }
       ],
-      "metaDescription": "A rule constraint that caps how frequently or how much a price can change within a given time window, preventing erratic pricing behavior."
+      "metaDescription": "A rule constraint that caps how frequently or how much a price can change within a given time window, preventing erratic pricing behavior.",
+      "metaTitle": "Velocity Limit | PriceLeap",
+      "ogTitle": "Velocity Limit | PriceLeap",
+      "ogDescription": "A rule constraint that caps how frequently or how much a price can change within a given time window, preventing erratic pricing behavior."
     }
   ]
 }
