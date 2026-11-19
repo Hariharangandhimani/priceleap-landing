@@ -1,0 +1,245 @@
+---
+// Native Astro port of the design package's Contact page.
+// Static initial render + all interactivity (route selector, live validation,
+// completion progress, submit → success, reset, business-hours dot) reimplemented
+// as a vanilla <script>. Same layout, tokens, colors and animations.
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+
+const routes = [
+  { t: 'Evaluating PriceLeap', d: 'First look at PriceLeap? See how it fits your catalog.', who: 'a pricing strategist', type: 'Book a demo', shape: '50%', rot: 0 },
+  { t: 'Enterprise Sales', d: '50K+ SKUs or complex multi-marketplace setups? Talk directly to our enterprise team.', who: 'our sales team', type: 'Enterprise sales', shape: '2px', rot: 45 },
+  { t: 'Technical Support', d: 'Existing customer? Your dedicated onboarding contact has priority access.', who: 'a technical specialist', type: 'Technical support', shape: '3px', rot: 0 },
+];
+const fieldLabel: Record<string, string> = { first: 'First Name', last: 'Last Name', email: 'Work Email', company: 'Company' };
+---
+<PriceLeapLayout
+  title="Contact PriceLeap · Let's talk pricing"
+  description="Talk to the PriceLeap team about pricing intelligence, enterprise rollouts or support."
+>
+  <div class="ct">
+    <section class="ct-hero">
+      <div aria-hidden="true" class="ct-grid-bg"></div>
+      <div aria-hidden="true" class="ct-glow"></div>
+      <div style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(48px,7vw,88px) clamp(20px,4vw,40px) clamp(56px,7vw,96px)">
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <span style="height:30px;padding:0 12px;display:inline-flex;align-items:center;gap:8px;border-radius:999px;background:var(--pl-surface);border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:50%;background:var(--pl-gradient);animation:pi-pulse 1.8s infinite"></span>Contact</span>
+          <h1 style="margin:20px 0 0;font-family:Geist,sans-serif;font-size:clamp(44px,6.4vw,84px);line-height:.98;letter-spacing:-.05em;color:var(--pl-ink)"><span style="font-weight:400">Let's talk </span><span style="font-weight:700">pricing.</span></h1>
+          <p style="margin:20px 0 0;max-width:620px;font-size:18px;line-height:1.6;color:var(--pl-ink-2);text-wrap:pretty">Whether you're evaluating PriceLeap for the first time or ready to scale your catalog - our team is ready to walk you through it.</p>
+          <div style="margin-top:24px;display:flex;flex-wrap:wrap;justify-content:center;border:1px solid var(--pl-line);border-radius:12px;background:var(--pl-surface);overflow:hidden">
+            <span style="height:40px;padding:0 16px;display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--pl-ink);border-right:1px solid var(--pl-line-soft)"><span style="width:7px;height:7px;border-radius:50%;background:var(--pl-gradient);animation:pi-pulse 1.8s infinite"></span>Avg. response under 4 hours</span>
+            <a href="mailto:sales_team@priceleap.ai" style="height:40px;padding:0 16px;display:flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12.5px;color:var(--pl-ink)">✉ sales_team@priceleap.ai</a>
+          </div>
+        </div>
+
+        <div class="ct-card">
+          <div style="background:var(--pl-cream);padding:clamp(22px,3vw,36px);display:flex;flex-direction:column;gap:20px">
+            <div>
+              <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--pl-muted)">01 · Who do you need?</span>
+              <p style="margin:8px 0 0;font-size:14.5px;line-height:1.55;color:var(--pl-muted)">We'll match you with the right person - whether that's a pricing strategist, a technical specialist, or our sales team.</p>
+            </div>
+            <div role="radiogroup" aria-label="Who do you need" style="display:flex;flex-direction:column;gap:10px">
+              {routes.map((r, i) => (
+                <button type="button" role="radio" aria-checked={i === 0 ? 'true' : 'false'} class="ct-route" class:list={[{ 'is-on': i === 0 }]} data-ct-route={i} data-type={r.type} style="text-align:left;cursor:pointer;border-radius:16px;padding:16px;display:grid;grid-template-columns:40px minmax(0,1fr) 22px;gap:14px;align-items:start;transition:all .25s">
+                  <span class="ct-ib" style="width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;transition:all .25s"><span class="ct-ic" style={`width:12px;height:12px;border-radius:${r.shape};transform:rotate(${r.rot}deg)`}></span></span>
+                  <span><span style="display:block;font-family:Geist,sans-serif;font-size:16px;font-weight:600;color:var(--pl-ink)">{r.t}</span><span style="display:block;margin-top:4px;font-size:13.5px;line-height:1.5;color:var(--pl-muted)">{r.d}</span></span>
+                  <span class="ct-radio" style="width:20px;height:20px;margin-top:2px;border-radius:50%;background:var(--pl-surface);transition:all .2s"></span>
+                </button>
+              ))}
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--pl-surface);border:1px dashed var(--pl-accent-line);animation:pi-in .35s ease">
+              <span style="display:flex"><span style="width:30px;height:30px;border-radius:50%;border:2px solid var(--pl-surface);background:repeating-linear-gradient(135deg,var(--pl-accent-tint) 0 4px,var(--pl-cream) 4px 8px);box-shadow:0 0 0 1px var(--pl-accent-line)"></span><span style="width:30px;height:30px;margin-left:-10px;border-radius:50%;border:2px solid var(--pl-surface);background:var(--pl-gradient);display:flex;align-items:center;justify-content:center"><img src="/assets/pl-mark.png" alt="" width="14" height="13"></span></span>
+              <span style="font-size:13.5px;line-height:1.45;color:var(--pl-ink-2)">You'll be matched with <b style="color:var(--pl-ink)" data-ct-who>a pricing strategist</b></span>
+            </div>
+            <div style="margin-top:auto;border-top:1px solid var(--pl-line);padding-top:18px;display:flex;flex-direction:column;gap:14px">
+              <div style="display:grid;grid-template-columns:32px minmax(0,1fr);gap:12px"><span style="width:32px;height:32px;border-radius:9px;border:1px solid var(--pl-line);background:var(--pl-surface);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></span><span><span style="display:block;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-muted)">Headquarters</span><span style="display:block;margin-top:2px;font-size:14.5px;font-weight:600;color:var(--pl-ink)">Manhattan, New York</span><span style="display:block;font-size:13.5px;color:var(--pl-muted)">80 Broad St, 5th Floor PMB#1148, NY</span></span></div>
+              <div style="display:grid;grid-template-columns:32px minmax(0,1fr);gap:12px"><span style="width:32px;height:32px;border-radius:9px;border:1px solid var(--pl-line);background:var(--pl-surface);display:flex;align-items:center;justify-content:center"><span data-ct-dot style="width:8px;height:8px;border-radius:50%;background:var(--pl-line-xstrong)"></span></span><span><span style="display:block;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-muted)">Business Hours · <span data-ct-open>Closed now</span></span><span style="display:block;margin-top:2px;font-size:14.5px;font-weight:600;color:var(--pl-ink)">Mon-Fri, 8am-6pm PT</span><span style="display:block;font-size:13.5px;color:var(--pl-muted)">Enterprise SLA customers receive 24/7 monitoring alerts.</span></span></div>
+            </div>
+          </div>
+
+          <div style="background:var(--pl-surface);position:relative">
+            <div style="height:4px;background:var(--pl-line-soft)"><div data-ct-progress style="height:100%;width:0%;background:var(--pl-gradient);transition:width .4s cubic-bezier(.2,.7,.2,1)"></div></div>
+            <form data-ct-form novalidate style="padding:clamp(22px,3vw,40px);display:flex;flex-direction:column;gap:18px">
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
+                <div><span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--pl-muted)">02 · Tell us about you</span><h2 style="margin:6px 0 0;font-family:Geist,sans-serif;font-size:28px;font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">Contact Us</h2></div>
+                <span style="height:26px;padding:0 10px;display:flex;align-items:center;border-radius:999px;background:var(--pl-sand);font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-ink-2)"><span data-ct-done>0</span> / 7 complete</span>
+              </div>
+              <p style="margin:0;font-size:14.5px;line-height:1.55;color:var(--pl-muted)">Fill in the form and we'll match you with the right person - whether that's a pricing strategist, a technical specialist, or our sales team.</p>
+              <div class="ct-pair">
+                {(['first', 'last', 'email', 'company'] as const).map((k) => (
+                  <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500;color:var(--pl-ink)">{fieldLabel[k]}</span><input data-ct-field={k} type={k === 'email' ? 'email' : 'text'} autocomplete={k === 'email' ? 'email' : k === 'company' ? 'organization' : k === 'first' ? 'given-name' : 'family-name'} placeholder={k === 'first' ? 'Alex' : k === 'last' ? 'Johnson' : k === 'email' ? 'alex@company.com' : 'Acme Corp'} class="ct-input" style="height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--pl-line);background:var(--pl-surface);font-size:15px;color:var(--pl-ink);outline:none;transition:border-color .2s,box-shadow .2s"><span data-ct-err={k} style="font-size:12px;color:var(--pl-danger-ink)"></span></label>
+                ))}
+                <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500;color:var(--pl-ink)">Catalog Size (SKUs)</span><span style="position:relative;display:block"><select data-ct-field="size" class="ct-input ct-select" style="width:100%;height:48px;padding:0 40px 0 14px;border-radius:12px;border:1px solid var(--pl-line);background:var(--pl-surface);font-size:15px;color:var(--pl-faint-2);outline:none;appearance:none;-webkit-appearance:none;cursor:pointer"><option value="">Select range</option><option value="Under 1,000">Under 1,000</option><option value="1,000 – 10,000">1,000 – 10,000</option><option value="10,000 – 50,000">10,000 – 50,000</option><option value="50,000+">50,000+</option></select><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:11px;color:var(--pl-muted)">▾</span></span><span data-ct-err="size" style="font-size:12px;color:var(--pl-danger-ink)"></span></label>
+                <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500;color:var(--pl-ink)">Inquiry Type</span><span style="position:relative;display:block"><select data-ct-field="type" class="ct-input ct-select" style="width:100%;height:48px;padding:0 40px 0 14px;border-radius:12px;border:1px solid var(--pl-line);background:var(--pl-surface);font-size:15px;color:var(--pl-faint-2);outline:none;appearance:none;-webkit-appearance:none;cursor:pointer"><option value="">What can we help with?</option><option value="Book a demo">Book a demo</option><option value="Pricing & plans">Pricing & plans</option><option value="Enterprise sales">Enterprise sales</option><option value="Technical support">Technical support</option><option value="Partnerships">Partnerships</option><option value="Other">Other</option></select><span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;font-size:11px;color:var(--pl-muted)">▾</span></span><span data-ct-err="type" style="font-size:12px;color:var(--pl-danger-ink)"></span></label>
+              </div>
+              <label style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;justify-content:space-between;font-size:13px;font-weight:500;color:var(--pl-ink)"><span>Message</span><span style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:400;color:var(--pl-faint)"><span data-ct-msglen>0</span> chars</span></span><textarea data-ct-field="msg" rows="5" placeholder="Tell us about your pricing challenges, catalog size, marketplaces you compete on, or anything else that helps us prepare..." class="ct-input" style="padding:12px 14px;border-radius:12px;border:1px solid var(--pl-line);background:var(--pl-surface);font-size:15px;line-height:1.55;color:var(--pl-ink);outline:none;resize:vertical;min-height:130px;transition:border-color .2s,box-shadow .2s"></textarea><span data-ct-err="msg" style="font-size:12px;color:var(--pl-danger-ink)"></span></label>
+              <div data-ct-alert role="alert" hidden style="padding:11px 14px;border-radius:11px;background:var(--pl-danger-tint);border:1px solid var(--pl-danger-line);font-size:13.5px;color:var(--pl-danger-ink);animation:pi-shake .35s ease">Please fix the highlighted fields.</div>
+              <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;border-top:1px solid var(--pl-line-soft);padding-top:18px">
+                <button type="submit" data-ct-submit style="height:52px;padding:0 28px;border:none;border-radius:12px;background:var(--pl-gradient);color:var(--pl-surface);font-family:Geist,sans-serif;font-weight:500;font-size:16px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 12px 26px -12px rgba(247,99,30,.9);transition:background .2s"><span data-ct-spinner hidden style="width:16px;height:16px;border-radius:50%;border:2px solid rgba(60,30,15,.25);border-top-color:var(--pl-ink);animation:pi-spin .8s linear infinite"></span><span data-ct-btnlabel>Submit →</span></button>
+                <p style="margin:0;flex:1;min-width:220px;font-size:12.5px;line-height:1.55;color:var(--pl-muted)">By submitting, you agree to our <a href="/privacy-policy" style="color:var(--pl-accent-ink);text-decoration:underline;text-underline-offset:3px">Privacy Policy</a>. We never share your data with third parties.</p>
+              </div>
+            </form>
+            <div data-ct-success hidden style="padding:clamp(40px,6vw,72px) clamp(22px,3vw,40px);flex-direction:column;align-items:center;text-align:center;gap:16px;animation:pi-in .45s ease">
+              <span style="width:72px;height:72px;border-radius:22px;background:var(--pl-gradient);display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--pl-surface);box-shadow:0 0 0 10px rgba(247,99,30,.14);animation:pi-pop .5s ease">✓</span>
+              <h2 style="margin:6px 0 0;font-family:Geist,sans-serif;font-size:28px;font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">Thanks, <span data-ct-sfirst></span>.</h2>
+              <p style="margin:0;max-width:400px;font-size:15.5px;line-height:1.6;color:var(--pl-ink-2)">We'll match you with <span data-ct-swho>a pricing strategist</span> and reply to <b style="color:var(--pl-ink)" data-ct-semail></b> — on average in under 4 hours.</p>
+              <div style="width:100%;max-width:400px;border:1px solid var(--pl-line);border-radius:14px;overflow:hidden;text-align:left">
+                <div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--pl-line-soft);font-size:13.5px"><span style="color:var(--pl-muted)">Inquiry</span><span style="color:var(--pl-ink)" data-ct-stype></span></div>
+                <div style="display:flex;justify-content:space-between;padding:12px 16px;font-size:13.5px"><span style="color:var(--pl-muted)">Catalog</span><span style="color:var(--pl-ink)"><span data-ct-ssize></span> SKUs</span></div>
+              </div>
+              <button type="button" data-ct-reset style="height:44px;padding:0 18px;border-radius:11px;border:1px solid var(--pl-line);background:var(--pl-surface);color:var(--pl-ink);font-size:14px;font-weight:500;cursor:pointer">Send another message</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .ct { background: var(--pl-surface); overflow-x: clip; }
+  @keyframes pi-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.55); } 100% { box-shadow: 0 0 0 10px rgba(247,99,30,0); } }
+  @keyframes pi-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes pi-pop { 0% { opacity: 0; transform: scale(.6); } 70% { transform: scale(1.08); } 100% { opacity: 1; transform: none; } }
+  @keyframes pi-spin { to { transform: rotate(360deg); } }
+  @keyframes pi-shake { 0%,100% { transform: none; } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+  @media (prefers-reduced-motion: reduce) { .ct *, .ct *::before, .ct *::after { animation: none !important; transition: none !important; } }
+
+  .ct-hero { position: relative; border-bottom: 1px solid var(--pl-line); overflow: hidden; }
+  .ct-grid-bg { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 70% 55% at 50% 0%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 70% 55% at 50% 0%,#000 10%,transparent 70%); pointer-events: none; }
+  .ct-glow { position: absolute; left: 50%; top: 260px; width: 1200px; height: 700px; transform: translateX(-50%); background: radial-gradient(closest-side,rgba(247,99,30,.12),transparent); pointer-events: none; }
+
+  .ct-card { margin-top: clamp(40px,5vw,64px); border: 1px solid var(--pl-line); border-radius: 28px; overflow: hidden; background: var(--pl-line); display: grid; grid-template-columns: 1fr; gap: 1px; box-shadow: 0 50px 100px -60px rgba(60,30,15,.35); }
+  @media (min-width: 1000px) { .ct-card { grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); } }
+  .ct-pair { display: grid; grid-template-columns: 1fr; gap: 14px 16px; }
+  @media (min-width: 760px) { .ct-pair { grid-template-columns: 1fr 1fr; } }
+
+  /* route selector states */
+  .ct-route { background: transparent; border: 1.5px solid var(--pl-line); box-shadow: none; }
+  .ct-route.is-on { background: var(--pl-surface); border-color: var(--pl-accent); box-shadow: 0 0 0 4px rgba(247,99,30,.12),0 18px 34px -26px rgba(194,65,12,.55); }
+  .ct-ib { background: var(--pl-surface); border: 1px solid var(--pl-line); }
+  .ct-route.is-on .ct-ib { background: var(--pl-accent); border-color: var(--pl-accent); }
+  .ct-ic { background: var(--pl-accent); }
+  .ct-route.is-on .ct-ic { background: var(--pl-ink); }
+  .ct-radio { border: 1.5px solid var(--pl-line-xstrong); }
+  .ct-route.is-on .ct-radio { border: 6px solid var(--pl-accent); }
+
+  .ct-input:focus { border-color: var(--pl-accent) !important; box-shadow: 0 0 0 4px rgba(247,99,30,.15); }
+  .ct-input::placeholder { color: var(--pl-faint-2); }
+  .ct-select.has-val { color: var(--pl-ink) !important; }
+  .ct-submit:hover { background: var(--pl-gradient-hover); }
+</style>
+
+<script>
+  const routes = [
+    { who: 'a pricing strategist', type: 'Book a demo' },
+    { who: 'our sales team', type: 'Enterprise sales' },
+    { who: 'a technical specialist', type: 'Technical support' },
+  ];
+  const root = document.querySelector('.ct');
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const keys = ['first', 'last', 'email', 'company', 'size', 'type', 'msg'] as const;
+    const f: Record<string, string> = { first: '', last: '', email: '', company: '', size: '', type: '', msg: '' };
+    let tried = false, route = 0;
+
+    const validate = (x: Record<string, string>) => {
+      const e: Record<string, string> = {};
+      if (!x.first.trim()) e.first = 'Enter your first name.';
+      if (!x.last.trim()) e.last = 'Enter your last name.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(x.email.trim())) e.email = 'Enter a valid work email.';
+      if (!x.company.trim()) e.company = 'Enter your company.';
+      if (!x.size) e.size = 'Select a range.';
+      if (!x.type) e.type = 'Select an inquiry type.';
+      if (x.msg.trim().length < 10) e.msg = 'Tell us a little more (10+ characters).';
+      return e;
+    };
+
+    const inputs = Array.from(root.querySelectorAll('[data-ct-field]')) as (HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)[];
+    const fieldEl = (k: string) => root.querySelector(`[data-ct-field="${k}"]`) as HTMLInputElement | null;
+    const errEl = (k: string) => root.querySelector(`[data-ct-err="${k}"]`) as HTMLElement | null;
+
+    const refresh = () => {
+      const live = validate(f);
+      const shownErr = tried ? live : {} as Record<string, string>;
+      keys.forEach((k) => {
+        const el = fieldEl(k); const er = errEl(k);
+        if (er) er.textContent = (shownErr as any)[k] || '';
+        if (el) {
+          const border = (shownErr as any)[k] ? 'var(--pl-danger)' : (!(live as any)[k] && f[k]) ? 'var(--pl-accent-line)' : 'var(--pl-line)';
+          el.style.borderColor = border;
+        }
+      });
+      const done = keys.filter((k) => !(live as any)[k]).length;
+      const doneEl = q('[data-ct-done]'); if (doneEl) doneEl.textContent = String(done);
+      const prog = q('[data-ct-progress]'); if (prog) prog.style.width = Math.round(done / 7 * 100) + '%';
+      const ml = q('[data-ct-msglen]'); if (ml) ml.textContent = String(f.msg.length);
+      const alert = q('[data-ct-alert]'); if (alert) alert.hidden = !(tried && Object.keys(live).length > 0);
+      // selects: ink colour once chosen
+      (['size', 'type'] as const).forEach((k) => { const el = fieldEl(k); el?.classList.toggle('has-val', !!f[k]); });
+    };
+
+    inputs.forEach((el) => {
+      const k = el.getAttribute('data-ct-field')!;
+      el.addEventListener('input', () => { f[k] = el.value; refresh(); });
+      el.addEventListener('change', () => { f[k] = el.value; refresh(); });
+    });
+
+    // route selector
+    root.querySelectorAll('[data-ct-route]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        route = Number(btn.getAttribute('data-ct-route'));
+        root.querySelectorAll('[data-ct-route]').forEach((b) => {
+          const on = b === btn;
+          b.classList.toggle('is-on', on);
+          b.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+        const who = q('[data-ct-who]'); if (who) who.textContent = routes[route].who;
+        // set inquiry type to match route
+        const typeEl = fieldEl('type'); if (typeEl) { typeEl.value = routes[route].type; f.type = routes[route].type; }
+        refresh();
+      });
+    });
+
+    // business hours (PT)
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', hour: 'numeric', hour12: false }).formatToParts(new Date());
+      const day = parts.find((p) => p.type === 'weekday')!.value;
+      const hr = +parts.find((p) => p.type === 'hour')!.value;
+      const open = !['Sat', 'Sun'].includes(day) && hr >= 8 && hr < 18;
+      const dot = q('[data-ct-dot]'); const lbl = q('[data-ct-open]');
+      if (open && dot) { dot.style.background = 'var(--pl-accent)'; dot.style.animation = 'pi-pulse 1.8s infinite'; }
+      if (lbl) lbl.textContent = open ? 'Open now' : 'Closed now';
+    } catch (e) {}
+
+    // submit
+    const form = q('[data-ct-form]') as HTMLFormElement | null;
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const er = validate(f);
+      if (Object.keys(er).length) { tried = true; refresh(); return; }
+      const spinner = q('[data-ct-spinner]'); const label = q('[data-ct-btnlabel]'); const submit = q('[data-ct-submit]') as HTMLButtonElement | null;
+      if (spinner) spinner.hidden = false; if (label) label.textContent = 'Sending…'; if (submit) submit.disabled = true;
+      setTimeout(() => {
+        form.style.display = 'none';
+        const succ = q('[data-ct-success]'); if (succ) { succ.hidden = false; succ.style.display = 'flex'; }
+        const prog = q('[data-ct-progress]'); if (prog) prog.style.width = '100%';
+        const set = (sel: string, v: string) => { const el = q(sel); if (el) el.textContent = v; };
+        set('[data-ct-sfirst]', f.first); set('[data-ct-semail]', f.email);
+        set('[data-ct-swho]', routes[route].who); set('[data-ct-stype]', f.type); set('[data-ct-ssize]', f.size);
+      }, 900);
+    });
+
+    // reset
+    q('[data-ct-reset]')?.addEventListener('click', () => {
+      keys.forEach((k) => { f[k] = ''; const el = fieldEl(k); if (el) el.value = ''; });
+      tried = false;
+      const succ = q('[data-ct-success]'); if (succ) { succ.hidden = true; succ.style.display = ''; }
+      if (form) { form.style.display = 'flex'; }
+      const spinner = q('[data-ct-spinner]'); const label = q('[data-ct-btnlabel]'); const submit = q('[data-ct-submit]') as HTMLButtonElement | null;
+      if (spinner) spinner.hidden = true; if (label) label.textContent = 'Submit →'; if (submit) submit.disabled = false;
+      refresh();
+    });
+
+    refresh();
+  }
+</script>
