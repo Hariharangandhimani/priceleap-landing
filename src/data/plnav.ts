@@ -16,6 +16,10 @@ export const L = {
   pricing: '/pricing',
   faq: '/faq',
   demo: '/book-a-demo',
+  compData: '/competitive-data',
+  scraping: '/price-scraping',
+  matching: '/product-matching',
+  predictive: '/predictive-pricing',
 };
 
 export type MenuItem = { t: string; d?: string; href: string };
@@ -24,12 +28,12 @@ export const PRODUCT: MenuItem[] = [
   { t: 'Price Intelligence Engine', d: 'Live competitor prices, index and positioning.', href: L.pie },
   { t: 'Pricing Decision Engine', d: 'Rules, floors and ceilings that turn data into moves.', href: '#' },
   { t: 'Margin Protection Engine', d: 'Guardrails that stop prices eroding margin.', href: '#' },
-  { t: 'Competitive Data', d: 'Clean, matched competitor data at catalog scale.', href: '#' },
-  { t: 'Price Scraping', d: 'Managed extraction from any marketplace or store.', href: '#' },
-  { t: 'Product Matching', d: 'AI matching with human QC on every SKU.', href: '#' },
+  { t: 'Competitive Data', d: 'Clean, matched competitor data at catalog scale.', href: L.compData },
+  { t: 'Price Scraping', d: 'Managed extraction from any marketplace or store.', href: L.scraping },
+  { t: 'Product Matching', d: 'AI matching with human QC on every SKU.', href: L.matching },
   { t: 'Price Engine', d: 'The core engine behind every price recommendation.', href: '#' },
   { t: 'Price Optimization', d: 'Find the price that balances volume and margin.', href: '#' },
-  { t: 'Predictive Pricing', d: 'Forecast market moves before they happen.', href: '#' },
+  { t: 'Predictive Pricing', d: 'Forecast market moves before they happen.', href: L.predictive },
 ];
 
 export type SolGroup = { t: string; d: string; items: MenuItem[] };
