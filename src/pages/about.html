@@ -186,7 +186,7 @@ button,input,select,textarea{font:inherit}
       <div data-reveal="" style="border:1px solid var(--pl-line);border-radius:22px;overflow:hidden;background:var(--pl-line);display:grid;gap:1px">
         <sc-for list="{{ values }}" as="v" hint-placeholder-count="5">
           <div style="background:var(--pl-surface);padding:20px 22px;display:grid;grid-template-columns:44px minmax(0,1fr);gap:16px;align-items:start;transition:background .25s" style-hover="background:var(--pl-cream)">
-            <span style="width:44px;height:44px;border-radius:12px;border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);display:flex;align-items:center;justify-content:center"><img src="/assets/icons/{{ v.icon }}.svg" alt="" width="20" height="20" style="display:block" onerror="this.style.visibility='hidden'"></span>
+            <span style="width:44px;height:44px;border-radius:12px;border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);display:flex;align-items:center;justify-content:center"><img src="/assets/icons/{{ v.icon }}.svg" alt="" width="20" height="20" loading="lazy" decoding="async" style="display:block" onerror="this.style.visibility='hidden'"></span>
             <span><span style="display:block;font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:var(--pl-ink)">{{ v.t }}</span><span style="display:block;margin-top:4px;font-size:14.5px;line-height:1.55;color:var(--pl-muted)">{{ v.d }}</span></span>
           </div>
         </sc-for>
