@@ -1,0 +1,218 @@
+---
+// Native Astro port of the design package's "Book a Demo" page.
+// Same layout, design tokens, colors and animations — rendered statically
+// (responsive values that were JS/innerWidth-driven are now CSS media queries).
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+
+const agenda = [
+  ['0–5', 'Your goals', 'Catalog size, channels and the pricing decisions you want to improve.'],
+  ['5–15', 'Live data on your SKUs', 'We pull competitor prices for a sample of your products, live.'],
+  ['15–25', 'Matching & decisions', 'See match accuracy, rules, floors and recommended price moves.'],
+  ['25–30', 'Plan & pricing', 'A rollout plan and pricing for your catalog size.'],
+].map(([t, h, d], i, a) => ({ t, h, d, last: i === a.length - 1 }));
+
+const avail = [9, 10, 12, 16, 17, 19, 23, 24];
+const days = Array.from({ length: 35 }, (_, i) => {
+  const n = i - 2;
+  const ok = avail.includes(n), sel = n === 17;
+  return {
+    n: n > 0 && n <= 30 ? String(n) : '',
+    bg: sel ? '#1C130E' : ok ? '#FFF4EC' : 'transparent',
+    bc: sel ? '#1C130E' : ok ? '#FFD8BE' : 'transparent',
+    c: sel ? '#FFFFFF' : ok ? '#C2410C' : '#C4B4A8',
+  };
+});
+
+const slots = ['9:00 AM', '10:30 AM', '11:00 AM', '1:30 PM', '3:00 PM', '4:30 PM'].map((t, i) => ({
+  t,
+  bc: i === 1 ? '#1C130E' : '#EFE3DA',
+  bg: i === 1 ? '#1C130E' : '#FFFFFF',
+  c: i === 1 ? '#FFFFFF' : '#3A302A',
+}));
+
+const next = [
+  ['01', 'INSTANTLY', 'Confirmation & invite', 'A calendar invite with the video link lands in your inbox.'],
+  ['02', 'BEFORE THE CALL', 'Share a few SKUs', 'Send 5–10 product URLs or SKUs so we can pull live data on them.'],
+  ['03', 'ON THE CALL', 'See your market live', 'We walk through your competitor prices, matches and next steps.'],
+].map(([n, when, t, d], i) => ({
+  n, when, t, d,
+  bg: i === 0 ? '#1C130E' : '#FFFFFF',
+  c: i === 0 ? '#FFFFFF' : '#1C130E',
+  bc: i === 0 ? '#1C130E' : '#EFE3DA',
+}));
+
+const faqs = [
+  ['Who should join the call?', 'Whoever owns pricing decisions: pricing, category, ecommerce or marketplace managers. Bring a technical colleague if you want to discuss integrations.'],
+  ['Do I need to prepare anything?', 'Only a few product URLs or SKUs you compete on. We use them to pull live competitor prices during the call.'],
+  ['Is the demo really on my data?', 'Yes. We pull live prices on your own SKUs during the call so you see real freshness and match accuracy.'],
+  ['Is there any cost or commitment?', 'No. The demo is free and there is no obligation to buy.'],
+].map(([q, a]) => ({ q, a }));
+---
+<PriceLeapLayout
+  title="Book a demo · PriceLeap"
+  description="Book a 30-minute PriceLeap demo. We'll pull live competitor prices on your own SKUs during the call."
+>
+  <div class="bd">
+    <section class="bd-hero">
+      <div aria-hidden="true" class="bd-hero-grid-bg"></div>
+      <div aria-hidden="true" class="bd-hero-glow"></div>
+      <div class="bd-hero-grid">
+
+        <div class="bd-hero-left">
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:50%;background:#F7631E;animation:bd-pulse 1.8s ease-out infinite"></span>Book a demo · 30 min</span>
+            <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(36px,4.8vw,60px);line-height:1.03;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">See your market, </span><span style="font-weight:700">on your own SKUs.</span></h1>
+            <p style="margin:0;max-width:520px;font-size:18px;line-height:1.6;color:#3A302A;text-wrap:pretty">Pick a time that works. We'll pull live competitor prices on your products during the call, so you see real freshness and match accuracy, not a canned demo.</p>
+          </div>
+
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden">
+            <div style="padding:14px 20px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066">WHAT WE'LL COVER</div>
+            {agenda.map((a) => (
+              <div style={`display:grid;grid-template-columns:52px minmax(0,1fr);gap:14px;align-items:start;padding:16px 20px;border-bottom:${a.last ? 'none' : '1px solid #F5ECE5'}`}>
+                <span style="height:24px;display:flex;align-items:center;justify-content:center;border-radius:7px;background:#FBF3EC;font-family:'Geist Mono',monospace;font-size:10.5px;color:#3A302A">{a.t}</span>
+                <div><div style="font-size:15px;font-weight:600;color:#1C130E">{a.h}</div><div style="margin-top:3px;font-size:14px;line-height:1.5;color:#665A51">{a.d}</div></div>
+              </div>
+            ))}
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:#EFE3DA;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden">
+            <div style="background:#FFFFFF;padding:16px"><div style="font-family:Geist,sans-serif;font-size:22px;font-weight:600;letter-spacing:-.03em;color:#1C130E">30 min</div><div style="margin-top:2px;font-size:12.5px;color:#665A51">Video call</div></div>
+            <div style="background:#FFFFFF;padding:16px"><div style="font-family:Geist,sans-serif;font-size:22px;font-weight:600;letter-spacing:-.03em;color:#1C130E">Your SKUs</div><div style="margin-top:2px;font-size:12.5px;color:#665A51">Live data</div></div>
+            <div style="background:#FFFFFF;padding:16px"><div style="font-family:Geist,sans-serif;font-size:22px;font-weight:600;letter-spacing:-.03em;color:#1C130E">No cost</div><div style="margin-top:2px;font-size:12.5px;color:#665A51">No commitment</div></div>
+          </div>
+
+          <figure style="margin:0;display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:18px;background:#FFF9F4;border:1px solid #F5ECE5">
+            <blockquote style="margin:0;font-size:15px;line-height:1.6;color:#1C130E">"PriceLeap's decision engine started catching competitor undercuts within minutes. Our Buy Box win rate went from 28% to over 90% in six weeks."</blockquote>
+            <figcaption style="display:flex;align-items:center;gap:12px"><span style="width:36px;height:36px;border-radius:10px;background:#1C130E;color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:11px;display:flex;align-items:center;justify-content:center">HM</span><span><span style="display:block;font-size:13.5px;font-weight:600;color:#1C130E">Head of Marketplace Pricing</span><span style="display:block;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#7F7066">CONSUMER ELECTRONICS</span></span></figcaption>
+          </figure>
+        </div>
+
+        <div style="min-width:0;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;box-shadow:0 48px 90px -56px rgba(60,30,15,.4),0 0 0 6px rgba(255,255,255,.7)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 22px;border-bottom:1px solid #F5ECE5">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v15H4zM4 10h16M9 3v4M15 3v4"></path></svg></span>
+              <div><div style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:#1C130E">Choose a time</div><div style="font-size:13px;color:#665A51">Times shown in your local timezone</div></div>
+            </div>
+            <span style="display:flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;background:#FFF4EC;border:1px solid #FFD8BE;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.06em;color:#C2410C"><span style="width:6px;height:6px;border-radius:50%;background:#F7631E;animation:bd-pulse 1.6s infinite"></span>SLOTS THIS WEEK</span>
+          </div>
+
+          <div id="booking-embed" class="bd-embed">
+            <div aria-hidden="true" class="bd-cal">
+              <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;justify-content:space-between;align-items:center"><span style="height:14px;width:110px;border-radius:7px;background:linear-gradient(90deg,#F5ECE5 0%,#FDF6F0 50%,#F5ECE5 100%);background-size:500px 100%;animation:bd-shimmer 1.6s linear infinite"></span><span style="display:flex;gap:6px"><span style="width:28px;height:28px;border-radius:8px;border:1px solid #EFE3DA"></span><span style="width:28px;height:28px;border-radius:8px;border:1px solid #EFE3DA"></span></span></div>
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
+                  {days.map((d) => (
+                    <span style={`aspect-ratio:1;border-radius:9px;background:${d.bg};border:1px solid ${d.bc};display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:11px;color:${d.c}`}>{d.n}</span>
+                  ))}
+                </div>
+              </div>
+              <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:8px">
+                <span style="height:14px;width:90px;border-radius:7px;margin-bottom:6px;background:linear-gradient(90deg,#F5ECE5 0%,#FDF6F0 50%,#F5ECE5 100%);background-size:500px 100%;animation:bd-shimmer 1.6s linear infinite"></span>
+                {slots.map((s) => (
+                  <span style={`height:42px;border-radius:10px;border:1px solid ${s.bc};background:${s.bg};display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;color:${s.c}`}>{s.t}</span>
+                ))}
+              </div>
+            </div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;pointer-events:none">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;background:rgba(255,255,255,.94);border:1px dashed #E2D3C8;border-radius:14px;padding:16px 20px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)">
+                <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#C2410C">BOOKING CALENDAR EMBED</span>
+                <span style="font-size:13px;color:#665A51;max-width:300px">Replace the contents of <code style="font-family:'Geist Mono',monospace;font-size:12px;color:#1C130E">#booking-embed</code> with your scheduler iframe.</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px 20px;flex-wrap:wrap;padding:14px 22px;border-top:1px solid #F5ECE5;font-size:13px;color:#665A51">
+            <span style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Calendar invite sent instantly</span>
+            <span style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Reschedule anytime</span>
+            <a href="/contact" style="margin-left:auto;font-weight:500">Prefer email? Contact us →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(16px,4vw,40px)">
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>After you book</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.6vw,44px);line-height:1.08;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">What happens </span><span style="font-weight:700">next</span></h2>
+        </div>
+        <div class="bd-steps">
+          {next.map((n) => (
+            <div style="background:#FFFFFF;padding:28px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;gap:12px"><span style={`width:34px;height:34px;border-radius:50%;background:${n.bg};color:${n.c};border:1px solid ${n.bc};font-family:'Geist Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center`}>{n.n}</span><span style="height:1px;flex:1;background:repeating-linear-gradient(90deg,#E2D3C8 0 4px,transparent 4px 8px)"></span><span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#7F7066">{n.when}</span></div>
+              <div style="font-family:Geist,sans-serif;font-size:19px;font-weight:600;letter-spacing:-.01em;color:#1C130E">{n.t}</div>
+              <div style="font-size:15px;line-height:1.6;color:#665A51">{n.d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section style="border-bottom:1px solid #EFE3DA">
+      <div style="max-width:880px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(16px,4vw,40px)">
+        <h2 style="margin:0 0 28px;text-align:center;font-family:Geist,sans-serif;font-size:clamp(26px,3.2vw,38px);letter-spacing:-.03em;color:#1C130E"><span style="font-weight:400">Before you </span><span style="font-weight:700">book</span></h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((q, i) => (
+            <div class="bd-faq" class:list={[{ 'is-open': i === 0 }]} data-bd-faq>
+              <button type="button" aria-expanded={i === 0 ? 'true' : 'false'} data-bd-faq-btn style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:16px;padding:18px 20px;text-align:left">
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{q.q}</span>
+                <span class="bd-faq-plus" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .3s"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="bd-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px;font-size:15px;line-height:1.65;color:#3A302A">{q.a}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .bd { background: #FFFCF9; overflow-x: clip; }
+  @keyframes bd-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.55); } 100% { box-shadow: 0 0 0 10px rgba(247,99,30,0); } }
+  @keyframes bd-shimmer { 0% { background-position: -500px 0; } 100% { background-position: 500px 0; } }
+  @media (prefers-reduced-motion: reduce) { .bd *, .bd *::before, .bd *::after { animation: none !important; transition: none !important; } }
+
+  .bd-hero { position: relative; border-bottom: 1px solid #EFE3DA; overflow: hidden; }
+  .bd-hero-grid-bg { position: absolute; inset: 0; background-image: linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 60% 70% at 20% 20%,#000 10%,transparent 70%); mask-image: radial-gradient(ellipse 60% 70% at 20% 20%,#000 10%,transparent 70%); pointer-events: none; }
+  .bd-hero-glow { position: absolute; left: -10%; top: -30%; width: 680px; height: 560px; background: radial-gradient(closest-side,rgba(247,99,30,.10),transparent); pointer-events: none; }
+  .bd-hero-grid { position: relative; max-width: 1280px; margin: 0 auto; padding: clamp(40px,6vw,80px) clamp(16px,4vw,40px) clamp(48px,6vw,88px); display: grid; grid-template-columns: 1fr; gap: clamp(32px,4.5vw,64px); align-items: start; }
+  .bd-hero-left { min-width: 0; position: static; top: 96px; display: flex; flex-direction: column; gap: 28px; }
+  @media (min-width: 1024px) {
+    .bd-hero-grid { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); }
+    .bd-hero-left { position: sticky; }
+  }
+
+  .bd-embed { position: relative; min-height: 620px; background: #FFF9F4; padding: clamp(14px,2.4vw,24px); }
+  @media (min-width: 640px) { .bd-embed { min-height: 680px; } }
+  .bd-cal { height: 100%; min-height: inherit; display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @media (min-width: 640px) { .bd-cal { grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); } }
+
+  .bd-steps { margin-top: 44px; position: relative; display: grid; grid-template-columns: 1fr; gap: 1px; background: #EFE3DA; border: 1px solid #EFE3DA; border-radius: 22px; overflow: hidden; }
+  @media (min-width: 860px) { .bd-steps { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+
+  .bd-faq { background: #FFFFFF; border: 1px solid #EFE3DA; border-radius: 16px; overflow: hidden; transition: border-color .25s; }
+  .bd-faq.is-open { border-color: #FFD8BE; }
+  .bd-faq-plus { background: #FBF3EC; color: #1C130E; }
+  .bd-faq.is-open .bd-faq-plus { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .bd-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .bd-faq.is-open .bd-faq-panel { grid-template-rows: 1fr; }
+</style>
+
+<script>
+  // FAQ accordion — single-open, matches the original (first item open on load).
+  document.querySelectorAll('[data-bd-faq-btn]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('[data-bd-faq]');
+      const wasOpen = item?.classList.contains('is-open');
+      document.querySelectorAll('[data-bd-faq]').forEach((el) => {
+        el.classList.remove('is-open');
+        el.querySelector('[data-bd-faq-btn]')?.setAttribute('aria-expanded', 'false');
+      });
+      if (!wasOpen && item) {
+        item.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+</script>
