@@ -1,0 +1,735 @@
+---
+// Native Astro port of the design package's Competitive Data page.
+// Static initial render + the full 300ms animation loop and interactions
+// reimplemented in vanilla JS: hero competitor price-flash + velocity + freshness
+// timers, auto-advancing How-it-works stepper with swapping panels, data-field
+// hover highlighting the product-detail card, region toggle (US/India), a
+// match-fixing demo, a refresh/failed-fetch demo with donut, an integration
+// connect demo, billing toggle and FAQ accordion. Responsive via CSS media queries.
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+
+const C = { amz: '#F59E0B', bb: '#3B82F6', tgt: '#EF4444', wmt: '#2563EB', cro: '#0EA5A4', rel: '#8B5CF6', fk: '#EAB308' };
+const heroData: [string, string, string, string, string, string, string, string, string, [string, string, string, string][], string][] = [
+  ['Philips Airfryer XXL HD9650', 'bestbuy.com', '$249.99', '−2.1% vs avg', '#1E7A3D', 'Competitive', 'Lowest among tracked sellers', '#1E7A3D', '0,16 12,15 24,17 36,12 48,13 60,9 70,10', [['Amazon', C.amz, '$254.00', '$251.50'], ['Walmart', C.wmt, '$259.00', '$259.00'], ['Target', C.tgt, 'No match', 'No match']], 'Today 9:02'],
+  ['Ninja Foodi 9-in-1 OL501', 'amazon.com', '$229.99', '+6.7% vs avg', '#B42318', 'Premium', '13% above lowest', '#C2410C', '0,12 12,12 24,10 36,10 48,8 60,8 70,6', [['Best Buy', C.bb, '$199.99', '$194.99'], ['Walmart', C.wmt, '$214.00', '$214.00'], ['Target', C.tgt, '$219.99', '$219.99']], 'Today 9:02'],
+  ['KitchenAid Artisan 5-Qt', 'walmart.com', '$379.00', '+0.0% vs avg', '#665A51', 'Competitive', '20% under highest', '#1E7A3D', '0,12 12,12 24,12 36,12 48,12 60,12 70,12', [['Amazon', C.amz, '$379.99', '$374.99'], ['Best Buy', C.bb, '$449.99', '$449.99'], ['Target', C.tgt, '$399.99', '$399.99']], 'Today 9:03'],
+  ['Dyson V15 Detect', 'target.com', '$749.99', '+0.0% vs avg', '#665A51', 'Unknown', 'Waiting on matches', '#665A51', '0,12 12,12 24,12 36,12 48,12 60,12 70,12', [['Amazon', C.amz, 'No match', 'No match'], ['Best Buy', C.bb, '$749.99', '$729.99'], ['Walmart', C.wmt, 'No match', 'No match']], 'Today 9:03'],
+];
+const heroRows = heroData.map(([n, src, p, vs, vc, pos, posD, posC, spark, comps, f]) => ({
+  n, src, p, vs, vc, pos, posD, posC, spark, f,
+  comps: comps.map(([cn, dot, a, b], k) => ({ n: cn, dot, a, b, flips: k === 0 && a !== b, pc0: a === 'No match' ? '#C2410C' : '#1C130E' })),
+}));
+const problems = [['01', 'BROKEN SCRAPERS', 'In-house scrapers break the week a competitor changes their site, and nobody notices until a price move is already wrong.'], ['02', 'LOOSE MATCHING', "Loose matching compares your SKU to a different pack size, variant, or seller, so the gap on screen isn't a real gap."], ['03', 'THIN COVERAGE', 'Coverage stops at one or two big marketplaces and misses the regional sites where you actually lose sales.'], ['04', 'STALE FILES', 'Data lands as a weekly CSV. By the time it reaches the pricing model, the market has moved on.']].map(([n, tag, t]) => ({ n, tag, t }));
+const steps4 = [['Add your products', 'Paste product URLs, upload a file or connect your catalog.'], ['Choose competitors', 'Let AI competitor discovery find competing products for a product group, or add the competitor URLs you already watch.'], ['Set a schedule', 'Each product group gets its own refresh time, competitor set and location.'], ['Review and export', 'Review prices, gaps and stock on the dashboard, then export them.']].map(([t, d], i) => ({ t, d, no: i + 1 }));
+const panels = [['Add Products', 'Paste URLs, upload a file or connect a catalog'], ['Add Products · tracking', 'How should we track this group?'], ['Product Groups', 'Refresh time, competitor set and location per group'], ['Price Intelligence', 'Review prices, gaps and stock, then export']];
+const addUrls = ['https://bestbuy.com/site/philips-airfryer-xxl/6512345.p', 'https://walmart.com/ip/ninja-foodi-ol501/1234567', 'https://amazon.com/dp/B0B8RZ1Y9K'].map((t, i) => ({ t, dl: (i * 0.25).toFixed(2) }));
+const discovered = [['Amazon', C.amz], ['Best Buy', C.bb], ['Walmart', C.wmt]].map(([t, c], i) => ({ t, c, dl: (0.2 + i * 0.15).toFixed(2) }));
+const schedRows = [['KA', 'Kitchen_Appliances', '#D97706', 'EVERY DAY', '3:00 pm London (GMT)', '4 competitors', 'Auto'], ['TV', 'TV_Weekly_Promo', '#0E8FA3', '2× DAILY', '8:00 · 20:00 PT', '5 competitors', '94105'], ['LP', 'Laptops_BackToSchool', '#E04A3A', '3× DAILY', '6 · 12 · 18 CST', '5 competitors', '60601']].map(([ab, n, av, freq, time, c, loc], i) => ({ ab, n, av, freq, time, c, loc, dl: (i * 0.1).toFixed(1) }));
+const fd: [string, string, string, string, boolean?][] = [
+  ['Your price', 'Current price and % vs market average', 'Dashboard, product detail', 'price'],
+  ['Competitor prices', 'Each tracked retailer\'s price, or "No match"', 'Dashboard, product detail', 'comp'],
+  ['Gap vs you', 'Amount and percent per competitor', 'Product detail', 'comp'],
+  ['Position vs market', 'Competitive, Premium or Unknown, plus market rank', 'Dashboard, product detail', 'pos'],
+  ['Stock status', 'In stock or out of stock, for you and each competitor', 'Dashboard, product detail', 'comp'],
+  ['Price history', 'Trend sparkline; history for 14 days, 30 days, 90 days, 1 year or full', 'Dashboard, product detail', 'hist'],
+  ['MAP and MSRP', 'Values with a validity period', 'Product detail', 'ids', true],
+  ['Identifiers', 'SKU, UPC, GTIN, MPN', 'Product detail', 'ids'],
+  ['Last check', 'Last fetch per product, last seen per competitor', 'Dashboard, product detail', 'ids'],
+];
+const fieldRows = fd.map(([k, v, wh, key, cf]) => ({ k, v, w: wh, key, cf: !!cf }));
+const detailComps = [['Amazon', C.amz, '$254.00', '+$4.01 (1.6%)', 'IN STOCK'], ['Walmart', C.wmt, '$259.00', '+$9.01 (3.6%)', 'IN STOCK'], ['Target', C.tgt, 'No match', '—', '—']].map(([n, dot, p, g, st]) => ({ n, dot, p, g, s: st, pc: p === 'No match' ? '#C2410C' : '#1C130E', gc: g === '—' ? '#B9A99C' : '#1E7A3D', sc: st === 'IN STOCK' ? '#1E7A3D' : '#B9A99C' }));
+const RG = [
+  { t: 'United States', zip: '94105', product: 'Philips Airfryer XXL', yours: '$249.99', comps: [['Amazon', C.amz, '$254.00', 'USD'], ['Best Buy', C.bb, '$249.99', 'USD'], ['target.com', C.tgt, 'No match', ''], ['Walmart', C.wmt, '$259.00', 'USD']] },
+  { t: 'India', zip: '560001', product: 'Philips Airfryer XXL', yours: '₹21,999', comps: [['Amazon India', C.amz, '₹21,499', 'INR'], ['Croma', C.cro, '₹22,990', 'INR'], ['Flipkart', C.fk, 'No match', ''], ['Reliance Digital', C.rel, '₹21,999', 'INR']] },
+];
+const sellerApis = [['AMZ', 'Amazon Seller Central', '#F59E0B'], ['WMT', 'Walmart Marketplace', '#2563EB'], ['eB', 'eBay Seller Hub', '#E04A3A'], ['TP', 'Target Plus', '#CC0000']].map(([ab, t, c]) => ({ ab, t, c }));
+const refreshGroups = [['KA', 'Kitchen_Appliances', '#D97706', 'Every day · 3:00 pm London'], ['TV', 'TV_Weekly_Promo', '#0E8FA3', '2× daily · 8:00 / 20:00 PT'], ['LP', 'Laptops_BackToSchool', '#E04A3A', '3× daily · 6 / 12 / 18 CST']].map(([ab, n, av, sched], i) => ({ ab, n, av, sched, last: i === 2 }));
+const plans = [['Starter', '$89', '$71', ['1,500 products per month', '1 check per day'], false], ['Growth', '$159', '$127', ['3,000 products per month', '2 checks per day'], true], ['Scale', '$299', '$239', ['6,000 products per month', '3 checks per day'], false]].map(([n, m, a, f, pop]) => ({ n, f: f as string[], pop: pop as boolean, m: m as string, a: a as string }));
+const fq = [
+  ['What is competitive pricing intelligence?', 'Competitive pricing intelligence is the practice of tracking competitor prices, stock and price changes for the products you sell, then using that data to set your own prices. It depends on two things: matching each competitor listing to the right product, and knowing how recent each price is. priceleap.ai shows both for every tracked product.'],
+  ['How does priceleap.ai match competitor listings to my products?', 'Each product carries its identifiers: SKU, UPC, GTIN and MPN. If no matching listing is found, priceleap.ai shows "No match" instead of a price, so a gap on screen is a real gap. You can add the right competitor listing by URL from the product page.'],
+  ['How often is competitor price data refreshed?', 'Each product group runs on its own schedule, with 1, 2 or 3 checks a day depending on your plan, and you can re-run a group on demand. Every product shows its last fetch time, and every competitor price shows when it was last seen.'],
+  ['What data do I get for each product?', 'Your price, competitor prices, gap vs you, position vs market, stock status, price history from 14 days to full, identifiers and last check time, on the dashboard and the product detail page.'],
+  ['Can I export competitor price data to Excel or Google Sheets?', 'Yes. Export the full dashboard or one product\'s data, or connect Google Sheets or Microsoft Excel from Integrations.'],
+  ['Can I track competitors in more than one country?', 'Yes. Track US and international sites in one workspace, each price in its own currency, and set a ZIP code per product group when a retailer prices by location.'],
+].map(([q, a], i) => ({ q, a, n: String(i + 1).padStart(2, '0') }));
+---
+<PriceLeapLayout
+  title="Competitive Pricing Intelligence & Competitor Data · PriceLeap"
+  description="priceleap.ai is competitor price monitoring software that tracks competitor prices and stock for the products you sell, matched to your catalog with last-checked timestamps."
+>
+  <div class="cd">
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 0%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 70% 60% at 50% 0%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;left:50%;top:-30%;width:900px;height:560px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.09),transparent);pointer-events:none"></div>
+      <div style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(44px,6vw,88px) clamp(16px,4vw,40px) clamp(48px,6vw,80px)">
+        <div style="max-width:900px;margin:0 auto;display:flex;flex-direction:column;align-items:center;text-align:center;gap:20px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:50%;background:#F7631E;animation:cd-pulse 1.8s ease-out infinite"></span>Competitive Data</span>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(34px,5vw,62px);line-height:1.04;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Competitive pricing intelligence built on </span><span style="font-weight:700">competitor data you can check</span></h1>
+          <p style="margin:0;max-width:720px;font-size:18px;line-height:1.6;color:#3A302A;text-wrap:pretty">priceleap.ai is competitor price monitoring software that tracks competitor prices and stock for the products you sell. It matches each listing to your catalog and shows when every price was last checked.</p>
+          <p style="margin:0;font-size:16px;line-height:1.6;color:#665A51">Your team picks the products, competitors and schedule. The software does the checking.</p>
+          <a href="/book-a-demo" style="height:48px;padding:0 22px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+          <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px">
+            {['Refresh schedules per product group', 'Price history from 14 days to full', 'Exports to Google Sheets and Excel'].map((t) => (
+              <span style="height:32px;padding:0 12px;display:inline-flex;align-items:center;gap:8px;border-radius:9px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:13px;color:#1C130E"><span style="width:6px;height:6px;border-radius:50%;background:#F7631E"></span>{t}</span>
+            ))}
+          </div>
+        </div>
+
+        <div style="margin:clamp(36px,5vw,56px) auto 0;max-width:1120px;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;box-shadow:0 50px 100px -60px rgba(60,30,15,.45),0 0 0 6px rgba(255,255,255,.7)">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+            <span style="font-size:13.5px;font-weight:600;color:#1C130E">Price Intelligence</span>
+            <span style="width:1px;height:14px;background:#EFE3DA"></span>
+            <span style="font-size:12px;color:#7F7066;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Monitor competitor prices and track your market position.</span>
+            <span style="margin-left:auto;flex:none;display:flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;background:#FFF4EC;border:1px solid #FFD8BE;font-family:'Geist Mono',monospace;font-size:10px;color:#C2410C"><span style="width:6px;height:6px;border-radius:50%;background:#F7631E;animation:cd-pulse 1.6s infinite"></span>LAST FETCH 9:02</span>
+          </div>
+          <div class="cd-kpi" style="gap:1px;background:#F5ECE5;border-bottom:1px solid #F5ECE5">
+            <div style="background:#FFFFFF;padding:14px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:#7F7066">CATALOG OVERVIEW</div><div style="margin-top:6px;display:flex;align-items:baseline;gap:8px"><span style="font-family:Geist,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.03em;color:#1C130E">248</span><span style="font-size:12px;color:#665A51">active products</span></div></div>
+            <div style="background:#FFFFFF;padding:14px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:#7F7066">PRICE VELOCITY · 30D</div><div style="margin-top:6px;display:flex;gap:14px;font-family:Geist,sans-serif;font-size:20px;font-weight:600"><span style="color:#B42318"><span data-cd-velup>3</span><span style="display:block;font-family:'Geist Mono',monospace;font-size:9px;font-weight:400;letter-spacing:.06em">UP</span></span><span style="color:#1E7A3D"><span data-cd-veldown>5</span><span style="display:block;font-family:'Geist Mono',monospace;font-size:9px;font-weight:400;letter-spacing:.06em">DOWN</span></span></div></div>
+            <div style="background:#FFFFFF;padding:14px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:#7F7066">MARKET POSITION</div><div style="margin-top:6px;display:flex;align-items:baseline;gap:8px"><span style="font-family:Geist,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.03em;color:#1E7A3D">96</span><span style="font-size:12px;color:#665A51">cheapest</span></div></div>
+            <div style="background:#FFFFFF;padding:14px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.1em;color:#7F7066">FAILED FETCHES</div><div style="margin-top:6px;display:flex;align-items:baseline;gap:8px"><span style="font-family:Geist,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.03em;color:#1C130E">0</span><span style="font-size:12px;color:#665A51">products</span></div></div>
+          </div>
+          <div style="overflow-x:auto">
+            <div style="min-width:820px">
+              <div style="display:grid;grid-template-columns:minmax(0,1.6fr) 120px minmax(0,1.1fr) 80px minmax(0,1.5fr) 110px;gap:14px;padding:10px 18px;border-bottom:1px solid #F5ECE5;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066"><span>PRODUCT</span><span>YOUR PRICE</span><span>POSITION VS MARKET</span><span>TREND</span><span>COMPETITORS</span><span>LAST FETCH</span></div>
+              {heroRows.map((r, ri) => (
+                <div style="display:grid;grid-template-columns:minmax(0,1.6fr) 120px minmax(0,1.1fr) 80px minmax(0,1.5fr) 110px;gap:14px;align-items:center;padding:12px 18px;border-bottom:1px solid #F5ECE5">
+                  <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:36px;height:36px;flex:none;border-radius:9px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 5px,#FFFCF9 5px 10px)"></span><span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{r.n}</span><span style="display:block;font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">{r.src}</span></span></span>
+                  <span><span style="display:block;font-family:Geist,sans-serif;font-size:15px;font-weight:600;color:#1C130E">{r.p}</span><span style={`display:block;font-size:11px;color:${r.vc}`}>{r.vs}</span></span>
+                  <span><span style={`display:block;font-size:13px;font-weight:500;color:${r.posC}`}>{r.pos}</span><span style="display:block;font-size:11px;color:#7F7066">{r.posD}</span></span>
+                  <svg viewBox="0 0 70 24" width="70" height="24"><polyline points={r.spark} fill="none" stroke="#1C130E" stroke-width="1.6" stroke-linecap="round"></polyline></svg>
+                  <span style="display:flex;flex-direction:column;gap:3px">
+                    {r.comps.map((c, ci) => (
+                      <span style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:#1C130E"><span style={`width:6px;height:6px;border-radius:50%;background:${c.dot}`}></span><span style="min-width:62px">{c.n}</span><span class={ci === 0 ? 'cd-flip' : ''} data-cd-flip={ci === 0 ? ri : undefined} data-a={ci === 0 ? c.a : undefined} data-b={ci === 0 ? c.b : undefined} data-flips={ci === 0 && c.flips ? '1' : undefined} style={`padding:0 4px;border-radius:4px;font-family:'Geist Mono',monospace;color:${c.pc0}`}>{c.a}</span></span>
+                    ))}
+                  </span>
+                  <span style="font-family:'Geist Mono',monospace;font-size:11px;color:#665A51">{r.f}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 DEFINITION -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="cd-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:center">
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>The basics</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">What is </span><span style="font-weight:700">competitive pricing intelligence?</span></h2>
+          <p style="margin:0;font-size:17px;line-height:1.7;color:#3A302A;text-wrap:pretty">Competitive pricing intelligence is competitor price, stock and price-change data for the products you sell, matched to your catalog and used to set your own prices. Its value rests on two things: correct matches and current prices.</p>
+          <p style="margin:0;font-size:17px;line-height:1.7;color:#3A302A;text-wrap:pretty">priceleap.ai gives your pricing team both in one dashboard. The evidence behind every number is on screen.</p>
+        </div>
+        <div data-reveal class="cd-pillar" style="display:grid;gap:12px">
+          <div style="background:#FFF9F4;border:1px solid #EFE3DA;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px">
+            <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066">01 · CORRECT MATCHES</span>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:12px;padding:10px 12px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">YOUR SKU</div><div style="font-size:13px;font-weight:600;color:#1C130E">Philips Airfryer XXL · HD9650</div></div>
+              <div style="display:flex;justify-content:center"><span style="height:22px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:999px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;color:#FFFFFF">✓ GTIN MATCH</span></div>
+              <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:12px;padding:10px 12px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">AMAZON</div><div style="font-size:13px;font-weight:600;color:#1C130E">Philips HD9650/96 Airfryer XXL</div></div>
+            </div>
+          </div>
+          <div style="background:#FFF9F4;border:1px solid #EFE3DA;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:14px">
+            <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066">02 · CURRENT PRICES</span>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              {[['Amazon', '$254.00'], ['Walmart', '$259.00'], ['Best Buy', '$249.99']].map(([n, p], i) => (
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:10px;padding:9px 12px;font-size:12.5px"><span style="color:#1C130E">{n}</span><span style="font-family:'Geist Mono',monospace;color:#1C130E">{p}</span><span class="cd-fresh" data-cd-fresh={i} style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#C2410C">{[2, 6, 11][i]}m ago</span></div>
+              ))}
+            </div>
+            <span style="font-size:12px;color:#665A51">Every price shows when it was last seen.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 PROBLEM (static) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="max-width:780px;display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>The problem</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Why competitor price data </span><span style="font-weight:700">goes wrong</span></h2>
+        </div>
+        <div data-reveal class="cd-prob" style="margin-top:44px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#EFE3DA;gap:1px">
+          {problems.map((p) => (
+            <div style="background:#FFFFFF;padding:26px;display:flex;flex-direction:column;gap:18px">
+              <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:Geist,sans-serif;font-size:38px;font-weight:600;letter-spacing:-.05em;line-height:1;color:#E2D3C8">{p.n}</span><span style="height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:#FBF3EC;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.06em;color:#665A51">{p.tag}</span></div>
+              <p style="margin:0;font-size:15.5px;line-height:1.6;color:#1C130E">{p.t}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 HOW IT WORKS (stepper + panels) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>How it works</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;max-width:860px;text-wrap:balance"><span style="font-weight:400">How competitive pricing intelligence works </span><span style="font-weight:700">in priceleap.ai</span></h2>
+        </div>
+        <div data-reveal class="cd-steps" style="margin-top:48px;position:relative;gap:12px">
+          <span aria-hidden="true" class="cd-step-track" style="position:absolute;left:12.5%;right:12.5%;top:39px;height:2px;background:#F5ECE5"></span>
+          <span aria-hidden="true" class="cd-step-fill" data-cd-stepfill style="position:absolute;left:12.5%;top:39px;height:2px;width:0%;background:#1C130E;transition:width .3s linear"></span>
+          {steps4.map((s, i) => (
+            <button type="button" class="cd-step" class:list={[{ 'is-on': i === 0 }]} data-cd-step={i} aria-pressed={i === 0 ? 'true' : 'false'} style="position:relative;text-align:left;border:1px solid #EFE3DA;background:#FFFCF9;border-radius:18px;padding:22px 20px;display:flex;flex-direction:column;gap:12px;cursor:pointer;transition:all .3s">
+              <span class="cd-step-n" style="position:relative;width:36px;height:36px;border-radius:50%;font-family:'Geist Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .3s">{i + 1}</span>
+              <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#7F7066">STEP {s.no}</span>
+              <span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">{s.t}</span>
+              <span style="font-size:14px;line-height:1.55;color:#665A51">{s.d}</span>
+            </button>
+          ))}
+        </div>
+        <div data-reveal style="margin-top:18px;display:flex;justify-content:center">
+          <p style="margin:0;max-width:820px;text-align:center;padding:14px 20px;border-radius:14px;background:#FFF9F4;border:1px solid #F5ECE5;font-size:15px;line-height:1.6;color:#3A302A">Competitive Data is the data layer inside the <a href="/price-intelligence-engine" style="font-weight:600">Price Intelligence Engine</a>. The same data feeds the <a href="/dynamic-pricing-software" style="font-weight:600">pricing rules</a> in the Pricing Decision Engine.</p>
+        </div>
+        <div data-reveal style="margin:32px auto 0;max-width:980px;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 44px 84px -52px rgba(60,30,15,.42)">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span data-cd-ptitle style="font-size:13.5px;font-weight:600;color:#1C130E">{panels[0][0]}</span><span data-cd-psub style="font-size:12px;color:#7F7066;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{panels[0][1]}</span></div>
+          <div style="padding:18px;min-height:200px">
+            <div class="cd-panel" data-cd-panel={0} style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;gap:18px;border-bottom:1px solid #F5ECE5"><span style="padding-bottom:10px;border-bottom:2px solid #1C130E;font-size:13px;font-weight:500;color:#1C130E">Paste URLs</span><span style="padding-bottom:10px;font-size:13px;color:#7F7066">Upload file</span><span style="padding-bottom:10px;font-size:13px;color:#7F7066">Connect catalog</span></div>
+              <div style="border:1px solid #EFE3DA;border-radius:12px;padding:12px 14px;font-family:'Geist Mono',monospace;font-size:12px;line-height:1.8;color:#1C130E">
+                {addUrls.map((u) => (<div style={`white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:cd-in .35s ease ${u.dl}s both`}>{u.t}</div>))}
+              </div>
+              <span style="font-size:12px;color:#7F7066">Adding 3 items to <b style="color:#1C130E">Kitchen_Appliances</b></span>
+            </div>
+            <div class="cd-panel" data-cd-panel={1} style="display:none;grid-template-columns:1fr;gap:10px">
+              <div class="cd-radio" style="display:grid;gap:10px">
+                <div style="border:1.5px solid #FFD8BE;background:#FFF9F4;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;align-items:center;gap:10px"><span style="width:16px;height:16px;border-radius:50%;border:5px solid #1C130E;background:#FFFFFF"></span><span style="font-size:14.5px;font-weight:600;color:#1C130E">Find &amp; monitor competitors</span><span style="margin-left:auto;height:20px;padding:0 7px;display:flex;align-items:center;border-radius:6px;background:#FFFFFF;border:1px solid #FFD8BE;font-family:'Geist Mono',monospace;font-size:9.5px;color:#C2410C">AI POWERED</span></div>
+                  <span style="font-size:13px;line-height:1.5;color:#665A51">AI discovers competing products and tracks pricing for the group.</span>
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">{discovered.map((c) => (<span style={`height:24px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:12px;color:#1C130E;animation:cd-pop .3s ease ${c.dl}s both`}><span style={`width:6px;height:6px;border-radius:50%;background:${c.c}`}></span>{c.t}</span>))}</div>
+                </div>
+                <div style="border:1px solid #EFE3DA;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;align-items:center;gap:10px"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid #D7C6BA"></span><span style="font-size:14.5px;font-weight:600;color:#1C130E">Track your product URLs</span></div>
+                  <span style="font-size:13px;line-height:1.5;color:#665A51">Add the competitor URLs you already watch, per product.</span>
+                </div>
+              </div>
+            </div>
+            <div class="cd-panel" data-cd-panel={2} style="display:none;flex-direction:column;gap:8px">
+              {schedRows.map((g) => (
+                <div class="cd-sched" style={`display:grid;gap:12px;align-items:center;padding:12px 14px;border:1px solid #F5ECE5;border-radius:12px;animation:cd-in .35s ease ${g.dl}s both`}>
+                  <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style={`width:28px;height:28px;flex:none;border-radius:8px;background:${g.av};color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10px;display:flex;align-items:center;justify-content:center`}>{g.ab}</span><span style="font-size:13px;font-weight:600;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{g.n}</span></span>
+                  <span style="justify-self:start;padding:4px 10px;border-radius:8px;border:1px solid #FFD8BE;background:#FFF4EC"><span style="display:block;font-family:'Geist Mono',monospace;font-size:9px;color:#C2410C">{g.freq}</span><span style="display:block;font-size:12px;color:#1C130E;white-space:nowrap">{g.time}</span></span>
+                  <span style="justify-self:start;height:26px;padding:0 9px;display:flex;align-items:center;border-radius:999px;border:1px solid #EFE3DA;font-size:12px;color:#1C130E;white-space:nowrap">{g.c}</span>
+                  <span style="justify-self:start;height:24px;padding:0 8px;display:flex;align-items:center;border-radius:999px;border:1px solid #EFE3DA;font-family:'Geist Mono',monospace;font-size:10.5px;color:#1C130E">📍 {g.loc}</span>
+                </div>
+              ))}
+            </div>
+            <div class="cd-panel" data-cd-panel={3} style="display:none;flex-direction:column;gap:12px">
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+                <div style="border:1px solid #F5ECE5;border-radius:12px;padding:12px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">CHEAPEST</div><div style="font-family:Geist,sans-serif;font-size:22px;font-weight:600;color:#1E7A3D">96</div></div>
+                <div style="border:1px solid #F5ECE5;border-radius:12px;padding:12px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">ABOVE MARKET</div><div style="font-family:Geist,sans-serif;font-size:22px;font-weight:600;color:#C2410C">31</div></div>
+                <div style="border:1px solid #F5ECE5;border-radius:12px;padding:12px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">COMPETITOR OOS</div><div style="font-family:Geist,sans-serif;font-size:22px;font-weight:600;color:#1C130E">7</div></div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <span style="height:34px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;background:#1C130E;color:#FFFFFF;font-size:13px">↓ Export</span>
+                <span style="height:34px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid #EFE3DA;font-size:13px;color:#1C130E">Google Sheets</span>
+                <span style="height:34px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid #EFE3DA;font-size:13px;color:#1C130E">Excel</span>
+                <span style="height:34px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid #EFE3DA;font-size:13px;color:#1C130E">CSV</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 DATA FIELDS (hover highlight) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal class="cd-split" style="gap:clamp(24px,4vw,64px);align-items:end">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Data fields</span>
+            <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">What data you get for </span><span style="font-weight:700">each tracked product</span></h2>
+          </div>
+          <p style="margin:0;font-size:16.5px;line-height:1.65;color:#3A302A">Every product row and product page shows the same core fields. Here's one record, built from sample data.</p>
+        </div>
+        <div data-reveal class="cd-field" style="margin-top:40px;gap:16px;align-items:start">
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden">
+            <div class="cd-ft" style="padding:12px 18px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066"><span>FIELD</span><span>WHAT IT SHOWS</span><span class="cd-ft-where">WHERE YOU SEE IT</span></div>
+            {fieldRows.map((f, i) => (
+              <div class="cd-frow" class:list={[{ 'is-on': i === 1 }]} data-cd-field={i} data-key={f.key} style="cursor:default;transition:background .2s">
+                <span style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#1C130E"><span class="cd-fdot" style="width:6px;height:6px;flex:none;border-radius:50%;background:#E2D3C8"></span>{f.k}{f.cf && <span style="height:18px;padding:0 6px;display:inline-flex;align-items:center;border-radius:5px;border:1px dashed #E2D3C8;font-family:'Geist Mono',monospace;font-size:9px;font-weight:400;color:#7F7066">CONFIRM</span>}</span>
+                <span style="font-size:13.5px;line-height:1.5;color:#3A302A">{f.v}<span class="cd-ft-wmob" style="margin-top:3px;font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">{f.w}</span></span>
+                <span class="cd-ft-where" style="font-family:'Geist Mono',monospace;font-size:11px;color:#665A51">{f.w}</span>
+              </div>
+            ))}
+          </div>
+          <div class="cd-sticky" style="top:96px;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 40px 80px -52px rgba(60,30,15,.4)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span style="font-size:13px;font-weight:600;color:#1C130E">Philips Airfryer XXL · HD9650</span><span style="font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066">PRODUCT DETAIL</span></div>
+            <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                <div data-cd-hl="price" style="border:1px solid #F5ECE5;border-radius:12px;padding:10px 12px;transition:border-color .2s"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">YOUR PRICE</div><div style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:#1C130E">$249.99</div><div style="font-size:11px;color:#1E7A3D">−2.1% vs avg</div></div>
+                <div data-cd-hl="pos" style="border:1px solid #F5ECE5;border-radius:12px;padding:10px 12px;transition:border-color .2s"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">POSITION</div><div style="font-size:15px;font-weight:600;color:#1E7A3D">Competitive</div><div style="font-size:11px;color:#665A51">#1 of 3 sellers</div></div>
+              </div>
+              <div data-cd-hl="hist" style="border:1px solid #F5ECE5;border-radius:12px;padding:10px 12px;transition:border-color .2s">
+                <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066"><span>PRICE HISTORY</span><span style="display:flex;gap:6px"><span>14D</span><span>30D</span><span style="color:#1C130E">90D</span><span>1Y</span><span>FULL</span></span></div>
+                <svg viewBox="0 0 300 60" style="display:block;width:100%;height:60px;margin-top:6px"><polyline points="0,40 40,38 80,42 120,30 160,32 200,22 240,26 300,20" fill="none" stroke="#1C130E" stroke-width="2" pathLength="1" style="stroke-dasharray:1;animation:cd-draw 1.8s ease both"></polyline><polyline points="0,30 40,30 80,34 120,34 160,28 200,28 240,30 300,30" fill="none" stroke="#F7631E" stroke-width="1.5" stroke-dasharray="3 4"></polyline></svg>
+              </div>
+              <div data-cd-hl="comp" style="border:1px solid #F7631E;border-radius:12px;overflow:hidden;transition:border-color .2s">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 74px 70px 60px;gap:8px;padding:8px 12px;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:.06em;color:#7F7066"><span>RETAILER</span><span>PRICE</span><span>VS YOU</span><span>STOCK</span></div>
+                {detailComps.map((c) => (
+                  <div style="display:grid;grid-template-columns:minmax(0,1fr) 74px 70px 60px;gap:8px;align-items:center;padding:9px 12px;border-top:1px solid #F5ECE5;font-size:12px">
+                    <span style="display:flex;align-items:center;gap:6px;color:#1C130E"><span style={`width:6px;height:6px;border-radius:50%;background:${c.dot}`}></span>{c.n}</span>
+                    <span style={`font-family:'Geist Mono',monospace;color:${c.pc}`}>{c.p}</span>
+                    <span style={`font-family:'Geist Mono',monospace;font-size:11px;color:${c.gc}`}>{c.g}</span>
+                    <span style={`font-family:'Geist Mono',monospace;font-size:10px;color:${c.sc}`}>{c.s}</span>
+                  </div>
+                ))}
+              </div>
+              <div data-cd-hl="ids" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;border:1px solid #F5ECE5;border-radius:12px;padding:10px 12px;transition:border-color .2s;font-size:11.5px">
+                <span><span style="display:block;font-family:'Geist Mono',monospace;font-size:9px;color:#7F7066">SKU</span><span style="font-family:'Geist Mono',monospace;color:#1C130E">HD9650/96</span></span>
+                <span><span style="display:block;font-family:'Geist Mono',monospace;font-size:9px;color:#7F7066">GTIN</span><span style="font-family:'Geist Mono',monospace;color:#1C130E">8710103796360</span></span>
+                <span><span style="display:block;font-family:'Geist Mono',monospace;font-size:9px;color:#7F7066">LAST FETCH</span><span style="font-family:'Geist Mono',monospace;color:#1C130E">Today 9:02</span></span>
+                <span><span style="display:block;font-family:'Geist Mono',monospace;font-size:9px;color:#7F7066">MAP / MSRP</span><span style="font-family:'Geist Mono',monospace;color:#7F7066">[confirm]</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p data-reveal style="margin:16px 0 0;font-family:'Geist Mono',monospace;font-size:12px;color:#7F7066">[Promo price, seller and shipping cost: add only once confirmed.]</p>
+      </div>
+    </section>
+
+    <!-- 06 MARKETPLACES (region toggle) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="cd-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:center">
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Marketplaces</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.6vw,44px);line-height:1.08;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Track competitors on the </span><span style="font-weight:700">marketplaces and retail sites you sell against</span></h2>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Add any competitor product page by URL, or let AI competitor discovery find competing products for you.</span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Track US and international sites in one workspace, each price in its own currency.</span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Set a ZIP code per product group when a retailer prices by location.</span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span><span>Connect Amazon Seller Central, Walmart Marketplace, eBay Seller Hub or Target Plus to bring in your own listings. Follow what each rival changes with <a href="#" style="font-weight:600">competitor tracking</a>.</span></span>
+          </div>
+          <span style="align-self:flex-start;padding:8px 12px;border-radius:10px;border:1px dashed #E2D3C8;font-family:'Geist Mono',monospace;font-size:11.5px;color:#7F7066">[Supported sites and countries list]</span>
+        </div>
+        <div data-reveal style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 44px 84px -52px rgba(60,30,15,.42)">
+          <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+            {RG.map((g, i) => (<button type="button" class="cd-region" class:list={[{ 'is-on': i === 0 }]} data-cd-region={i} style="height:30px;padding:0 12px;border:1px solid #EFE3DA;border-radius:9px;background:#FFFFFF;color:#1C130E;font-size:12.5px;cursor:pointer;transition:all .2s">{g.t}</button>))}
+            <span style="margin-left:auto;height:26px;padding:0 9px;display:flex;align-items:center;border-radius:999px;border:1px solid #EFE3DA;background:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10.5px;color:#1C130E">📍 <span data-cd-zip>{RG[0].zip}</span></span>
+          </div>
+          <div data-cd-regionbody style="padding:16px;display:flex;flex-direction:column;gap:12px;animation:cd-in .35s ease">
+            <div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;flex:none;border-radius:11px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 5px,#FFFCF9 5px 10px)"></span><span><span style="display:block;font-size:14.5px;font-weight:600;color:#1C130E">{RG[0].product}</span><span style="display:block;font-family:'Geist Mono',monospace;font-size:11px;color:#7F7066">Your price <span data-cd-yours>{RG[0].yours}</span></span></span></div>
+            <div data-cd-comps style="border:1px solid #F5ECE5;border-radius:12px;overflow:hidden">
+              {RG[0].comps.map(([n, dot, p, ccy], i) => (
+                <div style={`display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid #F5ECE5;font-size:12.5px;animation:cd-in .3s ease ${(i * 0.06).toFixed(2)}s both`}>
+                  <span style="display:flex;align-items:center;gap:7px;color:#1C130E"><span style={`width:6px;height:6px;border-radius:50%;background:${dot}`}></span>{n}</span>
+                  <span style={`font-family:'Geist Mono',monospace;color:${p === 'No match' ? '#C2410C' : '#1C130E'}`}>{p}</span>
+                  <span style={`height:18px;padding:0 6px;display:${ccy ? 'flex' : 'none'};align-items:center;border-radius:5px;background:#FBF3EC;font-family:'Geist Mono',monospace;font-size:9px;color:#665A51`}>{ccy}</span>
+                </div>
+              ))}
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">{sellerApis.map((a) => (<span style="height:26px;padding:0 10px;display:flex;align-items:center;gap:6px;border-radius:8px;border:1px solid #EFE3DA;font-size:11.5px;color:#1C130E"><span style={`width:16px;height:16px;border-radius:4px;background:${a.c};color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:7.5px;display:flex;align-items:center;justify-content:center`}>{a.ab}</span>{a.t}</span>))}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 MATCHING (match-fix demo) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div class="cd-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:center">
+        <div data-reveal class="cd-match-card" style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 44px 84px -52px rgba(60,30,15,.42)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.08em;color:#1C130E">COMPETITORS <span style="padding:1px 6px;border-radius:999px;background:#FBF3EC;color:#665A51">3</span></span><span style="font-size:12px;color:#7F7066">Ninja Foodi 9-in-1</span></div>
+          <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid #F5ECE5;border-radius:12px;background:#FFFFFF"><span style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1C130E"><span style={`width:7px;height:7px;border-radius:50%;background:${C.bb}`}></span>Best Buy</span><span style="font-family:'Geist Mono',monospace;font-size:13px;color:#1C130E;padding:2px 6px;border-radius:5px">$199.99</span></div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid #F5ECE5;border-radius:12px;background:#FFFFFF"><span style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1C130E"><span style={`width:7px;height:7px;border-radius:50%;background:${C.wmt}`}></span>Walmart</span><span style="font-family:'Geist Mono',monospace;font-size:13px;color:#1C130E;padding:2px 6px;border-radius:5px">$214.00</span></div>
+            <div data-cd-matchrow style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid #F5ECE5;border-radius:12px;background:#FFFFFF;transition:all .35s"><span style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:#1C130E"><span style={`width:7px;height:7px;border-radius:50%;background:${C.tgt}`}></span>Target<span data-cd-matchurl style="display:none;font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066">target.com/p/…</span></span><span data-cd-matchprice style="font-family:'Geist Mono',monospace;font-size:13px;color:#C2410C;padding:2px 6px;border-radius:5px">No match</span></div>
+            <div data-cd-addrow style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px dashed #E2D3C8;border-radius:12px;font-family:'Geist Mono',monospace;font-size:11.5px;color:#7F7066;transition:all .3s">
+              <span>+ Add URL</span><span data-cd-addtext style="color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">paste a competitor URL</span>
+            </div>
+            <span style="font-size:12px;color:#665A51">You are <b style="color:#1C130E">#1</b> of 2 tracked sellers · a gap on screen is a real gap.</span>
+          </div>
+        </div>
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Matching</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.6vw,44px);line-height:1.08;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">How does priceleap.ai match competitor listings </span><span style="font-weight:700">to your products?</span></h2>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C;padding-top:2px">01</span>Each product carries its identifiers: SKU, UPC, GTIN and MPN.</span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C;padding-top:2px">02</span>No matching listing found? priceleap.ai shows "No match" instead of a price, so a gap on screen is a real gap.</span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C;padding-top:2px">03</span>Spot a wrong or missing competitor and add the right listing by URL from the product page.</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span style="padding:8px 12px;border-radius:10px;border:1px dashed #E2D3C8;font-family:'Geist Mono',monospace;font-size:11.5px;color:#7F7066">[Matching method and confidence score]</span><a href="/product-matching" style="font-weight:600;font-size:15px">More on product matching →</a></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 REFRESH (failed-fetch donut demo) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal class="cd-split" style="gap:clamp(28px,5vw,72px);align-items:start">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Refresh</span>
+            <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.6vw,44px);line-height:1.08;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">How often does priceleap.ai </span><span style="font-weight:700">check competitor prices?</span></h2>
+            <a href="/real-time-price-monitoring" style="font-weight:600;font-size:15px">More on refresh schedules →</a>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <p style="margin:0;font-size:16.5px;line-height:1.65;color:#3A302A">Each product group runs on its own schedule, with 1, 2 or 3 checks a day depending on your plan. Re-run a group on demand.</p>
+            <p style="margin:0;font-size:16.5px;line-height:1.65;color:#3A302A">Every product shows its last fetch time, and every competitor price shows when it was last seen.</p>
+            <p style="margin:0;font-size:16.5px;line-height:1.65;color:#3A302A">The Failed Fetches card counts products whose last check failed, so gaps in your data stay visible.</p>
+          </div>
+        </div>
+        <div data-reveal class="cd-refresh" style="margin-top:40px;gap:14px">
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;padding:20px;display:flex;align-items:center;gap:20px;box-shadow:0 30px 60px -44px rgba(60,30,15,.35)">
+            <div style="flex:1;min-width:0"><div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#7F7066">FAILED FETCHES</div><div data-cd-failed style="margin-top:8px;font-family:Geist,sans-serif;font-size:40px;font-weight:600;letter-spacing:-.04em;color:#1C130E">1</div><div data-cd-failednote style="font-size:13px;color:#665A51">Laptops_BackToSchool · retrying</div></div>
+            <svg viewBox="0 0 64 64" width="72" height="72" style="flex:none;transform:rotate(-90deg)"><circle cx="32" cy="32" r="26" fill="none" stroke="#F5ECE5" stroke-width="6"></circle><circle data-cd-donut cx="32" cy="32" r="26" fill="none" stroke="#B42318" stroke-width="6" stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="150" style="transition:stroke-dashoffset .6s ease"></circle></svg>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 30px 60px -44px rgba(60,30,15,.35)">
+            {refreshGroups.map((g, i) => (
+              <div style={`display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:14px 18px;border-bottom:${g.last ? 'none' : '1px solid #F5ECE5'}`}>
+                <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style={`width:28px;height:28px;flex:none;border-radius:8px;background:${g.av};color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10px;display:flex;align-items:center;justify-content:center`}>{g.ab}</span><span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{g.n}</span><span style="display:block;font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">{g.sched}</span></span></span>
+                <span data-cd-rstat={i} style="display:flex;align-items:center;gap:6px;font-family:'Geist Mono',monospace;font-size:11px;color:#665A51"><span data-cd-rspin hidden style="width:10px;height:10px;border-radius:50%;border:2px solid #F5ECE5;border-top-color:#F7631E;animation:cd-spin .8s linear infinite"></span><span data-cd-rtext>{i === 2 ? '1 failed' : 'Fetched 9:02'}</span></span>
+                <span style="height:28px;padding:0 10px;display:flex;align-items:center;border-radius:8px;border:1px solid #EFE3DA;font-size:12px;color:#1C130E">Re-run</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 EXPORT (integration connect demo) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div class="cd-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:center">
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Export</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.6vw,44px);line-height:1.08;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Get competitor price data into </span><span style="font-weight:700">Excel, Google Sheets or your BI tool</span></h2>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Export the full dashboard, or one product's data.</span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span><span>Connect Google Sheets or Microsoft Excel from <a href="#" style="font-weight:600">Integrations</a>.</span></span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span><span>Get <a href="#" style="font-weight:600">price alerts</a> for price drops, price increases, competitor stock-outs and MAP or MSRP violations by email, Slack or in-app.</span></span>
+          </div>
+          <span style="align-self:flex-start;padding:8px 12px;border-radius:10px;border:1px dashed #E2D3C8;font-family:'Geist Mono',monospace;font-size:11.5px;color:#7F7066">[REST API access: confirm]</span>
+        </div>
+        <div data-reveal style="display:flex;flex-direction:column;gap:12px">
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px -46px rgba(60,30,15,.4)">
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5"><span style="width:26px;height:26px;border-radius:8px;background:#FBF3EC;color:#C2410C;display:flex;align-items:center;justify-content:center;font-size:12px">▥</span><span style="font-size:14px;font-weight:600;color:#1C130E">Analytics &amp; BI</span><span style="font-size:12px;color:#7F7066">Send data out for analysis</span></div>
+            <div style="padding:10px;display:flex;flex-direction:column;gap:8px">
+              <div data-cd-int style="display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;border:1px solid #F5ECE5;border-radius:12px;background:#FFFFFF;transition:all .4s">
+                <span style="width:36px;height:36px;border-radius:10px;background:#E7F6EC;color:#1E7A3D;font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center">GS</span>
+                <span style="min-width:0"><span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px;font-weight:600;color:#1C130E">Google Sheets<span style="height:18px;padding:0 6px;display:inline-flex;align-items:center;border-radius:5px;background:#F3EEFB;font-family:'Geist Mono',monospace;font-size:9px;color:#6B3FA0">OAUTH 2.0</span></span><span style="display:block;margin-top:2px;font-size:12px;color:#665A51;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Export price data and reports automatically</span></span>
+                <span data-cd-intbtn style="height:28px;padding:0 10px;display:flex;align-items:center;border-radius:8px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:12px;color:#1C130E;white-space:nowrap;transition:all .4s">Connect</span>
+              </div>
+              <div style="display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;border:1px solid #F5ECE5;border-radius:12px;background:#FFFFFF">
+                <span style="width:36px;height:36px;border-radius:10px;background:#E6F0EA;color:#185C37;font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center">XL</span>
+                <span style="min-width:0"><span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px;font-weight:600;color:#1C130E">Microsoft Excel<span style="height:18px;padding:0 6px;display:inline-flex;align-items:center;border-radius:5px;background:#F3EEFB;font-family:'Geist Mono',monospace;font-size:9px;color:#6B3FA0">GRAPH API</span></span><span style="display:block;margin-top:2px;font-size:12px;color:#665A51;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Push pricing data to Excel workbooks</span></span>
+                <span style="height:28px;padding:0 10px;display:flex;align-items:center;border-radius:8px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:12px;color:#1C130E;white-space:nowrap">Connect</span>
+              </div>
+            </div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px -46px rgba(60,30,15,.4)">
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5"><span style="width:26px;height:26px;border-radius:8px;background:#FBF3EC;color:#C2410C;display:flex;align-items:center;justify-content:center;font-size:12px">◔</span><span style="font-size:14px;font-weight:600;color:#1C130E">Alerts &amp; collaboration</span><span style="font-size:12px;color:#7F7066">Where your team gets notified</span></div>
+            <div style="padding:10px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;border:1px solid #F5ECE5;border-radius:12px;background:#FFFFFF">
+                <span style="width:36px;height:36px;border-radius:10px;background:#E9F6EE;color:#1E7A3D;font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center">@</span>
+                <span style="min-width:0"><span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px;font-weight:600;color:#1C130E">Email<span style="height:18px;padding:0 6px;display:inline-flex;align-items:center;border-radius:5px;background:#E9F6EE;font-family:'Geist Mono',monospace;font-size:9px;color:#1E7A3D">CONNECTED</span></span><span style="display:block;margin-top:2px;font-size:12px;color:#665A51;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Price alerts and digest reports to any team inbox</span></span>
+                <span style="height:28px;padding:0 10px;display:flex;align-items:center;border-radius:8px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:12px;color:#1C130E;white-space:nowrap">Settings</span>
+              </div>
+              <div style="display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;border:1px solid #F5ECE5;border-radius:12px;background:#FFFFFF">
+                <span style="width:36px;height:36px;border-radius:10px;background:#F6EEF4;color:#7A3E6B;font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center">#</span>
+                <span style="min-width:0"><span style="font-size:14px;font-weight:600;color:#1C130E">Slack</span><span style="display:block;margin-top:2px;font-size:12px;color:#665A51;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Price alerts and competitor changes to any channel</span></span>
+                <span style="height:28px;padding:0 10px;display:flex;align-items:center;border-radius:8px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:12px;color:#1C130E;white-space:nowrap">Connect</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 PROOF -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(16px,4vw,40px)">
+        <div data-reveal class="cd-proof" style="position:relative;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#EFE3DA;gap:1px">
+          <div style="background:#FFFFFF;padding:clamp(24px,3.4vw,40px);display:flex;flex-direction:column;gap:16px">
+            <span style="align-self:flex-start;height:24px;padding:0 9px;display:flex;align-items:center;border-radius:6px;border:1px dashed #E2D3C8;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">HOLD · NEEDS APPROVED CASE</span>
+            <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(24px,2.8vw,34px);line-height:1.15;letter-spacing:-.03em;color:#1C130E"><span style="font-weight:700">[Client name]</span><span style="font-weight:400"> tracks [N] products against [N] competitors on [N] marketplaces</span></h2>
+            <p style="margin:0;font-size:16px;line-height:1.65;color:#665A51">[One line: what they sell and in which markets.] [One line: what changed, ending on a hard number such as [X] hours of manual price checks saved per week.]</p>
+          </div>
+          <div style="background:#FFF9F4;padding:clamp(24px,3.4vw,40px);display:flex;flex-direction:column;justify-content:center;gap:6px">
+            <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066">HOURS SAVED / WEEK</span>
+            <span style="font-family:Geist,sans-serif;font-size:clamp(48px,6vw,72px);font-weight:600;letter-spacing:-.05em;line-height:1;color:#1C130E">[X]</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 SECURITY -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.4vw,42px);line-height:1.08;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Security and </span><span style="font-weight:700">access controls</span></h2>
+        <div data-reveal style="margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px">
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px"><span style="width:38px;height:38px;border-radius:11px;background:#1C130E;color:#FFFFFF;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"></path></svg></span><span style="font-size:15.5px;line-height:1.55;color:#1C130E">Enforce two-factor authentication for every member of a workspace.</span></div>
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px"><span style="width:38px;height:38px;border-radius:11px;background:#1C130E;color:#FFFFFF;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"></path></svg></span><span style="font-size:15.5px;line-height:1.55;color:#1C130E">Run separate workspaces for teams, brands or regions.</span></div>
+          <div style="background:#FFFCF9;border:1px dashed #E2D3C8;border-radius:18px;padding:22px;display:flex;flex-direction:column;gap:14px"><span style="width:38px;height:38px;border-radius:11px;border:1px dashed #E2D3C8;color:#7F7066;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"></path></svg></span><span style="font-family:'Geist Mono',monospace;font-size:12.5px;color:#7F7066">[SOC 2 / ISO 27001 status]</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 PRICING (billing toggle) -->
+    <section id="pricing" style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1200px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Pricing</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">How is priceleap.ai </span><span style="font-weight:700">priced?</span></h2>
+          <p style="margin:0;font-size:16.5px;color:#3A302A">Three plans, set by products tracked per month and checks per day.</p>
+          <div role="group" aria-label="Billing period" style="margin-top:6px;display:inline-flex;padding:4px;border-radius:12px;background:#FFF9F4;border:1px solid #EFE3DA">
+            <button type="button" data-cd-bill="monthly" class="cd-bill is-on" style="height:36px;padding:0 16px;border:none;border-radius:9px;background:#1C130E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s">Monthly</button>
+            <button type="button" data-cd-bill="annual" class="cd-bill" style="height:36px;padding:0 16px;border:none;border-radius:9px;background:transparent;color:#665A51;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s">Annual</button>
+          </div>
+        </div>
+        <div data-reveal class="cd-plans" style="margin-top:40px;gap:14px;align-items:stretch">
+          {plans.map((p) => (
+            <div style={`position:relative;background:#FFFFFF;border:${p.pop ? '1.5px' : '1px'} solid ${p.pop ? '#1C130E' : '#EFE3DA'};border-radius:22px;padding:28px;display:flex;flex-direction:column;gap:18px;box-shadow:${p.pop ? '0 30px 60px -40px rgba(60,30,15,.45)' : 'none'}`}>
+              {p.pop && <span style="position:absolute;top:-12px;left:28px;height:24px;padding:0 10px;display:flex;align-items:center;border-radius:7px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#FFFFFF">MOST POPULAR</span>}
+              <span style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:#1C130E">{p.n}</span>
+              <div><div style="display:flex;align-items:baseline;gap:4px"><span class="cd-price" data-monthly={p.m} data-annual={p.a} style="font-family:Geist,sans-serif;font-size:46px;font-weight:600;letter-spacing:-.045em;color:#1C130E">{p.m}</span><span style="font-size:15px;color:#665A51">/month</span></div><div class="cd-note" data-monthly={`${p.a}/month billed annually`} data-annual="billed annually" style="margin-top:2px;font-size:13px;color:#7F7066">{p.a}/month billed annually</div></div>
+              <div style="display:flex;flex-direction:column;gap:10px;border-top:1px dashed #EFE3DA;padding-top:18px">
+                {p.f.map((x) => (<span style="display:flex;gap:10px;align-items:center;font-size:15px;color:#1C130E"><span style="width:18px;height:18px;flex:none;border-radius:50%;background:#FFF4EC;border:1px solid #FFD8BE;color:#C2410C;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>{x}</span>))}
+              </div>
+              <a href="/book-a-demo" style={`margin-top:auto;height:46px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:${p.pop ? 'linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%)' : '#FFFFFF'};border:1px solid ${p.pop ? 'transparent' : '#EFE3DA'};color:${p.pop ? '#FFFFFF' : '#1C130E'};font-family:Geist,sans-serif;font-size:14.5px;font-weight:500`}>Book a Demo</a>
+            </div>
+          ))}
+        </div>
+        <p data-reveal style="margin:22px 0 0;text-align:center;font-size:15px;line-height:1.6;color:#665A51">Every plan includes 5 competitors <span style="font-family:'Geist Mono',monospace;font-size:12.5px;color:#7F7066">[per product or per group]</span>. Larger catalogs can request a custom proposal.</p>
+      </div>
+    </section>
+
+    <!-- 13 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div class="cd-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <div data-reveal class="cd-sticky" style="top:96px;display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>FAQ</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Competitive pricing intelligence </span><span style="font-weight:700">FAQ</span></h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {fq.map((q, i) => (
+            <div class="cd-faq" class:list={[{ 'is-open': i === 0 }]} data-cd-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-cd-faq-btn aria-expanded={i === 0 ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="cd-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px;color:#B9A99C">{q.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{q.q}</span>
+                <span class="cd-faq-plus" style="flex:none;width:28px;height:28px;border-radius:8px;background:#FBF3EC;color:#1C130E;display:flex;align-items:center;justify-content:center;transition:all .3s"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="cd-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{q.a}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 14 FINAL CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-220px;width:640px;height:400px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.14),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:20px">
+          <h2 style="margin:0;max-width:820px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">See your own catalog matched </span><span style="font-weight:700">against your competitors</span></h2>
+          <p style="margin:0;max-width:560px;font-size:17px;line-height:1.6;color:#3A302A">Bring a product list, and the demo shows your prices next to your competitors'.</p>
+          <a href="/book-a-demo" style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .cd { background: #FFFCF9; overflow-x: clip; }
+  @keyframes cd-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.5); } 100% { box-shadow: 0 0 0 9px rgba(247,99,30,0); } }
+  @keyframes cd-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes cd-pop { 0% { opacity: 0; transform: scale(.92); } 100% { opacity: 1; transform: none; } }
+  @keyframes cd-spin { to { transform: rotate(360deg); } }
+  @keyframes cd-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes cd-flash { 0%,100% { background: transparent; } 35% { background: #FFF4EC; } }
+  @media (prefers-reduced-motion: reduce) { .cd *, .cd *::before, .cd *::after { animation: none !important; transition: none !important; } }
+
+  .cd-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .cd-split { grid-template-columns: minmax(0,.95fr) minmax(0,1.05fr); } }
+  .cd-sticky { position: static; }
+  @media (min-width: 1024px) { .cd-sticky { position: sticky; } }
+  .cd-kpi { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  @media (min-width: 720px) { .cd-kpi { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+  .cd-pillar { grid-template-columns: 1fr; }
+  @media (min-width: 560px) { .cd-pillar { grid-template-columns: 1fr 1fr; } }
+  .cd-prob { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .cd-prob { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  @media (min-width: 1100px) { .cd-prob { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+  .cd-steps { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .cd-steps { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  @media (min-width: 980px) { .cd-steps { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+  .cd-step-track, .cd-step-fill { display: none; }
+  @media (min-width: 980px) { .cd-step-track, .cd-step-fill { display: block; } }
+  .cd-radio { grid-template-columns: 1fr; }
+  @media (min-width: 640px) { .cd-radio { grid-template-columns: 1fr 1fr; } }
+  .cd-sched { grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .cd-sched { grid-template-columns: minmax(0,1.3fr) minmax(0,1.2fr) auto auto; } }
+  .cd-field { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .cd-field { grid-template-columns: minmax(0,1.15fr) minmax(0,.85fr); } }
+  .cd-ft, .cd-frow { display: grid; grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); gap: 12px; align-items: start; padding: 13px 18px; border-bottom: 1px solid #F5ECE5; }
+  .cd-ft-where { display: none; }
+  @media (min-width: 720px) { .cd-ft, .cd-frow { grid-template-columns: minmax(0,.8fr) minmax(0,1.4fr) minmax(0,.9fr); } .cd-ft-where { display: block; } .cd-ft-wmob { display: none; } }
+  .cd-ft-wmob { display: block; }
+  .cd-refresh { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .cd-refresh { grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); } }
+  .cd-proof { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .cd-proof { grid-template-columns: minmax(0,1.6fr) minmax(0,1fr); } }
+  .cd-match-card { order: 1; }
+  @media (min-width: 1024px) { .cd-match-card { order: 0; } }
+  .cd-plans { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .cd-plans { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+
+  .cd-frow.is-on { background: #FFF9F4; }
+  .cd-frow.is-on .cd-fdot { background: #F7631E; }
+  .cd-step.is-on { border-color: #FFD8BE; background: #FFFFFF; box-shadow: 0 24px 48px -32px rgba(60,30,15,.45); }
+  .cd-step .cd-step-n { background: #FFFFFF; border: 1.5px solid #EFE3DA; color: #7F7066; }
+  .cd-step.is-on .cd-step-n, .cd-step.is-done .cd-step-n { background: #1C130E; border-color: #1C130E; color: #FFFFFF; }
+  .cd-region.is-on { background: #1C130E; border-color: #1C130E; color: #FFFFFF; }
+  .cd-bill.is-on { background: #1C130E; color: #FFFFFF; }
+  .cd-faq.is-open { border-color: #FFD8BE; }
+  .cd-faq.is-open .cd-faq-plus { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .cd-faq.is-open .cd-faq-n { color: #C2410C; }
+  .cd-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .cd-faq.is-open .cd-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.cd');
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+
+    // ---- hero flips + velocity + freshness ----
+    const flips = qa('[data-cd-flip]');
+    const velUp = q('[data-cd-velup]'), velDown = q('[data-cd-veldown]');
+    const fresh = qa('[data-cd-fresh]');
+    const paintHero = (tk: number) => {
+      const flipIdx = Math.floor(tk / 10) % 4, flipOn = tk % 10 < 3;
+      flips.forEach((el) => {
+        const i = Number(el.getAttribute('data-cd-flip')), a = el.getAttribute('data-a')!, b = el.getAttribute('data-b');
+        const canFlip = el.getAttribute('data-flips') === '1';
+        if (i === flipIdx && canFlip) { el.textContent = flipOn ? a : (b || a); el.style.animation = flipOn ? 'cd-flash 1.2s ease' : 'none'; }
+        else { el.textContent = a; el.style.animation = 'none'; }
+      });
+      if (velUp) velUp.textContent = String(3 + Math.floor(tk / 10) % 3);
+      if (velDown) velDown.textContent = String(5 + Math.floor(tk / 14) % 2);
+      fresh.forEach((el, i) => { el.textContent = ((tk % 9) + [2, 6, 11][i]) + 'm ago'; });
+    };
+
+    // ---- stepper + panels ----
+    const steps = qa('[data-cd-step]'), panels3 = qa('[data-cd-panel]');
+    const panelMeta = [['Add Products', 'Paste URLs, upload a file or connect a catalog'], ['Add Products · tracking', 'How should we track this group?'], ['Product Groups', 'Refresh time, competitor set and location per group'], ['Price Intelligence', 'Review prices, gaps and stock, then export']];
+    const stepFill = q('[data-cd-stepfill]');
+    let step = 0, sp = 0, stepAuto = true;
+    const paintSteps = () => {
+      steps.forEach((el, i) => {
+        el.classList.toggle('is-on', i === step); el.classList.toggle('is-done', i < step);
+        el.setAttribute('aria-pressed', String(i === step));
+        const n = el.querySelector('.cd-step-n') as HTMLElement; if (n) n.textContent = i < step ? '✓' : String(i + 1);
+      });
+      panels3.forEach((pnl, i) => (pnl.style.display = i === step ? (i === 0 ? 'flex' : (i === 1 ? 'grid' : 'flex')) : 'none'));
+      const pt = q('[data-cd-ptitle]'), psb = q('[data-cd-psub]');
+      if (pt) pt.textContent = panelMeta[step][0]; if (psb) psb.textContent = panelMeta[step][1];
+      if (stepFill) stepFill.style.width = Math.min(75, (step + (stepAuto ? sp / 100 : 0)) / 3 * 75) + '%';
+    };
+    steps.forEach((el, i) => el.addEventListener('click', () => { step = i; sp = 0; stepAuto = false; paintSteps(); }));
+
+    // ---- data field hover ----
+    const hlBoxes = qa('[data-cd-hl]');
+    qa('[data-cd-field]').forEach((row) => {
+      row.addEventListener('mouseenter', () => {
+        qa('[data-cd-field]').forEach((r) => r.classList.remove('is-on'));
+        row.classList.add('is-on');
+        const key = row.getAttribute('data-key');
+        hlBoxes.forEach((box) => { box.style.borderColor = box.getAttribute('data-cd-hl') === key ? '#F7631E' : '#F5ECE5'; });
+      });
+    });
+
+    // ---- region toggle ----
+    const RG = [
+      { zip: '94105', yours: '$249.99', comps: [['Amazon', '#F59E0B', '$254.00', 'USD'], ['Best Buy', '#3B82F6', '$249.99', 'USD'], ['target.com', '#EF4444', 'No match', ''], ['Walmart', '#2563EB', '$259.00', 'USD']] },
+      { zip: '560001', yours: '₹21,999', comps: [['Amazon India', '#F59E0B', '₹21,499', 'INR'], ['Croma', '#0EA5A4', '₹22,990', 'INR'], ['Flipkart', '#EAB308', 'No match', ''], ['Reliance Digital', '#8B5CF6', '₹21,999', 'INR']] },
+    ];
+    qa('[data-cd-region]').forEach((btn) => btn.addEventListener('click', () => {
+      const i = Number(btn.getAttribute('data-cd-region'));
+      qa('[data-cd-region]').forEach((b) => b.classList.toggle('is-on', b === btn));
+      const r = RG[i];
+      const zip = q('[data-cd-zip]'), yours = q('[data-cd-yours]'), comps = q('[data-cd-comps]'), body = q('[data-cd-regionbody]');
+      if (zip) zip.textContent = r.zip; if (yours) yours.textContent = r.yours;
+      if (comps) comps.innerHTML = r.comps.map(([n, dot, p, ccy], k) =>
+        `<div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid #F5ECE5;font-size:12.5px;animation:cd-in .3s ease ${(k * 0.06).toFixed(2)}s both"><span style="display:flex;align-items:center;gap:7px;color:#1C130E"><span style="width:6px;height:6px;border-radius:50%;background:${dot}"></span>${n}</span><span style="font-family:'Geist Mono',monospace;color:${p === 'No match' ? '#C2410C' : '#1C130E'}">${p}</span><span style="height:18px;padding:0 6px;display:${ccy ? 'flex' : 'none'};align-items:center;border-radius:5px;background:#FBF3EC;font-family:'Geist Mono',monospace;font-size:9px;color:#665A51">${ccy}</span></div>`).join('');
+      if (body) { body.style.animation = 'none'; void body.offsetWidth; body.style.animation = 'cd-in .35s ease'; }
+    }));
+
+    // ---- matching demo ----
+    const matchRow = q('[data-cd-matchrow]'), matchPrice = q('[data-cd-matchprice]'), matchUrl = q('[data-cd-matchurl]'), addRow = q('[data-cd-addrow]'), addText = q('[data-cd-addtext]');
+    const typed = 'target.com/p/ninja-foodi-ol501';
+    const paintMatch = (tk: number) => {
+      const mPhase = Math.floor(tk / 6) % 4;
+      const at = mPhase === 1 ? typed.slice(0, Math.min(typed.length, (tk % 6 + 1) * 6)) : mPhase === 2 ? typed : '';
+      const fixed = mPhase >= 3 || (mPhase === 2 && tk % 6 > 3);
+      if (addText) addText.textContent = at || 'paste a competitor URL';
+      if (addRow) { addRow.style.borderColor = (mPhase === 1 || mPhase === 2) ? '#F7631E' : '#E2D3C8'; addRow.style.color = (mPhase === 1 || mPhase === 2) ? '#C2410C' : '#7F7066'; }
+      if (matchPrice) { matchPrice.textContent = fixed ? '$219.99' : 'No match'; matchPrice.style.color = fixed ? '#1C130E' : '#C2410C'; matchPrice.style.animation = fixed ? 'cd-flash 1.2s ease' : 'none'; }
+      if (matchUrl) matchUrl.style.display = fixed ? 'inline' : 'none';
+      if (matchRow) { matchRow.style.borderColor = fixed ? '#FFD8BE' : '#F5ECE5'; matchRow.style.background = fixed ? '#FFF9F4' : '#FFFFFF'; }
+    };
+
+    // ---- refresh demo ----
+    const failedN = q('[data-cd-failed]'), failedNote = q('[data-cd-failednote]'), donut = q('[data-cd-donut]');
+    const paintRefresh = (tk: number) => {
+      const rPhase = Math.floor(tk / 8) % 3;
+      qa('[data-cd-rstat]').forEach((cell, i) => {
+        const spin = rPhase === 1 && i === 2, failed = rPhase === 0 && i === 2;
+        const sp2 = cell.querySelector('[data-cd-rspin]') as HTMLElement, tx = cell.querySelector('[data-cd-rtext]') as HTMLElement;
+        if (sp2) sp2.hidden = !spin;
+        if (tx) tx.textContent = spin ? 'Re-running…' : failed ? '1 failed' : 'Fetched 9:02';
+        cell.style.color = failed ? '#B42318' : spin ? '#C2410C' : '#665A51';
+      });
+      const fN = rPhase === 0 ? 1 : 0;
+      if (failedN) failedN.textContent = String(fN);
+      if (failedNote) { failedNote.textContent = fN ? 'Laptops_BackToSchool · retrying' : 'All products fetched'; failedNote.style.color = fN ? '#B42318' : '#1E7A3D'; }
+      if (donut) { donut.style.stroke = fN ? '#B42318' : '#1E7A3D'; donut.style.strokeDashoffset = String(fN ? 150 : 0); }
+    };
+
+    // ---- integration demo ----
+    const intBtn = q('[data-cd-intbtn]'), intRow = q('[data-cd-int]');
+    const paintInt = (tk: number) => {
+      const on = Math.floor(tk / 10) % 2 === 1;
+      if (intBtn) { intBtn.textContent = on ? '✓ Connected' : 'Connect'; intBtn.style.background = on ? '#1C130E' : '#FFFFFF'; intBtn.style.color = on ? '#FFFFFF' : '#1C130E'; intBtn.style.borderColor = on ? '#1C130E' : '#EFE3DA'; }
+      if (intRow) { intRow.style.borderColor = on ? '#FFD8BE' : '#F5ECE5'; intRow.style.background = on ? '#FFF9F4' : '#FFFFFF'; }
+    };
+
+    // ---- 300ms loop ----
+    let tick = 0;
+    paintHero(0); paintSteps(); paintMatch(0); paintRefresh(0); paintInt(0);
+    setInterval(() => {
+      tick++;
+      paintHero(tick); paintMatch(tick); paintRefresh(tick); paintInt(tick);
+      if (stepAuto) { sp += 3; if (sp >= 100) { sp = 0; step = (step + 1) % 4; paintSteps(); } else if (stepFill) stepFill.style.width = Math.min(75, (step + sp / 100) / 3 * 75) + '%'; }
+    }, 300);
+
+    // ---- billing ----
+    qa('[data-cd-bill]').forEach((b) => b.addEventListener('click', () => {
+      const annual = b.getAttribute('data-cd-bill') === 'annual';
+      qa('[data-cd-bill]').forEach((x) => x.classList.toggle('is-on', x === b));
+      qa('.cd-price').forEach((el) => el.textContent = el.getAttribute(annual ? 'data-annual' : 'data-monthly') || '');
+      qa('.cd-note').forEach((el) => el.textContent = el.getAttribute(annual ? 'data-annual' : 'data-monthly') || '');
+    }));
+
+    // ---- faq ----
+    qa('[data-cd-faq-btn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-cd-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-cd-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-cd-faq-btn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    // ---- reveal ----
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>
