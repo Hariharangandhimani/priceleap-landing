@@ -1,0 +1,622 @@
+---
+// Native Astro port of the design package's Product Matching page.
+// Static initial render + the full 300ms animation loop and interactions
+// reimplemented in vanilla JS: hero match-evidence demo (signals light up, confidence
+// bar, bundle flag, confirm state), shuffling "manual matching" sheet grid, auto-advancing
+// How-it-works stepper with 5 panels (incl. live track-toggle, review-queue + threshold),
+// a no-match fix demo, animated coverage bars, and FAQ. Responsive via CSS media queries.
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+
+const C = { amz: '#F59E0B', bb: '#3B82F6', ne: '#8B5CF6', wmt: '#2563EB', tgt: '#EF4444' };
+const sigNames = ['Identifiers', 'Title', 'Image', 'Specs', 'Pack and variant'];
+const stepData = [
+  ['Add your products and identifiers', 'Paste product URLs, upload a file or connect a catalog. Titles and specs are parsed into brand, model, MPN, GTIN, color, size and pack count.', 'Product Info', 'IDENTIFIERS'],
+  ['Find the competitor listings', 'Let AI find competing products for the group, or assign the competitor domains and URLs you already track. Each product can switch between the two later.', 'Add Products', 'TRACKING'],
+  ['Score every candidate', "Matching starts with identifiers where they're published, then weighs brand, model, specs, title text and images where they're not. Each candidate gets a confidence score showing which signals agreed and which didn't.", 'Candidate scoring', 'EXAMPLE'],
+  ['Keep variants, bundles and multipacks apart', 'Pack count, condition and variant attributes are compared on every candidate. A two-pack, a bundle or a refurbished unit is flagged, never merged into your single-unit price.', 'Variant flags', 'EXAMPLE'],
+  ['Set a threshold and review the rest', 'Set the confidence threshold once. Matches above it flow into pricing, and the rest go to a review queue for your team to confirm or reject.', 'Review queue', 'EXAMPLE'],
+].map(([t, d, pt, pk], i) => ({ t, d, no: '0' + (i + 1), pt, pk }));
+const infoFields = [['SKU', 'HD9650/96', 1], ['UPC', '075020071125', 1], ['GTIN', '8710103796360', 1], ['MPN', 'HD9650/96', 1], ['BRAND', 'Philips', 0], ['MODEL', 'Airfryer XXL', 0], ['COLOR', 'Black', 0], ['SIZE', '7.3 qt', 0], ['PACK COUNT', '1', 0], ['STATUS', '● active', 0]].map(([k, v, id], i) => ({ k, v, bg: id ? '#FFF9F4' : '#FFFFFF', bc: id ? '#FFD8BE' : '#F5ECE5', c: k === 'STATUS' ? '#1E7A3D' : '#1C130E', dl: (i * 0.06).toFixed(2) }));
+const trackOpts = [['Find & monitor competitors', 'AI discovers competing products and tracks pricing and strategy for the group above.', 'AI POWERED', '#C2410C', '#FFD8BE'], ['Track prices for your product URLs', "Monitors your product URLs and lets you assign competitor domains or URLs per product whenever you're ready.", 'SAVE CREDITS', '#1E7A3D', '#BFE5CC']].map(([t, d, tag, tagC, tagBc]) => ({ t, d, tag, tagC, tagBc }));
+const multiSig = [['Identifier (GTIN)', 'agrees', '#1E7A3D'], ['Specs', 'agrees', '#1E7A3D'], ['Title text', 'agrees', '#1E7A3D'], ['Pack count', '1 ≠ 2', '#B42318']].map(([t, v, c], i) => ({ t, v, c, dl: (i * 0.12).toFixed(2) }));
+const variantFlags = [['Listing · same model, 2-pack', 'Pack count differs'], ['Listing · with travel case', 'Bundle differs'], ['Listing · renewed', 'Condition differs']].map(([t, f], i) => ({ t, f, dl: (i * 0.15).toFixed(2) }));
+const queue = [['pack count differs', 'Review'], ['brand unresolved', 'Review'], ['condition differs', 'Reject']].map(([t, b]) => ({ t, b, rej: b === 'Reject' }));
+const nmStatic = [
+  { n: 'Logitech MX Master 3S', p: '$99.99', pos: 'Competitive', posC: '#1E7A3D', comps: [['Amazon', C.amz, '$99.99'], ['Best Buy', C.bb, '$109.99'], ['Newegg', C.ne, 'No match']] },
+  { n: 'Anker 737 Power Bank', p: '$89.99', pos: 'Premium', posC: '#C2410C', comps: [['Amazon', C.amz, '$79.99'], ['Target', C.tgt, 'No match'], ['Walmart', C.wmt, '$84.99']] },
+];
+const coverage = [['Kitchen_Appliances', 72, '13 / 18 slots'], ['TV_Weekly_Promo', 54, '9 / 15 slots'], ['Laptops_BackToSchool', 88, '22 / 25 slots']].map(([n, wv, slots]) => ({ n, wv, slots }));
+const checklist = ['It should use identifiers when they exist and still match when they don\'t.', 'Look for a reason behind every match, such as a score and the signals behind it.', 'Pack sizes, bundles and refurbished listings need to be caught before they distort your prices.', 'Your team should be able to set the bar for auto-acceptance and fix matches without raising a ticket.', 'Ask how long setup takes before the first trustworthy matches arrive.'].map((t, i, a) => ({ t, n: '0' + (i + 1), last: i === a.length - 1 }));
+const uses = [['Price comparison', 'Compare prices across sellers for the exact same item.', '#', 'M4 4h6v16H4zM14 4h6v16h-6z'], ['Competitor tracking', 'Track the retailers and marketplaces you choose.', '/competitive-data', 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6'], ['MAP monitoring', 'MAP and MSRP violations are flagged against the right product.', '#', 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z'], ['Pricing Decision Engine', 'Pricing rules use matched prices as their benchmark. SmartPrice is a recommendation, and your team decides.', '/dynamic-pricing-software', 'M6 3v12M18 9a3 3 0 1 0 0-6a3 3 0 1 0 0 6M6 21a3 3 0 1 0 0-6a3 3 0 1 0 0 6M18 9c0 6-12 3-12 9'], ['Price alerts', 'Alerts for competitor price drops and out-of-stock listings.', '#', 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0']].map(([t, d, href, ico]) => ({ t, d, href, ico }));
+const teamDoes = [['01', 'Adds products'], ['02', 'Sets the confidence threshold'], ['03', 'Works the review queue'], ['04', 'Fixes gaps in the dashboard']].map(([n, t]) => ({ n, t }));
+const lg: [string, string, number, string][] = [['McAfee', 'Geist,sans-serif', 600, '0'], ['Xometry', 'Geist,sans-serif', 500, '-.01em'], ['Do it Best', 'Inter,sans-serif', 700, '-.02em'], ['Wolt', 'Geist,sans-serif', 700, '.02em'], ['neho', 'Inter,sans-serif', 600, '-.03em'], ['apoBank', 'Geist,sans-serif', 700, '-.02em']];
+const logos = [...lg, ...lg].map(([t, f, w, ls]) => ({ t, f, w, ls }));
+const fq = [
+  ['What is product matching in ecommerce?', 'Product matching in ecommerce means linking a product in your catalog to the listings on other sites and marketplaces that sell the same item. It is the step that makes competitor price comparison valid, because a price is only useful if it belongs to the same product, pack size and condition. Read the full definition in the', true],
+  ['Do you need GTINs or UPCs to match products?', "No. Matching uses identifiers where they're published, then weighs brand, model, specs, title text and images where they're not. Each candidate gets a confidence score showing which signals agreed.", false],
+  ['How are bundles, multipacks and variants handled?', 'Pack count, condition and variant attributes are compared on every candidate. A two-pack, a bundle or a refurbished unit is flagged, never merged into your single-unit price.', false],
+  ['Can we review and correct matches?', 'Yes. Set the confidence threshold once; matches below it go to a review queue for your team to confirm or reject. You can also add the right listing by URL from the product page or the dashboard.', false],
+  ["How accurate is PriceLeap's product matching?", 'Accuracy is visible one match at a time, through the confidence score and its signals. Low-confidence candidates wait in review, and matches pass QC checks before they count, backed by an SLA of [X% maximum false positives].', false],
+  ['How is product matching priced?', 'Product matching runs inside the Price Intelligence Engine and is part of PriceLeap plans. Larger catalogs can request a custom proposal.', false],
+].map(([q, a, link], i) => ({ q, a, link, n: String(i + 1).padStart(2, '0') }));
+---
+<PriceLeapLayout
+  title="Product Matching Software for Competitor Pricing · PriceLeap"
+  description="PriceLeap's product matching links each product in your catalog to the same product on competitor sites, even when titles, pack sizes and identifiers don't agree — every match with a confidence score."
+>
+  <div class="pm">
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-10%;top:-25%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.09),transparent);pointer-events:none"></div>
+      <div class="pm-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(36px,5vw,72px) clamp(16px,4vw,40px) clamp(48px,6vw,88px);gap:clamp(36px,4.5vw,64px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:20px">
+          <nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:#665A51"><a href="#" style="color:#665A51">Product</a><span style="color:#D7C6BA">›</span><a href="/price-intelligence-engine" style="color:#665A51">Price Intelligence</a><span style="color:#D7C6BA">›</span><span style="color:#1C130E">Product Matching</span></nav>
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>Product matching</span>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(36px,5vw,64px);line-height:1.03;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Product Matching Software</span><span style="font-weight:400"> for Competitor Pricing</span></h1>
+          <p style="margin:0;max-width:600px;font-size:18px;line-height:1.6;color:#3A302A;text-wrap:pretty">PriceLeap's product matching links each product in your catalog to the same product on competitor sites and marketplaces, even when titles, pack sizes and identifiers don't agree. Every match carries a confidence score and the signals behind it, so the prices you compare are like for like.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+            <a href="/book-a-demo" style="height:48px;padding:0 22px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+            <a href="/contact" style="height:48px;padding:0 18px;display:inline-flex;align-items:center;border-radius:12px;border:1px solid #EFE3DA;background:#FFFFFF;color:#1C130E;font-family:Geist,sans-serif;font-weight:500;font-size:15px">Talk to a matching expert →</a>
+          </div>
+        </div>
+
+        <div style="position:relative;min-width:0;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;box-shadow:0 44px 84px -50px rgba(60,30,15,.42),0 0 0 6px rgba(255,255,255,.7)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+            <span style="font-size:13.5px;font-weight:600;color:#1C130E">Match evidence</span>
+            <span style="height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;border:1px dashed #E2D3C8;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">EXAMPLE</span>
+          </div>
+          <div class="pm-ev" style="position:relative;padding:16px;gap:0;align-items:stretch">
+            <div style="border:1px solid #EFE3DA;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">YOUR PRODUCT</span>
+              <div style="height:70px;border-radius:9px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 6px,#FFFCF9 6px 12px);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">image</div>
+              <span style="font-size:13px;font-weight:600;color:#1C130E">Product title</span>
+              <span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#665A51">SKU · GTIN</span>
+              <span style="font-family:'Geist Mono',monospace;font-size:12px;color:#1C130E">[price]</span>
+            </div>
+            <div aria-hidden="true" class="pm-evarrow" style="display:flex;align-items:center;justify-content:center">
+              <svg class="pm-evarrow-h" width="54" height="20" viewBox="0 0 54 20" style="overflow:visible"><path d="M0,10 L54,10" fill="none" stroke="#E2D3C8" stroke-width="1.5"></path><path d="M0,10 L54,10" fill="none" stroke="#F7631E" stroke-width="1.5" stroke-dasharray="4 8" style="animation:pm-dash 1s linear infinite"></path></svg>
+              <svg class="pm-evarrow-v" width="20" height="32" viewBox="0 0 20 32" style="overflow:visible"><path d="M10,0 L10,32" fill="none" stroke="#E2D3C8" stroke-width="1.5"></path><path d="M10,0 L10,32" fill="none" stroke="#F7631E" stroke-width="1.5" stroke-dasharray="4 8" style="animation:pm-dash 1s linear infinite"></path></svg>
+            </div>
+            <div data-pm-compbc style="border:1px solid #EFE3DA;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;transition:border-color .4s">
+              <span style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">COMPETITOR LISTING</span>
+              <div style="height:70px;border-radius:9px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 6px,#FFFCF9 6px 12px);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">image</div>
+              <span style="font-size:13px;font-weight:600;color:#1C130E">Listing title</span>
+              <span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#665A51">MPN</span>
+              <span style="font-family:'Geist Mono',monospace;font-size:12px;color:#1C130E">[price]</span>
+            </div>
+          </div>
+          <div class="pm-sig" style="padding:0 16px 16px;gap:12px">
+            <div style="border:1px solid #F5ECE5;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+              {sigNames.map((t, i) => (
+                <div class="pm-sigrow" data-pm-sig={i} style="display:flex;align-items:center;gap:10px;font-size:13px;color:#7F7066;transition:color .3s">
+                  <span class="pm-sigmk" style="width:18px;height:18px;flex:none;border-radius:50%;background:#FFFFFF;border:1.5px solid #E2D3C8;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center;transition:all .3s"></span>{t}
+                  <span class="pm-sigstat" style="margin-left:auto;font-family:'Geist Mono',monospace;font-size:10px;color:#B9A99C">checking</span>
+                </div>
+              ))}
+            </div>
+            <div style="border:1px solid #F5ECE5;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px">
+              <span style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">CONFIDENCE SCORE</span>
+              <span style="font-family:Geist,sans-serif;font-size:30px;font-weight:600;letter-spacing:-.03em;color:#1C130E">[XX%]</span>
+              <div style="height:6px;border-radius:6px;background:#F5ECE5"><div data-pm-conf style="height:100%;width:0%;border-radius:6px;background:#1C130E;transition:width .5s ease"></div></div>
+              <span data-pm-bundle style="align-self:flex-start;height:22px;padding:0 8px;display:flex;align-items:center;gap:6px;border-radius:6px;background:#FFFFFF;border:1px solid #EFE3DA;font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066;transition:all .3s">⚑ Bundle flag</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px;border-top:1px solid #F5ECE5;background:#FFF9F4">
+            <span data-pm-ok style="height:38px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#FFFFFF;color:#1C130E;border:1px solid #EFE3DA;font-size:13px;font-weight:500;transition:all .3s">Confirm match</span>
+            <span style="height:38px;display:flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid #EFE3DA;background:#FFFFFF;color:#1C130E;font-size:13px;font-weight:500">Not a match</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 WHY IT MATTERS -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="max-width:820px;display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Why it matters</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Why does product matching matter for </span><span style="font-weight:700">competitor pricing?</span></h2>
+        </div>
+        <div data-reveal class="pm-three" style="margin-top:44px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#EFE3DA;gap:1px">
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:160px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,260px);display:flex;flex-direction:column;gap:6px;font-size:12px">
+                <span style="padding:7px 10px;border-radius:8px;border:1px solid #EFE3DA;background:#FFFFFF;color:#1C130E">Philips Airfryer XXL HD9650/96</span>
+                <span style="padding:7px 10px;border-radius:8px;border:1px solid #EFE3DA;background:#FFFFFF;color:#1C130E">PHILIPS XXL Air Fryer Blk 7.3QT</span>
+                <span style="padding:7px 10px;border-radius:8px;border:1px dashed #E2D3C8;background:#FFFFFF;color:#665A51">Airfryer XXL (no GTIN listed)</span>
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;gap:14px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">01</span><p style="margin:0;font-size:15.5px;line-height:1.6;color:#1C130E">The same product is listed differently on every site. Titles, abbreviations, pack sizes and colorways change, and many marketplace listings carry no shared identifier.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:160px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,260px);display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center">
+                <span style="padding:10px;border-radius:10px;border:1px solid #EFE3DA;background:#FFFFFF;text-align:center"><span style="display:block;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">YOU</span><span style="display:block;font-size:13px;font-weight:600;color:#1C130E">1 unit</span></span>
+                <span style="font-family:'Geist Mono',monospace;font-size:14px;color:#B42318">≠</span>
+                <span style="padding:10px;border-radius:10px;border:1px solid #F5C6C3;background:#FDECEB;text-align:center"><span style="display:block;font-family:'Geist Mono',monospace;font-size:9.5px;color:#B42318">RIVAL</span><span style="display:block;font-size:13px;font-weight:600;color:#1C130E">2-pack</span></span>
+                <span style="grid-column:1 / -1;text-align:center;font-family:'Geist Mono',monospace;font-size:10.5px;color:#B42318">↓ price cut you didn't need</span>
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;gap:14px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">02</span><p style="margin:0;font-size:15.5px;line-height:1.6;color:#1C130E">A wrong match is worse than no match. Compare your single unit with a rival's two-pack and you cut price on a product you were never losing.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:160px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,260px);display:grid;grid-template-columns:repeat(8,1fr);gap:3px">
+                {Array.from({ length: 40 }, (_, i) => (<span class="pm-cell" data-pm-cell={i} style="height:14px;border-radius:2px;background:#F5ECE5;transition:background .4s"></span>))}
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;gap:14px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">03</span><p style="margin:0;font-size:15.5px;line-height:1.6;color:#1C130E">Manual matching breaks as the catalog grows. Thousands of SKUs across many sites, changing every week, outgrow a spreadsheet fast.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 HOW IT WORKS (stepper + 5 panels) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>How it works</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">How does product matching </span><span style="font-weight:700">work in PriceLeap?</span></h2>
+          <p style="margin:0;max-width:680px;font-size:16.5px;line-height:1.65;color:#3A302A">Product matching runs inside the <a href="/price-intelligence-engine" style="font-weight:600">Price Intelligence Engine</a>, one product group at a time. Every step happens in the dashboard.</p>
+        </div>
+        <div data-reveal class="pm-how" style="margin-top:48px;gap:clamp(20px,3vw,36px);align-items:start">
+          <div style="display:flex;flex-direction:column">
+            {stepData.map((s, i) => (
+              <button type="button" class="pm-step" class:list={[{ 'is-on': i === 0 }]} data-pm-step={i} aria-pressed={i === 0 ? 'true' : 'false'} style="position:relative;text-align:left;border:none;background:transparent;border-radius:16px;padding:16px 16px 16px 14px;display:grid;grid-template-columns:36px minmax(0,1fr);gap:14px;cursor:pointer;transition:background .3s">
+                {i < 4 && <span aria-hidden="true" class="pm-step-line" style="position:absolute;left:31px;top:54px;bottom:-14px;width:2px;background:#EFE3DA;transition:background .3s"></span>}
+                <span class="pm-step-n" style="position:relative;width:36px;height:36px;border-radius:50%;font-family:'Geist Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .3s">{i + 1}</span>
+                <span style="min-width:0;padding-top:4px"><span style="display:block;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#7F7066">STEP {s.no}</span><span class="pm-step-t" style="display:block;margin-top:3px;font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:#3A302A;transition:color .3s">{s.t}</span><span class="pm-step-d" style="margin-top:6px;font-size:14.5px;line-height:1.6;color:#665A51">{s.d}</span>
+                  <span class="pm-step-bar" style="display:none;margin-top:12px;height:3px;border-radius:3px;background:#F5ECE5;overflow:hidden"><span class="pm-step-fill" style="display:block;height:100%;width:0%;background:#F7631E;transition:width .25s linear"></span></span></span>
+              </button>
+            ))}
+          </div>
+
+          <div class="pm-sticky" style="top:96px;min-width:0;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 44px 84px -52px rgba(60,30,15,.42)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span data-pm-ptitle style="font-size:13.5px;font-weight:600;color:#1C130E">{stepData[0].pt}</span><span data-pm-pkey style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">{stepData[0].pk}</span></div>
+            <div style="padding:16px;min-height:360px">
+              <div class="pm-panel" data-pm-panel={0} style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px;font-size:12px">
+                {infoFields.map((f) => (
+                  <div style={`display:flex;flex-direction:column;gap:3px;padding:8px 10px;border-radius:10px;background:${f.bg};border:1px solid ${f.bc};animation:pm-in .35s ease ${f.dl}s both`}>
+                    <span style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">{f.k}</span>
+                    <span style={`font-family:'Geist Mono',monospace;font-size:12.5px;font-weight:500;color:${f.c}`}>{f.v}</span>
+                  </div>
+                ))}
+              </div>
+              <div class="pm-panel" data-pm-panel={1} style="display:none;flex-direction:column;gap:12px">
+                <div><div style="font-size:15px;font-weight:600;color:#1C130E">How should we track this group?</div><div style="margin-top:2px;font-size:12.5px;color:#665A51">Pick once — you can flip individual products later from the dashboard.</div></div>
+                {trackOpts.map((o, i) => (
+                  <div class="pm-track" class:list={[{ 'is-on': i === 0 }]} data-pm-track={i} style="border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px;transition:all .4s">
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="pm-track-dot" style="width:16px;height:16px;flex:none;border-radius:50%;background:#FFFFFF;transition:all .3s"></span><span style="font-size:14px;font-weight:600;color:#1C130E">{o.t}</span><span style={`margin-left:auto;height:20px;padding:0 7px;display:flex;align-items:center;border-radius:6px;background:#FFFFFF;border:1px solid ${o.tagBc};font-family:'Geist Mono',monospace;font-size:9.5px;color:${o.tagC}`}>{o.tag}</span></div>
+                    <span style="font-size:12.5px;line-height:1.5;color:#665A51">{o.d}</span>
+                  </div>
+                ))}
+              </div>
+              <div class="pm-panel" data-pm-panel={2} style="display:none">
+                <div class="pm-cmp" style="display:grid;gap:10px">
+                  <div style="border:1px solid #F5C6C3;border-radius:14px;overflow:hidden">
+                    <div style="padding:10px 12px;background:#FDECEB;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#B42318">KEYWORD MATCH</div>
+                    <div style="padding:12px;display:flex;flex-direction:column;gap:8px;font-size:12.5px">
+                      <span style="font-family:'Geist Mono',monospace;font-size:11px;color:#665A51">title contains "headphone"</span>
+                      <span style="padding:8px 10px;border-radius:9px;border:1px solid #EFE3DA;color:#1C130E">Your: Headphones, single</span>
+                      <span style="padding:8px 10px;border-radius:9px;border:1px solid #F5C6C3;background:#FFF7F6;color:#1C130E">Rival: Headphones, 2-pack</span>
+                      <span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#B42318">✕ Two-pack matched to single</span>
+                    </div>
+                  </div>
+                  <div style="border:1px solid #1C130E;border-radius:14px;overflow:hidden">
+                    <div style="padding:10px 12px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#FFFFFF">MULTI-SIGNAL MATCH</div>
+                    <div style="padding:12px;display:flex;flex-direction:column;gap:7px;font-size:12.5px">
+                      <span style="font-family:'Geist Mono',monospace;font-size:11px;color:#665A51">ID · specs · title · image</span>
+                      {multiSig.map((m) => (<span style={`display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:9px;border:1px solid #F5ECE5;color:#1C130E;animation:pm-in .3s ease ${m.dl}s both`}>{m.t}<span style={`font-family:'Geist Mono',monospace;font-size:10.5px;color:${m.c}`}>{m.v}</span></span>))}
+                      <span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#1E7A3D">✓ Variants kept apart</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="pm-panel" data-pm-panel={3} style="display:none;flex-direction:column;gap:10px">
+                <div style="padding:12px 14px;border-radius:12px;border:1px solid #1C130E;display:flex;align-items:center;gap:10px"><span style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">YOUR PRODUCT</span><span style="font-size:13px;font-weight:600;color:#1C130E">Single unit · New · Black</span></div>
+                {variantFlags.map((v) => (
+                  <div style={`display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 14px;border-radius:12px;border:1px solid #FFD8BE;background:#FFF9F4;animation:pm-in .35s ease ${v.dl}s both`}>
+                    <span style="font-size:13px;color:#1C130E">{v.t}</span>
+                    <span style="height:22px;padding:0 8px;display:flex;align-items:center;gap:6px;border-radius:6px;background:#FFFFFF;border:1px solid #FFD8BE;font-family:'Geist Mono',monospace;font-size:10px;color:#C2410C">⚑ {v.f}</span>
+                  </div>
+                ))}
+                <span style="font-size:12.5px;color:#665A51">Flagged, never merged into your single-unit price.</span>
+              </div>
+              <div class="pm-panel" data-pm-panel={4} style="display:none;flex-direction:column;gap:12px">
+                <div style="padding:12px 14px;border:1px solid #F5ECE5;border-radius:12px">
+                  <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066"><span>AUTO-ACCEPT THRESHOLD</span><span style="color:#1C130E">[≥ X]</span></div>
+                  <div style="position:relative;margin-top:14px;height:6px;border-radius:6px;background:#F5ECE5"><div data-pm-thrbar style="position:absolute;left:0;top:0;bottom:0;width:55%;border-radius:6px;background:#1C130E;transition:width .6s ease"></div><span data-pm-thrknob style="position:absolute;top:50%;left:55%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#FFFFFF;border:2px solid #1C130E;box-shadow:0 4px 10px -4px rgba(60,30,15,.4);transition:left .6s ease"></span></div>
+                  <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11.5px;color:#665A51"><span>Review queue</span><span>Flows into pricing</span></div>
+                </div>
+                <div style="border:1px solid #F5ECE5;border-radius:12px;overflow:hidden">
+                  <div style="padding:10px 14px;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">REVIEW QUEUE · EXAMPLE</div>
+                  {queue.map((qq, i) => (
+                    <div class="pm-qrow" data-pm-qrow={i} data-rej={qq.rej ? '1' : '0'} style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 14px;border-top:1px solid #F5ECE5;background:#FFFFFF;transition:background .3s">
+                      <span style="font-size:13px;color:#1C130E">Listing · <span style="color:#665A51">{qq.t}</span></span>
+                      <span class="pm-qbtn" style="height:26px;padding:0 10px;display:flex;align-items:center;border-radius:7px;border:1px solid #EFE3DA;background:#FFFFFF;color:#1C130E;font-size:12px;transition:all .3s">{qq.b}</span>
+                    </div>
+                  ))}
+                </div>
+                <span style="font-family:'Geist Mono',monospace;font-size:11px;color:#7F7066">[Confirm: decisions are kept for future matching.]</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 NO MATCH (fix demo) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="pm-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:center">
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>No match</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.6vw,44px);line-height:1.08;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">What happens when a product </span><span style="font-weight:700">can't be matched?</span></h2>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C;padding-top:2px">01</span>The competitor cell reads "No match", so a missing listing never shows up as a price.</span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C;padding-top:2px">02</span>Market position stays "Unknown" until at least one listing is matched.</span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C;padding-top:2px">03</span>Add the right listing by URL from the product page or the dashboard, and it's tracked from the next refresh.</span>
+          </div>
+        </div>
+        <div data-reveal style="min-width:0;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 44px 84px -52px rgba(60,30,15,.42)">
+          <div style="overflow-x:auto">
+            <div style="min-width:560px">
+              <div style="display:grid;grid-template-columns:minmax(0,1.5fr) 96px minmax(0,1fr) minmax(0,1.4fr);gap:12px;padding:10px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066"><span>PRODUCT</span><span>YOUR PRICE</span><span>POSITION</span><span>COMPETITORS</span></div>
+              <!-- row 0 Logitech (static) -->
+              <div style="display:grid;grid-template-columns:minmax(0,1.5fr) 96px minmax(0,1fr) minmax(0,1.4fr);gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid #F5ECE5;background:#FFFFFF">
+                <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:34px;height:34px;flex:none;border-radius:9px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 5px,#FFFCF9 5px 10px)"></span><span style="font-size:13px;font-weight:600;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{nmStatic[0].n}</span></span>
+                <span style="font-family:Geist,sans-serif;font-size:14.5px;font-weight:600;color:#1C130E">{nmStatic[0].p}</span>
+                <span style={`font-size:13px;font-weight:500;color:${nmStatic[0].posC}`}>{nmStatic[0].pos}</span>
+                <span style="display:flex;flex-direction:column;gap:4px">
+                  {nmStatic[0].comps.map(([cn, dot, cp]) => (<span style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:#1C130E"><span style={`width:6px;height:6px;border-radius:50%;background:${dot}`}></span><span style="min-width:58px">{cn}</span><span style={`padding:0 4px;border-radius:4px;font-family:'Geist Mono',monospace;color:${cp === 'No match' ? '#C2410C' : '#1C130E'}`}>{cp}</span></span>))}
+                  <span style="align-self:flex-start;margin-top:2px;height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;border:1px solid #EFE3DA;background:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">+ add</span>
+                </span>
+              </div>
+              <!-- row 1 Sony (live) -->
+              <div data-pm-nmrow style="display:grid;grid-template-columns:minmax(0,1.5fr) 96px minmax(0,1fr) minmax(0,1.4fr);gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid #F5ECE5;background:#FFFFFF;transition:background .4s">
+                <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:34px;height:34px;flex:none;border-radius:9px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 5px,#FFFCF9 5px 10px)"></span><span style="font-size:13px;font-weight:600;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Sony WH-1000XM5</span></span>
+                <span style="font-family:Geist,sans-serif;font-size:14.5px;font-weight:600;color:#1C130E">$329.99</span>
+                <span data-pm-nmpos style="font-size:13px;font-weight:500;color:#665A51;transition:color .4s">Unknown</span>
+                <span style="display:flex;flex-direction:column;gap:4px">
+                  <span style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:#1C130E"><span style={`width:6px;height:6px;border-radius:50%;background:${C.amz}`}></span><span style="min-width:58px">Amazon</span><span data-pm-nmprice style="padding:0 4px;border-radius:4px;font-family:'Geist Mono',monospace;color:#C2410C">No match</span></span>
+                  <span style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:#1C130E"><span style={`width:6px;height:6px;border-radius:50%;background:${C.bb}`}></span><span style="min-width:58px">Best Buy</span><span style="padding:0 4px;border-radius:4px;font-family:'Geist Mono',monospace;color:#C2410C">No match</span></span>
+                  <span style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:#1C130E"><span style={`width:6px;height:6px;border-radius:50%;background:${C.wmt}`}></span><span style="min-width:58px">Walmart</span><span style="padding:0 4px;border-radius:4px;font-family:'Geist Mono',monospace;color:#C2410C">No match</span></span>
+                  <span data-pm-nmadd style="align-self:flex-start;margin-top:2px;height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;border:1px solid #EFE3DA;background:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066;transition:all .3s">+ add</span>
+                </span>
+              </div>
+              <!-- row 2 Anker (static) -->
+              <div style="display:grid;grid-template-columns:minmax(0,1.5fr) 96px minmax(0,1fr) minmax(0,1.4fr);gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid #F5ECE5;background:#FFFFFF">
+                <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:34px;height:34px;flex:none;border-radius:9px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 5px,#FFFCF9 5px 10px)"></span><span style="font-size:13px;font-weight:600;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{nmStatic[1].n}</span></span>
+                <span style="font-family:Geist,sans-serif;font-size:14.5px;font-weight:600;color:#1C130E">{nmStatic[1].p}</span>
+                <span style={`font-size:13px;font-weight:500;color:${nmStatic[1].posC}`}>{nmStatic[1].pos}</span>
+                <span style="display:flex;flex-direction:column;gap:4px">
+                  {nmStatic[1].comps.map(([cn, dot, cp]) => (<span style="display:flex;align-items:center;gap:7px;font-size:11.5px;color:#1C130E"><span style={`width:6px;height:6px;border-radius:50%;background:${dot}`}></span><span style="min-width:58px">{cn}</span><span style={`padding:0 4px;border-radius:4px;font-family:'Geist Mono',monospace;color:${cp === 'No match' ? '#C2410C' : '#1C130E'}`}>{cp}</span></span>))}
+                  <span style="align-self:flex-start;margin-top:2px;height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;border:1px solid #EFE3DA;background:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">+ add</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 ACCURACY (coverage bars) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div class="pm-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:center">
+        <div data-reveal class="pm-acc" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px">
+          <div style="grid-column:1 / -1;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:10px">
+            <span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#7F7066">MATCH COVERAGE · PER GROUP · EXAMPLE</span>
+            {coverage.map((g) => (
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:12px;align-items:center">
+                <div><div style="font-size:13px;font-weight:600;color:#1C130E">{g.n}</div><div style="margin-top:6px;height:6px;border-radius:6px;background:#F5ECE5;overflow:hidden"><div class="pm-cov" data-pm-cov={g.wv} style={`height:100%;width:${Math.max(10, g.wv - 18)}%;border-radius:6px;background:#1C130E;transition:width .8s ease`}></div></div></div>
+                <span style="font-family:'Geist Mono',monospace;font-size:11px;color:#665A51;text-align:right">{g.slots}</span>
+              </div>
+            ))}
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;padding:18px"><div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#7F7066">QC SLA</div><div style="margin-top:8px;font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:#1C130E">[X% maximum false positives]</div></div>
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;padding:18px"><div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#7F7066">IN REVIEW</div><div style="margin-top:8px;display:flex;align-items:center;gap:8px"><span style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:#1C130E">Low confidence</span></div><div style="font-size:12px;color:#665A51">waits, never enters price data</div></div>
+        </div>
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Accuracy</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.6vw,44px);line-height:1.08;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">How accurate is PriceLeap's </span><span style="font-weight:700">product matching?</span></h2>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Accuracy is visible one match at a time, through the confidence score and its signals.</span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Low-confidence candidates wait in review instead of entering your price data.</span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Matches pass QC checks before they count, backed by an SLA of [X% maximum false positives].</span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.6;color:#3A302A"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span><span>The dashboard shows how many products have a match and how many competitor slots are filled, per group. <span style="font-family:'Geist Mono',monospace;font-size:12px;color:#7F7066">[Confirm slot definition]</span></span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 CHECKLIST -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1100px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Buyer's checklist</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">What to look for in </span><span style="font-weight:700">product matching software</span></h2>
+        </div>
+        <div data-reveal style="margin-top:40px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#FFFFFF">
+          {checklist.map((c) => (
+            <div class="pm-check" style={`display:grid;grid-template-columns:56px minmax(0,1fr) 28px;gap:16px;align-items:center;padding:18px 22px;border-bottom:${c.last ? 'none' : '1px solid #F5ECE5'};transition:background .2s`}>
+              <span style="font-family:Geist,sans-serif;font-size:28px;font-weight:600;letter-spacing:-.04em;color:#E2D3C8">{c.n}</span>
+              <span style="font-size:16px;line-height:1.55;color:#1C130E">{c.t}</span>
+              <span style="width:24px;height:24px;border-radius:7px;border:1.5px solid #1C130E;color:#1C130E;font-size:11px;display:flex;align-items:center;justify-content:center">✓</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 WHERE USED -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Across the platform</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Where product matching is </span><span style="font-weight:700">used in PriceLeap</span></h2>
+        </div>
+        <div data-reveal style="position:relative;margin-top:44px">
+          <div style="display:flex;justify-content:center;margin-bottom:-1px"><span style="position:relative;z-index:1;height:44px;padding:0 18px;display:flex;align-items:center;gap:10px;border-radius:12px 12px 0 0;border:1px solid #EFE3DA;border-bottom:none;background:#FFFFFF;font-family:Geist,sans-serif;font-size:15px;font-weight:600;color:#1C130E"><span style="width:8px;height:8px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>Product matching</span></div>
+          <div class="pm-use" style="border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#EFE3DA;gap:1px">
+            {uses.map((u) => (
+              <a href={u.href} class="pm-usecell" style="background:#FFFFFF;padding:22px;display:flex;flex-direction:column;gap:12px;color:#1C130E;transition:background .2s">
+                <span style="width:38px;height:38px;border-radius:11px;background:#FFF4EC;border:1px solid #FFD8BE;color:#C2410C;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d={u.ico}></path></svg></span>
+                <span style="font-family:Geist,sans-serif;font-size:17px;font-weight:600">{u.t}</span>
+                <span style="font-size:14px;line-height:1.55;color:#665A51">{u.d}</span>
+                <span style="margin-top:auto;font-size:13px;font-weight:500;color:#C2410C">Learn more →</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 SOFTWARE OR SERVICE -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="pm-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:center">
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.6vw,44px);line-height:1.08;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Is PriceLeap's product matching </span><span style="font-weight:700">software or a managed service?</span></h2>
+          <p style="margin:0;font-size:16.5px;line-height:1.65;color:#3A302A">PriceLeap is software. Your team adds products, sets the confidence threshold, works the review queue and fixes gaps in the dashboard.</p>
+          <p style="margin:0;font-size:16.5px;line-height:1.65;color:#3A302A">Matches also pass QC checks before they count. Larger catalogs can request a custom proposal from inside the app.</p>
+        </div>
+        <div data-reveal style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+          {teamDoes.map((t) => (
+            <div style="background:#FFF9F4;border:1px solid #F5ECE5;border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px">
+              <span style="font-family:'Geist Mono',monospace;font-size:11px;color:#C2410C">{t.n}</span>
+              <span style="font-size:15px;font-weight:600;color:#1C130E">{t.t}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 TRUSTED BY -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFCF9">
+      <div class="pm-logowrap" style="max-width:1280px;margin:0 auto;border-bottom:1px solid #EFE3DA">
+        <div class="pm-logolabel" style="padding:22px clamp(16px,4vw,40px);display:flex;align-items:center;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#665A51">Trusted by teams at</div>
+        <div style="overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)">
+          <div style="display:flex;width:max-content;animation:pm-marquee 32s linear infinite">
+            {logos.map((l) => (<div style={`flex:none;width:200px;height:84px;display:flex;align-items:center;justify-content:center;border-right:1px solid #F5ECE5;font-family:${l.f};font-size:21px;font-weight:${l.w};letter-spacing:${l.ls};color:#665A51`}>{l.t}</div>))}
+          </div>
+        </div>
+      </div>
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(40px,5vw,64px) clamp(16px,4vw,40px)">
+        <div class="pm-hold" style="display:grid;gap:12px">
+          <div style="border:1px dashed #E2D3C8;border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:8px"><span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">STAT · HOLD</span><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">[X% of catalog matched across tracked competitors after onboarding]</span></div>
+          <div style="border:1px dashed #E2D3C8;border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:8px"><span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">STAT · HOLD</span><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">[X days to first matches]</span></div>
+          <div style="border:1px dashed #E2D3C8;border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:8px"><span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">TESTIMONIAL · HOLD</span><span style="font-size:15px;line-height:1.55;color:#665A51">[quote · name · role · company]</span></div>
+          <div style="border:1px dashed #E2D3C8;border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:8px"><span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">CASE STUDY · HOLD</span><span style="font-size:15px;line-height:1.55;color:#665A51">How [retailer] matched [X%] of a [Y]-SKU catalog across [Z] competitors</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-220px;width:640px;height:400px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.14),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:20px">
+          <h2 style="margin:0;max-width:820px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">See product matching on </span><span style="font-weight:700">your own catalog</span></h2>
+          <p style="margin:0;max-width:600px;font-size:17px;line-height:1.6;color:#3A302A">Bring a sample of your SKUs and the competitors you track. In the demo you'll see each match, its confidence score and the signals behind it.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center">
+            <a href="/book-a-demo" style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+            <a href="/contact" style="height:50px;padding:0 20px;display:inline-flex;align-items:center;border-radius:12px;border:1px solid #EFE3DA;background:#FFFFFF;color:#1C130E;font-family:Geist,sans-serif;font-weight:500;font-size:15px">Talk to a matching expert →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 FAQ -->
+    <section style="border-top:1px solid #EFE3DA;border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="pm-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <div data-reveal class="pm-sticky" style="top:96px;display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>FAQ</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Product matching software </span><span style="font-weight:700">FAQ</span></h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {fq.map((qq, i) => (
+            <div class="pm-faq" class:list={[{ 'is-open': i === 0 }]} data-pm-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-pm-faq-btn aria-expanded={i === 0 ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="pm-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px;color:#B9A99C">{qq.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{qq.q}</span>
+                <span class="pm-faq-plus" style="flex:none;width:28px;height:28px;border-radius:8px;background:#FBF3EC;color:#1C130E;display:flex;align-items:center;justify-content:center;transition:all .3s"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="pm-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{qq.a}{qq.link && <a href="/glossary" style="font-weight:600"> PriceLeap glossary →</a>}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .pm { background: #FFFCF9; overflow-x: clip; }
+  @keyframes pm-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes pm-dash { to { stroke-dashoffset: -20; } }
+  @keyframes pm-flash { 0%,100% { background: transparent; } 35% { background: #FFF4EC; } }
+  @keyframes pm-marquee { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .pm *, .pm *::before, .pm *::after { animation: none !important; transition: none !important; } }
+
+  .pm-hero { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .pm-hero { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } }
+  .pm-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .pm-split { grid-template-columns: minmax(0,.95fr) minmax(0,1.05fr); } }
+  .pm-sticky { position: static; }
+  @media (min-width: 1024px) { .pm-sticky { position: sticky; } }
+  .pm-ev { display: grid; grid-template-columns: 1fr; }
+  .pm-ev .pm-evarrow-h { display: none; }
+  .pm-ev .pm-evarrow { padding: 6px 0; }
+  @media (min-width: 560px) { .pm-ev { grid-template-columns: minmax(0,1fr) 54px minmax(0,1fr); } .pm-ev .pm-evarrow-h { display: block; } .pm-ev .pm-evarrow-v { display: none; } .pm-ev .pm-evarrow { padding: 0; } }
+  .pm-sig { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 560px) { .pm-sig { grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); } }
+  .pm-three { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 960px) { .pm-three { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+  .pm-how { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .pm-how { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); } }
+  .pm-cmp { grid-template-columns: 1fr; }
+  @media (min-width: 560px) { .pm-cmp { grid-template-columns: 1fr 1fr; } }
+  .pm-acc { order: 1; }
+  @media (min-width: 1024px) { .pm-acc { order: 0; } }
+  .pm-use { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .pm-use { grid-template-columns: repeat(2,minmax(0,1fr)); } .pm-usecell:nth-child(5) { grid-column: 1 / -1; } }
+  @media (min-width: 1100px) { .pm-use { grid-template-columns: repeat(5,minmax(0,1fr)); } .pm-usecell:nth-child(5) { grid-column: auto; } }
+  .pm-logowrap { display: grid; grid-template-columns: 1fr; }
+  .pm-logolabel { border-bottom: 1px solid #EFE3DA; }
+  @media (min-width: 720px) { .pm-logowrap { grid-template-columns: 260px minmax(0,1fr); } .pm-logolabel { border-right: 1px solid #EFE3DA; border-bottom: none; } }
+  .pm-hold { grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .pm-hold { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  @media (min-width: 1000px) { .pm-hold { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+
+  .pm-step.is-on { background: #FFFFFF; }
+  .pm-step .pm-step-n { background: #FFFFFF; border: 1.5px solid #EFE3DA; color: #7F7066; }
+  .pm-step.is-on .pm-step-n, .pm-step.is-done .pm-step-n { background: #1C130E; border-color: #1C130E; color: #FFFFFF; }
+  .pm-step.is-on .pm-step-t { color: #1C130E; }
+  .pm-step.is-done .pm-step-line { background: #1C130E; }
+  .pm-step .pm-step-d { display: none; }
+  .pm-step.is-on .pm-step-d { display: block; }
+  @media (max-width: 1023px) { .pm-step .pm-step-d { display: block; } }
+  .pm-step.is-on .pm-step-bar { display: block !important; }
+  .pm-track.is-on { border: 1.5px solid #FFD8BE; background: #FFF9F4; }
+  .pm-track { border: 1px solid #EFE3DA; background: #FFFFFF; }
+  .pm-track .pm-track-dot { border: 1.5px solid #D7C6BA; }
+  .pm-track.is-on .pm-track-dot { border: 5px solid #1C130E; }
+  .pm-check:hover { background: #FFF9F4; }
+  .pm-usecell:hover { background: #FFFCF9; }
+  .pm-faq.is-open { border-color: #FFD8BE; }
+  .pm-faq.is-open .pm-faq-plus { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .pm-faq.is-open .pm-faq-n { color: #C2410C; }
+  .pm-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .pm-faq.is-open .pm-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.pm');
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+
+    // ---- hero match-evidence demo ----
+    const sigRows = qa('[data-pm-sig]'), conf = q('[data-pm-conf]'), bundle = q('[data-pm-bundle]'), compbc = q('[data-pm-compbc]'), ok = q('[data-pm-ok]');
+    const paintHero = (tk: number) => {
+      const evPhase = tk % 22, nSig = Math.min(5, Math.max(0, evPhase - 2)), done = nSig >= 5, bundleOn = evPhase >= 4 && evPhase < 10;
+      sigRows.forEach((row, i) => {
+        const okk = i < nSig;
+        const mk = row.querySelector('.pm-sigmk') as HTMLElement, stat = row.querySelector('.pm-sigstat') as HTMLElement;
+        if (mk) { mk.textContent = okk ? '✓' : ''; mk.style.background = okk ? '#1C130E' : '#FFFFFF'; mk.style.borderColor = okk ? '#1C130E' : '#E2D3C8'; }
+        row.style.color = okk ? '#1C130E' : '#7F7066';
+        if (stat) { stat.textContent = okk ? 'agrees' : 'checking'; stat.style.color = okk ? '#1E7A3D' : '#B9A99C'; }
+      });
+      if (conf) conf.style.width = (nSig * 20) + '%';
+      if (bundle) { bundle.style.background = bundleOn ? '#FFF4EC' : '#FFFFFF'; bundle.style.borderColor = bundleOn ? '#FFD8BE' : '#EFE3DA'; bundle.style.color = bundleOn ? '#C2410C' : '#7F7066'; }
+      if (compbc) compbc.style.borderColor = done ? '#1C130E' : '#EFE3DA';
+      if (ok) { ok.style.background = done ? '#1C130E' : '#FFFFFF'; ok.style.color = done ? '#FFFFFF' : '#1C130E'; ok.style.borderColor = done ? '#1C130E' : '#EFE3DA'; }
+    };
+
+    // ---- manual-matching sheet grid ----
+    const cells = qa('[data-pm-cell]');
+    const paintCells = (tk: number) => {
+      cells.forEach((el, i) => { const v = (i * 37 + Math.floor(tk / 3) * 11) % 40; el.style.background = v < 4 ? '#FDECEB' : v < 9 ? '#FFE9D9' : '#F5ECE5'; });
+    };
+
+    // ---- no-match fix demo ----
+    const nmRow = q('[data-pm-nmrow]'), nmPos = q('[data-pm-nmpos]'), nmPrice = q('[data-pm-nmprice]'), nmAdd = q('[data-pm-nmadd]');
+    const paintNm = (tk: number) => {
+      const nmPh = Math.floor(tk / 6) % 4, fixed = nmPh >= 2;
+      if (nmRow) nmRow.style.background = (nmPh === 1 || nmPh === 2) ? '#FFF9F4' : '#FFFFFF';
+      if (nmPos) { nmPos.textContent = fixed ? 'Competitive' : 'Unknown'; nmPos.style.color = fixed ? '#1E7A3D' : '#665A51'; }
+      if (nmPrice) { nmPrice.textContent = fixed ? '$328.00' : 'No match'; nmPrice.style.color = fixed ? '#1C130E' : '#C2410C'; nmPrice.style.animation = nmPh === 2 ? 'pm-flash 1.2s ease' : 'none'; }
+      if (nmAdd) {
+        nmAdd.textContent = nmPh === 1 ? '+ amazon.com/dp/B09XS7…' : '+ add';
+        nmAdd.style.borderColor = nmPh === 1 ? '#F7631E' : '#EFE3DA'; nmAdd.style.background = nmPh === 1 ? '#FFF4EC' : '#FFFFFF'; nmAdd.style.color = nmPh === 1 ? '#C2410C' : '#7F7066';
+      }
+    };
+
+    // ---- coverage bars ----
+    const covs = qa('[data-pm-cov]');
+    const paintCov = (tk: number) => {
+      const covPh = Math.floor(tk / 12) % 2;
+      covs.forEach((el) => { const wv = Number(el.getAttribute('data-pm-cov')); el.style.width = (covPh ? wv : Math.max(10, wv - 18)) + '%'; });
+    };
+
+    // ---- stepper (track toggle, queue, threshold are inside panels) ----
+    const steps = qa('[data-pm-step]'), panels3 = qa('[data-pm-panel]'), fills = qa('.pm-step-fill');
+    let step = 0, sp = 0, stepAuto = true;
+    const paintSteps = () => {
+      steps.forEach((el, i) => {
+        el.classList.toggle('is-on', i === step); el.classList.toggle('is-done', i < step);
+        el.setAttribute('aria-pressed', String(i === step));
+        const n = el.querySelector('.pm-step-n') as HTMLElement; if (n) n.textContent = i < step ? '✓' : String(i + 1);
+      });
+      panels3.forEach((pnl, i) => (pnl.style.display = i === step ? (i === 0 ? 'grid' : (i === 2 ? 'block' : 'flex')) : 'none'));
+      const pt = q('[data-pm-ptitle]'), pk = q('[data-pm-pkey]');
+      const meta = [['Product Info', 'IDENTIFIERS'], ['Add Products', 'TRACKING'], ['Candidate scoring', 'EXAMPLE'], ['Variant flags', 'EXAMPLE'], ['Review queue', 'EXAMPLE']];
+      if (pt) pt.textContent = meta[step][0]; if (pk) pk.textContent = meta[step][1];
+      fills.forEach((f, i) => (f.style.width = (i === step ? (stepAuto ? sp : 100) : 0) + '%'));
+    };
+    steps.forEach((el, i) => el.addEventListener('click', () => { step = i; sp = 0; stepAuto = false; paintSteps(); }));
+    const paintPanelAnims = (tk: number) => {
+      // track toggle (panel 1)
+      const tPh = Math.floor(tk / 8) % 2;
+      qa('[data-pm-track]').forEach((el, i) => el.classList.toggle('is-on', i === tPh));
+      // queue highlight (panel 4)
+      const qPh = Math.floor(tk / 5) % 4;
+      qa('[data-pm-qrow]').forEach((row, i) => {
+        const act = qPh === i + 1, rej = row.getAttribute('data-rej') === '1';
+        row.style.background = act ? '#FFF9F4' : '#FFFFFF';
+        const btn = row.querySelector('.pm-qbtn') as HTMLElement;
+        if (btn) { btn.style.borderColor = act ? (rej ? '#F5C6C3' : '#1C130E') : '#EFE3DA'; btn.style.background = act ? (rej ? '#FDECEB' : '#1C130E') : '#FFFFFF'; btn.style.color = act ? (rej ? '#B42318' : '#FFFFFF') : '#1C130E'; }
+      });
+      // threshold (panel 4)
+      const thr = 55 + (Math.floor(tk / 8) % 2) * 15;
+      const tb = q('[data-pm-thrbar]'), tk2 = q('[data-pm-thrknob]');
+      if (tb) tb.style.width = thr + '%'; if (tk2) tk2.style.left = thr + '%';
+    };
+
+    // ---- 300ms loop ----
+    let tick = 0;
+    paintHero(0); paintCells(0); paintNm(0); paintCov(0); paintSteps(); paintPanelAnims(0);
+    setInterval(() => {
+      tick++;
+      paintHero(tick); paintCells(tick); paintNm(tick); paintCov(tick); paintPanelAnims(tick);
+      if (stepAuto) { sp += 2.6; if (sp >= 100) { sp = 0; step = (step + 1) % 5; paintSteps(); } else fills.forEach((f, i) => { if (i === step) f.style.width = sp + '%'; }); }
+    }, 300);
+
+    // ---- faq ----
+    qa('[data-pm-faq-btn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-pm-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-pm-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-pm-faq-btn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    // ---- reveal ----
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>
