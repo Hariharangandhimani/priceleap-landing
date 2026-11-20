@@ -1,0 +1,503 @@
+---
+// Native Astro port of the design package's About page.
+// Static initial render + all animation/interactivity reimplemented as a vanilla
+// <script>: cycling competitor/decision demo (2800ms), auto-advancing solutions
+// carousel (click/hover), vs-comparison hover, 8-person team bio accordion, and
+// scroll-reveal. Same layout, tokens, colors and animations. Responsive via CSS.
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+
+const rv = [['Competitor A', '$184.99', 'IN STOCK'], ['Marketplace B', '$179.50', '−3.0%'], ['Retailer C', '$189.00', 'OUT'], ['Reseller D', '$176.20', '−4.8%']];
+const rivals = rv.map(([n, p, s]) => ({ n, p, s, sc: s.startsWith('−') ? 'var(--pl-danger-ink)' : s === 'OUT' ? 'var(--pl-muted)' : 'var(--pl-accent-ink)' }));
+const decs = [
+  { sku: 'SKU 48201', price: '$184.99', action: 'Hold', margin: '+3.2%', rule: 'Floor 28%' },
+  { sku: 'SKU 48201', price: '$181.49', action: 'Match −1%', margin: '+1.4%', rule: 'MAP ✓' },
+  { sku: 'SKU 48201', price: '$192.00', action: 'Raise', margin: '+5.6%', rule: 'Rival OOS' },
+  { sku: 'SKU 48201', price: '$179.99', action: 'Review', margin: '+0.8%', rule: 'Threshold' },
+];
+const solData = [
+  ['01 - Competitive Intelligence', 'Market Visibility at Scale', 'Track competitor prices, stock availability, and market movements across thousands of SKUs with speed and precision.'],
+  ['02 - Pricing Decision Engine', 'Data That Drives Action', 'Turn raw competitor data into structured decisions using configurable rules, pricing models, and real-time insights.'],
+  ['03 - Control & Automation', 'Margin-Aligned Execution', 'Apply pricing strategies automatically - aligned with your margins, inventory levels, and business rules. Always in control.'],
+  ['04 - Enterprise Integration', 'Connect Your Ecosystem', 'Seamlessly connect via APIs, ERP systems, and analytics tools. PriceLeap fits into your existing infrastructure.'],
+].map(([k, t, d], i) => ({ k, t, d, n: '0' + (i + 1) }));
+const valData = [['Real-Time Alerts', 'Instant notifications via Email, Slack, and SMS — so you never miss a market move.'], ['Clear Price Positioning', 'Understand exactly where you stand against competitors at any moment.'], ['Margin Protection', 'Rule-based logic ensures your pricing never erodes the margins that matter.'], ['Reduced Manual Effort', 'Eliminate spreadsheet-based tracking and fragmented monitoring tools permanently.'], ['Scalable Across SKUs', 'Apply consistent pricing intelligence across thousands of products simultaneously.']];
+const valIcons = ['alert', 'intelligence', 'shield', 'optimize', 'data'];
+const values = valData.map(([t, d], i) => ({ t, d, icon: valIcons[i] || 'engine' }));
+const vs = [['Track prices', 'Turn data into decisions'], ['Dashboards', 'Strategy enablement'], ['Limited integrations', 'Deep integrations'], ['Reactive alerts', 'Proactive control']].map(([a, b]) => ({ a, b }));
+const serve = [
+  { t: 'Primary Customers', n: '01', items: ['E-commerce sellers', 'Multi-SKU brands', 'Online retailers', 'Distributors'] },
+  { t: 'Industries', n: '02', items: ['Electronics', 'Automotive', 'Consumer goods', 'Industrial distribution'] },
+  { t: 'Operational Scale', n: '03', items: ['Mid-market operations', 'Enterprise e-commerce', 'OEM pricing teams', 'Complex SKU environments'] },
+];
+const tm = [
+  ['Seema Phull', 'Executive Advisor, USA', 'Provides strategic guidance to the leadership team, shaping company direction. With 25+ years of driving change in Aerospace, Defense, and Renewable Energy, she has led turnarounds and improvements, including doubling EBITDA for a distressed aerospace firm and building a global supply chain for a Blackstone portfolio company.'],
+  ['Justin Dye', 'Technology & Analytics, USA', 'Drives innovation, leveraging data, and ensuring the technological backbone aligns with business goals. Justin has a proven track record of driving market-leading growth through analytics, risk management, and operational excellence. Global industry experience across Defense and Space, Aerospace, Transportation, and Hi-Tech industries.'],
+  ['Mike Kapusta', 'Strategic Solutions & Business Development, USA', 'Drives growth by identifying new opportunities, creating tailored solutions, and building strong relationships. Mike has 25 years of experience in driving corporate growth and profitability through customer-centric and solutions-focused strategies.'],
+  ['Joshua McDonough', 'Operations & Commercial Excellence, USA', 'Drives efficiency, profitability, and alignment between operational and commercial strategies. 25 years of experience in business improvement through process analysis, demand forecasting, strategic planning, inventory management, and supply chain management. Expertise in transformative projects in Aerospace, Defense, Medical Device, CPG, High Tech, and Renewable Energy sectors.'],
+  ['Jyothish R', 'CTO & Global Delivery Officer', 'Leads the delivery and innovation team with a strong focus on operational efficiency and client success. Jyothish brings experience from Honeywell, Oracle, and Ford Motors. Key responsibilities include: ensuring customer success and strategic alignment, championing an AI- and automation-first mindset, developing new capabilities aligned with business goals, and driving team growth through continuous enablement and leadership.'],
+  ['Biju M L', 'Chief Growth Officer', "Leads the organization's growth strategy with a focus on revenue generation, market expansion, and customer success. Biju brings 17+ years of experience across small to large enterprises, having worked at Cognizant and Capgemini before joining AIMLEAP. Key focus areas include: developing and executing data-driven strategies, identifying new market opportunities, scaling revenue streams, building strategic partnerships, aligning marketing, sales, and product functions, and leveraging innovation to accelerate growth."],
+  ['Jay Suresh', 'Head – HR & Operations', 'Seasoned HR leader with over a decade of experience. Known for driving organizational success through people-centric strategies, fostering high-performance cultures, and empowering talent. Focus areas include: innovative hiring and retention strategies, engagement initiatives to boost alignment and motivation, championing DEI programs, and aligning HR strategy with long-term business goals.'],
+  ['Edwin P. Davis', 'Strategic Alliances & Partnerships', 'Brings a unique blend of operational excellence & strategic insight, backed in project and operations roles & an MBA in Marketing from a Tier 1 institute. He has worked across leading tech & consulting firms. At AIMLEAP, he drives cross-functional collaboration, global partnerships, and growth initiatives. Areas of expertise include GTM strategy, CXO reporting, KPI dashboards, & crafting scalable, insight-led strategies for long-term impact.'],
+];
+const team = tm.map(([n, r, b]) => ({ n, r, b, ini: n.replace(/\./g, '').split(' ').filter(Boolean).map((x) => x[0]).slice(0, 2).join('') }));
+const beliefs = ['Pricing should be a system, not guesswork — built on data, rules, and repeatable logic.', 'Control matters more than automation. The best systems keep humans confidently in charge.', 'Speed is a competitive advantage. Responding to market changes faster wins margins.', "Data must lead to action. Dashboards that don't drive decisions are just noise.", 'Infrastructure over tools. Sustainable businesses are built on platforms, not point solutions.', 'Customer-centricity is built into every layer — from the interface to the integration.'].map((t, i) => ({ t, n: '0' + (i + 1) }));
+const impact = ['Faster response to market changes', 'Better pricing consistency across all SKUs', 'Stronger margins through rule-based protection', 'Dramatically reduced manual pricing work', 'More confident, data-backed pricing decisions'];
+const banner = [0, 1, 2, 3, 4, 5].map((i) => ({ w: i % 2 ? 400 : 700, c: i % 2 ? 'var(--pl-line-xstrong)' : 'var(--pl-ink)' }));
+---
+<PriceLeapLayout
+  title="About PriceLeap · Pricing Intelligence Built for Scale"
+  description="PriceLeap is a pricing intelligence engine that transforms competitor data into structured, real-time pricing decisions."
+>
+  <div class="ab">
+    <!-- HERO -->
+    <section id="top" style="position:relative;border-bottom:1px solid var(--pl-line);overflow:hidden">
+      <div aria-hidden="true" class="ab-hero-grid"></div>
+      <div aria-hidden="true" class="ab-hero-glow"></div>
+      <div style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(56px,8vw,104px) clamp(20px,4vw,40px) clamp(56px,6vw,88px);display:flex;flex-direction:column;align-items:center;text-align:center">
+        <span style="height:30px;padding:0 12px;display:inline-flex;align-items:center;gap:8px;border-radius:999px;background:var(--pl-surface);border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:50%;background:var(--pl-gradient);animation:pi-pulse 1.8s infinite"></span>About PriceLeap</span>
+        <h1 style="margin:22px 0 0;font-family:Geist,sans-serif;font-size:clamp(40px,6vw,80px);line-height:1;letter-spacing:-.05em;color:var(--pl-ink);max-width:1000px;text-wrap:balance"><span style="font-weight:400">Turn Competitor Prices Into </span><span style="font-weight:700">Pricing Decisions</span></h1>
+        <p style="margin:24px 0 0;max-width:720px;font-size:18px;line-height:1.6;color:var(--pl-ink-2);text-wrap:pretty">PriceLeap is a pricing intelligence engine built for businesses operating in complex pricing environments. We transform competitor data into structured, real-time pricing decisions.</p>
+        <div style="margin-top:28px;display:flex;flex-wrap:wrap;justify-content:center;border:1px solid var(--pl-line);border-radius:12px;background:var(--pl-surface);overflow:hidden">
+          {['Pricing Intelligence', 'Real-Time Decisions', 'Enterprise Scale', 'Deep Integration'].map((t, i) => (
+            <span style={`height:40px;padding:0 16px;display:flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-ink)${i < 3 ? ';border-right:1px solid var(--pl-line-soft)' : ''}`}><span style="width:6px;height:6px;border-radius:2px;background:var(--pl-gradient)"></span>{t}</span>
+          ))}
+        </div>
+
+        <div class="ab-flow">
+          <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:18px;padding:16px;box-shadow:0 24px 48px -32px rgba(60,30,15,.35);display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-faint)"><span>COMPETITOR DATA</span><span style="color:var(--pl-accent-ink)">LIVE</span></div>
+            {rivals.map((r, i) => (
+              <div class="ab-rival" data-ab-rival={i} style={`display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 10px;border-radius:10px;background:${i === 0 ? 'var(--pl-cream)' : 'var(--pl-surface)'};border:1px solid ${i === 0 ? 'var(--pl-accent-line)' : 'var(--pl-line-soft)'};transition:all .35s`}>
+                <span style="font-size:13px;color:var(--pl-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{r.n}</span>
+                <span style={`font-family:'Geist Mono',monospace;font-size:10px;color:${r.sc}`}>{r.s}</span>
+                <span style="font-family:'Geist Mono',monospace;font-size:12.5px;color:var(--pl-ink)">{r.p}</span>
+              </div>
+            ))}
+          </div>
+          <span aria-hidden="true" class="ab-conn" style="height:2px;margin:0 -1px;background:repeating-linear-gradient(90deg,var(--pl-accent) 0 6px,transparent 6px 12px);background-size:20px 2px;animation:pi-dashx .8s linear infinite"></span>
+          <div class="ab-core" style="justify-self:center;display:flex;flex-direction:column;align-items:center;gap:10px">
+            <span style="position:relative;width:96px;height:96px;display:flex;align-items:center;justify-content:center">
+              <span style="position:absolute;inset:-12px;border-radius:50%;border:1px dashed var(--pl-accent-line);animation:pi-orbit 22s linear infinite"></span>
+              <span style="position:absolute;inset:0;border-radius:28px;border:1px solid rgba(247,99,30,.6);animation:pi-ring 2.8s ease-out infinite"></span>
+              <span style="position:relative;width:96px;height:96px;border-radius:28px;background:var(--pl-surface);border:1.5px solid var(--pl-accent);box-shadow:0 0 0 8px rgba(247,99,30,.1),0 20px 40px -16px rgba(194,65,12,.5);display:flex;align-items:center;justify-content:center"><img src="/assets/pl-mark.png" alt="" width="36" height="34"></span>
+            </span>
+            <span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--pl-accent-ink)">DECISION ENGINE</span>
+          </div>
+          <span aria-hidden="true" class="ab-conn" style="height:2px;margin:0 -1px;background:repeating-linear-gradient(90deg,var(--pl-accent) 0 6px,transparent 6px 12px);background-size:20px 2px;animation:pi-dashx .8s linear infinite"></span>
+          <div data-ab-dec style="background:var(--pl-surface);border:1.5px solid var(--pl-accent);border-radius:18px;padding:16px;box-shadow:0 0 0 6px rgba(247,99,30,.08),0 24px 48px -30px rgba(194,65,12,.5);display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-accent-ink)"><span>PRICING DECISION</span><span data-ab-sku>{decs[0].sku}</span></div>
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px"><span data-ab-price style="font-family:Geist,sans-serif;font-size:30px;font-weight:600;letter-spacing:-.04em;color:var(--pl-ink)">{decs[0].price}</span><span data-ab-action style="height:24px;padding:0 9px;display:flex;align-items:center;border-radius:6px;background:var(--pl-ink);color:var(--pl-surface);font-family:'Geist Mono',monospace;font-size:10.5px">{decs[0].action}</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <span style="padding:8px 10px;border-radius:9px;background:var(--pl-cream);border:1px solid #FFE8D6;font-size:12px;color:var(--pl-ink-2)">Margin <b data-ab-margin style="font-family:'Geist Mono',monospace;font-weight:500;color:var(--pl-accent-ink)">{decs[0].margin}</b></span>
+              <span style="padding:8px 10px;border-radius:9px;background:var(--pl-cream);border:1px solid var(--pl-line-soft);font-size:12px;color:var(--pl-ink-2)">Rule <b data-ab-rule style="font-family:'Geist Mono',monospace;font-weight:500;color:var(--pl-ink)">{decs[0].rule}</b></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHO WE ARE -->
+    <section id="who" style="border-bottom:1px solid var(--pl-line)">
+      <div class="ab-split" style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:start">
+        <div data-reveal>
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>Who We Are</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">Pricing Intelligence </span><span style="font-weight:700">Built for Scale</span></h2>
+          <div style="margin-top:24px;display:flex;flex-direction:column;gap:16px;font-size:16.5px;line-height:1.7;color:var(--pl-ink-2)">
+            <p style="margin:0">PriceLeap is designed as a scalable pricing infrastructure - enabling businesses to respond faster, protect margins, and maintain control across thousands of SKUs.</p>
+            <p style="margin:0">We help companies move beyond manual tracking and fragmented tools by transforming competitor data into structured, real-time pricing decisions.</p>
+            <p style="margin:0">Track competitor prices, monitor stock availability, and respond to market changes - all within a system designed for speed, control, and scale.</p>
+          </div>
+        </div>
+        <div data-reveal style="display:flex;flex-direction:column;gap:16px">
+          <div style="position:relative;background:var(--pl-cream);border:1px solid var(--pl-line);border-left:3px solid var(--pl-accent);border-radius:4px 18px 18px 4px;padding:24px 26px">
+            <p style="margin:0;font-family:Geist,sans-serif;font-size:clamp(19px,2vw,23px);font-weight:500;line-height:1.45;letter-spacing:-.015em;color:var(--pl-ink);text-wrap:pretty">PriceLeap is not just a tool - it is a pricing decision engine that bridges SaaS simplicity with enterprise-grade capability.</p>
+          </div>
+          <div style="border:1px solid var(--pl-line);border-radius:20px;overflow:hidden;background:var(--pl-line);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px">
+            <div style="background:var(--pl-surface);padding:24px"><div style="font-family:Geist,sans-serif;font-size:clamp(34px,4vw,48px);font-weight:600;letter-spacing:-.045em;line-height:1;color:var(--pl-ink)">1000s</div><div style="margin-top:8px;font-size:14px;color:var(--pl-muted)">SKUs Tracked</div></div>
+            <div style="background:var(--pl-surface);padding:24px"><div style="display:flex;align-items:center;gap:10px;font-family:Geist,sans-serif;font-size:clamp(34px,4vw,48px);font-weight:600;letter-spacing:-.045em;line-height:1;color:var(--pl-ink)">Real-Time<span style="width:10px;height:10px;border-radius:50%;background:var(--pl-gradient);animation:pi-pulse 1.6s infinite"></span></div><div style="margin-top:8px;font-size:14px;color:var(--pl-muted)">Price Intelligence</div></div>
+            <div style="background:var(--pl-surface);padding:24px"><div style="font-family:Geist,sans-serif;font-size:clamp(34px,4vw,48px);font-weight:600;letter-spacing:-.045em;line-height:1;color:var(--pl-ink)">3<span style="color:var(--pl-accent)">+</span></div><div style="margin-top:8px;font-size:14px;color:var(--pl-muted)">Alert Channels</div></div>
+            <div style="background:var(--pl-surface);padding:24px"><div style="font-family:Geist,sans-serif;font-size:clamp(34px,4vw,48px);font-weight:600;letter-spacing:-.045em;line-height:1;color:var(--pl-ink)">100<span style="color:var(--pl-accent)">%</span></div><div style="margin-top:8px;font-size:14px;color:var(--pl-muted)">Decision Driven</div></div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            {['Mid-Market', 'Enterprise', 'E-Commerce', 'Distributors', 'OEMs'].map((t) => (
+              <span style="height:34px;padding:0 14px;display:flex;align-items:center;border-radius:999px;background:var(--pl-surface);border:1px solid var(--pl-line);font-size:13.5px;color:var(--pl-ink)">{t}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MISSION & VISION -->
+    <section id="purpose" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream)">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>Our Purpose</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink)"><span style="font-weight:400">Mission </span><span style="font-weight:700">&amp; Vision</span></h2>
+        </div>
+        <div data-reveal style="margin-top:48px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px">
+          <div style="position:relative;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:24px;padding:clamp(28px,4vw,44px);overflow:hidden;display:flex;flex-direction:column;gap:18px">
+            <span aria-hidden="true" style="position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;border:1px solid var(--pl-line-soft);box-shadow:inset 0 0 0 30px var(--pl-cream),inset 0 0 0 31px var(--pl-line-soft),inset 0 0 0 60px var(--pl-surface),inset 0 0 0 61px var(--pl-line-soft)"></span>
+            <span style="position:relative;width:56px;height:56px;border-radius:50%;border:1.5px solid var(--pl-accent);display:flex;align-items:center;justify-content:center"><span style="width:30px;height:30px;border-radius:50%;border:1.5px solid var(--pl-accent);display:flex;align-items:center;justify-content:center"><span style="width:10px;height:10px;border-radius:50%;background:var(--pl-gradient)"></span></span></span>
+            <span style="position:relative;font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)">Our Mission</span>
+            <p style="position:relative;margin:0;font-family:Geist,sans-serif;font-size:clamp(20px,2.2vw,26px);font-weight:500;line-height:1.4;letter-spacing:-.015em;color:var(--pl-ink);text-wrap:pretty">To empower businesses with the speed, clarity, and control to make smarter pricing decisions - transforming complex market data into structured, scalable intelligence that eliminates guesswork.</p>
+          </div>
+          <div style="position:relative;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:24px;padding:clamp(28px,4vw,44px);overflow:hidden;display:flex;flex-direction:column;gap:18px">
+            <span aria-hidden="true" style="position:absolute;right:-50px;top:-50px;width:200px;height:200px;border-radius:50%;border:1px solid var(--pl-line-soft);background:repeating-linear-gradient(0deg,transparent 0 24px,var(--pl-sand-3) 24px 25px),repeating-linear-gradient(90deg,transparent 0 24px,var(--pl-sand-3) 24px 25px)"></span>
+            <span style="position:relative;width:56px;height:56px;border-radius:50%;border:1.5px solid var(--pl-accent);overflow:hidden;display:flex;align-items:center;justify-content:center"><span style="position:absolute;width:56px;height:24px;border-radius:50%;border:1.5px solid var(--pl-accent)"></span><span style="position:absolute;width:24px;height:56px;border-radius:50%;border:1.5px solid var(--pl-accent);animation:pi-orbit 8s linear infinite"></span><span style="position:absolute;left:0;right:0;top:50%;height:1.5px;background:var(--pl-gradient)"></span></span>
+            <span style="position:relative;font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)">Our Vision</span>
+            <p style="position:relative;margin:0;font-family:Geist,sans-serif;font-size:clamp(20px,2.2vw,26px);font-weight:500;line-height:1.4;letter-spacing:-.015em;color:var(--pl-ink);text-wrap:pretty">To become the core pricing infrastructure layer powering how businesses monitor, decide, and execute pricing strategies globally.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SOLUTION (auto-advancing carousel) -->
+    <section id="solution" style="border-bottom:1px solid var(--pl-line)">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+        <div data-reveal style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:20px 64px;align-items:end">
+          <div>
+            <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>What We Do</span>
+            <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink)"><span style="font-weight:400">Our </span><span style="font-weight:700">Solution</span></h2>
+          </div>
+          <p style="margin:0;max-width:460px;font-size:17px;line-height:1.6;color:var(--pl-ink-2)">Four integrated capabilities that move you from price watching to pricing control.</p>
+        </div>
+        <div data-reveal style="position:relative;margin-top:48px">
+          <span aria-hidden="true" class="ab-sol-track" style="position:absolute;left:12.5%;right:12.5%;top:27px;height:2px;background:var(--pl-line-soft)"></span>
+          <span aria-hidden="true" class="ab-sol-fill" data-ab-solfill style="position:absolute;left:12.5%;top:27px;height:2px;width:0%;background:var(--pl-gradient);transition:width .6s cubic-bezier(.2,.7,.2,1)"></span>
+          <div class="ab-sol-grid" style="position:relative;display:grid;gap:16px">
+            {solData.map((s, i) => (
+              <button type="button" class="ab-sol" class:list={[{ 'is-on': i === 0 }]} data-ab-sol={i} style="border:none;background:transparent;padding:0;cursor:pointer;text-align:left;display:flex;flex-direction:column;align-items:center;gap:18px">
+                <span class="ab-sol-n" style="width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:13px;color:var(--pl-ink);transition:all .35s">{s.n}</span>
+                <span class="ab-sol-card" style="width:100%;flex:1;background:var(--pl-surface);border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:10px;transition:all .35s">
+                  <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-accent-ink)">{s.k}</span>
+                  <span style="font-family:Geist,sans-serif;font-size:19px;font-weight:600;letter-spacing:-.015em;color:var(--pl-ink)">{s.t}</span>
+                  <span style="font-size:14.5px;line-height:1.6;color:var(--pl-muted)">{s.d}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW WE DELIVER (values + vs comparison) -->
+    <section id="deliver" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream)">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+        <div data-reveal style="max-width:760px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>How We Deliver</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink)"><span style="font-weight:400">How PriceLeap </span><span style="font-weight:700">Delivers Value</span></h2>
+        </div>
+        <div class="ab-split" style="margin-top:48px;gap:16px;align-items:start">
+          <div data-reveal style="border:1px solid var(--pl-line);border-radius:22px;overflow:hidden;background:var(--pl-line);display:grid;gap:1px">
+            {values.map((v) => (
+              <div class="ab-val" style="background:var(--pl-surface);padding:20px 22px;display:grid;grid-template-columns:44px minmax(0,1fr);gap:16px;align-items:start;transition:background .25s">
+                <span style="width:44px;height:44px;border-radius:12px;border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);display:flex;align-items:center;justify-content:center"><img src={`/assets/icons/${v.icon}.svg`} alt="" width="20" height="20" loading="lazy" decoding="async" style="display:block" onerror="this.style.visibility='hidden'"></span>
+                <span><span style="display:block;font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:var(--pl-ink)">{v.t}</span><span style="display:block;margin-top:4px;font-size:14.5px;line-height:1.55;color:var(--pl-muted)">{v.d}</span></span>
+              </div>
+            ))}
+          </div>
+          <div data-reveal class="ab-sticky" style="top:96px;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:22px;overflow:hidden">
+            <div style="padding:20px 22px;border-bottom:1px solid var(--pl-line-soft)"><span style="font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:var(--pl-ink)">Traditional Tools vs PriceLeap</span></div>
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr);background:var(--pl-cream);border-bottom:1px solid var(--pl-line-soft)">
+              <span style="padding:12px 22px;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-faint)">Traditional</span>
+              <span></span>
+              <span style="padding:12px 22px;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink);background:var(--pl-accent-tint)">PriceLeap</span>
+            </div>
+            {vs.map((r, i) => (
+              <div class="ab-vs" class:list={[{ 'is-on': i === 0 }]} data-ab-vs={i} style="display:grid;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr);align-items:stretch;border-bottom:1px solid var(--pl-line-soft)">
+                <span class="ab-vs-a" style="padding:20px 22px;font-size:15px;color:var(--pl-muted);text-decoration-color:rgba(201,55,46,.5);transition:all .25s">{r.a}</span>
+                <span style="position:relative;display:flex;align-items:center;justify-content:center"><span class="ab-vs-line" style="position:absolute;left:0;right:0;top:50%;height:2px;background-size:20px 2px;animation:pi-dashx .8s linear infinite"></span><span class="ab-vs-dot" style="position:relative;width:26px;height:26px;border-radius:50%;font-size:11px;color:var(--pl-ink);display:flex;align-items:center;justify-content:center;transition:all .3s">→</span></span>
+                <span class="ab-vs-b" style="padding:20px 22px;font-size:15px;font-weight:500;color:var(--pl-ink);transition:background .25s">{r.b}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHO WE SERVE -->
+    <section id="market" style="border-bottom:1px solid var(--pl-line)">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>Our Market</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink)"><span style="font-weight:400">Who We </span><span style="font-weight:700">Serve</span></h2>
+          <p style="margin:18px 0 0;max-width:620px;font-size:17px;line-height:1.6;color:var(--pl-ink-2)">Built specifically for mid-market to enterprise operations in complex pricing environments.</p>
+        </div>
+        <div data-reveal style="margin-top:48px;border:1px solid var(--pl-line);border-radius:24px;overflow:hidden;background:var(--pl-line);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:1px">
+          {serve.map((c) => (
+            <div style="background:var(--pl-surface);display:flex;flex-direction:column">
+              <div style="padding:20px 24px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream);display:flex;justify-content:space-between;align-items:center"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:var(--pl-ink)">{c.t}</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-faint)">{c.n}</span></div>
+              <div style="padding:10px 12px;display:flex;flex-direction:column">
+                {c.items.map((it) => (
+                  <span class="ab-serve" style="display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;font-size:15.5px;color:var(--pl-ink);transition:background .2s"><span style="width:8px;height:8px;border-radius:2px;background:var(--pl-gradient);transform:rotate(45deg)"></span>{it}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- TEAM (bio accordion) -->
+    <section id="team" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream)">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+        <div data-reveal style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:20px 64px;align-items:end">
+          <div>
+            <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>The Team</span>
+            <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink)"><span style="font-weight:400">Our </span><span style="font-weight:700">People</span></h2>
+          </div>
+          <p style="margin:0;max-width:480px;font-size:17px;line-height:1.6;color:var(--pl-ink-2)">Meet the dedicated team at PriceLeap, committed to transforming pricing complexity into competitive advantage for businesses worldwide.</p>
+        </div>
+        <div data-reveal style="margin-top:48px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:12px;align-items:start">
+          {team.map((p) => (
+            <div class="ab-tm" style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .25s,box-shadow .25s,transform .25s">
+              <div style="position:relative;height:150px;background:repeating-linear-gradient(135deg,var(--pl-sand) 0 8px,var(--pl-cream) 8px 16px);border-bottom:1px solid var(--pl-line-soft);display:flex;align-items:flex-end;padding:16px">
+                <span style="position:absolute;right:12px;top:12px;font-family:'Geist Mono',monospace;font-size:9.5px;color:var(--pl-faint)">photo</span>
+                <span style="width:64px;height:64px;border-radius:18px;background:var(--pl-surface);border:1px solid var(--pl-line);box-shadow:0 10px 24px -14px rgba(60,30,15,.4);display:flex;align-items:center;justify-content:center;font-family:Geist,sans-serif;font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--pl-ink)">{p.ini}</span>
+              </div>
+              <div style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:10px">
+                <div><div style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;letter-spacing:-.015em;color:var(--pl-ink)">{p.n}</div><div style="margin-top:3px;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--pl-accent-ink)">{p.r}</div></div>
+                <p class="ab-tm-bio" style="margin:0;font-size:14px;line-height:1.6;color:var(--pl-muted);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden">{p.b}</p>
+                <button type="button" class="ab-tm-btn" aria-expanded="false" style="align-self:flex-start;border:none;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:500;color:var(--pl-accent-ink)"><span class="ab-tm-lbl">Read bio</span><span class="ab-tm-chev" style="display:inline-block;transition:transform .25s">↓</span></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- MARQUEE -->
+    <section aria-label="Smarter Pricing Starts Here" style="border-bottom:1px solid var(--pl-line);overflow:hidden;background:var(--pl-surface)">
+      <div style="display:flex;width:max-content;animation:pi-marquee 40s linear infinite;padding:28px 0">
+        {banner.map((b) => (
+          <span style={`flex:none;display:flex;align-items:center;gap:40px;padding-right:40px;font-family:Geist,sans-serif;font-size:clamp(36px,5vw,64px);font-weight:${b.w};letter-spacing:-.045em;color:${b.c};white-space:nowrap`}>Smarter Pricing Starts Here<span style="width:18px;height:18px;border-radius:4px;background:var(--pl-gradient);transform:rotate(45deg)"></span></span>
+        ))}
+      </div>
+    </section>
+
+    <!-- CORE VALUES -->
+    <section id="values" style="border-bottom:1px solid var(--pl-line)">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>What Drives Us</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink)"><span style="font-weight:400">Our Core </span><span style="font-weight:700">Values</span></h2>
+          <p style="margin:18px 0 0;max-width:600px;font-size:17px;line-height:1.6;color:var(--pl-ink-2)">Building pricing infrastructure on a foundation of principles that matter.</p>
+        </div>
+        <div data-reveal style="margin-top:48px;border:1px solid var(--pl-line);border-radius:24px;overflow:hidden;background:var(--pl-line);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:1px">
+          <div class="ab-cv" style="background:var(--pl-surface);padding:28px;display:flex;flex-direction:column;gap:14px;transition:background .25s">
+            <span style="width:52px;height:52px;border-radius:14px;border:1px solid var(--pl-line);background:var(--pl-cream);display:flex;align-items:center;justify-content:center"><span style="width:22px;height:22px;border-radius:50%;border:2px solid var(--pl-accent);box-shadow:inset 0 0 0 5px var(--pl-surface),inset 0 0 0 11px var(--pl-accent)"></span></span>
+            <span style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:var(--pl-ink)">Clarity</span>
+            <p style="margin:0;font-size:15px;line-height:1.6;color:var(--pl-muted)">Every insight we surface is clear, actionable, and free of ambiguity — because decisions require certainty.</p>
+          </div>
+          <div class="ab-cv" style="background:var(--pl-surface);padding:28px;display:flex;flex-direction:column;gap:14px;transition:background .25s">
+            <span style="width:52px;height:52px;border-radius:14px;border:1px solid var(--pl-line);background:var(--pl-cream);display:flex;align-items:flex-end;justify-content:center;gap:3px;padding-bottom:14px"><span style="width:5px;height:12px;border-radius:2px;background:var(--pl-gradient)"></span><span style="width:5px;height:12px;border-radius:2px;background:var(--pl-gradient)"></span><span style="width:5px;height:12px;border-radius:2px;background:var(--pl-gradient)"></span><span style="width:5px;height:12px;border-radius:2px;background:var(--pl-gradient)"></span></span>
+            <span style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:var(--pl-ink)">Reliability</span>
+            <p style="margin:0;font-size:15px;line-height:1.6;color:var(--pl-muted)">Pricing decisions depend on data you can trust. We build systems that perform consistently at scale.</p>
+          </div>
+          <div class="ab-cv" style="background:var(--pl-surface);padding:28px;display:flex;flex-direction:column;gap:14px;transition:background .25s">
+            <span style="width:52px;height:52px;border-radius:14px;border:1px solid var(--pl-line);background:var(--pl-cream);display:flex;align-items:center;justify-content:center"><span style="position:relative;width:26px;height:14px;border-radius:999px;background:var(--pl-gradient)"><span style="position:absolute;right:2px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--pl-surface)"></span></span></span>
+            <span style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:var(--pl-ink)">Control</span>
+            <p style="margin:0;font-size:15px;line-height:1.6;color:var(--pl-muted)">Automation without control is risk. We keep your team in command of every pricing strategy and outcome.</p>
+          </div>
+          <div class="ab-cv" style="background:var(--pl-surface);padding:28px;display:flex;flex-direction:column;gap:14px;transition:background .25s">
+            <span style="width:52px;height:52px;border-radius:14px;border:1px solid var(--pl-line);background:var(--pl-cream);display:flex;align-items:flex-end;justify-content:center;gap:3px;padding-bottom:13px"><span style="width:5px;height:6px;border-radius:2px;background:var(--pl-gradient)"></span><span style="width:5px;height:11px;border-radius:2px;background:var(--pl-gradient)"></span><span style="width:5px;height:16px;border-radius:2px;background:var(--pl-gradient)"></span><span style="width:5px;height:22px;border-radius:2px;background:var(--pl-gradient)"></span></span>
+            <span style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:var(--pl-ink)">Scalability</span>
+            <p style="margin:0;font-size:15px;line-height:1.6;color:var(--pl-muted)">Built from the ground up to grow with your business — from hundreds to hundreds of thousands of SKUs.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BELIEFS -->
+    <section id="believe" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream)">
+      <div class="ab-believe" style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px);gap:clamp(32px,5vw,72px);align-items:start">
+        <div data-reveal class="ab-sticky" style="top:96px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>Our Philosophy</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink)"><span style="font-weight:400">What We </span><span style="font-weight:700">Believe</span></h2>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px">
+          {beliefs.map((b) => (
+            <div data-reveal class="ab-belief" style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:14px;transition:border-color .25s,transform .25s">
+              <span style="font-family:Geist,sans-serif;font-size:40px;font-weight:600;letter-spacing:-.05em;line-height:1;color:var(--pl-accent)">{b.n}</span>
+              <p style="margin:0;font-size:16px;line-height:1.55;color:var(--pl-ink);text-wrap:pretty">{b.t}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- IMPACT -->
+    <section id="impact" style="padding:clamp(20px,3vw,28px)">
+      <div class="ab-impact" style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:28px">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(var(--pl-line-alt) 1px,transparent 1px);background-size:20px 20px;-webkit-mask-image:radial-gradient(ellipse 50% 70% at 80% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 50% 70% at 80% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;right:-140px;bottom:-200px;width:620px;height:440px;background:radial-gradient(closest-side,rgba(247,99,30,.16),transparent)"></div>
+        <div data-reveal style="position:relative;padding:clamp(32px,5vw,64px);display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>The Results</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink)"><span style="font-weight:400">Customer </span><span style="font-weight:700">Impact</span></h2>
+          <div style="margin-top:6px;display:flex;flex-direction:column;border-top:1px solid var(--pl-line-soft)">
+            {impact.map((i) => (
+              <span style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--pl-line-soft);font-size:16px;color:var(--pl-ink)"><span style="flex:none;width:22px;height:22px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:11px;display:flex;align-items:center;justify-content:center">✓</span>{i}</span>
+            ))}
+          </div>
+        </div>
+        <div data-reveal class="ab-impact-r" style="position:relative;padding:clamp(32px,5vw,64px);display:flex;flex-direction:column;justify-content:center;gap:26px">
+          <p style="margin:0;font-family:Geist,sans-serif;font-size:clamp(26px,3.2vw,40px);line-height:1.15;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">PriceLeap helps businesses </span><span style="font-weight:700">compete with confidence, act with speed, and scale with control.</span></p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            <a href="/book-a-demo" style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:var(--pl-gradient);color:var(--pl-surface);font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.9)">Start Free Trial</a>
+            <a href="/contact" style="height:50px;padding:0 22px;display:inline-flex;align-items:center;gap:10px;border-radius:12px;background:var(--pl-surface);border:1px solid var(--pl-line);color:var(--pl-ink);font-family:Geist,sans-serif;font-weight:500;font-size:15px">Contact us<span style="color:var(--pl-accent-ink)">→</span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .ab { background: var(--pl-surface); overflow-x: clip; }
+  @keyframes pi-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.55); } 100% { box-shadow: 0 0 0 10px rgba(247,99,30,0); } }
+  @keyframes pi-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes pi-spin { to { transform: rotate(360deg); } }
+  @keyframes pi-orbit { to { transform: rotate(360deg); } }
+  @keyframes pi-marquee { to { transform: translateX(-50%); } }
+  @keyframes pi-dashx { to { background-position: 20px 0; } }
+  @keyframes pi-ring { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(1.5); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .ab *, .ab *::before, .ab *::after { animation: none !important; transition: none !important; } }
+
+  .ab-hero-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px); background-size: 56px 56px; -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 30%,#000 10%,transparent 72%); mask-image: radial-gradient(ellipse 70% 70% at 50% 30%,#000 10%,transparent 72%); pointer-events: none; }
+  .ab-hero-glow { position: absolute; left: 50%; bottom: -300px; width: 1100px; height: 600px; transform: translateX(-50%); background: radial-gradient(closest-side,rgba(247,99,30,.15),transparent); pointer-events: none; }
+
+  /* flow diagram */
+  .ab-flow { margin-top: 56px; width: 100%; max-width: 1080px; display: grid; grid-template-columns: 1fr; align-items: center; gap: 0; text-align: left; }
+  .ab-flow .ab-conn { display: none; }
+  .ab-flow .ab-core { margin: 24px 0; }
+  @media (min-width: 760px) {
+    .ab-flow { grid-template-columns: minmax(0,1fr) minmax(40px,.3fr) auto minmax(40px,.3fr) minmax(0,1fr); }
+    .ab-flow .ab-conn { display: block; }
+    .ab-flow .ab-core { margin: 0; }
+  }
+
+  /* generic responsive helpers */
+  .ab-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1000px) { .ab-split { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } }
+  .ab-sticky { position: relative; }
+  @media (min-width: 1000px) { .ab-sticky { position: sticky; } }
+  .ab-believe { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1000px) { .ab-believe { grid-template-columns: minmax(0,.7fr) minmax(0,1.3fr); } }
+  .ab-impact { display: grid; grid-template-columns: 1fr; }
+  .ab-impact-r { border-top: 1px solid var(--pl-line-soft); }
+  @media (min-width: 1000px) { .ab-impact { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } .ab-impact-r { border-top: none; border-left: 1px solid var(--pl-line-soft); } }
+
+  .ab-val:hover, .ab-serve:hover, .ab-cv:hover { background: var(--pl-cream); }
+  .ab-tm:hover { transform: translateY(-3px); }
+  .ab-belief:hover { border-color: var(--pl-accent-line); transform: translateY(-3px); }
+
+  /* solutions carousel */
+  .ab-sol-grid { grid-template-columns: 1fr; }
+  @media (min-width: 760px) { .ab-sol-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  @media (min-width: 1000px) { .ab-sol-grid { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+  .ab-sol-track, .ab-sol-fill { display: none; }
+  @media (min-width: 1000px) { .ab-sol-track, .ab-sol-fill { display: block; } }
+  .ab-sol-n { background: var(--pl-surface); border: 1.5px solid var(--pl-line); }
+  .ab-sol-card { border: 1px solid var(--pl-line); box-shadow: none; }
+  .ab-sol.is-on .ab-sol-n { background: var(--pl-accent); border-color: var(--pl-accent); box-shadow: 0 0 0 8px rgba(247,99,30,.16); }
+  .ab-sol.is-done .ab-sol-n { background: var(--pl-accent); border-color: var(--pl-accent); }
+  .ab-sol.is-on .ab-sol-card { border-color: var(--pl-accent-line); box-shadow: 0 24px 44px -28px rgba(194,65,12,.5); }
+  @media (min-width: 1000px) { .ab-sol.is-on .ab-sol-card { transform: translateY(-4px); } }
+
+  /* vs comparison */
+  .ab-vs-line { background: repeating-linear-gradient(90deg,var(--pl-line) 0 6px,transparent 6px 12px); }
+  .ab-vs-dot { background: var(--pl-surface); border: 1px solid var(--pl-line); }
+  .ab-vs-b { background: var(--pl-cream); }
+  .ab-vs.is-on .ab-vs-a { text-decoration: line-through; }
+  .ab-vs.is-on .ab-vs-line { background: repeating-linear-gradient(90deg,var(--pl-accent) 0 6px,transparent 6px 12px); }
+  .ab-vs.is-on .ab-vs-dot { background: var(--pl-accent); border-color: var(--pl-accent); }
+  .ab-vs.is-on .ab-vs-b { background: var(--pl-accent-tint); }
+
+  /* scroll reveal */
+  [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.ab');
+  if (root) {
+    // ---- cycling competitor + decision demo (2800ms) + solutions auto-advance ----
+    const decs = [
+      { sku: 'SKU 48201', price: '$184.99', action: 'Hold', margin: '+3.2%', rule: 'Floor 28%' },
+      { sku: 'SKU 48201', price: '$181.49', action: 'Match −1%', margin: '+1.4%', rule: 'MAP ✓' },
+      { sku: 'SKU 48201', price: '$192.00', action: 'Raise', margin: '+5.6%', rule: 'Rival OOS' },
+      { sku: 'SKU 48201', price: '$179.99', action: 'Review', margin: '+0.8%', rule: 'Threshold' },
+    ];
+    const rivals = Array.from(root.querySelectorAll('[data-ab-rival]')) as HTMLElement[];
+    const decCard = root.querySelector('[data-ab-dec]') as HTMLElement | null;
+    const set = (sel: string, v: string) => { const el = root.querySelector(sel); if (el) el.textContent = v; };
+    const sols = Array.from(root.querySelectorAll('[data-ab-sol]')) as HTMLElement[];
+    const solFill = root.querySelector('[data-ab-solfill]') as HTMLElement | null;
+    let sol = 0, autoSol = true;
+
+    const paintSol = () => {
+      sols.forEach((el, i) => {
+        el.classList.toggle('is-on', i === sol);
+        el.classList.toggle('is-done', i < sol);
+      });
+      if (solFill) solFill.style.width = Math.min(75, sol / 3 * 75) + '%';
+    };
+    sols.forEach((el, i) => {
+      const pick = () => { sol = i; autoSol = false; paintSol(); };
+      el.addEventListener('click', pick);
+      el.addEventListener('mouseenter', pick);
+    });
+
+    let tick = 0;
+    setInterval(() => {
+      tick++;
+      const hot = tick % 4;
+      rivals.forEach((el, i) => {
+        el.style.background = i === hot ? 'var(--pl-cream)' : 'var(--pl-surface)';
+        el.style.borderColor = i === hot ? 'var(--pl-accent-line)' : 'var(--pl-line-soft)';
+      });
+      const d = decs[tick % 4];
+      set('[data-ab-sku]', d.sku); set('[data-ab-price]', d.price); set('[data-ab-action]', d.action);
+      set('[data-ab-margin]', d.margin); set('[data-ab-rule]', d.rule);
+      if (decCard) { decCard.style.animation = 'none'; void decCard.offsetWidth; decCard.style.animation = 'pi-in .45s ease'; }
+      if (autoSol) { sol = (sol + 1) % 4; paintSol(); }
+    }, 2800);
+    paintSol();
+
+    // ---- vs comparison hover ----
+    root.querySelectorAll('[data-ab-vs]').forEach((row) => {
+      row.addEventListener('mouseenter', () => {
+        root.querySelectorAll('[data-ab-vs]').forEach((r) => r.classList.remove('is-on'));
+        row.classList.add('is-on');
+      });
+    });
+
+    // ---- team bio accordion ----
+    root.querySelectorAll('.ab-tm').forEach((card) => {
+      const btn = card.querySelector('.ab-tm-btn') as HTMLElement | null;
+      const bio = card.querySelector('.ab-tm-bio') as HTMLElement | null;
+      const lbl = card.querySelector('.ab-tm-lbl') as HTMLElement | null;
+      const chev = card.querySelector('.ab-tm-chev') as HTMLElement | null;
+      btn?.addEventListener('click', () => {
+        const open = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!open));
+        if (bio) bio.style.webkitLineClamp = open ? '4' : 'unset';
+        if (lbl) lbl.textContent = open ? 'Read bio' : 'Show less';
+        if (chev) chev.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+        (card as HTMLElement).style.borderColor = open ? 'var(--pl-line)' : 'var(--pl-accent-line)';
+        (card as HTMLElement).style.boxShadow = open ? 'none' : '0 24px 44px -30px rgba(194,65,12,.5)';
+      });
+    });
+
+    // ---- scroll reveal ----
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+      }), { rootMargin: '0px 0px -8% 0px' });
+      root.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+    } else {
+      root.querySelectorAll('[data-reveal]').forEach((el) => el.classList.add('is-in'));
+    }
+  }
+</script>
