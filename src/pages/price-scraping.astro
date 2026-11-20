@@ -1,0 +1,770 @@
+---
+// Native Astro port of the design package's Price Scraping page.
+// Static initial render + the full 280ms animation loop and interactions
+// reimplemented in vanilla JS: hero "Add Products" typing/find-competitors demo,
+// auto-advancing "How it works" stepper synced to the scheduler table (highlights,
+// fetch spinners, context menu), animated cadence clock, delivery tabs, billing
+// toggle and FAQ accordion. Same layout, colors and animations. Responsive via CSS.
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+
+const URLS = ['https://amazon.com/dp/B09XS7JWHH', 'https://walmart.com/ip/sony-wh1000xm5/62513', 'https://target.com/p/sony-wh-1000xm5/-/A-86523', 'https://bestbuy.com/site/sony-wh1000xm5/6505727.p'];
+const urls = URLS.map((t, i) => ({ t, n: String(i + 1).padStart(2, '0') }));
+const foundComps = [['Amazon', '#F59E0B'], ['Best Buy', '#3B82F6'], ['Target', '#EF4444']].map(([t, c], i) => ({ t, c, dl: (i * 0.12).toFixed(2) }));
+const record = [['product', 'Sony WH-1000XM5'], ['retailer', 'bestbuy.com'], ['price', '329.99'], ['currency', 'USD'], ['stock', 'in_stock'], ['fetched_at', '2026-11-19 09:02']].map(([k, v]) => ({ k, v }));
+const I: Record<string, string> = {
+  tag: 'M3 12V3h9l9 9-9 9-9-9zM7.5 7.5h.01', box: 'M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10', chart: 'M3 3v18h18M7 15l4-4 3 3 5-6',
+  clock: 'M12 22a10 10 0 1 0 0-20a10 10 0 1 0 0 20M12 6v6l4 2', link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1', pos: 'M4 20V10M10 20V4M16 20v-8M22 20H2',
+  grid: 'M3 3h18v18H3zM3 9h18M9 3v18', file: 'M6 2h9l5 5v15H6zM14 2v6h6M9 13h6M9 17h6', code: 'M8 6l-6 6 6 6M16 6l6 6-6 6', sheet: 'M4 3h16v18H4zM4 9h16M4 15h16M10 3v18', bell: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0',
+};
+const stepsData = [
+  ['Add products.', 'Paste product URLs, upload a file or connect your catalog.', 'prod', 'Products added to the group by URL, file or catalog.'],
+  ['Choose competitors.', 'Let AI find competing products for the group, or add the competitor domains and URLs you already track.', 'comp', 'AI finds competitors, or you add your own domains and URLs.'],
+  ['Set schedule and location.', 'Each product group gets its own refresh schedule, timezone and location: Auto, or a specific ZIP code.', 'sched', 'Schedule, timezone and ZIP code set per group.'],
+  ['Collection runs in the background.', "Prices are fetched on schedule. Failed Fetches shows any product whose last check didn't return a price, and Fetch now re-runs a group on demand.", 'fetch', 'Runs on schedule. Fetch now re-runs a group on demand.'],
+  ['Use the data.', 'Compare prices in the dashboard, set alerts and pricing rules, or export.', 'use', 'Compare in the dashboard, set alerts and rules, or export.'],
+].map(([t, d, key, note]) => ({ t, d, key, note }));
+const gData = [
+  { ab: 'HP', n: 'Headphones_Monitor', av: '#7C5CDB', freq: 'EVERY DAY', time: '9:00 am New York', p: 48, c: '3 competitors', loc: 'Auto', f: 'Today 9:02' },
+  { ab: 'TV', n: 'TV_Weekly_Promo', av: '#0E8FA3', freq: '2× DAILY', time: '8:00 · 20:00 PT', p: 22, c: '5 competitors', loc: '94105', f: 'Today 8:01' },
+  { ab: 'KA', n: 'Kitchen_Appliances', av: '#D97706', freq: 'EVERY DAY', time: '3:00 pm London', p: 61, c: '4 competitors', loc: 'Auto', f: 'Today 15:03' },
+  { ab: 'LP', n: 'Laptops_BackToSchool', av: '#E04A3A', freq: '3× DAILY', time: '6 · 12 · 18 CST', p: 35, c: '5 competitors', loc: '60601', f: 'Today 12:00' },
+];
+const menu = [['◉', 'View in Price Intelligence', false], ['↻', 'Re-run / Fetch now', false], ['⌁', 'Manage competitors', true], ['⌖', 'Set ZIP code', false], ['✎', 'Edit rules & alerts', false]].map(([i, t, ai], k) => ({ i, t, ai, bt: k === 1 ? '1px solid #F5ECE5' : 'none' }));
+const fields = [
+  ["your current price and each competitor's price, in the listing's currency", 'tag'],
+  ['stock status, for your store and for competitors', 'box'],
+  ['price history over 14 days, 30 days, 90 days, a year, or the full record', 'chart'],
+  ['when each product was last fetched, and when each competitor listing was last seen', 'clock'],
+  ['the source URL, with a link back to the page', 'link'],
+  ['position vs market: cheapest, or how far above or below the market you sit', 'pos'],
+].map(([t, k], i, a) => ({ t, ico: I[k], last: i === a.length - 1 }));
+const ownFields = ['SKU', 'UPC', 'GTIN', 'MPN', 'product cost', 'MAP', 'MSRP'];
+const sample = [
+  ['Sony WH-1000XM5', 'Amazon', '#F59E0B', '$328.00', 'IN STOCK', 'Today 9:02'],
+  ['Sony WH-1000XM5', 'Best Buy', '#3B82F6', '$349.99', 'IN STOCK', 'Today 9:02'],
+  ['Bose QC Ultra', 'Target', '#EF4444', '$399.99', 'OOS', 'Today 9:03'],
+  ['AirPods Max', 'Walmart', '#2563EB', '$549.00', 'IN STOCK', 'Today 9:03'],
+].map(([p, c, dc, pr, st, t], i) => ({ p, c, dc, pr, s: st, t, sb: st === 'OOS' ? '#FDECEB' : '#E9F6EE', sc: st === 'OOS' ? '#B42318' : '#1E7A3D', dl: (i * 0.08).toFixed(2) }));
+const cad: [string, string, string, string, number[]][] = [['Starter', '1x daily', '1,500', '50', [37.5]], ['Growth', '2x daily', '3,000', '100', [33.3, 83.3]], ['Scale', '3x daily', '6,000', '200', [25, 50, 75]]];
+const cadence = cad.map(([plan, refresh, month, day, xs], i) => ({ plan, refresh, month, day, last: i === 2, xs }));
+const deliveryData = [
+  ['The Price Intelligence dashboard shows every product with your price, competitor prices, position and last fetch.', 'grid'],
+  ['Download CSV exports by product group or by product.', 'file'],
+  ['Pull prices, groups, competitors and runs as JSON through the REST API.', 'code'],
+  ['Connect Google Sheets or Excel and push price data to a workbook. Workspaces with Power BI enabled get embedded reports.', 'sheet'],
+  ['Price change and competitor stock-out alerts go out by email, Slack or in-app. Webhook alerts are on Growth and Scale.', 'bell'],
+].map(([t, k]) => ({ t, ico: I[k] }));
+const DV = [
+  { title: 'Price Intelligence', sub: 'Every product, every competitor', rows: [['SN', 'Sony WH-1000XM5', '', 'Your $329.99 · Amazon $328.00 · Best Buy $349.99', 'Competitive', '#1C130E', '#FFFFFF'], ['BO', 'Bose QC Ultra', '', 'Your $429.00 · Target $399.99', 'Premium', '#FBF3EC', '#3A302A'], ['AP', 'AirPods Max', '', 'Your $549.00 · Walmart $549.00', 'At market', '#FBF3EC', '#3A302A']] },
+  { title: 'Exports', sub: 'By product group or by product', rows: [['CSV', 'headphones_monitor.csv', 'GROUP', '48 products · 3 competitors each', '↓ Download', '#FBF3EC', '#3A302A'], ['CSV', 'sony-wh-1000xm5.csv', 'PRODUCT', 'Full price history · 90 days', '↓ Download', '#FBF3EC', '#3A302A']] },
+  { title: 'REST API', sub: 'JSON · prices, groups, competitors, runs', rows: [['GET', '/v1/prices', 'JSON', 'Latest price per product and competitor', '200 OK', '#1C130E', '#FFFFFF'], ['GET', '/v1/groups', 'JSON', 'Groups, schedules and locations', '200 OK', '#1C130E', '#FFFFFF'], ['GET', '/v1/runs', 'JSON', 'Fetch runs and failed fetches', '200 OK', '#1C130E', '#FFFFFF']] },
+  { title: 'Analytics & BI', sub: 'Send data out for analysis', rows: [['GS', 'Google Sheets', 'OAUTH 2.0', 'Export price data and reports automatically', 'Connect', '#E7F6EC', '#1E7A3D'], ['XL', 'Microsoft Excel', 'GRAPH API', 'Push pricing data to Excel workbooks', 'Connect', '#E6F0EA', '#185C37'], ['BI', 'Power BI', 'EMBEDDED', 'Embedded reports for enabled workspaces', 'Enabled', '#FDF5E1', '#8A6100']] },
+  { title: 'Alerts & collaboration', sub: 'Where your team gets notified', rows: [['@', 'Email', 'CONNECTED', 'Price alerts and digest reports to any team inbox', 'Settings', '#F3EEFB', '#6B3FA0'], ['#', 'Slack', '', 'Price and competitor stock-out alerts to a channel', 'Connect', '#F6EEF4', '#7A3E6B'], ['⇢', 'Webhooks', 'GROWTH · SCALE', 'Send alerts to your own endpoint', 'Connect', '#FBF3EC', '#3A302A']] },
+];
+const bv = [
+  ['Setup', 'A scraper per site', 'Paste URLs, upload a file or connect a catalog'],
+  ['Competitors', 'You find and list them', 'AI discovery, or your own list'],
+  ['Schedule', 'Cron jobs you maintain', 'Per-group schedule, up to 3x daily'],
+  ['Location', 'Proxies per region', 'ZIP code per product group'],
+  ['Failures', 'Found when the data looks wrong', 'Failed Fetches on the dashboard, Fetch now to re-run'],
+  ['Output', 'Raw HTML to clean', 'Dashboard, CSV, REST API'],
+  ['Cost', '[engineer hours + proxies + hosting]', 'Plans from $89/month'],
+].map(([k, a, b], i, arr) => ({ k, a, b, last: i === arr.length - 1 }));
+const plans = [
+  ['Starter', '$89', '$71', ['1,500 products a month', 'Refreshed once a day'], false],
+  ['Growth', '$159', '$127', ['3,000 products a month', 'Refreshed twice a day', 'Webhook alerts'], true],
+  ['Scale', '$299', '$239', ['6,000 products a month', 'Refreshed three times a day', 'Webhook alerts'], false],
+].map(([n, m, a, f, pop]) => ({ n, f: f as string[], pop: pop as boolean, m: m as string, a: a as string }));
+const fq = [
+  ['What is price scraping software?', 'Price scraping software collects prices from competitor product pages automatically and stores them as structured data. In priceleap.ai, you add product URLs, then let AI find competitors or add your own, and set a schedule. Collection runs in the background. Every product then shows price, stock status and when it was last checked.'],
+  ['Is price scraping legal?', "Collecting publicly listed prices is common practice in retail. The rules still depend on the country, the site's terms and how the data is collected, so check with your legal team for your markets. priceleap.ai collects prices from the public product pages you add."],
+  ['How often does priceleap.ai check competitor prices?', 'It depends on your plan. Starter refreshes once a day, Growth twice a day and Scale three times a day. Each product group has its own schedule and timezone. You can run Fetch now for a fresh check before a pricing decision, and every product shows its last fetch time.'],
+  ['Should we build our own price scraper or buy software?', 'Building can work for a handful of stable sites, if an engineer has time to maintain the code. Once you track many retailers, most of the effort goes into broken selectors, blocks and cleanup. Price scraping software moves that work out of your sprint, so analysts spend their time on prices instead of scripts.'],
+  ['How do I get scraped price data out of priceleap.ai?', 'Most teams start in the Price Intelligence dashboard. You can also download CSV exports by product group or product, or pull prices, groups, competitors and runs as JSON through the REST API. Other options: connect Google Sheets or Excel, or view embedded Power BI reports if your workspace has Power BI enabled.'],
+  ['How is Price Scraping different from Competitive Data?', 'Price Scraping is the collection setup: the URLs, competitors, schedules and locations you configure, and the prices that come back. Competitive Data [confirm scope, e.g. competitor listings matched to your SKUs]. A demo will show which fits your catalog.'],
+].map(([q, a], i) => ({ q, a, n: String(i + 1).padStart(2, '0') }));
+---
+<PriceLeapLayout
+  title="Price Scraping Software for Competitor Prices · PriceLeap"
+  description="priceleap.ai is price scraping software for pricing and ecommerce teams. Add product pages, choose competitors and locations, and prices are collected on your schedule."
+>
+  <div class="ps">
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-10%;top:-25%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.09),transparent);pointer-events:none"></div>
+      <div class="ps-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(44px,6vw,88px) clamp(16px,4vw,40px) clamp(48px,6vw,88px);gap:clamp(36px,4.5vw,64px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:50%;background:#F7631E;animation:ps-pulse 1.8s ease-out infinite"></span>Price scraping</span>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(36px,5vw,64px);line-height:1.03;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Price scraping software</span><span style="font-weight:400"> for competitor prices</span></h1>
+          <p style="margin:0;max-width:580px;font-size:18px;line-height:1.6;color:#3A302A;text-wrap:pretty">priceleap.ai is price scraping software for pricing and ecommerce teams. Add the product pages you want to watch, choose competitors and locations, and the platform collects prices on the schedule you set.</p>
+          <p style="margin:0;max-width:580px;font-size:16px;line-height:1.6;color:#665A51">No scraper code to write, and nothing to maintain on your side.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+            <a href="/book-a-demo" style="height:48px;padding:0 22px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            {['Up to 3x daily refresh', 'ZIP code checks per product group', 'CSV export and REST API'].map((t) => (
+              <span style="height:32px;padding:0 12px;display:inline-flex;align-items:center;gap:8px;border-radius:9px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:13px;color:#1C130E"><span style="width:6px;height:6px;border-radius:50%;background:#F7631E"></span>{t}</span>
+            ))}
+          </div>
+        </div>
+
+        <figure style="margin:0;min-width:0;display:flex;flex-direction:column;gap:12px">
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 44px 84px -50px rgba(60,30,15,.4),0 0 0 6px rgba(255,255,255,.7)">
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+              <span style="font-size:13.5px;font-weight:600;color:#1C130E">Add Products</span>
+              <span style="width:1px;height:14px;background:#EFE3DA"></span>
+              <span style="font-size:12px;color:#7F7066;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">AI tracks pricing, finds competitors and monitors their prices.</span>
+            </div>
+            <div style="padding:14px 16px 0;display:flex;gap:18px;border-bottom:1px solid #F5ECE5">
+              <span style="padding-bottom:10px;border-bottom:2px solid #1C130E;font-size:13px;font-weight:500;color:#1C130E">Paste URLs</span>
+              <span style="padding-bottom:10px;font-size:13px;color:#7F7066">Upload file</span>
+              <span style="padding-bottom:10px;font-size:13px;color:#7F7066">Connect catalog</span>
+            </div>
+            <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+              <div data-ps-ta style="min-height:118px;border:1px solid #FFD8BE;border-radius:12px;padding:12px 14px;font-family:'Geist Mono',monospace;font-size:12px;line-height:1.75;color:#1C130E;transition:border-color .3s;box-shadow:0 0 0 4px rgba(247,99,30,.08)">
+                {urls.map((u, i) => (
+                  <div data-ps-url={i} style={`display:${i === 0 ? 'flex' : 'none'};align-items:center;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:ps-in .35s ease`}><span style="color:#B9A99C">{u.n}</span>{u.t}</div>
+                ))}
+                <span data-ps-caret style="display:inline-block;width:7px;height:14px;background:#F7631E;vertical-align:-2px;animation:ps-blink 1s steps(1) infinite"></span>
+              </div>
+              <div class="ps-radio" style="display:grid;gap:8px">
+                <div style="border:1.5px solid #FFD8BE;background:#FFF9F4;border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:4px">
+                  <div style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;border:4px solid #1C130E;background:#FFFFFF"></span><span style="font-size:13px;font-weight:600;color:#1C130E">Find &amp; monitor competitors</span><span style="margin-left:auto;height:18px;padding:0 6px;display:flex;align-items:center;border-radius:5px;background:#FFFFFF;border:1px solid #FFD8BE;font-family:'Geist Mono',monospace;font-size:9px;color:#C2410C">AI</span></div>
+                  <span style="font-size:11.5px;line-height:1.45;color:#665A51">AI discovers competing products for the group.</span>
+                </div>
+                <div style="border:1px solid #EFE3DA;border-radius:12px;padding:11px 12px;display:flex;flex-direction:column;gap:4px">
+                  <div style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid #D7C6BA"></span><span style="font-size:13px;font-weight:600;color:#1C130E">Track your product URLs</span></div>
+                  <span style="font-size:11.5px;line-height:1.45;color:#665A51">Assign competitor domains or URLs later.</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid #F5ECE5;background:#FFF9F4">
+              <span style="font-size:12px;color:#665A51">Adding <b data-ps-count style="color:#1C130E">1</b> items to</span>
+              <span style="height:28px;padding:0 10px;display:flex;align-items:center;border-radius:8px;border:1px solid #EFE3DA;background:#FFFFFF;font-family:'Geist Mono',monospace;font-size:11px;color:#1C130E">Headphones_Monitor</span>
+              <span data-ps-btn style="margin-left:auto;height:34px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:10px;background:#1C130E;color:#FFFFFF;font-size:12.5px;font-weight:500;transition:background .3s"><span data-ps-btn-spin hidden style="width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#FFFFFF;animation:ps-spin .8s linear infinite"></span><span data-ps-btn-label>Find competitors →</span></span>
+            </div>
+            <div data-ps-found hidden style="align-items:center;gap:8px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid #F5ECE5;animation:ps-in .4s ease">
+              <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.06em;color:#7F7066">COMPETITORS FOUND</span>
+              {foundComps.map((c) => (
+                <span style={`height:24px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:12px;color:#1C130E;animation:ps-pop .3s ease ${c.dl}s both`}><span style={`width:6px;height:6px;border-radius:50%;background:${c.c}`}></span>{c.t}</span>
+              ))}
+            </div>
+          </div>
+          <figcaption style="font-size:13px;color:#7F7066;text-align:center">Add products by URL, file or catalog, then let AI find the competitors to track.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 02 DEFINITION -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="ps-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:center">
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>The basics</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">What is </span><span style="font-weight:700">price scraping software?</span></h2>
+          <p style="margin:0;font-size:17px;line-height:1.7;color:#3A302A;text-wrap:pretty">Price scraping software collects prices from retailer and marketplace product pages on a schedule. It turns them into structured records you can sort, compare and export.</p>
+          <p style="margin:0;font-size:17px;line-height:1.7;color:#3A302A;text-wrap:pretty">It replaces manual checks and in-house scripts for competitor price scraping. Scraping is the collection step; price monitoring is what you do with the data afterwards.</p>
+          <p style="margin:0;font-size:17px;line-height:1.7;color:#3A302A;text-wrap:pretty">In priceleap.ai, both live in one workspace. Collected prices go into the <a href="/price-intelligence-engine" style="font-weight:500;text-decoration:underline;text-underline-offset:3px">Price Intelligence dashboard</a>, <a href="#" style="font-weight:500;text-decoration:underline;text-underline-offset:3px">price alerts</a> and <a href="/dynamic-pricing-software" style="font-weight:500;text-decoration:underline;text-underline-offset:3px">pricing rules</a>.</p>
+        </div>
+        <div data-reveal class="ps-def" style="position:relative;align-items:center">
+          <div style="background:#FFF9F4;border:1px solid #EFE3DA;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px">
+            <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#7F7066">PRODUCT PAGE · RETAILER</span>
+            <div style="height:76px;border-radius:10px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 7px,#FFFCF9 7px 14px)"></div>
+            <span style="font-size:13px;font-weight:600;color:#1C130E">Sony WH-1000XM5 Wireless</span>
+            <div style="display:flex;align-items:center;gap:8px"><span style="padding:2px 6px;border-radius:6px;outline:1.5px dashed #F7631E;font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">$329.99</span><span style="font-size:11px;color:#2E7D4F">In stock</span></div>
+            <span style="height:8px;width:70%;border-radius:4px;background:#F5ECE5"></span>
+            <span style="height:8px;width:50%;border-radius:4px;background:#F5ECE5"></span>
+          </div>
+          <div aria-hidden="true" class="ps-arrow" style="display:flex;align-items:center;justify-content:center">
+            <svg class="ps-arrow-h" width="64" height="20" viewBox="0 0 64 20" style="overflow:visible"><path d="M0,10 L64,10" fill="none" stroke="#E2D3C8" stroke-width="1.5"></path><path d="M0,10 L64,10" fill="none" stroke="#F7631E" stroke-width="1.5" stroke-dasharray="4 8" style="animation:ps-dash 1s linear infinite"></path></svg>
+            <svg class="ps-arrow-v" width="20" height="40" viewBox="0 0 20 40" style="overflow:visible"><path d="M10,0 L10,40" fill="none" stroke="#E2D3C8" stroke-width="1.5"></path><path d="M10,0 L10,40" fill="none" stroke="#F7631E" stroke-width="1.5" stroke-dasharray="4 8" style="animation:ps-dash 1s linear infinite"></path></svg>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px -40px rgba(60,30,15,.4)">
+            <div style="padding:10px 14px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#7F7066">STRUCTURED RECORD</div>
+            <div style="padding:6px 14px 10px;display:flex;flex-direction:column">
+              {record.map((r) => (
+                <div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed #F5ECE5;font-size:12.5px"><span style="font-family:'Geist Mono',monospace;color:#7F7066">{r.k}</span><span style="font-family:'Geist Mono',monospace;color:#1C130E;text-align:right">{r.v}</span></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 PROBLEM (static) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="max-width:780px;display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>The problem</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Why in-house price scrapers are </span><span style="font-weight:700">hard to keep running</span></h2>
+        </div>
+        <div data-reveal class="ps-prob" style="margin-top:44px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#EFE3DA;gap:1px">
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:150px;border-bottom:1px solid #F5ECE5;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,250px);display:flex;flex-direction:column;gap:6px;font-family:'Geist Mono',monospace;font-size:11.5px">
+                <span style="display:flex;justify-content:space-between;padding:7px 10px;border-radius:8px;border:1px solid #EFE3DA;color:#665A51"><span style="text-decoration:line-through">div.price-now</span><span>yesterday</span></span>
+                <span style="display:flex;justify-content:space-between;padding:7px 10px;border-radius:8px;background:#FDECEB;border:1px solid #F5C6C3;color:#B42318"><span>→ null</span><span>today</span></span>
+                <span style="display:flex;align-items:center;gap:6px;color:#7F7066"><span style="width:6px;height:6px;border-radius:50%;background:#D7C6BA"></span>feed quiet · no error raised</span>
+              </div>
+            </div>
+            <div style="padding:22px;display:flex;gap:14px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">01</span><p style="margin:0;font-size:15.5px;line-height:1.6;color:#1C130E">Sites change their markup without warning. A selector that worked yesterday returns nothing today, and the feed goes quiet instead of failing loudly.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:150px;border-bottom:1px solid #F5ECE5;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,250px);display:flex;flex-direction:column;gap:6px">
+                <span style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;border:1px solid #EFE3DA;font-size:12px;color:#1C130E">📍<span style="font-family:'Geist Mono',monospace">Deliver to: 10001</span><span style="margin-left:auto;font-family:'Geist Mono',monospace;color:#1C130E">$329.99</span></span>
+                <span style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;border:1px solid #EFE3DA;font-size:12px;color:#1C130E">📍<span style="font-family:'Geist Mono',monospace">Deliver to: 94105</span><span style="margin-left:auto;font-family:'Geist Mono',monospace;color:#C2410C">$349.99</span></span>
+                <span style="height:22px;width:60%;border-radius:6px;background:linear-gradient(90deg,#F5ECE5 0%,#FDF6F0 50%,#F5ECE5 100%);background-size:400px 100%;animation:ps-shimmer 1.6s linear infinite"></span>
+              </div>
+            </div>
+            <div style="padding:22px;display:flex;gap:14px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">02</span><p style="margin:0;font-size:15.5px;line-height:1.6;color:#1C130E">Prices load client-side, sit behind a postcode picker, or change by location.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:150px;border-bottom:1px solid #F5ECE5;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,250px);display:flex;flex-direction:column;gap:6px;font-family:'Geist Mono',monospace;font-size:11.5px">
+                <span style="display:flex;justify-content:space-between;padding:7px 10px;border-radius:8px;background:#FFF4EC;border:1px solid #FFD8BE;color:#C2410C"><span>429 Too Many Requests</span><span>×38</span></span>
+                <span style="display:flex;justify-content:space-between;padding:7px 10px;border-radius:8px;border:1px solid #EFE3DA;color:#665A51"><span>Captcha challenge</span><span>×12</span></span>
+                <span style="display:flex;justify-content:space-between;padding:7px 10px;border-radius:8px;border:1px solid #EFE3DA;color:#665A51"><span>Proxy spend</span><span>↑ monthly</span></span>
+              </div>
+            </div>
+            <div style="padding:22px;display:flex;gap:14px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">03</span><p style="margin:0;font-size:15.5px;line-height:1.6;color:#1C130E">Bot defences, rate limits and proxy costs turn a small script into infrastructure someone has to own.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:150px;border-bottom:1px solid #F5ECE5;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,250px);display:grid;grid-template-columns:1fr auto auto;gap:6px 10px;font-family:'Geist Mono',monospace;font-size:11.5px;color:#1C130E">
+                <span>Listing A</span><span>€299</span><span style="color:#B9A99C">—</span>
+                <span>Listing A</span><span>$329.99</span><span style="color:#B9A99C">dup</span>
+                <span>Listing B</span><span>329,99</span><span style="color:#B9A99C">stock?</span>
+              </div>
+            </div>
+            <div style="padding:22px;display:flex;gap:14px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">04</span><p style="margin:0;font-size:15.5px;line-height:1.6;color:#1C130E">Raw output needs cleanup before pricing can trust it: mixed currencies, missing stock flags, duplicate listings.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 HOW IT WORKS (auto-advancing stepper + scheduler table) -->
+    <section id="how" style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>How it works</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;max-width:820px;text-wrap:balance"><span style="font-weight:400">How price scraping works </span><span style="font-weight:700">in priceleap.ai</span></h2>
+        </div>
+        <div data-reveal class="ps-how" style="margin-top:48px;gap:clamp(20px,3vw,36px);align-items:start">
+          <div style="display:flex;flex-direction:column">
+            {stepsData.map((s, i) => (
+              <button type="button" class="ps-step" class:list={[{ 'is-on': i === 0 }]} data-ps-step={i} aria-pressed={i === 0 ? 'true' : 'false'} style="position:relative;text-align:left;border:none;background:transparent;border-radius:16px;padding:16px 16px 16px 14px;display:grid;grid-template-columns:36px minmax(0,1fr);gap:14px;cursor:pointer;transition:background .3s">
+                {i < 4 && <span aria-hidden="true" class="ps-step-line" style="position:absolute;left:31px;top:54px;bottom:-14px;width:2px;background:#F5ECE5;transition:background .3s"></span>}
+                <span class="ps-step-n" style="position:relative;width:36px;height:36px;border-radius:50%;font-family:'Geist Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .3s">{i + 1}</span>
+                <span style="min-width:0;padding-top:6px"><span class="ps-step-t" style="display:block;font-family:Geist,sans-serif;font-size:17px;font-weight:600;transition:color .3s">{s.t}</span><span style="display:block;margin-top:5px;font-size:14.5px;line-height:1.6;color:#665A51">{s.d}</span>
+                  <span class="ps-step-bar" style="display:none;margin-top:12px;height:3px;border-radius:3px;background:#F5ECE5;overflow:hidden"><span class="ps-step-fill" style="display:block;height:100%;width:0%;background:#F7631E;transition:width .25s linear"></span></span></span>
+              </button>
+            ))}
+          </div>
+
+          <figure class="ps-sticky" style="margin:0;top:96px;display:flex;flex-direction:column;gap:12px;min-width:0">
+            <div style="position:relative;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 44px 84px -52px rgba(60,30,15,.42)">
+              <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+                <span style="font-size:13.5px;font-weight:600;color:#1C130E">Product Groups</span>
+                <span style="width:1px;height:14px;background:#EFE3DA"></span>
+                <span style="font-size:12px;color:#7F7066;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Manage groups, schedules and pricing rules.</span>
+                <span style="margin-left:auto;flex:none;height:28px;padding:0 10px;display:flex;align-items:center;gap:6px;border-radius:8px;background:#1C130E;color:#FFFFFF;font-size:12px">+ New group</span>
+              </div>
+              <div style="overflow-x:auto">
+                <div style="min-width:620px">
+                  <div style="display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1.3fr) 70px minmax(0,1.2fr) 80px 92px;gap:10px;padding:10px 16px;border-bottom:1px solid #F5ECE5;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">
+                    <span>GROUP</span><span data-hc="sched" style="color:#7F7066">SCHEDULE</span><span data-hc="prod" style="color:#C2410C">PRODUCTS</span><span data-hc="comp" style="color:#7F7066">COMPETITORS</span><span data-hc="loc" style="color:#7F7066">LOCATION</span><span data-hc="fetch" style="color:#7F7066">LAST FETCH</span>
+                  </div>
+                  {gData.map((g, i) => (
+                    <div class="ps-grow" data-ps-grow={i} style="position:relative;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1.3fr) 70px minmax(0,1.2fr) 80px 92px;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:transparent;transition:background .3s">
+                      <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style={`width:28px;height:28px;flex:none;border-radius:8px;background:${g.av};color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10px;display:flex;align-items:center;justify-content:center`}>{g.ab}</span><span style="font-size:13px;font-weight:600;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{g.n}</span></span>
+                      <span data-g="sch" style="justify-self:start;min-height:30px;padding:3px 9px;display:flex;flex-direction:column;justify-content:center;border-radius:8px;border:1px solid #EFE3DA;background:#FFFFFF;transition:all .3s"><span style="font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:.06em;color:#7F7066">{g.freq}</span><span style="font-size:11.5px;color:#1C130E;white-space:nowrap">{g.time}</span></span>
+                      <span data-g="prod" style="padding:4px 6px;border-radius:8px;background:#FFF4EC;text-align:center;transition:background .3s"><span style="display:block;font-family:Geist,sans-serif;font-size:15px;font-weight:600;color:#1C130E">{g.p}</span><span style="display:block;font-size:10px;color:#7F7066">products</span></span>
+                      <span data-g="comp" style="justify-self:start;height:26px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:999px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:11.5px;color:#1C130E;white-space:nowrap;transition:all .3s"><span style="display:flex;gap:2px"><span style="width:6px;height:6px;border-radius:50%;background:#F59E0B"></span><span style="width:6px;height:6px;border-radius:50%;background:#3B82F6"></span><span style="width:6px;height:6px;border-radius:50%;background:#EF4444"></span></span>{g.c}</span>
+                      <span data-g="loc" style="justify-self:start;height:24px;padding:0 8px;display:flex;align-items:center;gap:5px;border-radius:999px;border:1px solid #EFE3DA;background:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10.5px;color:#1C130E;white-space:nowrap;transition:all .3s">📍 {g.loc}</span>
+                      <span data-g="fetch" style="display:flex;align-items:center;gap:6px;font-family:'Geist Mono',monospace;font-size:10.5px;color:#665A51"><span data-g-spin hidden style="width:10px;height:10px;flex:none;border-radius:50%;border:2px solid #F5ECE5;border-top-color:#F7631E;animation:ps-spin .8s linear infinite"></span><span data-g-ftext>{g.f}</span></span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div data-ps-menu hidden style="position:absolute;right:16px;top:118px;width:214px;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:14px;box-shadow:0 24px 48px -24px rgba(60,30,15,.45);padding:6px;animation:ps-pop .25s ease;z-index:3">
+                {menu.map((m, k) => (
+                  <div class="ps-menu-i" data-ps-menu-i={k} style={`display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;background:transparent;font-size:12.5px;color:#1C130E;border-top:${m.bt}`}><span style="width:14px;text-align:center;color:#7F7066">{m.i}</span>{m.t}<span style={`display:${m.ai ? 'inline-flex' : 'none'};margin-left:auto;height:16px;padding:0 5px;align-items:center;border-radius:4px;background:#FFF4EC;border:1px solid #FFD8BE;font-family:'Geist Mono',monospace;font-size:8.5px;color:#C2410C`}>AI</span></div>
+                ))}
+              </div>
+              <div data-ps-stepnote style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:#FFF9F4">
+                <span style="height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;color:#FFFFFF">STEP <span data-ps-stepno>1</span></span>
+                <span data-ps-notetext style="font-size:13px;color:#1C130E">{stepsData[0].note}</span>
+              </div>
+            </div>
+            <figcaption style="font-size:13px;color:#7F7066;text-align:center">Each product group has its own schedule, competitors and pricing rules.</figcaption>
+          </figure>
+        </div>
+        <div data-reveal style="margin-top:32px;display:flex;justify-content:center">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;padding:14px 20px;border-radius:14px;background:#FFF9F4;border:1px solid #F5ECE5;font-size:15px;color:#3A302A">Need competitor listings matched to your own SKUs? <a href="/competitive-data" style="font-weight:600">See Competitive Data →</a></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 DATA FIELDS -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div class="ps-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:start">
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Data fields</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">What data can a </span><span style="font-weight:700">price scraping tool collect?</span></h2>
+          <p style="margin:0;font-size:16.5px;line-height:1.65;color:#3A302A">For every tracked product and competitor listing, priceleap.ai records:</p>
+          <div style="display:flex;flex-direction:column;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;background:#FFFFFF">
+            {fields.map((f) => (
+              <div style={`display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;align-items:start;padding:13px 16px;border-bottom:${f.last ? 'none' : '1px solid #F5ECE5'}`}>
+                <span style="width:26px;height:26px;border-radius:8px;background:#FFF4EC;border:1px solid #FFD8BE;color:#C2410C;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d={f.ico}></path></svg></span>
+                <span style="font-size:15px;line-height:1.55;color:#1C130E;padding-top:2px">{f.t}</span>
+              </div>
+            ))}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:15px;color:#3A302A">You can add your own fields too:</span>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              {ownFields.map((o) => (<span style="height:28px;padding:0 10px;display:flex;align-items:center;border-radius:8px;background:#FFFFFF;border:1px dashed #E2D3C8;font-family:'Geist Mono',monospace;font-size:11.5px;color:#1C130E">+ {o}</span>))}
+            </div>
+          </div>
+        </div>
+        <div data-reveal class="ps-sticky" style="top:96px;display:flex;flex-direction:column;gap:12px;min-width:0">
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 40px 80px -52px rgba(60,30,15,.4)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+              <span style="display:flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.06em;color:#1C130E"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6zM14 2v6h6"></path></svg>headphones_monitor.csv</span>
+              <span style="height:24px;padding:0 9px;display:flex;align-items:center;border-radius:7px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:11.5px;color:#1C130E">↓ Export</span>
+            </div>
+            <div style="overflow-x:auto">
+              <div style="min-width:480px">
+                <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 80px 74px 86px;gap:10px;padding:10px 16px;border-bottom:1px solid #F5ECE5;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066"><span>PRODUCT</span><span>COMPETITOR</span><span>PRICE</span><span>STOCK</span><span>LAST FETCH</span></div>
+                {sample.map((r) => (
+                  <div style={`display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 80px 74px 86px;gap:10px;align-items:center;padding:11px 16px;border-bottom:1px solid #F5ECE5;font-size:12.5px;animation:ps-in .4s ease ${r.dl}s both`}>
+                    <span style="color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{r.p}</span>
+                    <span style="display:flex;align-items:center;gap:6px;color:#1C130E"><span style={`width:6px;height:6px;border-radius:50%;background:${r.dc}`}></span>{r.c}</span>
+                    <span style="font-family:'Geist Mono',monospace;color:#1C130E">{r.pr}</span>
+                    <span style={`justify-self:start;height:20px;padding:0 7px;display:flex;align-items:center;border-radius:5px;background:${r.sb};font-family:'Geist Mono',monospace;font-size:9.5px;color:${r.sc}`}>{r.s}</span>
+                    <span style="font-family:'Geist Mono',monospace;font-size:11px;color:#665A51">{r.t}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style="padding:12px 16px;display:flex;align-items:center;gap:8px;font-size:12px;color:#7F7066"><span style="width:6px;height:6px;border-radius:50%;background:#F7631E;animation:ps-pulse 1.6s infinite"></span>Sample rows · replace with a real anonymised CSV export</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 CADENCE (animated clock) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div class="ps-split" style="gap:clamp(32px,5vw,72px);align-items:end">
+          <div data-reveal style="display:flex;flex-direction:column;gap:16px">
+            <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Cadence</span>
+            <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">How often should you </span><span style="font-weight:700">scrape competitor prices?</span></h2>
+          </div>
+          <div data-reveal style="display:flex;flex-direction:column;gap:12px">
+            <p style="margin:0;font-size:16.5px;line-height:1.65;color:#3A302A">For many catalogs, one check a day covers it. Fast-moving categories and promo weeks justify two or three.</p>
+            <p style="margin:0;font-size:16.5px;line-height:1.65;color:#3A302A">Schedules are set per product group, with a time and timezone. Need a fresh read before a decision? Run <b style="color:#1C130E">Fetch now</b>.</p>
+          </div>
+        </div>
+        <div data-reveal style="margin-top:44px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#FFFFFF">
+          <div class="ps-cad-row" style="padding:12px 20px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#7F7066">
+            <span>PLAN</span><span>REFRESH · 24H</span><span class="ps-cad-wide">PRODUCTS / MONTH</span><span class="ps-cad-wide">PRODUCTS / DAY</span>
+          </div>
+          {cadence.map((c) => (
+            <div class="ps-cad-row" style={`align-items:center;padding:18px 20px;border-bottom:${c.last ? 'none' : '1px solid #F5ECE5'}`}>
+              <span style="display:flex;flex-direction:column;gap:2px"><span style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:#1C130E">{c.plan}</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:#C2410C">{c.refresh}</span></span>
+              <div style="position:relative;height:34px">
+                <span style="position:absolute;left:0;right:0;top:16px;height:2px;border-radius:2px;background:#F5ECE5"></span>
+                <span data-ps-clockbar style="position:absolute;left:0;top:16px;height:2px;border-radius:2px;width:0%;background:#E2D3C8;transition:width 1s linear"></span>
+                <span data-ps-clockmark style="position:absolute;top:10px;left:0%;width:2px;height:14px;margin-left:-1px;background:#1C130E;border-radius:2px;transition:left 1s linear"></span>
+                {c.xs.map((x) => (
+                  <span class="ps-run" data-ps-run={x} style="position:absolute;top:10px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:#FFFFFF;border:2px solid #FFFFFF;box-shadow:0 0 0 1.5px #E2D3C8;transition:all .3s" style-left={`${x}%`}></span>
+                ))}
+                <span style="position:absolute;left:0;bottom:-6px;font-family:'Geist Mono',monospace;font-size:9px;color:#B9A99C">00:00</span><span style="position:absolute;right:0;bottom:-6px;font-family:'Geist Mono',monospace;font-size:9px;color:#B9A99C">24:00</span>
+              </div>
+              <span class="ps-cad-wide" style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:#1C130E">{c.month}</span>
+              <span class="ps-cad-wide" style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:#1C130E">{c.day}</span>
+              <span class="ps-cad-narrow" style="grid-column:1 / -1;font-size:13px;color:#665A51">{c.month} products / month · {c.day} / day</span>
+            </div>
+          ))}
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px;border-top:1px solid #F5ECE5;background:#FFF9F4;font-size:13.5px;color:#3A302A">
+            <span style="height:28px;padding:0 10px;display:flex;align-items:center;gap:6px;border-radius:8px;background:#1C130E;color:#FFFFFF;font-size:12px">↻ Fetch now</span>
+            <span>Runs a fresh check for a group on demand, between scheduled runs.</span>
+            <span style="margin-left:auto;font-family:'Geist Mono',monospace;font-size:11px;color:#7F7066">NOW <span data-ps-clocklabel>00:00</span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 DELIVERY (tabs) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div class="ps-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:center">
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Delivery</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Get scraped price data </span><span style="font-weight:700">into your tools</span></h2>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            {deliveryData.map((d, i) => (
+              <button type="button" class="ps-dv" class:list={[{ 'is-on': i === 0 }]} data-ps-dv={i} style="text-align:left;border:1px solid #EFE3DA;background:transparent;border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:34px minmax(0,1fr);gap:14px;align-items:start;cursor:pointer;transition:all .25s">
+                <span class="ps-dv-ic" style="width:34px;height:34px;border-radius:10px;background:#FFFFFF;color:#C2410C;display:flex;align-items:center;justify-content:center;transition:all .25s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d={d.ico}></path></svg></span>
+                <span style="font-size:15px;line-height:1.55;color:#1C130E;padding-top:5px">{d.t}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div data-reveal style="position:relative;min-width:0">
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 44px 84px -52px rgba(60,30,15,.42)">
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span data-ps-dvtitle style="font-size:13.5px;font-weight:600;color:#1C130E">{DV[0].title}</span><span data-ps-dvsub style="font-size:12px;color:#7F7066">{DV[0].sub}</span></div>
+            {DV.map((d, di) => (
+              <div class="ps-dvpanel" data-ps-dvpanel={di} style={`${di === 0 ? 'display:flex' : 'display:none'};padding:14px;flex-direction:column;gap:8px;min-height:300px;animation:ps-in .35s ease`}>
+                {d.rows.map(([ab, t, tag, dd, bb, lb, lc], ri) => (
+                  <div style={`display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;border:1px solid #F5ECE5;border-radius:13px;background:#FFFFFF;animation:ps-in .35s ease ${(ri * 0.06).toFixed(2)}s both`}>
+                    <span style={`width:38px;height:38px;border-radius:10px;background:${lb};color:${lc};font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center`}>{ab}</span>
+                    <span style="min-width:0"><span style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px;font-weight:600;color:#1C130E">{t}{tag && <span style="height:18px;padding:0 6px;display:inline-flex;align-items:center;border-radius:5px;background:#FBF3EC;font-family:'Geist Mono',monospace;font-size:9px;color:#665A51">{tag}</span>}</span><span style="display:block;margin-top:2px;font-size:12px;color:#665A51;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{dd}</span></span>
+                    <span style="height:28px;padding:0 10px;display:flex;align-items:center;border-radius:8px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:12px;color:#1C130E;white-space:nowrap">{bb}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 BUILD VS BUY -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1100px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Build vs buy</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Should you build a price scraper </span><span style="font-weight:700">or buy software?</span></h2>
+        </div>
+        <div data-reveal style="margin-top:44px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#FFFFFF">
+          <div class="ps-bv-row" style="border-bottom:1px solid #EFE3DA">
+            <span class="ps-bv-k" style="padding:16px 20px;background:#FFF9F4"></span>
+            <span style="padding:16px 20px;background:#FFF9F4;font-family:Geist,sans-serif;font-size:16px;font-weight:600;color:#665A51">Build in-house</span>
+            <span style="padding:16px 20px;background:#1C130E;font-family:Geist,sans-serif;font-size:16px;font-weight:600;color:#FFFFFF;display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:50%;background:#F7631E"></span>priceleap.ai</span>
+          </div>
+          {bv.map((r) => (
+            <div class="ps-bv-row" style={`border-bottom:${r.last ? 'none' : '1px solid #F5ECE5'}`}>
+              <span class="ps-bv-k" style="padding:16px 20px;font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#7F7066;background:#FFF9F4">{r.k}</span>
+              <span style="padding:16px 20px;font-size:14.5px;line-height:1.5;color:#665A51"><span class="ps-bv-kinline" style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#7F7066;margin-bottom:4px">{r.k}</span>{r.a}</span>
+              <span style="padding:16px 20px;font-size:14.5px;line-height:1.5;color:#1C130E;background:#FFFCF9;border-left:1px solid #F5ECE5;display:flex;gap:10px;align-items:flex-start"><span style="flex:none;margin-top:3px;width:16px;height:16px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:8px;display:flex;align-items:center;justify-content:center">✓</span><span>{r.b}</span></span>
+            </div>
+          ))}
+        </div>
+        <p data-reveal style="margin:22px auto 0;max-width:720px;text-align:center;font-size:16px;line-height:1.65;color:#3A302A">Building still makes sense for a few stable sites and an engineer with spare time. Past that, maintenance tends to eat the budget.</p>
+      </div>
+    </section>
+
+    <!-- 09 PROOF -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(16px,4vw,40px)">
+        <div data-reveal class="ps-proof" style="border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#EFE3DA;gap:1px">
+          <div style="background:#FFFFFF;padding:clamp(24px,3.4vw,40px);display:flex;flex-direction:column;gap:16px">
+            <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Customer story</span>
+            <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(26px,3vw,38px);line-height:1.1;letter-spacing:-.03em;color:#1C130E"><span style="font-weight:400">How </span><span style="font-weight:700">[Industry] team</span><span style="font-weight:400"> replaced its in-house scrapers</span></h2>
+            <p style="margin:0;font-size:16px;line-height:1.65;color:#665A51">[Two or three lines: catalog size, sites tracked, checks per day, what the old setup cost. End on a hard number.]</p>
+          </div>
+          <div style="background:#FFFFFF;padding:clamp(24px,3.4vw,40px);display:flex;flex-direction:column;justify-content:center;gap:6px">
+            <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066">KEY RESULT</span>
+            <span style="font-family:Geist,sans-serif;font-size:clamp(48px,6vw,72px);font-weight:600;letter-spacing:-.05em;line-height:1;color:#1C130E">[X]</span>
+          </div>
+          <div style="grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:1px;background:#F5ECE5">
+            {[1, 2, 3, 4].map(() => (<div style="background:#FFFFFF;height:84px;display:flex;align-items:center;justify-content:center"><span style="height:34px;padding:0 14px;display:flex;align-items:center;border-radius:8px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 6px,#FFFCF9 6px 12px);font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">[Client logo]</span></div>))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 SECURITY -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="ps-split" style="max-width:1280px;margin:0 auto;padding:clamp(56px,7vw,96px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,64px);align-items:center">
+        <div data-reveal style="display:flex;flex-direction:column;gap:14px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Security</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.4vw,42px);line-height:1.08;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Is priceleap.ai </span><span style="font-weight:700">secure and compliant?</span></h2>
+        </div>
+        <div data-reveal style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:10px">
+          <div style="border:1px solid #EFE3DA;border-radius:16px;padding:18px;display:flex;gap:14px;align-items:flex-start"><span style="width:36px;height:36px;flex:none;border-radius:10px;background:#1C130E;color:#FFFFFF;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4"></path></svg></span><span style="font-size:15px;line-height:1.55;color:#1C130E">Two-factor authentication for workspace members.</span></div>
+          <div style="border:1px solid #EFE3DA;border-radius:16px;padding:18px;display:flex;gap:14px;align-items:flex-start"><span style="width:36px;height:36px;flex:none;border-radius:10px;background:#1C130E;color:#FFFFFF;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"></path></svg></span><span style="font-size:15px;line-height:1.55;color:#1C130E">Prices are collected from the public product pages you add. <a href="/privacy-policy" style="font-weight:500">Data Compliance →</a></span></div>
+          <div style="border:1px dashed #E2D3C8;border-radius:16px;padding:16px 18px;font-family:'Geist Mono',monospace;font-size:12px;color:#7F7066">[SOC 2 Type II: confirm status]</div>
+          <div style="border:1px dashed #E2D3C8;border-radius:16px;padding:16px 18px;font-family:'Geist Mono',monospace;font-size:12px;color:#7F7066">[ISO 27001: confirm certificate]</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 PRICING (billing toggle) -->
+    <section id="pricing" style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1200px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Pricing</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Price scraping software </span><span style="font-weight:700">pricing</span></h2>
+          <p style="margin:0;font-size:16.5px;color:#3A302A">Annual billing saves 20%. Every plan includes 5 competitors.</p>
+          <div role="group" aria-label="Billing period" style="margin-top:6px;display:inline-flex;padding:4px;border-radius:12px;background:#FFFFFF;border:1px solid #EFE3DA">
+            <button type="button" data-ps-bill="monthly" class="ps-bill is-on" style="height:36px;padding:0 16px;border:none;border-radius:9px;background:#1C130E;color:#FFFFFF;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s">Monthly</button>
+            <button type="button" data-ps-bill="annual" class="ps-bill" style="height:36px;padding:0 16px;border:none;border-radius:9px;background:transparent;color:#665A51;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s">Annual<span style="height:18px;padding:0 6px;display:flex;align-items:center;border-radius:5px;background:#FFF4EC;border:1px solid #FFD8BE;font-family:'Geist Mono',monospace;font-size:9.5px;color:#C2410C">−20%</span></button>
+          </div>
+        </div>
+        <div data-reveal class="ps-plans" style="margin-top:40px;gap:14px;align-items:stretch">
+          {plans.map((p) => (
+            <div style={`position:relative;background:#FFFFFF;border:${p.pop ? '1.5px' : '1px'} solid ${p.pop ? '#1C130E' : '#EFE3DA'};border-radius:22px;padding:28px;display:flex;flex-direction:column;gap:18px;box-shadow:${p.pop ? '0 30px 60px -40px rgba(60,30,15,.45)' : 'none'}`}>
+              {p.pop && <span style="position:absolute;top:-12px;left:28px;height:24px;padding:0 10px;display:flex;align-items:center;border-radius:7px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#FFFFFF">MOST POPULAR</span>}
+              <span style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:#1C130E">{p.n}</span>
+              <div><div style="display:flex;align-items:baseline;gap:4px"><span class="ps-price" data-monthly={p.m} data-annual={p.a} style="font-family:Geist,sans-serif;font-size:46px;font-weight:600;letter-spacing:-.045em;color:#1C130E">{p.m}</span><span style="font-size:15px;color:#665A51">/month</span></div><div class="ps-note" data-monthly={`${p.a}/month billed annually`} data-annual="billed annually" style="margin-top:2px;font-size:13px;color:#7F7066">{p.a}/month billed annually</div></div>
+              <div style="display:flex;flex-direction:column;gap:10px;border-top:1px dashed #EFE3DA;padding-top:18px">
+                {p.f.map((x) => (<span style="display:flex;gap:10px;align-items:center;font-size:15px;color:#1C130E"><span style="width:18px;height:18px;flex:none;border-radius:50%;background:#FFF4EC;border:1px solid #FFD8BE;color:#C2410C;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>{x}</span>))}
+              </div>
+              <a href="/book-a-demo" style={`margin-top:auto;height:46px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:${p.pop ? 'linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%)' : '#FFFFFF'};border:1px solid ${p.pop ? 'transparent' : '#EFE3DA'};color:${p.pop ? '#FFFFFF' : '#1C130E'};font-family:Geist,sans-serif;font-size:14.5px;font-weight:500`}>Book a Demo</a>
+            </div>
+          ))}
+        </div>
+        <p data-reveal style="margin:22px 0 0;text-align:center;font-size:15px;color:#665A51">Larger catalog? Ask for a custom proposal in your demo.</p>
+      </div>
+    </section>
+
+    <!-- 12 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="ps-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <div data-reveal class="ps-sticky" style="top:96px;display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>FAQ</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Frequently asked </span><span style="font-weight:700">questions</span></h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {fq.map((q, i) => (
+            <div class="ps-faq" class:list={[{ 'is-open': i === 0 }]} data-ps-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-ps-faq-btn aria-expanded={i === 0 ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="ps-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px;color:#B9A99C">{q.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{q.q}</span>
+                <span class="ps-faq-plus" style="flex:none;width:28px;height:28px;border-radius:8px;background:#FBF3EC;color:#1C130E;display:flex;align-items:center;justify-content:center;transition:all .3s"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="ps-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{q.a}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 13 FINAL CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-220px;width:640px;height:400px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.14),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:20px">
+          <h2 style="margin:0;max-width:820px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">See price scraping run on </span><span style="font-weight:700">your own competitor URLs</span></h2>
+          <p style="margin:0;max-width:560px;font-size:17px;line-height:1.6;color:#3A302A">Bring a few product URLs to the demo. We'll walk through the setup and the data that comes back.</p>
+          <a href="/book-a-demo" style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .ps { background: #FFFCF9; overflow-x: clip; }
+  @keyframes ps-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.5); } 100% { box-shadow: 0 0 0 9px rgba(247,99,30,0); } }
+  @keyframes ps-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes ps-pop { 0% { opacity: 0; transform: scale(.92); } 100% { opacity: 1; transform: none; } }
+  @keyframes ps-spin { to { transform: rotate(360deg); } }
+  @keyframes ps-blink { 50% { opacity: 0; } }
+  @keyframes ps-dash { to { stroke-dashoffset: -20; } }
+  @keyframes ps-shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+  @media (prefers-reduced-motion: reduce) { .ps *, .ps *::before, .ps *::after { animation: none !important; transition: none !important; } }
+
+  .ps-hero { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ps-hero { grid-template-columns: minmax(0,1fr) minmax(0,1.02fr); } }
+  .ps-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ps-split { grid-template-columns: minmax(0,.95fr) minmax(0,1.05fr); } }
+  .ps-sticky { position: static; }
+  @media (min-width: 1024px) { .ps-sticky { position: sticky; } }
+  .ps-radio { grid-template-columns: 1fr; }
+  @media (min-width: 520px) { .ps-radio { grid-template-columns: 1fr 1fr; } }
+  .ps-prob { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .ps-prob { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  @media (min-width: 1100px) { .ps-prob { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+  .ps-how { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ps-how { grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); } }
+  .ps-proof { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ps-proof { grid-template-columns: minmax(0,1.6fr) minmax(0,1fr); } }
+  .ps-plans { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .ps-plans { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+
+  .ps-def { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .ps-def .ps-arrow-h { display: none; }
+  .ps-def .ps-arrow { padding: 6px 0; }
+  @media (min-width: 640px) { .ps-def { grid-template-columns: minmax(0,1fr) 64px minmax(0,1fr); } .ps-def .ps-arrow-h { display: block; } .ps-def .ps-arrow-v { display: none; } .ps-def .ps-arrow { padding: 0; } }
+
+  .ps-cad-row { display: grid; grid-template-columns: 110px minmax(0,1fr); gap: 12px; }
+  .ps-cad-wide { display: none; }
+  @media (min-width: 720px) { .ps-cad-row { grid-template-columns: 150px minmax(0,1fr) 150px 130px; } .ps-cad-wide { display: block; } .ps-cad-narrow { display: none; } }
+
+  .ps-bv-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .ps-bv-k { display: none; }
+  @media (min-width: 720px) { .ps-bv-row { grid-template-columns: 170px minmax(0,1fr) minmax(0,1.15fr); } .ps-bv-k { display: block; } .ps-bv-kinline { display: none; } }
+  .ps-bv-kinline { display: block; }
+
+  /* stepper states */
+  .ps-step.is-on { background: #FFF9F4; }
+  .ps-step .ps-step-n { background: #FFFFFF; border: 1.5px solid #EFE3DA; color: #7F7066; }
+  .ps-step.is-on .ps-step-n, .ps-step.is-done .ps-step-n { background: #1C130E; border-color: #1C130E; color: #FFFFFF; }
+  .ps-step .ps-step-t { color: #3A302A; }
+  .ps-step.is-on .ps-step-t { color: #1C130E; }
+  .ps-step.is-done .ps-step-line { background: #1C130E; }
+  .ps-step.is-on .ps-step-bar { display: block !important; }
+
+  /* delivery tabs */
+  .ps-dv.is-on { border-color: #FFD8BE; background: #FFFFFF; }
+  .ps-dv.is-on .ps-dv-ic { background: #1C130E; color: #FFFFFF; }
+
+  /* billing */
+  .ps-bill.is-on { background: #1C130E; color: #FFFFFF; }
+
+  /* faq */
+  .ps-faq.is-open { border-color: #FFD8BE; }
+  .ps-faq.is-open .ps-faq-plus { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .ps-faq.is-open .ps-faq-n { color: #C2410C; }
+  .ps-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .ps-faq.is-open .ps-faq-panel { grid-template-rows: 1fr; }
+
+  /* scroll reveal */
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.ps');
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+    const stepsKey = ['prod', 'comp', 'sched', 'fetch', 'use'];
+    const stepNotes = [
+      'Products added to the group by URL, file or catalog.',
+      'AI finds competitors, or you add your own domains and URLs.',
+      'Schedule, timezone and ZIP code set per group.',
+      'Runs on schedule. Fetch now re-runs a group on demand.',
+      'Compare in the dashboard, set alerts and rules, or export.',
+    ];
+    const groupFetch = ['Today 9:02', 'Today 8:01', 'Today 15:03', 'Today 12:00'];
+
+    // ---- hero demo ----
+    const urlRows = qa('[data-ps-url]');
+    const caret = q('[data-ps-caret]'), ta = q('[data-ps-ta]'), count = q('[data-ps-count]');
+    const btn = q('[data-ps-btn]'), btnSpin = q('[data-ps-btn-spin]'), btnLabel = q('[data-ps-btn-label]'), found = q('[data-ps-found]');
+    const paintHero = (phase: number) => {
+      const nUrls = Math.min(4, phase + 1), finding = phase >= 5 && phase < 7, isFound = phase >= 7;
+      urlRows.forEach((el, i) => { el.style.display = i < nUrls ? 'flex' : 'none'; });
+      if (caret) caret.style.display = (!finding && !isFound) ? 'inline-block' : 'none';
+      if (ta) { ta.style.borderColor = nUrls < 4 ? '#FFD8BE' : '#EFE3DA'; ta.style.boxShadow = nUrls < 4 ? '0 0 0 4px rgba(247,99,30,.08)' : 'none'; }
+      if (count) count.textContent = String(nUrls);
+      if (btnSpin) btnSpin.hidden = !finding;
+      if (btn) btn.style.background = finding ? '#3A2C24' : '#1C130E';
+      if (btnLabel) btnLabel.textContent = finding ? 'Finding competitors…' : isFound ? '✓ 3 competitors found' : 'Find competitors →';
+      if (found) found.style.display = isFound ? 'flex' : 'none';
+    };
+
+    // ---- stepper + scheduler table ----
+    const steps = qa('[data-ps-step]');
+    const fills = qa('.ps-step-fill');
+    const grows = qa('[data-ps-grow]');
+    const menuEl = q('[data-ps-menu]');
+    let step = 0, sp = 0, stepAuto = true;
+
+    const paintTable = () => {
+      const key = stepsKey[step];
+      const hi = '#FFF4EC';
+      qa('[data-hc]').forEach((el) => { el.style.color = el.getAttribute('data-hc') === key || (el.getAttribute('data-hc') === 'loc' && key === 'sched') ? '#C2410C' : '#7F7066'; });
+      grows.forEach((row, i) => {
+        row.style.background = (key === 'use' && i === 0) ? '#FFF9F4' : 'transparent';
+        const sch = row.querySelector('[data-g="sch"]') as HTMLElement, prod = row.querySelector('[data-g="prod"]') as HTMLElement;
+        const comp = row.querySelector('[data-g="comp"]') as HTMLElement, loc = row.querySelector('[data-g="loc"]') as HTMLElement;
+        if (sch) { sch.style.borderColor = key === 'sched' ? '#FFD8BE' : '#EFE3DA'; sch.style.background = key === 'sched' ? hi : '#FFFFFF'; }
+        if (prod) prod.style.background = key === 'prod' ? hi : 'transparent';
+        if (comp) { comp.style.borderColor = key === 'comp' ? '#FFD8BE' : '#EFE3DA'; comp.style.background = key === 'comp' ? hi : '#FFFFFF'; }
+        if (loc) { loc.style.borderColor = key === 'sched' ? '#FFD8BE' : '#EFE3DA'; loc.style.background = key === 'sched' ? hi : '#FFFFFF'; }
+        const fetchCell = row.querySelector('[data-g="fetch"]') as HTMLElement;
+        const spin = row.querySelector('[data-g-spin]') as HTMLElement, ftext = row.querySelector('[data-g-ftext]') as HTMLElement;
+        const fetching = key === 'fetch' && i === 1, failed = key === 'fetch' && i === 3;
+        if (spin) spin.hidden = !fetching;
+        if (ftext) ftext.textContent = fetching ? 'Fetching…' : failed ? '1 failed fetch' : groupFetch[i];
+        if (fetchCell) fetchCell.style.color = failed ? '#B42318' : fetching ? '#C2410C' : '#665A51';
+      });
+      if (menuEl) menuEl.hidden = !(key === 'sched' || key === 'fetch');
+      qa('[data-ps-menu-i]').forEach((el, k) => {
+        const on = (key === 'fetch' && k === 1) || (key === 'sched' && k === 3);
+        el.style.background = on ? '#FFF4EC' : 'transparent';
+        el.style.color = on ? '#C2410C' : '#1C130E';
+      });
+      const sn = q('[data-ps-stepno]'); if (sn) sn.textContent = String(step + 1);
+      const nt = q('[data-ps-notetext]'); if (nt) nt.textContent = stepNotes[step];
+    };
+    const paintSteps = () => {
+      steps.forEach((el, i) => {
+        el.classList.toggle('is-on', i === step);
+        el.classList.toggle('is-done', i < step);
+        el.setAttribute('aria-pressed', String(i === step));
+        const nEl = el.querySelector('.ps-step-n') as HTMLElement;
+        if (nEl) nEl.textContent = i < step ? '✓' : String(i + 1);
+      });
+      fills.forEach((f, i) => { f.style.width = (i === step ? (stepAuto ? sp : 100) : 0) + '%'; });
+      paintTable();
+    };
+    steps.forEach((el, i) => el.addEventListener('click', () => { step = i; sp = 0; stepAuto = false; paintSteps(); }));
+
+    // ---- cadence clock ----
+    const clockBars = qa('[data-ps-clockbar]'), clockMarks = qa('[data-ps-clockmark]'), runs = qa('[data-ps-run]');
+    const clockLabel = q('[data-ps-clocklabel]');
+    runs.forEach((r) => { r.style.left = r.getAttribute('data-ps-run') + '%'; });
+    const paintClock = (now: number) => {
+      const pct = now.toFixed(1) + '%';
+      clockBars.forEach((b) => b.style.width = pct);
+      clockMarks.forEach((m) => m.style.left = pct);
+      runs.forEach((r) => { const ran = now >= Number(r.getAttribute('data-ps-run')); r.style.background = ran ? '#1C130E' : '#FFFFFF'; r.style.boxShadow = ran ? '0 0 0 1.5px #1C130E' : '0 0 0 1.5px #E2D3C8'; });
+      const hrs = Math.floor(now / 100 * 24), mins = Math.floor((now / 100 * 24 - hrs) * 60);
+      if (clockLabel) clockLabel.textContent = String(hrs).padStart(2, '0') + ':' + String(mins).padStart(2, '0');
+    };
+
+    // ---- the 280ms loop ----
+    let tick = 0, now = 0;
+    paintHero(0); paintSteps(); paintClock(0);
+    setInterval(() => {
+      tick++; now = (now + 0.35) % 100;
+      paintHero(Math.floor(tick / 4) % 10);
+      if (stepAuto) { sp += 4; if (sp >= 100) { sp = 0; step = (step + 1) % 5; paintSteps(); } else { fills.forEach((f, i) => { if (i === step) f.style.width = sp + '%'; }); } }
+      paintClock(now);
+    }, 280);
+
+    // ---- delivery tabs ----
+    const dvTitle = q('[data-ps-dvtitle]'), dvSub = q('[data-ps-dvsub]');
+    const dvMeta = [['Price Intelligence', 'Every product, every competitor'], ['Exports', 'By product group or by product'], ['REST API', 'JSON · prices, groups, competitors, runs'], ['Analytics & BI', 'Send data out for analysis'], ['Alerts & collaboration', 'Where your team gets notified']];
+    qa('[data-ps-dv]').forEach((el, i) => {
+      const go = () => {
+        qa('[data-ps-dv]').forEach((b, k) => b.classList.toggle('is-on', k === i));
+        qa('[data-ps-dvpanel]').forEach((pnl, k) => (pnl as HTMLElement).style.display = k === i ? 'flex' : 'none');
+        if (dvTitle) dvTitle.textContent = dvMeta[i][0];
+        if (dvSub) dvSub.textContent = dvMeta[i][1];
+      };
+      el.addEventListener('mouseenter', go); el.addEventListener('click', go);
+    });
+
+    // ---- billing toggle ----
+    qa('[data-ps-bill]').forEach((btn2) => btn2.addEventListener('click', () => {
+      const annual = btn2.getAttribute('data-ps-bill') === 'annual';
+      qa('[data-ps-bill]').forEach((b) => b.classList.toggle('is-on', b === btn2));
+      qa('.ps-price').forEach((el) => el.textContent = el.getAttribute(annual ? 'data-annual' : 'data-monthly') || '');
+      qa('.ps-note').forEach((el) => el.textContent = el.getAttribute(annual ? 'data-annual' : 'data-monthly') || '');
+    }));
+
+    // ---- faq ----
+    qa('[data-ps-faq-btn]').forEach((btn3) => btn3.addEventListener('click', () => {
+      const item = btn3.closest('[data-ps-faq]');
+      const wasOpen = item?.classList.contains('is-open');
+      qa('[data-ps-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-ps-faq-btn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!wasOpen && item) { item.classList.add('is-open'); btn3.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    // ---- scroll reveal ----
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>
