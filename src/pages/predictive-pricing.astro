@@ -1,0 +1,500 @@
+---
+// Native Astro port of the design package's Predictive Pricing page.
+// Static initial render + the full 1s animation loop and interactions reimplemented
+// in vanilla JS: hero lead-time countdown + forecast chart + pre-stage toggle,
+// reveal-triggered probability markers / backtest bars / counters, cycling
+// competitor-pattern highlight, horizon tabs and FAQ. Responsive via CSS media queries.
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+
+const problems = [['01', 'Monitoring tells you what happened. Every response is therefore a reaction, and the traffic that moved during the gap between their change and yours is gone.'], ['02', 'The same patterns repeat — end-of-quarter clearances, restock cuts, weekend promotions — but nobody has the history in one place to see them coming.'], ['03', "Reacting late forces over-correction. A cut made three days after a rival's is usually deeper than it needed to be, because share has to be won back rather than held."]].map(([n, t]) => ({ n, t }));
+const rivalsData: [string, number, string, string, string, string][] = [
+  ['Ridgeline Supply', 78, 'next 7 days', 'Cuts within a week of every restock. Inventory landed Tuesday.', '−$2.40 expected', 'stage'],
+  ['Northvale Direct', 54, 'next 14 days', 'Quarter-end clearance pattern, three years running.', '−6% category-wide', 'watch'],
+  ['Halden Marketplace', 19, 'next 7 days', 'Held price for 63 days. No trigger signal present.', 'no action staged', 'none'],
+];
+const rivals = rivalsData.map(([n, p, win, dsc, tag, k]) => ({ n, p, win, d: dsc, tag,
+  pc: k === 'stage' ? '#C2410C' : '#665A51', bc: k === 'stage' ? '#FFD8BE' : '#EFE3DA', sh: k === 'stage' ? '0 24px 48px -32px rgba(247,99,30,.45)' : 'none',
+  tb: k === 'stage' ? '#1C130E' : k === 'watch' ? '#FFF4EC' : '#FBF3EC', tbc: k === 'stage' ? '#1C130E' : k === 'watch' ? '#FFD8BE' : '#EFE3DA', tc: k === 'stage' ? '#FFFFFF' : k === 'watch' ? '#C2410C' : '#7F7066' }));
+const triage = [[78, 'STAGED'], [64, 'STAGED'], [42, 'REPORT'], [19, 'REPORT']].map(([p, l]) => ({ p, l, c: (p as number) >= 60 ? '#C2410C' : '#7F7066', bar: (p as number) >= 60 ? '#F7631E' : '#D7C6BA' }));
+const pat: [string, string, string, string, number[]][] = [
+  ['Ridgeline Supply', 'restock-triggered · Tue / Wed', '11.4 d', '4 of last 4 after restock', [3, 14, 25, 36, 47, 58, 69, 80, 91]],
+  ['Northvale Direct', 'calendar-driven · quarter end', '89 d', '3 years, same window', [24, 49, 74, 99]],
+  ['Halden Marketplace', 'algorithmic · follows cheapest', '6 h', 'reactive, not predictive', Array.from({ length: 50 }, (_, i) => i * 2)],
+  ['Ambervale Retail', 'promotional · weekend depth', '28 d', 'depth −8% to −12%', [10, 38, 66, 94]],
+];
+const patterns = pat.map(([n, k, mm, note, marks], i) => ({ n, k, m: mm, note, last: i === 3,
+  ticks: Array.from({ length: 20 }, (_, j) => { const on = marks.some((x) => Math.floor(x / 5) === j); return { h: on ? (i === 3 ? 90 : 75) : 18, on }; }) }));
+const hzData: [string, number, string][] = [
+  ['48 hours', 31, 'A move inside 48 hours is possible but not the most likely window.'],
+  ['7 days', 78, 'Most likely window. Ridgeline has cut this SKU within six days of every stock replenishment for the last four cycles, and inventory landed Tuesday.'],
+  ['14 days', 64, 'Still above the action threshold, with a wider timing interval than seven days.'],
+  ['30 days', 42, 'Past fourteen days most categories are reported for planning rather than used to stage prices.'],
+];
+const backtest = [['48 hours', 91], ['7 days', 84], ['14 days', 71], ['30 days', 48]].map(([t, p]) => ({ t, p: p as number, c: (p as number) >= 70 ? '#1C130E' : '#D7C6BA' }));
+const cats = [['Electronics · live', '#1E7A3D'], ['Home & garden · live', '#1E7A3D'], ['Grocery · in backtest', '#F7631E'], ['Apparel · not started', '#D7C6BA']].map(([t, d]) => ({ t, d }));
+const fq = [
+  ['What is predictive pricing?', 'It is forecasting what competitors will charge next, rather than only recording what they charge now. The output is a probability, an expected price and a window, which together let you prepare a response before the move happens.'],
+  ['How is it different from dynamic repricing?', 'Repricing reacts to a change that has already been published. Predictive Pricing anticipates it and stages the reaction in advance, so the two run together: the forecast decides when to be ready, your rules decide what to publish.'],
+  ['How much history do you need before forecasts are usable?', 'Roughly six months of observed competitor changes gives workable cadence and depth patterns; twelve to thirty-six months makes seasonal and calendar-driven behaviour reliable. Competitors with too little history are reported as unmodelled rather than guessed at.'],
+  ['How accurate are the forecasts?', 'Accuracy is measured per competitor, category and horizon, and published in the product alongside every forecast. Short horizons score far better than long ones, which is why staging is limited to the range that backtests well for your catalog.'],
+  ['What happens when a predicted move never arrives?', 'Nothing is published. A pre-staged price waits for confirmation of the predicted move and expires at the end of its window, so a wrong forecast costs no margin.'],
+  ['Can we control which forecasts are allowed to act?', 'Yes. You set the probability threshold, the maximum horizon and the categories in scope. Below the threshold a forecast is information only, and every staged price still passes through your floors, caps and MAP commitments.'],
+  ['How is Predictive Pricing priced?', "It depends on catalog size, how many competitors you model and the forecast cadence. Book a demo and we'll scope it with you."],
+].map(([q, a], i) => ({ q, a, n: String(i + 1).padStart(2, '0') }));
+const lg: [string, string, number, string][] = [['McAfee', 'Geist,sans-serif', 600, '0'], ['Xometry', 'Geist,sans-serif', 500, '-.01em'], ['Do it Best', 'Inter,sans-serif', 700, '-.02em'], ['Wolt', 'Geist,sans-serif', 700, '.02em'], ['neho', 'Inter,sans-serif', 600, '-.03em'], ['apoBank', 'Geist,sans-serif', 700, '-.02em']];
+const logos = [...lg, ...lg].map(([t, f, w, ls]) => ({ t, f, w, ls }));
+---
+<PriceLeapLayout
+  title="AI Predictive Pricing · Forecast competitor price moves · PriceLeap"
+  description="PriceLeap learns each competitor's cadence, depth and triggers, forecasts their next move with a probability and a window, and pre-stages your response so it lands the same hour theirs does."
+>
+  <div class="pp">
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-10%;top:-25%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.10),transparent);pointer-events:none"></div>
+      <div class="pp-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(40px,6vw,84px) clamp(16px,4vw,40px) clamp(48px,6vw,88px);gap:clamp(36px,4.5vw,64px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>AI Platform · Predictive Pricing</span>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(42px,6vw,76px);line-height:1;letter-spacing:-.05em;color:#1C130E"><span style="font-weight:400">Predictive </span><span style="font-weight:700">Pricing</span></h1>
+          <p style="margin:0;max-width:580px;font-size:18px;line-height:1.65;color:#3A302A;text-wrap:pretty">Competitor price moves are rarely random. PriceLeap learns each rival's cadence, depth and triggers, forecasts the next move with a probability and a window, and pre-stages your response so it lands the same hour theirs does.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+            <a href="/book-a-demo" style="height:48px;padding:0 22px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Get a Demo</a>
+            <a href="/book-a-demo" style="height:48px;padding:0 18px;display:inline-flex;align-items:center;border-radius:12px;border:1px solid #EFE3DA;background:#FFFFFF;color:#1C130E;font-family:Geist,sans-serif;font-weight:500;font-size:15px">See a forecast on your data →</a>
+          </div>
+        </div>
+
+        <div style="min-width:0;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;box-shadow:0 48px 90px -52px rgba(60,30,15,.45),0 0 0 6px rgba(255,255,255,.7)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+            <span style="font-size:13.5px;font-weight:600;color:#1C130E">Predictive Pricing · 14-day forecast</span>
+            <span style="height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.06em;color:#FFFFFF">FORECAST v2.4</span>
+          </div>
+          <div style="padding:16px 16px 6px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:#665A51"><span>Competitor price · <b style="color:#1C130E">Ridgeline</b></span><span style="display:flex;gap:12px;font-family:'Geist Mono',monospace;font-size:10px"><span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:2px;background:#1C130E"></span>Observed</span><span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:0;border-top:2px dashed #F7631E"></span>Forecast</span><span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:8px;border-radius:2px;background:#FFE3CF"></span>80% interval</span></span></div>
+            <svg viewBox="0 0 520 200" style="display:block;width:100%;height:auto;margin-top:10px;overflow:visible">
+              <line x1="0" y1="40" x2="520" y2="40" stroke="#F5ECE5"></line><line x1="0" y1="100" x2="520" y2="100" stroke="#F5ECE5"></line><line x1="0" y1="160" x2="520" y2="160" stroke="#F5ECE5"></line>
+              <path d="M260,62 L300,66 L340,108 L380,128 L420,124 L460,120 L520,118 L520,160 L460,158 L420,160 L380,162 L340,140 L300,82 L260,62 Z" fill="#FFE3CF" opacity=".75" style="animation:pp-fade 1s ease 1.4s both"></path>
+              <polyline points="0,70 30,68 60,72 90,62 120,66 150,60 180,98 210,90 240,66 260,62" fill="none" stroke="#1C130E" stroke-width="2.2" stroke-linejoin="round" pathLength="1" style="stroke-dasharray:1;animation:pp-draw 1.4s ease both"></polyline>
+              <polyline points="260,62 300,72 340,124 380,144 420,142 460,139 520,138" fill="none" stroke="#F7631E" stroke-width="2.2" stroke-dasharray="6 5" stroke-linejoin="round" style="animation:pp-fade .6s ease 1.3s both"></polyline>
+              <line x1="260" y1="20" x2="260" y2="176" stroke="#1C130E" stroke-dasharray="3 4"></line>
+              <rect x="232" y="4" width="56" height="18" rx="5" fill="#1C130E"></rect><text x="260" y="17" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#FFFFFF">TODAY</text>
+              <g style="animation:pp-fade .5s ease 1.9s both"><circle cx="340" cy="124" r="5" fill="#F7631E"><animate attributeName="r" values="5;7;5" dur="1.6s" repeatCount="indefinite"></animate></circle><circle cx="340" cy="124" r="5" fill="none" stroke="#F7631E" style="animation:pp-ring 1.8s ease-out infinite"></circle><rect x="352" y="96" width="96" height="20" rx="5" fill="#FFF4EC" stroke="#FFD8BE"></rect><text x="400" y="110" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#C2410C">PREDICTED CUT</text></g>
+              <g font-family="Geist Mono" font-size="9.5" fill="#7F7066"><text x="6" y="194">−21d</text><text x="88" y="194">−14d</text><text x="172" y="194">−7d</text><text x="338" y="194">+7d</text><text x="488" y="194">+14d</text></g>
+            </svg>
+          </div>
+          <div class="pp-herostat" style="gap:1px;background:#F5ECE5;border-top:1px solid #F5ECE5">
+            <div class="pp-pricecell" style="background:#FFFFFF;padding:14px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">PREDICTED PRICE · SKU 48201</div><div style="margin-top:4px;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap"><span style="font-family:Geist,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.03em;color:#1C130E">$27.59</span><span style="font-size:12px;color:#665A51;white-space:nowrap">from <s>$29.99</s> · <b style="color:#C2410C">−$2.40</b> expected</span></div></div>
+            <div style="background:#FFFFFF;padding:14px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">PROBABILITY</div><div style="margin-top:4px;font-family:Geist,sans-serif;font-size:22px;font-weight:600;color:#1C130E">78%</div><div style="margin-top:6px;height:4px;border-radius:4px;background:#F5ECE5"><div style="height:100%;width:78%;border-radius:4px;background:#F7631E;transition:width .6s ease"></div></div></div>
+            <div style="background:#FFFFFF;padding:14px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">WINDOW</div><div style="margin-top:4px;font-family:Geist,sans-serif;font-size:22px;font-weight:600;color:#1C130E">6 days</div></div>
+            <div style="background:#FFFFFF;padding:14px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">LEAD TIME</div><div data-pp-lead style="margin-top:4px;font-family:Geist,sans-serif;font-size:22px;font-weight:600;color:#1C130E">5d 14h 00m</div></div>
+          </div>
+          <div style="padding:12px 16px;border-top:1px solid #F5ECE5;display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.5;color:#3A302A"><span style="flex:none;margin-top:1px;height:20px;padding:0 7px;display:flex;align-items:center;border-radius:5px;background:#FFF4EC;border:1px solid #FFD8BE;font-family:'Geist Mono',monospace;font-size:9.5px;color:#C2410C">TRIGGER</span><span>Replenishment detected Tuesday · Ridgeline has cut within six days of restock on four of the last four cycles</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px;border-top:1px solid #F5ECE5;background:#FFF9F4">
+            <button type="button" data-pp-stage class="pp-stagebtn" style="height:40px;border-radius:10px;border:1px solid transparent;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-size:13px;font-weight:500;cursor:pointer;transition:all .3s"><span data-pp-stagelabel>Pre-stage response</span></button>
+            <button type="button" style="height:40px;border-radius:10px;border:1px solid #EFE3DA;background:#FFFFFF;color:#1C130E;font-size:13px;font-weight:500;cursor:pointer">Extend horizon</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 PROBLEM -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="max-width:900px">
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.8vw,46px);line-height:1.1;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">By the time a competitor's price change shows up in a report, </span><span style="font-weight:700">the week is already lost.</span></h2>
+        </div>
+        <div data-reveal style="margin-top:28px;padding:18px clamp(16px,2.4vw,24px);border:1px solid #EFE3DA;border-radius:18px;background:#FFF9F4">
+          <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066"><span>RIVAL CUTS</span><span>REPORT ARRIVES</span><span>YOU RESPOND</span></div>
+          <div style="position:relative;margin-top:12px;height:28px">
+            <span style="position:absolute;left:0;right:0;top:13px;height:2px;background:#EFE3DA"></span>
+            <span style="position:absolute;left:4%;top:13px;width:88%;height:2px;background:repeating-linear-gradient(90deg,#F5C6C3 0 6px,transparent 6px 10px)"></span>
+            <span style="position:absolute;left:4%;top:7px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:#B42318;border:2px solid #FFFFFF"></span>
+            <span style="position:absolute;left:50%;top:7px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:#FFFFFF;border:2px solid #7F7066"></span>
+            <span style="position:absolute;left:92%;top:7px;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:#1C130E;border:2px solid #FFFFFF"></span>
+          </div>
+          <div style="margin-top:6px;text-align:center;font-family:'Geist Mono',monospace;font-size:10.5px;color:#B42318">← traffic lost in the gap →</div>
+        </div>
+        <div data-reveal class="pp-three" style="margin-top:14px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#EFE3DA;gap:1px">
+          {problems.map((p) => (<div style="background:#FFFFFF;padding:26px;display:flex;flex-direction:column;gap:14px"><span style="font-family:Geist,sans-serif;font-size:38px;font-weight:600;letter-spacing:-.05em;line-height:1;color:#E2D3C8">{p.n}</span><p style="margin:0;font-size:15.5px;line-height:1.65;color:#1C130E">{p.t}</p></div>))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 APPROACH (probability markers) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div class="pp-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:center">
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>The approach</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Forecast the move,</span><span style="font-weight:400"> not the aftermath</span></h2>
+          <p style="margin:0;font-size:16.5px;line-height:1.7;color:#3A302A">PriceLeap models every tracked competitor separately: how often they move, how deep they cut, which days they favour and what usually precedes a change.</p>
+          <p style="margin:0;font-size:16.5px;line-height:1.7;color:#3A302A">Each forecast is published with a probability, a price range and a window — so a 78% call and a 40% call are treated differently rather than both becoming an alert.</p>
+          <p style="margin:0;font-size:16.5px;line-height:1.7;color:#3A302A">High-confidence forecasts pre-stage a response in the Pricing Decision Engine. It publishes the moment the predicted move is confirmed, and expires quietly if it never arrives.</p>
+        </div>
+        <div data-reveal style="display:flex;flex-direction:column;gap:10px">
+          {rivals.map((r) => (
+            <div style={`background:#FFFFFF;border:1px solid ${r.bc};border-radius:18px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;box-shadow:${r.sh}`}>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-family:Geist,sans-serif;font-size:16.5px;font-weight:600;color:#1C130E">{r.n}</span><span style={`font-family:'Geist Mono',monospace;font-size:12px;color:${r.pc}`}>{r.p}% · {r.win}</span></div>
+              <div>
+                <div style="position:relative;height:8px;border-radius:8px;background:linear-gradient(90deg,#F5ECE5,#FFD8BE 60%,#F7631E)">
+                  <span class="pp-rmark" data-pp-rmark={r.p} style="position:absolute;top:50%;left:0%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#FFFFFF;border:3px solid #1C130E;box-shadow:0 4px 10px -4px rgba(60,30,15,.5);transition:left 1.2s cubic-bezier(.2,.7,.2,1)"></span>
+                  <span style="position:absolute;top:-4px;bottom:-4px;left:60%;width:1.5px;background:#1C130E;opacity:.35"></span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066"><span>Unlikely</span><span>Near certain</span></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap"><span style="flex:1;min-width:200px;font-size:13.5px;line-height:1.5;color:#3A302A">{r.d}</span><span style={`height:24px;padding:0 9px;display:flex;align-items:center;border-radius:6px;background:${r.tb};border:1px solid ${r.tbc};font-family:'Geist Mono',monospace;font-size:10.5px;color:${r.tc};white-space:nowrap`}>{r.tag}</span></div>
+            </div>
+          ))}
+          <span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">Marker line = action threshold (60%)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 WHY PREDICTION MATTERS -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Why prediction matters</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;max-width:820px;text-wrap:balance"><span style="font-weight:400">Why a forecast is worth more than </span><span style="font-weight:700">a faster alert</span></h2>
+          <p style="margin:0;font-size:17px;color:#3A302A">Speed only shortens the gap. Knowing the move is coming removes it.</p>
+        </div>
+        <div data-reveal class="pp-three" style="margin-top:44px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#EFE3DA;gap:1px">
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:150px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:20px">
+              <div style="display:grid;grid-template-columns:62px 1fr;gap:10px;align-items:center"><span style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">ALERT</span><div style="position:relative;height:10px"><span style="position:absolute;left:10%;top:2px;width:6px;height:6px;border-radius:50%;background:#B42318"></span><span style="position:absolute;left:10%;right:20%;top:4px;height:2px;background:#F5C6C3"></span><span style="position:absolute;right:20%;top:1px;width:8px;height:8px;border-radius:50%;background:#1C130E"></span></div></div>
+              <div style="display:grid;grid-template-columns:62px 1fr;gap:10px;align-items:center"><span style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#C2410C">FORECAST</span><div style="position:relative;height:10px"><span style="position:absolute;left:10%;top:1px;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:#F7631E;box-shadow:0 0 0 4px rgba(247,99,30,.18)"></span></div></div>
+              <span style="font-family:'Geist Mono',monospace;font-size:10px;color:#665A51">same hour · no gap</span>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">Respond at the same hour, not the next day</span><p style="margin:0;font-size:15px;line-height:1.6;color:#665A51">A pre-staged price publishes on confirmation. There is no analyst in the loop, and no window where a rival is cheaper than you on a SKU that matters.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:150px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:flex-end;justify-content:center;gap:28px;padding:20px 20px 16px">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span style="width:40px;height:44px;border-radius:6px 6px 0 0;background:#F7631E"></span><span style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#C2410C">WITH</span></div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span style="width:40px;height:92px;border-radius:6px 6px 0 0;background:#E2D3C8"></span><span style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">AFTER</span></div>
+              <span style="align-self:center;font-family:'Geist Mono',monospace;font-size:10px;color:#665A51">discount depth</span>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">Shallower cuts, because you are holding not recovering</span><p style="margin:0;font-size:15px;line-height:1.6;color:#665A51">Moving with a competitor protects share at a smaller discount than moving after them. The difference compounds across a quarter of promotions.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:150px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;flex-direction:column;justify-content:center;gap:7px;padding:20px">
+              {triage.map((t) => (
+                <div style="display:grid;grid-template-columns:38px 1fr auto;gap:10px;align-items:center;font-size:11.5px"><span style={`font-family:'Geist Mono',monospace;color:${t.c}`}>{t.p}%</span><div style="height:6px;border-radius:6px;background:#F5ECE5"><div style={`height:100%;width:${t.p}%;border-radius:6px;background:${t.bar}`}></div></div><span style={`font-family:'Geist Mono',monospace;font-size:9.5px;color:${t.c}`}>{t.l}</span></div>
+              ))}
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">Probability decides who gets attention</span><p style="margin:0;font-size:15px;line-height:1.6;color:#665A51">Low-confidence forecasts stay in the report. Only calls above your action threshold pre-stage anything, so the team is not re-triaging noise.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 HOW IT WORKS (patterns + horizon tabs + backtest counters) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>How it works</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;max-width:820px;text-wrap:balance"><span style="font-weight:400">How PriceLeap forecasts </span><span style="font-weight:700">a competitor's next move</span></h2>
+        </div>
+
+        <!-- step 01 patterns -->
+        <div data-reveal class="pp-stepg" style="margin-top:56px;gap:clamp(24px,4vw,56px);align-items:center">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <span style="display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center">01</span><span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066">STEP 01</span></span>
+            <h3 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(24px,2.6vw,32px);font-weight:600;letter-spacing:-.03em;color:#1C130E">Learn each competitor's pattern</h3>
+            <p style="margin:0;font-size:16px;line-height:1.65;color:#3A302A">Years of observed price changes are decomposed per competitor into cadence, typical depth, preferred weekday and the events that tend to precede a move.</p>
+            <p style="margin:0;font-size:16px;line-height:1.65;color:#3A302A">Patterns are held per competitor and per category. A marketplace seller repricing hourly and a national retailer repricing monthly are never modelled the same way.</p>
+          </div>
+          <div style="min-width:0;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 40px 80px -52px rgba(60,30,15,.42)">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span style="font-size:13.5px;font-weight:600;color:#1C130E">Competitor patterns · Electronics</span><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">36 months observed · 214k price changes</span></div>
+            {patterns.map((p, pi) => (
+              <div class="pp-patrow" data-pp-pat={pi} style={`display:grid;gap:14px;align-items:center;padding:14px 16px;border-bottom:${p.last ? 'none' : '1px solid #F5ECE5'};background:#FFFFFF;transition:background .4s`}>
+                <div style="min-width:0"><div style="font-size:14px;font-weight:600;color:#1C130E">{p.n}</div><div style="margin-top:2px;font-family:'Geist Mono',monospace;font-size:10.5px;color:#665A51">{p.k}</div></div>
+                <div style="display:flex;align-items:flex-end;gap:2px;height:26px">{p.ticks.map((t) => (<span class="pp-tick" data-on={t.on ? '1' : '0'} style={`flex:1;height:${t.h}%;border-radius:1px;background:${t.on ? '#1C130E' : '#F5ECE5'}`}></span>))}</div>
+                <div style="text-align:right"><div style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">{p.m}</div><div style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">median interval</div></div>
+                <span class="pp-patnote" style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#C2410C">{p.note}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <!-- step 02 horizon tabs -->
+        <div data-reveal class="pp-stepgr" style="margin-top:72px;gap:clamp(24px,4vw,56px);align-items:center">
+          <div class="pp-s2panel" style="min-width:0;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 40px 80px -52px rgba(60,30,15,.42)">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span style="font-size:13.5px;font-weight:600;color:#1C130E">Forecast by horizon</span><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">Ridgeline Supply · SKU 48201</span></div>
+            <div role="tablist" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:#F5ECE5;border-bottom:1px solid #F5ECE5">
+              {hzData.map(([t, p], i) => (
+                <button type="button" role="tab" class="pp-hz" class:list={[{ 'is-on': i === 1 }]} data-pp-hz={i} aria-selected={i === 1 ? 'true' : 'false'} style="border:none;background:#FFF9F4;padding:14px 10px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;cursor:pointer;position:relative;transition:background .25s">
+                  <span class="pp-hz-t" style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">{t}</span>
+                  <span class="pp-hz-v" style="font-family:Geist,sans-serif;font-size:22px;font-weight:600;letter-spacing:-.03em;color:#665A51">{p}%</span>
+                  <span style="width:100%;height:4px;border-radius:4px;background:#F5ECE5"><span style={`display:block;height:100%;width:${p}%;border-radius:4px;background:${p >= 60 ? '#F7631E' : '#D7C6BA'}`}></span></span>
+                  <span class="pp-hz-under" style="position:absolute;left:0;right:0;bottom:0;height:2px;background:transparent"></span>
+                </button>
+              ))}
+            </div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:14px;min-height:250px">
+              <p data-pp-hznote style="margin:0;font-size:14px;line-height:1.6;color:#1C130E">{hzData[1][2]}</p>
+              <div data-pp-hzfull style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
+                  <div style="border:1px solid #F5ECE5;border-radius:12px;padding:10px"><div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7F7066">PROBABILITY</div><div style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:#1C130E">78%</div></div>
+                  <div style="border:1px solid #F5ECE5;border-radius:12px;padding:10px"><div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7F7066">EXPECTED</div><div style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:#C2410C">−$2.40</div></div>
+                  <div style="border:1px solid #F5ECE5;border-radius:12px;padding:10px"><div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7F7066">INTERVAL</div><div style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:#1C130E">± $0.55</div></div>
+                  <div style="border:1px solid #F5ECE5;border-radius:12px;padding:10px"><div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7F7066">LEAD TIME</div><div style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:#1C130E">6 days</div></div>
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <span style="height:24px;padding:0 9px;display:flex;align-items:center;border-radius:6px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;color:#FFFFFF">action threshold 60%</span>
+                  <span style="height:24px;padding:0 9px;display:flex;align-items:center;border-radius:6px;border:1px solid #EFE3DA;font-family:'Geist Mono',monospace;font-size:10px;color:#3A302A">restock signal</span>
+                  <span style="height:24px;padding:0 9px;display:flex;align-items:center;border-radius:6px;border:1px solid #EFE3DA;font-family:'Geist Mono',monospace;font-size:10px;color:#3A302A">promo calendar</span>
+                  <span style="height:24px;padding:0 9px;display:flex;align-items:center;border-radius:6px;border:1px solid #EFE3DA;font-family:'Geist Mono',monospace;font-size:10px;color:#3A302A">3y history</span>
+                </div>
+                <span style="align-self:flex-start;height:30px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:8px;background:#FFF4EC;border:1px solid #FFD8BE;font-size:12.5px;font-weight:500;color:#C2410C"><span style="width:7px;height:7px;border-radius:50%;background:#F7631E;animation:pp-pulse 1.6s infinite"></span>Response pre-staged</span>
+              </div>
+              <span data-pp-hzpartial hidden style="align-self:flex-start;padding:8px 12px;border-radius:10px;border:1px dashed #E2D3C8;font-family:'Geist Mono',monospace;font-size:11px;color:#7F7066">↑ Select a horizon to see its forecast.</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <span style="display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center">02</span><span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066">STEP 02</span></span>
+            <h3 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(24px,2.6vw,32px);font-weight:600;letter-spacing:-.03em;color:#1C130E">Forecast the next move</h3>
+            <p style="margin:0;font-size:16px;line-height:1.65;color:#3A302A">For each SKU and competitor the model returns a probability, an expected price, an interval and a window — the four things needed to decide whether to act early.</p>
+            <p style="margin:0;font-size:16px;line-height:1.65;color:#3A302A">Accuracy degrades with distance, and the forecast says so. Past fourteen days most categories are reported for planning rather than used to stage prices.</p>
+          </div>
+        </div>
+
+        <!-- step 03 backtest counters -->
+        <div data-reveal class="pp-stepg" style="margin-top:72px;gap:clamp(24px,4vw,56px);align-items:center">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <span style="display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:12px;display:flex;align-items:center;justify-content:center">03</span><span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066">STEP 03</span></span>
+            <h3 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(24px,2.6vw,32px);font-weight:600;letter-spacing:-.03em;color:#1C130E">Pre-stage the response, then score the call</h3>
+            <p style="margin:0;font-size:16px;line-height:1.65;color:#3A302A">Forecasts above your threshold stage a price behind your existing rules and floors. It publishes on confirmation of the predicted move, or expires without touching anything.</p>
+            <p style="margin:0;font-size:16px;line-height:1.65;color:#3A302A">Every forecast is scored against what actually happened. Hit rate, timing error and depth error are reported per competitor and per horizon, and feed the next model run.</p>
+          </div>
+          <div style="min-width:0;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 40px 80px -52px rgba(60,30,15,.42)">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span style="font-size:13.5px;font-weight:600;color:#1C130E">Backtest · Electronics, trailing 90 days</span><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">4,180 forecasts scored</span></div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+              {backtest.map((b) => (
+                <div style="display:grid;grid-template-columns:72px minmax(0,1fr) 46px;gap:12px;align-items:center"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:#665A51">{b.t}</span><div style="height:10px;border-radius:10px;background:#F5ECE5;overflow:hidden"><div class="pp-bt" data-pp-bt={b.p} style={`height:100%;width:0%;border-radius:10px;background:${b.c};transition:width 1.1s cubic-bezier(.2,.7,.2,1)`}></div></div><span style="font-family:Geist,sans-serif;font-size:15px;font-weight:600;color:#1C130E;text-align:right">{b.p}%</span></div>
+              ))}
+              <p style="margin:6px 0 0;font-size:12.5px;line-height:1.55;color:#665A51">Hit rate counts a forecast correct when direction and window both land. At seven days the median timing error was 1.4 days and the median depth error $0.38 — close enough to stage a price against.</p>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:#F5ECE5;border-top:1px solid #F5ECE5">
+              <div style="background:#FFFFFF;padding:12px 14px"><div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7F7066">PRE-STAGED</div><div data-pp-cstaged style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:#1C130E">0</div></div>
+              <div style="background:#FFFFFF;padding:12px 14px"><div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7F7066">PUBLISHED ON CONFIRM</div><div data-pp-cpub style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:#1E7A3D">0</div></div>
+              <div style="background:#FFFFFF;padding:12px 14px"><div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7F7066">EXPIRED UNUSED</div><div data-pp-cexp style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:#665A51">0</div></div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;padding:12px 16px;border-top:1px solid #F5ECE5;background:#FFF9F4">
+              {cats.map((c) => (<span style="height:24px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:11.5px;color:#1C130E"><span style={`width:6px;height:6px;border-radius:50%;background:${c.d}`}></span>{c.t}</span>))}
+            </div>
+          </div>
+        </div>
+
+        <p data-reveal style="margin:56px auto 0;max-width:820px;text-align:center;padding:14px 20px;border-radius:14px;background:#FFFFFF;border:1px solid #F5ECE5;font-size:15px;line-height:1.6;color:#3A302A">Built on the <a href="#" style="font-weight:600">Pricing Engine</a>, fed by <a href="/price-intelligence-engine" style="font-weight:600">Price Intelligence</a> and executed through the <a href="/dynamic-pricing-software" style="font-weight:600">Pricing Decision Engine</a> — bounded by <a href="#" style="font-weight:600">Margin Protection</a>.</p>
+      </div>
+    </section>
+
+    <!-- 06 OUTCOME (placeholder cards) -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>The outcome</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;max-width:820px;text-wrap:balance"><span style="font-weight:400">What changes when the move is </span><span style="font-weight:700">known in advance</span></h2>
+        </div>
+        <div data-reveal class="pp-out" style="margin-top:40px;gap:12px">
+          <div style="border:1px dashed #E2D3C8;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">[ VERIFY STAT ]</span><span style="font-family:Geist,sans-serif;font-size:48px;font-weight:600;letter-spacing:-.05em;color:#1C130E">~X%</span><span style="font-size:14px;line-height:1.55;color:#665A51">e.g. forecast hit rate at the seven-day horizon across live categories. — confirm before publish</span></div>
+          <div style="border:1px dashed #E2D3C8;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">[ VERIFY STAT ]</span><span style="font-family:Geist,sans-serif;font-size:48px;font-weight:600;letter-spacing:-.05em;color:#1C130E">~X hrs</span><span style="font-size:14px;line-height:1.55;color:#665A51">e.g. median response time to a competitor move once forecasts pre-stage prices. — confirm before publish</span></div>
+          <figure class="pp-quote" style="margin:0;border:1px dashed #E2D3C8;border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:16px;background:#FFF9F4">
+            <span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">[ TESTIMONIAL ]</span>
+            <blockquote style="margin:0;font-family:Geist,sans-serif;font-size:18px;line-height:1.5;color:#1C130E">“ Quote goes here — the pricing lead's words on the first time the team matched a competitor's cut the same morning it happened. ”</blockquote>
+            <figcaption style="display:flex;align-items:center;gap:12px"><span style="width:38px;height:38px;border-radius:50%;border:1px dashed #E2D3C8"></span><span><span style="display:block;font-size:14px;font-weight:600;color:#1C130E">Name</span><span style="display:block;font-size:12.5px;color:#665A51">Role · Company</span></span></figcaption>
+          </figure>
+        </div>
+        <div data-reveal class="pp-case" style="margin-top:12px;gap:12px">
+          <div class="pp-caseinner" style="border:1px dashed #E2D3C8;border-radius:20px;overflow:hidden;display:grid">
+            <div style="min-height:140px;background:repeating-linear-gradient(135deg,#FBF3EC 0 8px,#FFFCF9 8px 16px);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">thumbnail</div>
+            <div style="padding:22px;display:flex;flex-direction:column;gap:10px;justify-content:center"><span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">[ CASE STUDY ]</span><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;line-height:1.35;color:#1C130E">How [retailer] cut response time from X days to X hours by forecasting competitor moves</span><a href="#" style="font-weight:600;font-size:14px">Read the case study →</a></div>
+          </div>
+          <div style="border:1px dashed #E2D3C8;border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:10px;justify-content:center;align-items:center;text-align:center"><span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">[ LOGO WALL ]</span><span style="font-size:13px;color:#665A51">Approved customer logos go here.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-220px;width:640px;height:400px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.14),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:20px">
+          <h2 style="margin:0;max-width:860px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">See next week's competitor moves on </span><span style="font-weight:700">your own catalog</span></h2>
+          <p style="margin:0;max-width:640px;font-size:17px;line-height:1.6;color:#3A302A">Give us a category and the competitors you track. We'll backtest the forecast on the last 90 days, show the hit rate by horizon, and the moves the model would have called before they happened.</p>
+          <span style="height:28px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:999px;background:#FFF9F4;border:1px solid #F5ECE5;font-size:13px;color:#1C130E"><span style="width:6px;height:6px;border-radius:50%;background:#1E7A3D"></span>No prices change during evaluation.</span>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center">
+            <a href="/book-a-demo" style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Get a Demo</a>
+            <a href="/contact" style="height:50px;padding:0 20px;display:inline-flex;align-items:center;border-radius:12px;border:1px solid #EFE3DA;background:#FFFFFF;color:#1C130E;font-family:Geist,sans-serif;font-weight:500;font-size:15px">Talk to sales</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 FAQ -->
+    <section style="border-top:1px solid #EFE3DA;border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="pp-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <div data-reveal class="pp-sticky" style="top:96px;display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>FAQ</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Predictive pricing </span><span style="font-weight:700">FAQ</span></h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {fq.map((qq, i) => (
+            <div class="pp-faq" class:list={[{ 'is-open': i === 0 }]} data-pp-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-pp-faq-btn aria-expanded={i === 0 ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="pp-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px;color:#B9A99C">{qq.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{qq.q}</span>
+                <span class="pp-faq-plus" style="flex:none;width:28px;height:28px;border-radius:8px;background:#FBF3EC;color:#1C130E;display:flex;align-items:center;justify-content:center;transition:all .3s"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="pp-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{qq.a}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 TRUSTED BY -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFCF9">
+      <div class="pp-logowrap" style="max-width:1280px;margin:0 auto">
+        <div class="pp-logolabel" style="padding:22px clamp(16px,4vw,40px);display:flex;align-items:center;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#665A51">Trusted by teams at</div>
+        <div style="overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)">
+          <div style="display:flex;width:max-content;animation:pp-marquee 32s linear infinite">
+            {logos.map((l) => (<div style={`flex:none;width:200px;height:84px;display:flex;align-items:center;justify-content:center;border-right:1px solid #F5ECE5;font-family:${l.f};font-size:21px;font-weight:${l.w};letter-spacing:${l.ls};color:#665A51`}>{l.t}</div>))}
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .pp { background: #FFFCF9; overflow-x: clip; }
+  @keyframes pp-fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pp-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes pp-ring { 0% { r: 5; opacity: .6; } 100% { r: 16; opacity: 0; } }
+  @keyframes pp-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes pp-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.5); } 100% { box-shadow: 0 0 0 7px rgba(247,99,30,0); } }
+  @keyframes pp-marquee { to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .pp *, .pp *::before, .pp *::after { animation: none !important; transition: none !important; } }
+
+  .pp-hero { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .pp-hero { grid-template-columns: minmax(0,.92fr) minmax(0,1.08fr); } }
+  .pp-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .pp-split { grid-template-columns: minmax(0,.95fr) minmax(0,1.05fr); } }
+  .pp-sticky { position: static; }
+  @media (min-width: 1024px) { .pp-sticky { position: sticky; } }
+  .pp-herostat { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .pp-pricecell { grid-column: 1 / -1; }
+  @media (min-width: 600px) { .pp-herostat { grid-template-columns: minmax(0,1.5fr) repeat(3,minmax(0,1fr)); } .pp-pricecell { grid-column: auto; } }
+  .pp-three { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 960px) { .pp-three { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+  .pp-stepg { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .pp-stepg { grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); } }
+  .pp-stepgr { display: grid; grid-template-columns: 1fr; }
+  .pp-s2panel { order: 1; }
+  @media (min-width: 1024px) { .pp-stepgr { grid-template-columns: minmax(0,1.15fr) minmax(0,.85fr); } .pp-s2panel { order: 0; } }
+  .pp-patrow { grid-template-columns: minmax(0,1fr) 90px; }
+  .pp-patrow .pp-patnote { grid-column: 1 / -1; }
+  @media (min-width: 720px) { .pp-patrow { grid-template-columns: minmax(0,1.2fr) minmax(0,1fr) 90px minmax(0,.9fr); } .pp-patrow .pp-patnote { grid-column: auto; } }
+  .pp-out { display: grid; grid-template-columns: 1fr; }
+  .pp-quote { grid-column: 1 / -1; }
+  @media (min-width: 720px) { .pp-out { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1000px) { .pp-out { grid-template-columns: minmax(0,1fr) minmax(0,1fr) minmax(0,2fr); } .pp-quote { grid-column: auto; } }
+  .pp-case { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .pp-case { grid-template-columns: minmax(0,2fr) minmax(0,1fr); } }
+  .pp-caseinner { grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .pp-caseinner { grid-template-columns: 200px minmax(0,1fr); } }
+  .pp-logowrap { display: grid; grid-template-columns: 1fr; border-bottom: none; }
+  .pp-logolabel { border-bottom: 1px solid #EFE3DA; }
+  @media (min-width: 720px) { .pp-logowrap { grid-template-columns: 260px minmax(0,1fr); } .pp-logolabel { border-right: 1px solid #EFE3DA; border-bottom: none; } }
+
+  .pp-hz.is-on { background: #FFFFFF; }
+  .pp-hz.is-on .pp-hz-t { color: #C2410C; }
+  .pp-hz.is-on .pp-hz-v { color: #1C130E; }
+  .pp-hz.is-on .pp-hz-under { background: #1C130E; }
+  .pp-stagebtn.is-staged { background: #1C130E !important; border-color: #1C130E !important; }
+  .pp-faq.is-open { border-color: #FFD8BE; }
+  .pp-faq.is-open .pp-faq-plus { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .pp-faq.is-open .pp-faq-n { color: #C2410C; }
+  .pp-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .pp-faq.is-open .pp-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.pp');
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+
+    // ---- lead-time countdown + pattern highlight + counters (1s loop) ----
+    let lead = 5 * 86400 + 14 * 3600, tick = 0, seen = false, seenTick = 0;
+    const leadEl = q('[data-pp-lead]');
+    const pats = qa('[data-pp-pat]');
+    const cStaged = q('[data-pp-cstaged]'), cPub = q('[data-pp-cpub]'), cExp = q('[data-pp-cexp]');
+
+    const paintLead = () => { const d = Math.floor(lead / 86400), h = Math.floor(lead % 86400 / 3600), m = Math.floor(lead % 3600 / 60); if (leadEl) leadEl.textContent = d + 'd ' + h + 'h ' + String(m).padStart(2, '0') + 'm'; };
+    const paintHot = () => {
+      const hot = Math.floor(tick / 3) % 4;
+      pats.forEach((row, i) => {
+        row.style.background = i === hot ? '#FFF9F4' : '#FFFFFF';
+        row.querySelectorAll('.pp-tick').forEach((t) => { if ((t as HTMLElement).getAttribute('data-on') === '1') (t as HTMLElement).style.background = i === hot ? '#F7631E' : '#1C130E'; });
+      });
+    };
+    const paintCounters = () => {
+      const prog = seen ? Math.min(1, (tick - seenTick) / 6) : 0;
+      if (cStaged) cStaged.textContent = String(Math.round(612 * prog));
+      if (cPub) cPub.textContent = String(Math.round(487 * prog));
+      if (cExp) cExp.textContent = String(Math.round(125 * prog));
+    };
+    const onSeen = () => {
+      if (seen) return; seen = true; seenTick = tick;
+      qa('[data-pp-rmark]').forEach((el) => (el.style.left = el.getAttribute('data-pp-rmark') + '%'));
+      qa('[data-pp-bt]').forEach((el) => (el.style.width = el.getAttribute('data-pp-bt') + '%'));
+    };
+
+    paintLead(); paintHot(); paintCounters();
+    setInterval(() => {
+      tick++; lead = lead > 0 ? lead - 37 : 5 * 86400 + 14 * 3600;
+      paintLead(); paintHot(); paintCounters();
+    }, 1000);
+
+    // ---- pre-stage toggle ----
+    const stageBtn = q('[data-pp-stage]'), stageLabel = q('[data-pp-stagelabel]');
+    let staged = false;
+    stageBtn?.addEventListener('click', () => {
+      staged = !staged;
+      stageBtn.classList.toggle('is-staged', staged);
+      if (stageLabel) stageLabel.textContent = staged ? '✓ Response pre-staged' : 'Pre-stage response';
+    });
+
+    // ---- horizon tabs ----
+    const hzNotes = ['A move inside 48 hours is possible but not the most likely window.', 'Most likely window. Ridgeline has cut this SKU within six days of every stock replenishment for the last four cycles, and inventory landed Tuesday.', 'Still above the action threshold, with a wider timing interval than seven days.', 'Past fourteen days most categories are reported for planning rather than used to stage prices.'];
+    const hzNote = q('[data-pp-hznote]'), hzFull = q('[data-pp-hzfull]'), hzPartial = q('[data-pp-hzpartial]');
+    qa('[data-pp-hz]').forEach((btn) => btn.addEventListener('click', () => {
+      const i = Number(btn.getAttribute('data-pp-hz'));
+      qa('[data-pp-hz]').forEach((b) => { const on = b === btn; b.classList.toggle('is-on', on); b.setAttribute('aria-selected', String(on)); });
+      if (hzNote) hzNote.textContent = hzNotes[i];
+      const full = i === 1;
+      if (hzFull) hzFull.style.display = full ? 'flex' : 'none';
+      if (hzPartial) hzPartial.hidden = full;
+    }));
+
+    // ---- faq ----
+    qa('[data-pp-faq-btn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-pp-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-pp-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-pp-faq-btn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    // ---- reveal (triggers bar fills + counters) ----
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); onSeen(); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); onSeen(); }
+  }
+</script>
