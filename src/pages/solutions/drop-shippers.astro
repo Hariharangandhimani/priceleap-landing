@@ -1,0 +1,426 @@
+---
+// Native Astro port of the design package's "For Drop Shippers" solution page.
+// Static initial render + the full 1s animation loop and interactions reimplemented
+// in vanilla JS: cycling notification center + Slack card, hero chips, solution
+// cost-stack with moving SmartPrice marker, "why teams pick us" demos (paste/track,
+// SmartPrice slider, stock-out alert) and a live competitor table + FAQ.
+// Responsive via CSS media queries.
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+
+const STOCK = 'M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10';
+const PRICE = 'M3 17l6-6 4 4 8-8M15 7h6v6';
+const FLOOR = 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z';
+
+// --- notifications (tk=0, nph=0 → oos = TechDeals / Wireless Earbuds Pro) ---
+const notifsInit = [
+  { t: 'Competitor out of stock', d: 'TechDeals · Wireless Earbuds Pro is out of stock.', ch: 'SLACK · IN-APP', ico: STOCK, time: 'now', bg: '#FFF9F4', ib: '#1C130E', ibc: '#1C130E', ic: '#FFFFFF', dot: '#F7631E', anim: 'ds-flash 1.4s ease', bb: '1px solid #F5ECE5', first: true },
+  { t: 'Price drop · Wireless Earbuds Pro', d: 'BudgetBuy dropped to $29.90 (−6%).', ch: 'EMAIL · IN-APP', ico: PRICE, time: '12m', bg: '#FFFFFF', ib: '#FFF4EC', ibc: '#FFD8BE', ic: '#C2410C', dot: '#F7631E', anim: 'none', bb: '1px solid #F5ECE5', first: false },
+  { t: 'Below your floor', d: 'SmartPrice held Phone Ring Light at $18.40, above your $17.90 floor.', ch: 'IN-APP', ico: FLOOR, time: '1h', bg: '#FFFFFF', ib: '#FFF4EC', ibc: '#FFD8BE', ic: '#C2410C', dot: 'transparent', anim: 'none', bb: '1px solid #F5ECE5', first: false },
+  { t: 'Price drop · Silicone Watch Band', d: 'ShopNova dropped to $7.49 (−4%).', ch: 'SLACK', ico: PRICE, time: '3h', bg: '#FFFFFF', ib: '#FFF4EC', ibc: '#FFD8BE', ic: '#C2410C', dot: 'transparent', anim: 'none', bb: 'none', first: false },
+];
+
+const chipsInit = ['Competitor prices and stock', 'Margin floor on your full cost', 'Price recommendations you approve']
+  .map((t, i) => { const on = i === 0; return { t, bg: on ? '#FFF4EC' : '#FFFFFF', bc: on ? '#FFD8BE' : '#EFE3DA', dot: on ? '#F7631E' : '#D7C6BA' }; });
+
+const C = (t: string, k: 'n' | 'a' | 'r') => ({ t, ...({ n: { bg: '#FFFFFF', bc: '#EFE3DA', c: '#3A302A' }, a: { bg: '#FFF4EC', bc: '#FFD8BE', c: '#C2410C' }, r: { bg: '#FDECEB', bc: '#F5C6C3', c: '#B42318' } }[k]) });
+const problems: [string, string, ReturnType<typeof C>[]][] = [
+  ['01', "Every seller sourcing from the same supplier lists the same product under a different title. Competing on the sticker price alone is a race to the supplier's floor.", [C('Same SKU', 'a'), C('7 sellers', 'n'), C('7 titles', 'n')]],
+  ['02', "The sticker price is not your margin. Shipping, marketplace commission, payment fees, ad spend and returns land after the sale, and a listing that looks profitable often isn't.", [C('$34.99 sticker', 'n'), C('−$31.20 costs', 'r')]],
+  ['03', 'Every new seller on a supplier product pushes the price lower, so a listing that made money last month can lose it this month.', [C('Oct $39.99', 'n'), C('Nov $33.50', 'r')]],
+  ["04", "The same SKU sits on Amazon, eBay, Shopify and Etsy with different fees and different competitors, and one flat markup can't be right on all four.", [C('Amazon', 'n'), C('eBay', 'n'), C('Shopify', 'n'), C('Etsy', 'n')]],
+];
+const problemsInit = problems.map(([n, t, chips], i) => ({ n, t, chips, bb: i < 3 ? '1px solid #F5ECE5' : 'none' }));
+
+// --- solution cost stack (tk=0, cph=0 → priceV 32.9) ---
+const costs: [string, number, string, string][] = [['Product cost', 14.2, '#1C130E', '#FFFFFF'], ['Shipping', 4.8, '#665A51', '#FFFFFF'], ['Fees', 4.6, '#B9A99C', '#1C130E'], ['Margin floor', 3.0, '#FFD8BE', '#C2410C']];
+const total = 40, used = costs.reduce((a, c) => a + c[1], 0);
+const costBars = costs.map(([t, v, bg, c]) => ({ t: (v / total * 100) > 9 ? t : '', w: v / total * 100, bg, c }));
+const priceV0 = 32.9;
+const costRowsInit = costs.map(([k, v, dot]) => ({ k: k.toUpperCase(), v: '$' + v.toFixed(2), dot })).concat([{ k: 'SMARTPRICE', v: '$' + priceV0.toFixed(2), dot: '#F7631E' }]);
+const floorX = used / total * 100, priceX0 = priceV0 / total * 100;
+
+const sellersInit = ['Amazon · TechDeals', 'eBay · BudgetBuy', 'ShopNova store'].map((n) => ({ n, tag: 'PENDING', o: '.45', bc: '#EFE3DA', bg: '#FFFFFF', tc: '#7F7066' }));
+const chansInit = ['Slack', 'Email', 'In-app'].map((t, i) => { const on = i === 0; return { t, bg: on ? '#1C130E' : '#FFFFFF', bc: on ? '#1C130E' : '#EFE3DA', c: on ? '#FFFFFF' : '#3A302A' }; });
+
+// --- core competitor table (tk=0, rph=0) ---
+const kColors: Record<string, { sb: string; sbc: string; sc: string }> = { g: { sb: '#F6FBF7', sbc: '#BFE5CC', sc: '#1E7A3D' }, r: { sb: '#FDECEB', sbc: '#F5C6C3', sc: '#B42318' }, a: { sb: '#FFF8EB', sbc: '#F4DDAE', sc: '#8A5A00' }, n: { sb: '#FFFFFF', sbc: '#EFE3DA', sc: '#7F7066' } };
+const coreRaw: [string, string, string, string, string, number][] = [
+  ['You', '$34.99', 'In stock', 'g', '—', 600],
+  ['TechDeals', '$33.49', 'In stock', 'g', '2m', 400],
+  ['BudgetBuy', '$29.90', 'In stock', 'g', '5m', 400],
+  ['ShopNova', '$36.20', 'Low stock', 'a', '9m', 400],
+  ['GadgetHub', 'No match', '—', 'n', '—', 400],
+];
+const coreRowsInit = coreRaw.map(([n, p, st, k, t2, fw], i) => ({ n, p, s: st, t: t2, fw, bb: i < 4 ? '1px solid #F5ECE5' : 'none', bg: i === 0 ? '#FFF9F4' : '#FFFFFF', dot: i === 0 ? '#F7631E' : '#D7C6BA', pc: p === 'No match' ? '#C2410C' : '#1C130E', anim: 'none', ...kColors[k] }));
+
+const FQ: [string, string, string?, string?][] = [
+  ["How do I track sellers who list the same product?", "Paste each seller's product URL into a product group, or let priceleap.ai suggest competitors for the group. Their price and stock then show next to yours, with price history from the day tracking starts."],
+  ["How are marketplace fees and returns handled?", "Add them to the product as an add-on cost, alongside your product cost. The margin floor sits on that total, so SmartPrice recommendations stay above what the sale actually costs you."],
+  ["What if a supplier sets a MAP?", "", "Add the ", " to the product. priceleap.ai warns you before a SmartPrice recommendation would go below it, and alerts you if your own price drops under MAP."],
+  ["We sell print-on-demand. Does this apply?", "Yes, for any product with listings you can compare against. Track the closest equivalents to your designs, add your print and shipping cost, and set the floor on that total."],
+];
+const faqs = FQ.map(([q, a, a1, a2], i) => ({ q, a, a1: a1 || '', a2: a2 || '', hasLink: !!a1, n: '0' + (i + 1), open: i === 0 }));
+
+const jsonLd = [{
+  '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
+    { '@type': 'Question', name: 'How do I track sellers who list the same product?', acceptedAnswer: { '@type': 'Answer', text: "Paste each seller's product URL into a product group, or let priceleap.ai suggest competitors for the group. Their price and stock then show next to yours, with price history from the day tracking starts." } },
+    { '@type': 'Question', name: 'How are marketplace fees and returns handled?', acceptedAnswer: { '@type': 'Answer', text: 'Add them to the product as an add-on cost, alongside your product cost. The margin floor sits on that total, so SmartPrice recommendations stay above what the sale actually costs you.' } },
+    { '@type': 'Question', name: 'What if a supplier sets a MAP?', acceptedAnswer: { '@type': 'Answer', text: 'Add the MAP to the product. priceleap.ai warns you before a SmartPrice recommendation would go below it, and alerts you if your own price drops under MAP.' } },
+    { '@type': 'Question', name: 'We sell print-on-demand. Does this apply?', acceptedAnswer: { '@type': 'Answer', text: 'Yes, for any product with listings you can compare against. Track the closest equivalents to your designs, add your print and shipping cost, and set the floor on that total.' } },
+  ],
+}];
+---
+<PriceLeapLayout
+  title="Dropshipping Price Monitoring Software | priceleap.ai"
+  description="Track the sellers on your supplier's products, set a margin floor on your full cost, and get price recommendations you approve. Book a Demo."
+  jsonLd={jsonLd}
+>
+  <div class="ds" style="min-height:100vh;background:#FFFCF9;overflow-x:clip">
+
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-10%;top:-25%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.10),transparent);pointer-events:none"></div>
+      <div class="ds-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(40px,6vw,84px) clamp(16px,4vw,40px) clamp(48px,6vw,88px);gap:clamp(36px,4.5vw,64px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px">
+          <nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:#665A51"><a href="#" style="color:#665A51">Solutions</a><span style="color:#D7C6BA">›</span><a href="#" style="color:#665A51">By Industry</a><span style="color:#D7C6BA">›</span><span style="color:#1C130E">Drop Shippers</span></nav>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+            <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>For Drop Shippers</span>
+            <span style="height:24px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:12px;color:#1C130E"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2.2"><path d="M4 20h16M6 16l4-5 3 3 5-7"></path></svg>Margin floors on every product</span>
+          </div>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(36px,5vw,62px);line-height:1.03;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Dropshipping price monitoring that </span><span style="font-weight:700">protects your margin</span></h1>
+          <p style="margin:0;max-width:580px;font-size:17.5px;line-height:1.65;color:#3A302A;text-wrap:pretty">Dozens of sellers list the same supplier products you do. priceleap.ai tracks the ones you choose, sets a margin floor on your product cost plus extras like shipping and fees, and recommends a price that stays above it.</p>
+          <a href="/book-a-demo" style="align-self:flex-start;height:48px;padding:0 22px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            {chipsInit.map((c) => (
+              <span data-ds-chip style={`height:32px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:9px;background:${c.bg};border:1px solid ${c.bc};font-size:13px;color:#1C130E;transition:all .35s`}><span data-ds-chipdot style={`width:6px;height:6px;border-radius:50%;background:${c.dot};transition:background .35s`}></span>{c.t}</span>
+            ))}
+          </div>
+        </div>
+
+        <figure style="margin:0;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div class="ds-notif" style="position:relative;display:grid;gap:12px;align-items:start">
+            <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;box-shadow:0 48px 90px -52px rgba(60,30,15,.45),0 0 0 6px rgba(255,255,255,.7)">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+                <span style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600;color:#1C130E"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1C130E" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"></path></svg>Notifications</span>
+                <span data-ds-unread style="height:22px;min-width:22px;padding:0 7px;display:flex;align-items:center;justify-content:center;border-radius:999px;background:#F7631E;font-family:'Geist Mono',monospace;font-size:10.5px;color:#FFFFFF">2</span>
+              </div>
+              <div style="display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid #F5ECE5"><span style="height:26px;padding:0 10px;display:flex;align-items:center;border-radius:7px;background:#1C130E;font-size:12px;color:#FFFFFF">All</span><span style="height:26px;padding:0 10px;display:flex;align-items:center;border-radius:7px;border:1px solid #EFE3DA;font-size:12px;color:#3A302A">Stock</span><span style="height:26px;padding:0 10px;display:flex;align-items:center;border-radius:7px;border:1px solid #EFE3DA;font-size:12px;color:#3A302A">Price</span></div>
+              {notifsInit.map((n) => (
+                <div style={`display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:12px;align-items:start;padding:13px 16px;border-bottom:${n.bb};background:${n.bg};animation:${n.anim}`}>
+                  <span style={`width:32px;height:32px;border-radius:9px;background:${n.ib};border:1px solid ${n.ibc};color:${n.ic};display:flex;align-items:center;justify-content:center`}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d={n.ico}></path></svg></span>
+                  <span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;color:#1C130E">{n.t}</span><span data-ds-notifd={n.first ? '1' : undefined} style="display:block;margin-top:2px;font-size:12px;line-height:1.45;color:#665A51">{n.d}</span><span style="display:flex;gap:6px;margin-top:6px"><span style="height:18px;padding:0 6px;display:flex;align-items:center;border-radius:5px;background:#FBF3EC;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">{n.ch}</span></span></span>
+                  <span style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span style="font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066;white-space:nowrap">{n.time}</span><span style={`width:7px;height:7px;border-radius:50%;background:${n.dot}`}></span></span>
+                </div>
+              ))}
+            </div>
+            <div style="align-self:center;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;box-shadow:0 30px 60px -36px rgba(60,30,15,.45)">
+              <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span style="width:18px;height:18px;border-radius:5px;background:#4A154B;color:#FFFFFF;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">#</span><span style="font-size:12.5px;font-weight:600;color:#1C130E">pricing-alerts</span><span style="margin-left:auto;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">SLACK</span></div>
+              <div data-ds-slackbody style="padding:12px;display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;animation:ds-pop .35s ease">
+                <img src="/assets/pl-mark.png" alt="" width="28" height="28" style="width:28px;height:28px;border-radius:7px;object-fit:contain;background:#FFF4EC;padding:4px" />
+                <div style="min-width:0"><div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:12.5px;font-weight:700;color:#1C130E">priceleap.ai</span><span style="height:15px;padding:0 4px;display:flex;align-items:center;border-radius:3px;background:#F5ECE5;font-size:9px;color:#665A51">APP</span><span data-ds-slacktime style="font-size:10.5px;color:#7F7066">9:14 AM</span></div>
+                  <div style="margin-top:4px;padding:8px 10px;border-left:3px solid #F7631E;border-radius:0 8px 8px 0;background:#FFF9F4;font-size:12px;line-height:1.5;color:#1C130E"><b>Competitor out of stock</b><br /><span data-ds-slackmsg>TechDeals · Wireless Earbuds Pro is out of stock. Your price: in stock.</span></div></div>
+              </div>
+            </div>
+          </div>
+          <figcaption style="font-size:13px;color:#665A51;text-align:center">A competitor out-of-stock alert, sent to Slack and kept in the notification center</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 02 PROBLEM -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="ds-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(32px,5vw,72px);align-items:start">
+        <div data-reveal class="ds-sticky" style="top:96px;display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>The problem</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Why dropshipping </span><span style="font-weight:700">margins disappear</span></h2>
+        </div>
+        <div style="display:flex;flex-direction:column;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#FFFFFF">
+          {problemsInit.map((p) => (
+            <div data-reveal class="ds-probrow" style={`display:grid;gap:16px 22px;align-items:center;padding:22px clamp(18px,2.4vw,26px);border-bottom:${p.bb}`}>
+              <span style="font-family:Geist,sans-serif;font-size:34px;font-weight:600;letter-spacing:-.05em;line-height:1;color:#E2D3C8">{p.n}</span>
+              <p style="margin:0;font-size:15.5px;line-height:1.6;color:#1C130E">{p.t}</p>
+              <div class="ds-probchips" style="flex-wrap:wrap;gap:5px;justify-content:flex-end">
+                {p.chips.map((c) => (<span style={`height:24px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:${c.bg};border:1px solid ${c.bc};font-family:'Geist Mono',monospace;font-size:10.5px;color:${c.c};white-space:nowrap`}>{c.t}</span>))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 SOLUTION -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1100px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>The solution</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Track the sellers,</span><span style="font-weight:400"> set the floor, approve the price</span></h2>
+          <p style="margin:0;max-width:720px;font-size:17px;line-height:1.7;color:#3A302A;text-wrap:pretty">Add the listings you compete with, or let priceleap.ai <a href="#" style="font-weight:600">suggest competitors</a> for each product group. Enter your product cost and per-unit extras, set a margin floor and ceiling, and SmartPrice recommends a price that stays inside them.</p>
+        </div>
+        <div data-reveal style="margin:44px auto 0;max-width:760px;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;box-shadow:0 40px 80px -52px rgba(60,30,15,.4)">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span style="font-size:13.5px;font-weight:600;color:#1C130E">Wireless earbuds · supplier SKU</span><span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">EXAMPLE</span></div>
+          <div style="padding:22px 18px 18px">
+            <div style="position:relative;height:44px;display:flex;border-radius:10px;overflow:hidden;background:#F5ECE5">
+              {costBars.map((b) => (<span style={`width:${b.w}%;height:100%;background:${b.bg};border-right:1px solid #FFFFFF;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:10px;color:${b.c};white-space:nowrap;overflow:hidden;transition:width .8s cubic-bezier(.2,.7,.2,1)`}>{b.t}</span>))}
+              <span style={`position:absolute;top:-6px;bottom:-6px;left:${floorX}%;width:2px;background:#1C130E;transition:left .8s cubic-bezier(.2,.7,.2,1)`}></span>
+              <span data-ds-pricedot style={`position:absolute;top:50%;left:${priceX0}%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#F7631E;border:3px solid #FFFFFF;box-shadow:0 0 0 1px #F7631E;transition:left 1s cubic-bezier(.2,.7,.2,1)`}></span>
+            </div>
+            <div style="position:relative;height:30px;margin-top:8px">
+              <span style={`position:absolute;left:${floorX}%;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:10px;color:#1C130E;white-space:nowrap;transition:left .8s`}>FLOOR $26.60</span>
+              <span data-ds-pricelabel style={`position:absolute;left:${priceX0}%;top:14px;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:10px;color:#C2410C;white-space:nowrap;transition:left 1s`}>SMARTPRICE $32.90</span>
+            </div>
+            <div class="ds-costrows" style="display:grid;gap:8px;margin-top:10px">
+              {costRowsInit.map((r) => (<div style="padding:10px 12px;border:1px solid #F5ECE5;border-radius:11px;display:flex;flex-direction:column;gap:3px"><span style="display:flex;align-items:center;gap:6px;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:#7F7066"><span style={`width:7px;height:7px;border-radius:2px;background:${r.dot}`}></span>{r.k}</span><span data-ds-costv={r.k === 'SMARTPRICE' ? '1' : undefined} style="font-family:Geist,sans-serif;font-size:15px;font-weight:600;color:#1C130E">{r.v}</span></div>))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 WHY TEAMS PICK US -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Why teams pick us</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Built for </span><span style="font-weight:700">thin margins</span></h2>
+        </div>
+        <div data-reveal class="ds-three" style="margin-top:44px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#EFE3DA;display:grid;gap:1px">
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:170px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,260px);display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;border:1.5px solid #F7631E;background:#FFFFFF;box-shadow:0 0 0 4px rgba(247,99,30,.12);font-family:'Geist Mono',monospace;font-size:11px;color:#1C130E;overflow:hidden;white-space:nowrap"><span data-ds-paste>amazon.com/dp/B0C8QX…</span><span style="flex:none;display:inline-block;width:6px;height:13px;background:#F7631E;animation:ds-blink 1s steps(1) infinite"></span></div>
+                {sellersInit.map((s) => (
+                  <div data-ds-seller style={`display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 10px;border-radius:9px;border:1px solid ${s.bc};background:${s.bg};opacity:${s.o};transition:all .4s`}><span style="font-size:12px;color:#1C130E">{s.n}</span><span data-ds-stag style={`font-family:'Geist Mono',monospace;font-size:9.5px;color:${s.tc}`}>{s.tag}</span></div>
+                ))}
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">Any listing you can link to</span><p style="margin:0;font-size:15px;line-height:1.6;color:#665A51">Paste the product URLs of the sellers on your supplier's products, from the marketplaces and stores they sell on.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:170px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,260px)">
+                <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066"><span>TOTAL COST + MARGIN</span><span style="color:#C2410C">SMARTPRICE</span></div>
+                <div style="position:relative;margin:30px 4px 26px;height:8px;border-radius:8px;background:#F5ECE5">
+                  <span style="position:absolute;left:22%;right:22%;top:0;bottom:0;border-radius:8px;background:#FFE3CF"></span>
+                  <span style="position:absolute;left:22%;top:-5px;bottom:-5px;width:2px;background:#1C130E"></span>
+                  <span style="position:absolute;left:78%;top:-5px;bottom:-5px;width:2px;background:#1C130E"></span>
+                  <span style="position:absolute;top:15px;left:22%;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:9.5px;color:#3A302A">Cost floor</span>
+                  <span style="position:absolute;top:15px;left:78%;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:9.5px;color:#3A302A">Ceiling</span>
+                  <span data-ds-spdot style="position:absolute;top:50%;left:62%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#F7631E;border:3px solid #FFFFFF;box-shadow:0 0 0 1px #F7631E;transition:left 1.2s cubic-bezier(.2,.7,.2,1)"></span>
+                  <span data-ds-splabel style="position:absolute;bottom:16px;left:62%;transform:translateX(-50%);height:20px;padding:0 7px;display:flex;align-items:center;border-radius:5px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;color:#FFFFFF;white-space:nowrap;transition:left 1.2s cubic-bezier(.2,.7,.2,1)">$32.90</span>
+                </div>
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">Margin on your full cost</span><p style="margin:0;font-size:15px;line-height:1.6;color:#665A51">Your <a href="#" style="font-weight:600">floor</a> sits on product cost plus the extras you add, like shipping and fees, so a recommendation never prices below it.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:170px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,260px);display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:9px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:12px;color:#1C130E"><span>Alert when a rival runs out</span><span style="font-family:'Geist Mono',monospace;color:#C2410C">STOCK</span></div>
+                <div data-ds-alert style="display:none;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;background:#1C130E;color:#FFFFFF;font-size:12px;animation:ds-pop .35s ease"><span style="width:7px;height:7px;flex:none;border-radius:50%;background:#FB8A2E;animation:ds-pulse 1.6s infinite"></span><span style="flex:1">TechDeals · Earbuds Pro <b style="color:#FB8A2E">Out of stock</b></span><span data-ds-alertch style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#FB8A2E">SLACK</span></div>
+                <div style="display:flex;gap:5px">{chansInit.map((c) => (<span data-ds-chan style={`flex:1;height:26px;display:flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid ${c.bc};background:${c.bg};font-size:11.5px;color:${c.c};transition:all .3s`}>{c.t}</span>))}</div>
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">Stock-outs as openings</span><p style="margin:0;font-size:15px;line-height:1.6;color:#665A51"><a href="#" style="font-weight:600">An alert</a> when a competitor runs out of stock, by Slack, email or in-app.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 CORE FEATURE -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="ds-core" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(32px,5vw,64px);align-items:center">
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Core feature</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Watch every seller on </span><span style="font-weight:700">the same product</span></h2>
+          <h3 style="margin:6px 0 0;font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:#1C130E">Competitor prices and stock, per product</h3>
+          <p style="margin:0;font-size:16px;line-height:1.65;color:#3A302A">See each competing seller's price, stock and last check next to your own price, with your market rank on top.</p>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.55;color:#1C130E"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Price history for every seller you track</span>
+            <span style="display:flex;gap:12px;font-size:15.5px;line-height:1.55;color:#1C130E"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Unmatched listings show as No match instead of a wrong price</span>
+          </div>
+        </div>
+        <div data-reveal style="min-width:0;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;box-shadow:0 44px 84px -52px rgba(60,30,15,.42)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+            <div><div style="font-size:14px;font-weight:600;color:#1C130E">Wireless Earbuds Pro</div><div style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">Your price $34.99</div></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">MARKET RANK</span><span data-ds-rank style="height:30px;padding:0 12px;display:flex;align-items:center;border-radius:8px;background:#1C130E;font-family:Geist,sans-serif;font-size:15px;font-weight:600;color:#FFFFFF">#3 of 5</span></div>
+          </div>
+          <div style="overflow-x:auto"><div style="min-width:460px">
+            <div style="display:grid;grid-template-columns:minmax(0,1.4fr) 90px 100px 80px;gap:12px;padding:9px 18px;border-bottom:1px solid #F5ECE5;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066"><span>SELLER</span><span>PRICE</span><span>STOCK</span><span>CHECKED</span></div>
+            {coreRowsInit.map((r, i) => (
+              <div data-ds-corerow={i === 1 ? '1' : undefined} style={`display:grid;grid-template-columns:minmax(0,1.4fr) 90px 100px 80px;gap:12px;align-items:center;padding:12px 18px;border-bottom:${r.bb};background:${r.bg};transition:background .4s`}>
+                <span style="display:flex;align-items:center;gap:8px;min-width:0"><span style={`width:7px;height:7px;flex:none;border-radius:50%;background:${r.dot}`}></span><span style={`font-size:13px;font-weight:${r.fw};color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis`}>{r.n}</span></span>
+                <span data-ds-cprice={i === 1 ? '1' : undefined} style={`padding:1px 5px;justify-self:start;border-radius:4px;font-family:'Geist Mono',monospace;font-size:12.5px;color:${r.pc};animation:${r.anim}`}>{r.p}</span>
+                <span data-ds-cstock={i === 1 ? '1' : undefined} style={`justify-self:start;height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:${r.sb};border:1px solid ${r.sbc};font-family:'Geist Mono',monospace;font-size:10px;color:${r.sc};white-space:nowrap`}>{r.s}</span>
+                <span style="font-family:'Geist Mono',monospace;font-size:11px;color:#7F7066">{r.t}</span>
+              </div>
+            ))}
+          </div></div>
+          <div style="padding:14px 18px;border-top:1px solid #F5ECE5;background:#FFF9F4">
+            <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066"><span>PRICE HISTORY · 30 DAYS</span><span>3 SELLERS</span></div>
+            <svg viewBox="0 0 400 60" preserveAspectRatio="none" style="display:block;width:100%;height:60px;margin-top:8px">
+              <polyline points="0,30 50,28 100,32 150,26 200,30 250,24 300,28 350,22 400,26" fill="none" stroke="#1C130E" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
+              <polyline points="0,20 50,24 100,22 150,34 200,36 250,40 300,38 350,44 400,42" fill="none" stroke="#F7631E" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
+              <polyline points="0,46 50,44 100,48 150,46 200,42 250,46 300,44 350,40 400,44" fill="none" stroke="#D7C6BA" stroke-width="2" vector-effect="non-scaling-stroke"></polyline>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="ds-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <div data-reveal class="ds-sticky" style="top:96px;display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>FAQ</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Dropshipping price monitoring </span><span style="font-weight:700">FAQs</span></h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((q) => (
+            <div class="ds-faq" class:list={[{ 'is-open': q.open }]} data-ds-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-ds-faqbtn aria-expanded={q.open ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="ds-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px">{q.n}</span>
+                <span role="heading" aria-level="3" style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{q.q}</span>
+                <span class="ds-faq-ic" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="ds-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{q.a}{q.hasLink && (<span>{q.a1}<a href="#" style="font-weight:600">MAP</a>{q.a2}</span>)}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-220px;width:640px;height:400px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.14),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:22px">
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">See your own listings </span><span style="font-weight:700">in a demo</span></h2>
+          <a href="/book-a-demo" style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .ds { background: #FFFCF9; overflow-x: clip; }
+  @keyframes ds-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.5); } 100% { box-shadow: 0 0 0 9px rgba(247,99,30,0); } }
+  @keyframes ds-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes ds-pop { 0% { opacity: 0; transform: translateY(-4px) scale(.97); } 100% { opacity: 1; transform: none; } }
+  @keyframes ds-flash { 0% { background: #FFE9D9; } 100% { background: transparent; } }
+  @keyframes ds-blink { 50% { opacity: 0; } }
+
+  .ds-hero { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ds-hero { grid-template-columns: minmax(0,1fr) minmax(0,1.05fr); } }
+  .ds-notif { grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .ds-notif { grid-template-columns: minmax(0,1.3fr) minmax(0,1fr); } }
+  .ds-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ds-split { grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); } }
+  .ds-sticky { position: static; }
+  @media (min-width: 1024px) { .ds-sticky { position: sticky; } }
+  .ds-probrow { grid-template-columns: 44px minmax(0,1fr); }
+  .ds-probchips { display: none; }
+  @media (min-width: 720px) { .ds-probrow { grid-template-columns: 54px minmax(0,1fr) minmax(0,.8fr); } .ds-probchips { display: flex; } }
+  .ds-costrows { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  @media (min-width: 720px) { .ds-costrows { grid-template-columns: repeat(5,minmax(0,1fr)); } }
+  .ds-three { grid-template-columns: 1fr; }
+  @media (min-width: 960px) { .ds-three { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+  .ds-core { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ds-core { grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); } }
+
+  .ds-faq-n { color: #B9A99C; }
+  .ds-faq.is-open .ds-faq-n { color: #C2410C; }
+  .ds-faq-ic { background: #FBF3EC; color: #1C130E; transform: rotate(0deg); transition: all .3s; }
+  .ds-faq.is-open .ds-faq-ic { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .ds-faq.is-open { border-color: #FFD8BE; }
+  .ds-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .ds-faq.is-open .ds-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .ds *, .ds *::before, .ds *::after { animation: none !important; transition: none !important; } [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.ds') as HTMLElement | null;
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+
+    const oosData = [['TechDeals', 'Wireless Earbuds Pro'], ['GadgetHub', 'Phone Ring Light'], ['ShopNova', 'Silicone Watch Band']];
+    const urls = ['amazon.com/dp/B0C8QX…', 'ebay.com/itm/3859…', 'shopnova.com/earbuds-pro'];
+    const spPosData: [number, string][] = [[62, '$32.90'], [48, '$30.40'], [74, '$34.90']];
+    const total = 40;
+
+    const chips = qa('[data-ds-chip]');
+    const unread = q('[data-ds-unread]');
+    const notif0d = q('[data-ds-notifd="1"]');
+    const slackBody = q('[data-ds-slackbody]'), slackTime = q('[data-ds-slacktime]'), slackMsg = q('[data-ds-slackmsg]');
+    const priceDot = q('[data-ds-pricedot]'), priceLabel = q('[data-ds-pricelabel]'), costSp = q('[data-ds-costv="1"]');
+    const paste = q('[data-ds-paste]'), sellers = qa('[data-ds-seller]');
+    const spDot = q('[data-ds-spdot]'), spLabel = q('[data-ds-splabel]');
+    const alertEl = q('[data-ds-alert]'), alertCh = q('[data-ds-alertch]'), chans = qa('[data-ds-chan]');
+    const rank = q('[data-ds-rank]'), tRow = q('[data-ds-corerow="1"]'), tPrice = q('[data-ds-cprice="1"]'), tStock = q('[data-ds-cstock="1"]');
+
+    let tick = 0, lastNph = 0, lastRph = 0;
+    function paint() {
+      const tk = tick;
+      const nph = Math.floor(tk / 4) % 3;
+      const oos = oosData[nph];
+      // notification + slack
+      if (notif0d) notif0d.textContent = oos[0] + ' · ' + oos[1] + ' is out of stock.';
+      if (unread) unread.textContent = String(2 + nph);
+      if (slackTime) slackTime.textContent = '9:' + String(14 + nph * 7).padStart(2, '0') + ' AM';
+      if (slackMsg) slackMsg.textContent = oos[0] + ' · ' + oos[1] + ' is out of stock. Your price: in stock.';
+      if (nph !== lastNph) { lastNph = nph; if (slackBody) { slackBody.style.animation = 'none'; void slackBody.offsetWidth; slackBody.style.animation = 'ds-pop .35s ease'; } }
+      // chips highlight (nph)
+      chips.forEach((el, i) => { const on = i === nph; el.style.background = on ? '#FFF4EC' : '#FFFFFF'; el.style.borderColor = on ? '#FFD8BE' : '#EFE3DA'; const d = el.querySelector('[data-ds-chipdot]') as HTMLElement | null; if (d) d.style.background = on ? '#F7631E' : '#D7C6BA'; });
+      // solution SmartPrice marker (cph)
+      const cph = Math.floor(tk / 3) % 2, priceV = cph ? 30.4 : 32.9, priceX = priceV / total * 100;
+      if (priceDot) priceDot.style.left = priceX + '%';
+      if (priceLabel) { priceLabel.style.left = priceX + '%'; priceLabel.textContent = 'SMARTPRICE $' + priceV.toFixed(2); }
+      if (costSp) costSp.textContent = '$' + priceV.toFixed(2);
+      // paste url
+      if (paste) paste.textContent = urls[Math.floor(tk / 2) % 3];
+      // sellers tracked progressive (up)
+      const up = Math.floor(tk / 2) % 4;
+      sellers.forEach((el, i) => { const on = i < up; const tag = el.querySelector('[data-ds-stag]') as HTMLElement | null; if (tag) { tag.textContent = on ? 'TRACKED ✓' : 'PENDING'; tag.style.color = on ? '#1E7A3D' : '#7F7066'; } el.style.opacity = on ? '1' : '.45'; el.style.borderColor = on ? '#BFE5CC' : '#EFE3DA'; el.style.background = on ? '#F6FBF7' : '#FFFFFF'; });
+      // why-2 smartprice slider
+      const spPos = spPosData[Math.floor(tk / 3) % 3];
+      if (spDot) spDot.style.left = spPos[0] + '%';
+      if (spLabel) { spLabel.style.left = spPos[0] + '%'; spLabel.textContent = spPos[1]; }
+      // why-3 alert + chans
+      if (alertEl) alertEl.style.display = (tk % 4 >= 1) ? 'flex' : 'none';
+      const ach = Math.floor(tk / 2) % 3;
+      if (alertCh) alertCh.textContent = ['SLACK', 'EMAIL', 'IN-APP'][ach];
+      chans.forEach((el, i) => { const on = i === ach; el.style.background = on ? '#1C130E' : '#FFFFFF'; el.style.borderColor = on ? '#1C130E' : '#EFE3DA'; el.style.color = on ? '#FFFFFF' : '#3A302A'; });
+      // core table TechDeals row (rph)
+      const rph = Math.floor(tk / 4) % 2;
+      if (rank) rank.textContent = rph ? '#2 of 4' : '#3 of 5';
+      if (rph !== lastRph) {
+        lastRph = rph;
+        if (tRow) tRow.style.background = (rph ? '#FFF7F6' : '#FFFFFF');
+        if (tPrice) { tPrice.textContent = rph ? '—' : '$33.49'; tPrice.style.animation = 'none'; if (rph) { void tPrice.offsetWidth; tPrice.style.animation = 'ds-flash 1.2s ease'; } }
+        if (tStock) { tStock.textContent = rph ? 'Out of stock' : 'In stock'; const col = rph ? { sb: '#FDECEB', sbc: '#F5C6C3', sc: '#B42318' } : { sb: '#F6FBF7', sbc: '#BFE5CC', sc: '#1E7A3D' }; tStock.style.background = col.sb; tStock.style.borderColor = col.sbc; tStock.style.color = col.sc; }
+      }
+    }
+    paint();
+    setInterval(() => { tick++; paint(); }, 1000);
+
+    // ---- faq ----
+    qa('[data-ds-faqbtn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-ds-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-ds-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-ds-faqbtn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    // ---- reveal ----
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>
