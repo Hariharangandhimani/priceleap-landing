@@ -20,6 +20,10 @@ export const L = {
   scraping: '/price-scraping',
   matching: '/product-matching',
   predictive: '/predictive-pricing',
+  solBrands: '/solutions/brands',
+  solElectronics: '/solutions/electronics-retail',
+  solAuto: '/solutions/automotive-parts',
+  solDrop: '/solutions/drop-shippers',
 };
 
 export type MenuItem = { t: string; d?: string; href: string };
@@ -40,7 +44,7 @@ export type SolGroup = { t: string; d: string; items: MenuItem[] };
 export const SOL: SolGroup[] = [
   { t: 'By Industry', d: 'Built for your market', items: [
     { t: 'For Retailers', href: L.ret }, { t: 'For Ecommerce', href: L.ecom }, { t: 'For Brands & Manufacturers', href: '#' },
-    { t: 'For Marketplace Sellers', href: '#' }, { t: 'For Electronics Retail', href: '#' }, { t: 'Automotive Parts & Accessories', href: '#' }, { t: 'For Drop Shippers', href: '#' } ] },
+    { t: 'For Marketplace Sellers', href: '#' }, { t: 'For Electronics Retail', href: L.solElectronics }, { t: 'Automotive Parts & Accessories', href: '#' }, { t: 'For Drop Shippers', href: '#' } ] },
   { t: 'By Role', d: 'Built for your team', items: [
     { t: 'Category Managers', href: '#' }, { t: 'Pricing Managers', href: '#' }, { t: 'Product Managers', href: '#' },
     { t: 'Marketing Managers', href: '#' }, { t: 'Ecommerce Managers', href: '#' }, { t: 'Revenue Managers', href: '#' }, { t: 'Merchandising Managers', href: '#' } ] },

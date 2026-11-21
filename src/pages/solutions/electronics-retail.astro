@@ -1,0 +1,454 @@
+---
+// Native Astro port of the design package's "For Electronics Retail" solution page.
+// Static initial render + the full 1s animation loop and interactions reimplemented
+// in vanilla JS: cycling hero product-info card (model + identifiers), hero chips,
+// three problem demos (street-price slide, variant match, markdown timeline),
+// interactive price-history range tabs, "why teams pick us" demos (paste/match,
+// SmartPrice slider, weekly digest) and FAQ. Responsive via CSS media queries.
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+
+const MODELS: { n: string; p: string; cap: string; matched: number; total: number; f: [string, string, number][] }[] = [
+  { n: 'Samsung Galaxy S24 Ultra · 512GB · Titanium Black', p: '$1,299.99', cap: '512GB', matched: 4, total: 5, f: [['SKU', 'SM-S928U-512-BK', 0], ['UPC', '887276789012', 1], ['GTIN', '00887276789012', 1], ['MPN', 'SM-S928UZKFXAA', 1], ['BRAND', 'Samsung', 0], ['CATEGORY', 'Smartphones', 0], ['CAPACITY', '512GB', 0], ['COLOR', 'Titanium Black', 0]] },
+  { n: 'Sony WH-1000XM5 · Black', p: '$329.99', cap: 'Black', matched: 5, total: 5, f: [['SKU', 'WH1000XM5-B', 0], ['UPC', '027242923782', 1], ['GTIN', '04548736132610', 1], ['MPN', 'WH1000XM5/B', 1], ['BRAND', 'Sony', 0], ['CATEGORY', 'Headphones', 0], ['VARIANT', 'Over-ear', 0], ['COLOR', 'Black', 0]] },
+  { n: 'LG C3 OLED 65" · OLED65C3PUA', p: '$1,599.99', cap: '65"', matched: 3, total: 4, f: [['SKU', 'LG-OLED65C3', 0], ['UPC', '195174049325', 1], ['GTIN', '00195174049325', 1], ['MPN', 'OLED65C3PUA', 1], ['BRAND', 'LG', 0], ['CATEGORY', 'TVs', 0], ['SIZE', '65"', 0], ['YEAR', '2023', 0]] },
+];
+
+// initial model (mi=0, hi=0 → no identifier highlighted)
+const m0 = MODELS[0];
+const idFieldsInit = m0.f.map(([k, v, id], i) => ({
+  k, v, dl: (i * 0.05).toFixed(2),
+  bg: id ? '#FFF9F4' : '#FFFFFF', bc: id ? '#FFD8BE' : '#F5ECE5', kc: id ? '#C2410C' : '#7F7066', ckD: 'none',
+}));
+
+const chipsInit = ['Price history from 14 days to the full record', 'Price drop alerts', 'UPC, GTIN and MPN on every product']
+  .map((t, i) => { const on = i === 0; return { t, bg: on ? '#FFF4EC' : '#FFFFFF', bc: on ? '#FFD8BE' : '#EFE3DA', dot: on ? '#F7631E' : '#D7C6BA' }; });
+
+// price-history series (matches the client series())
+const series = (base: number, drift: number, wob: number, seed: number) => {
+  const pts: string[] = [];
+  for (let i = 0; i <= 24; i++) { const x = i / 24 * 600; const v = base - drift * (i / 24) + Math.sin(i * 0.9 + seed) * wob + (i % 7 === seed % 7 ? -wob * 1.6 : 0); pts.push(x.toFixed(0) + ',' + v.toFixed(1)); }
+  return pts.join(' ');
+};
+// range = 2 (90D) initial, k = 1
+const hYouInit = series(55, 22, 3, 1), hAInit = series(62, 34, 6, 3), hBInit = series(40, 14, 4, 5);
+const rangesInit = [['14D', 14], ['30D', 30], ['90D', 90], ['1Y', 365]].map(([t], i) => ({ t, on: i === 2 }));
+
+// markdown marks (mdW = 0 initial → none hit)
+const mdMarksInit = [['SLOW SKU', 12], ['NEW MODEL', 58], ['REPORT', 92]].map(([t, x]) => ({ t, x, bg: '#FFFFFF', bc: '#E2D3C8', c: '#B9A99C' }));
+const sellersInit = ['Retailer A · 512GB', 'Retailer B · 512GB', 'Retailer C · 256GB'].map((n) => ({ n, tag: 'CHECKING', o: '.45', bc: '#EFE3DA', bg: '#FFFFFF', tc: '#7F7066' }));
+const chansInit = ['TVs', 'Phones', 'Audio'].map((t, i) => { const on = i === 0; return { t, bg: on ? '#1C130E' : '#FFFFFF', bc: on ? '#1C130E' : '#EFE3DA', c: on ? '#FFFFFF' : '#3A302A' }; });
+
+const faqs = [
+  { q: 'How do you avoid matching the wrong variant?', hasLink: true, a1: 'Every product stores its UPC, GTIN and MPN, so your team can confirm a competitor listing is the same variant before it counts. Listings that aren’t matched show as No match rather than a wrong price. More on ', a2: '.', a: '' },
+  { q: 'How quickly can I add a new model?', hasLink: false, a: 'Paste the new model’s product URL into its group. Use Fetch now on the group for an immediate price check, and set a price drop alert to catch the first cut after launch.', a1: '', a2: '' },
+  { q: 'Which electronics categories can I track?', hasLink: false, a: 'Any model with a product page you can link to, from TVs to headphones. Group them by category so each line gets its own competitor set, schedule and rules.', a1: '', a2: '' },
+].map((f, i) => ({ ...f, n: '0' + (i + 1), open: i === 0 }));
+
+const jsonLd = [{
+  '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
+    { '@type': 'Question', name: 'How do you avoid matching the wrong variant?', acceptedAnswer: { '@type': 'Answer', text: 'Every product stores its UPC, GTIN and MPN, so your team can confirm a competitor listing is the same variant before it counts. Listings that aren’t matched show as No match rather than a wrong price. More on Product Matching.' } },
+    { '@type': 'Question', name: 'How quickly can I add a new model?', acceptedAnswer: { '@type': 'Answer', text: 'Paste the new model’s product URL into its group. Use Fetch now on the group for an immediate price check, and set a price drop alert to catch the first cut after launch.' } },
+    { '@type': 'Question', name: 'Which electronics categories can I track?', acceptedAnswer: { '@type': 'Answer', text: 'Any model with a product page you can link to, from TVs to headphones. Group them by category so each line gets its own competitor set, schedule and rules.' } },
+  ],
+}];
+---
+<PriceLeapLayout
+  title="Electronics Price Monitoring Software | priceleap.ai"
+  description="Track competitor prices on every model, keep the price history from day one, and get alerts when a rival drops. UPC, GTIN and MPN included. Book a Demo."
+  jsonLd={jsonLd}
+>
+  <div class="el" style="min-height:100vh;background:#FFFCF9;overflow-x:clip">
+
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-10%;top:-25%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.10),transparent);pointer-events:none"></div>
+      <div class="el-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(40px,6vw,84px) clamp(16px,4vw,40px) clamp(48px,6vw,88px);gap:clamp(36px,4.5vw,64px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px">
+          <nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:#665A51"><a href="#" style="color:#665A51">Solutions</a><span style="color:#D7C6BA">›</span><a href="#" style="color:#665A51">By Industry</a><span style="color:#D7C6BA">›</span><span style="color:#1C130E">Electronics Retail</span></nav>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+            <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>For Electronics Retail</span>
+            <span style="height:24px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:12px;color:#1C130E"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2.2"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"></path></svg>Price history on every model</span>
+          </div>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(36px,5vw,62px);line-height:1.03;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Price monitoring</span><span style="font-weight:400"> for electronics retailers</span></h1>
+          <p style="margin:0;max-width:580px;font-size:17.5px;line-height:1.65;color:#3A302A;text-wrap:pretty">priceleap.ai tracks the competitor listings you match to each model, keeps the price history from the day you start tracking, and alerts you when a competitor drops a price or runs out of stock. UPC, GTIN and MPN sit on every product, so you can check you're comparing the same variant.</p>
+          <a href="/book-a-demo" style="align-self:flex-start;height:48px;padding:0 22px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            {chipsInit.map((c) => (
+              <span data-el-chip style={`height:32px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:9px;background:${c.bg};border:1px solid ${c.bc};font-size:13px;color:#1C130E;transition:all .35s`}><span data-el-chipdot style={`width:6px;height:6px;border-radius:50%;background:${c.dot};transition:background .35s`}></span>{c.t}</span>
+            ))}
+          </div>
+        </div>
+
+        <figure style="margin:0;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div style="position:relative;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;box-shadow:0 48px 90px -52px rgba(60,30,15,.45),0 0 0 6px rgba(255,255,255,.7)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+              <span style="font-size:13.5px;font-weight:600;color:#1C130E">Product Info</span>
+              <span style="display:flex;gap:6px"><span style="height:24px;padding:0 9px;display:flex;align-items:center;border-radius:7px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:11.5px;color:#3A302A">Edit</span><span style="height:24px;padding:0 9px;display:flex;align-items:center;border-radius:7px;background:#1C130E;font-size:11.5px;color:#FFFFFF">Fetch now</span></span>
+            </div>
+            <div class="el-info" style="display:grid;gap:0">
+              <div class="el-infoleft" style="padding:16px;display:flex;flex-direction:column;gap:10px">
+                <div style="aspect-ratio:1 / 1;max-height:150px;border-radius:12px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 7px,#FFFCF9 7px 14px);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066">product image</div>
+                <div data-el-mname style="font-size:14px;font-weight:600;line-height:1.35;color:#1C130E">{m0.n}</div>
+                <div style="display:flex;align-items:center;gap:8px"><span data-el-mprice style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:#1C130E">{m0.p}</span><span style="height:20px;padding:0 7px;display:flex;align-items:center;border-radius:5px;background:#F6FBF7;border:1px solid #BFE5CC;font-family:'Geist Mono',monospace;font-size:9.5px;color:#1E7A3D">● active</span></div>
+              </div>
+              <div data-el-idgrid style="padding:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start">
+                {idFieldsInit.map((f) => (
+                  <div style={`padding:8px 10px;border-radius:10px;background:${f.bg};border:1px solid ${f.bc};display:flex;flex-direction:column;gap:3px;transition:all .3s;animation:el-in .35s ease ${f.dl}s both`}>
+                    <span style={`display:flex;align-items:center;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:${f.kc}`}>{f.k}<span data-el-chk style={`display:${f.ckD};color:#1E7A3D`}>✓</span></span>
+                    <span style="font-family:'Geist Mono',monospace;font-size:12px;font-weight:500;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{f.v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;border-top:1px solid #F5ECE5;background:#FFF9F4;font-size:12px;color:#3A302A"><span style="width:18px;height:18px;flex:none;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Comparing <b data-el-cap style="color:#1C130E">{m0.cap}</b> with <b data-el-cap style="color:#1C130E">{m0.cap}</b> · same MPN on <span data-el-matched style="font-weight:600;color:#1C130E">{m0.matched}</span> of <span data-el-total style="font-weight:600;color:#1C130E">{m0.total}</span> competitor listings</div>
+          </div>
+          <figcaption style="font-size:13px;color:#665A51;text-align:center">Identifiers stored on every product</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 02 PROBLEM -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>The problem</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Electronics prices </span><span style="font-weight:700">don't stay right for long</span></h2>
+        </div>
+        <div class="el-prob" style="margin-top:48px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#EFE3DA;display:grid;gap:1px">
+          <div data-reveal style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="position:relative;height:220px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;padding:20px;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="width:100%;max-width:300px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066"><span>STREET PRICE</span><span data-el-slidenow style="color:#B42318">$1,299</span></div>
+              <svg viewBox="0 0 300 120" style="display:block;width:100%;height:auto;overflow:visible">
+                <line x1="0" y1="24" x2="300" y2="24" stroke="#1C130E" stroke-dasharray="3 4"></line>
+                <text x="0" y="16" font-family="Geist Mono" font-size="9" fill="#1C130E">YOUR LAUNCH PRICE $1,299</text>
+                <path d="M0,24 C40,26 60,40 100,52 C140,64 180,78 220,86 C250,92 275,96 300,98 L300,120 L0,120 Z" fill="#FFF4EC"></path>
+                <path d="M0,24 C40,26 60,40 100,52 C140,64 180,78 220,86 C250,92 275,96 300,98" fill="none" stroke="#F7631E" stroke-width="2.2" pathLength="1" style="stroke-dasharray:1;animation:el-draw 2.2s ease both"></path>
+                <circle data-el-slidedot cx="20" cy="25" r="5" fill="#F7631E" stroke="#FFFFFF" stroke-width="2" style="transition:all .9s ease"></circle>
+                <line data-el-slideline x1="20" y1="24" x2="20" y2="25" stroke="#B42318" stroke-width="1.5" style="transition:all .9s ease"></line>
+              </svg>
+              <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066"><span>LAUNCH</span><span>WK 2</span><span>WK 4</span><span>WK 8</span></div>
+            </div></div>
+            <div style="padding:24px 26px 28px;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">01</span><p style="margin:0;font-size:16px;line-height:1.6;color:#1C130E;text-wrap:pretty">Street prices slide from launch day onward. A price you set at launch is above the market within a month.</p></div>
+          </div>
+          <div data-reveal style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="position:relative;height:220px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;padding:20px;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="width:100%;max-width:300px;display:grid;grid-template-columns:1fr 30px 1fr;align-items:center;gap:0">
+              <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px">
+                <div style="height:50px;border-radius:8px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 6px,#FFFCF9 6px 12px)"></div>
+                <span style="font-size:11px;font-weight:600;line-height:1.3;color:#1C130E">Galaxy S24 Ultra Titanium Black</span>
+                <span style="align-self:flex-start;height:20px;padding:0 6px;display:flex;align-items:center;border-radius:5px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;color:#FFFFFF">512GB</span>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px"><span data-el-varline style="width:100%;height:2px;background:#EFE3DA;transition:background .4s"></span><span data-el-varmk style="width:22px;height:22px;border-radius:50%;background:#B9A99C;color:#FFFFFF;font-size:11px;display:flex;align-items:center;justify-content:center;transition:background .4s">?</span></div>
+              <div data-el-varbox style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;transition:border-color .4s">
+                <div style="height:50px;border-radius:8px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 6px,#FFFCF9 6px 12px)"></div>
+                <span style="font-size:11px;font-weight:600;line-height:1.3;color:#1C130E">Galaxy S24 Ultra Titanium Black</span>
+                <span data-el-vartag style="align-self:flex-start;height:20px;padding:0 6px;display:flex;align-items:center;border-radius:5px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;color:#FFFFFF;transition:all .4s">256GB</span>
+              </div>
+              <span data-el-varnote style="grid-column:1 / -1;margin-top:10px;text-align:center;font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066;transition:color .4s">Title match: 100% identical</span>
+            </div></div>
+            <div style="padding:24px 26px 28px;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">02</span><p style="margin:0;font-size:16px;line-height:1.6;color:#1C130E;text-wrap:pretty">Model numbers, capacities, colors and retailer-exclusive bundles look almost identical. Matching on title alone compares a 512GB unit to a 256GB one.</p></div>
+          </div>
+          <div data-reveal style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="position:relative;height:220px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;padding:20px;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="width:100%;max-width:300px;display:flex;flex-direction:column;gap:10px">
+              <div style="position:relative;height:56px">
+                <span style="position:absolute;left:0;right:0;top:27px;height:2px;background:#EFE3DA"></span>
+                <span data-el-mdbar style="position:absolute;left:0;top:27px;height:2px;width:0%;background:#1C130E;transition:width .9s linear"></span>
+                {mdMarksInit.map((m) => (
+                  <span data-el-mdmark style={`position:absolute;left:${m.x}%;top:0;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px`}>
+                    <span data-el-mdtxt style={`font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:.06em;color:${m.c};white-space:nowrap`}>{m.t}</span>
+                    <span data-el-mddot style={`width:14px;height:14px;border-radius:50%;background:${m.bg};border:2px solid ${m.bc};transition:all .4s`}></span>
+                  </span>
+                ))}
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+                <span style="height:26px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:7px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:11.5px;color:#3A302A;white-space:nowrap"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6zM14 2v6h6"></path></svg>Weekly report</span>
+                <span data-el-mdtag style="height:26px;padding:0 9px;display:flex;align-items:center;white-space:nowrap;border-radius:7px;background:#FFFFFF;border:1px solid #EFE3DA;font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066;transition:all .4s">WAITING FOR MONDAY</span>
+              </div>
+            </div></div>
+            <div style="padding:24px 26px 28px;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">03</span><p style="margin:0;font-size:16px;line-height:1.6;color:#1C130E;text-wrap:pretty">Markdowns get taken too late. By the time a slow SKU shows up in a weekly report, the new model has already been announced.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 SOLUTION -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1100px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>The solution</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Follow every model's </span><span style="font-weight:700">price over time</span></h2>
+          <p style="margin:0;max-width:720px;font-size:17px;line-height:1.7;color:#3A302A;text-wrap:pretty">Add the competitor listings for each model, and priceleap.ai checks their prices on a schedule and builds a price history you can read at 30 days, 90 days or a year. Set a price position and a margin floor, and SmartPrice recommends where each model should sit.</p>
+        </div>
+        <div data-reveal style="margin:44px auto 0;max-width:860px;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;box-shadow:0 40px 80px -52px rgba(60,30,15,.4)">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 18px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+            <span style="font-size:13.5px;font-weight:600;color:#1C130E">Price history · Galaxy S24 Ultra 512GB</span>
+            <span role="tablist" style="display:flex;gap:4px;padding:3px;border:1px solid #EFE3DA;border-radius:10px;background:#FFFFFF">{rangesInit.map((r, i) => (
+              <button data-el-range={i} role="tab" aria-selected={r.on ? 'true' : 'false'} style={`height:26px;padding:0 10px;border:none;border-radius:7px;background:${r.on ? '#1C130E' : 'transparent'};color:${r.on ? '#FFFFFF' : '#3A302A'};font-family:'Geist Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s`}>{r.t}</button>
+            ))}</span>
+          </div>
+          <div style="padding:18px 18px 8px">
+            <svg viewBox="0 0 600 180" preserveAspectRatio="none" style="display:block;width:100%;height:180px;overflow:visible">
+              <line x1="0" y1="45" x2="600" y2="45" stroke="#F5ECE5" vector-effect="non-scaling-stroke"></line><line x1="0" y1="90" x2="600" y2="90" stroke="#F5ECE5" vector-effect="non-scaling-stroke"></line><line x1="0" y1="135" x2="600" y2="135" stroke="#F5ECE5" vector-effect="non-scaling-stroke"></line>
+              <polyline data-el-hyou points={hYouInit} fill="none" stroke="#1C130E" stroke-width="2.4" stroke-linejoin="round" vector-effect="non-scaling-stroke" pathLength="1" style="stroke-dasharray:1;animation:el-draw 1.2s ease both"></polyline>
+              <polyline data-el-ha points={hAInit} fill="none" stroke="#F7631E" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke" pathLength="1" style="stroke-dasharray:1;animation:el-draw 1.2s ease .15s both"></polyline>
+              <polyline data-el-hb points={hBInit} fill="none" stroke="#D7C6BA" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke" pathLength="1" style="stroke-dasharray:1;animation:el-draw 1.2s ease .3s both"></polyline>
+            </svg>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066"><span data-el-hstart>−90D</span><span>Today</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 18px;border-top:1px solid #F5ECE5">
+            <span style="display:flex;gap:12px;font-family:'Geist Mono',monospace;font-size:10.5px;color:#3A302A"><span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:2px;background:#1C130E"></span>You</span><span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:2px;background:#F7631E"></span>Retailer A</span><span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:2px;background:#D7C6BA"></span>Retailer B</span></span>
+            <span data-el-hsummary style="margin-left:auto;font-size:12.5px;color:#1C130E">Range $1,099 – $1,299 over 90D · You are 2nd lowest today</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 WHY TEAMS PICK US -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Why teams pick us</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">For catalogues that </span><span style="font-weight:700">change every season</span></h2>
+        </div>
+        <div data-reveal class="el-three" style="margin-top:44px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#EFE3DA;display:grid;gap:1px">
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:170px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,260px);display:flex;flex-direction:column;gap:6px">
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;border:1.5px solid #F7631E;background:#FFFFFF;box-shadow:0 0 0 4px rgba(247,99,30,.12);font-family:'Geist Mono',monospace;font-size:11px;color:#1C130E;overflow:hidden;white-space:nowrap"><span data-el-paste>UPC 887276789012</span><span style="flex:none;display:inline-block;width:6px;height:13px;background:#F7631E;animation:el-blink 1s steps(1) infinite"></span></div>
+                {sellersInit.map((s) => (
+                  <div data-el-seller style={`display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 10px;border-radius:9px;border:1px solid ${s.bc};background:${s.bg};opacity:${s.o};transition:all .4s`}><span style="font-size:12px;color:#1C130E">{s.n}</span><span data-el-stag style={`font-family:'Geist Mono',monospace;font-size:9.5px;color:${s.tc}`}>{s.tag}</span></div>
+                ))}
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">Identifiers on every model</span><p style="margin:0;font-size:15px;line-height:1.6;color:#665A51">UPC, GTIN and MPN are stored with each product, so your team can check a 512GB unit is compared with a 512GB unit.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:170px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,260px)">
+                <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066"><span>90-DAY RANGE</span><span style="color:#C2410C">SMARTPRICE</span></div>
+                <div style="position:relative;margin:30px 4px 26px;height:8px;border-radius:8px;background:#F5ECE5">
+                  <span style="position:absolute;left:22%;right:22%;top:0;bottom:0;border-radius:8px;background:#FFE3CF"></span>
+                  <span style="position:absolute;left:22%;top:-5px;bottom:-5px;width:2px;background:#1C130E"></span>
+                  <span style="position:absolute;left:78%;top:-5px;bottom:-5px;width:2px;background:#1C130E"></span>
+                  <span style="position:absolute;top:15px;left:22%;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:9.5px;color:#3A302A">Low $1,099</span>
+                  <span style="position:absolute;top:15px;left:78%;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:9.5px;color:#3A302A">Ceiling</span>
+                  <span data-el-spdot style="position:absolute;top:50%;left:22%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#F7631E;border:3px solid #FFFFFF;box-shadow:0 0 0 1px #F7631E;transition:left 1.2s cubic-bezier(.2,.7,.2,1)"></span>
+                  <span data-el-splabel style="position:absolute;bottom:16px;left:22%;transform:translateX(-50%);height:20px;padding:0 7px;display:flex;align-items:center;border-radius:5px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;color:#FFFFFF;white-space:nowrap;transition:left 1.2s cubic-bezier(.2,.7,.2,1)">$1,099</span>
+                </div>
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">Price history, not snapshots</span><p style="margin:0;font-size:15px;line-height:1.6;color:#665A51">Every model keeps its <a href="/price-intelligence-engine" style="font-weight:600">price history</a>, from 14 days to the full record, with a one-line summary of the range.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:170px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,260px);display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:9px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:12px;color:#1C130E"><span>Every Monday, by email</span><span style="font-family:'Geist Mono',monospace;color:#C2410C">WEEKLY</span></div>
+                <div data-el-alert style="display:none;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;background:#1C130E;color:#FFFFFF;font-size:12px;animation:el-pop .35s ease"><span style="width:7px;height:7px;flex:none;border-radius:50%;background:#FB8A2E;animation:el-pulse 1.6s infinite"></span><span style="flex:1">Weekly digest · TVs <b style="color:#FB8A2E">14 changes</b></span><span style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#FB8A2E">EMAIL</span></div>
+                <div style="display:flex;gap:5px">{chansInit.map((c) => (
+                  <span data-el-chan style={`flex:1;height:26px;display:flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid ${c.bc};background:${c.bg};font-size:11.5px;color:${c.c};transition:all .3s`}>{c.t}</span>
+                ))}</div>
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">A weekly digest</span><p style="margin:0;font-size:15px;line-height:1.6;color:#665A51">A <a href="#" style="font-weight:600">summary</a> of every price change in each product group, sent by email.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="el-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <div data-reveal class="el-sticky" style="top:96px;display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>FAQ</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Electronics price monitoring </span><span style="font-weight:700">FAQs</span></h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((q) => (
+            <div class="el-faq" class:list={[{ 'is-open': q.open }]} data-el-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-el-faqbtn aria-expanded={q.open ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="el-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px">{q.n}</span>
+                <span role="heading" aria-level="3" style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{q.q}</span>
+                <span class="el-faq-ic" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="el-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{q.a}{q.hasLink && (<span>{q.a1}<a href="/product-matching" style="font-weight:600">Product Matching</a>{q.a2}</span>)}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-220px;width:640px;height:400px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.14),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:22px">
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">See your models' price history </span><span style="font-weight:700">in a demo</span></h2>
+          <a href="/book-a-demo" style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .el { background: #FFFCF9; overflow-x: clip; }
+  @keyframes el-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.5); } 100% { box-shadow: 0 0 0 9px rgba(247,99,30,0); } }
+  @keyframes el-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes el-pop { 0% { opacity: 0; transform: translateY(-4px) scale(.97); } 100% { opacity: 1; transform: none; } }
+  @keyframes el-spin { to { transform: rotate(360deg); } }
+  @keyframes el-blink { 50% { opacity: 0; } }
+  @keyframes el-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+  .el-hero { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .el-hero { grid-template-columns: minmax(0,1fr) minmax(0,1.05fr); } }
+  .el-info { grid-template-columns: 1fr; }
+  .el-infoleft { border-bottom: 1px solid #F5ECE5; }
+  @media (min-width: 560px) { .el-info { grid-template-columns: 180px minmax(0,1fr); } .el-infoleft { border-right: 1px solid #F5ECE5; border-bottom: none; } }
+  .el-prob { grid-template-columns: 1fr; }
+  @media (min-width: 960px) { .el-prob { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+  .el-three { grid-template-columns: 1fr; }
+  @media (min-width: 960px) { .el-three { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+  .el-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .el-split { grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); } }
+  .el-sticky { position: static; }
+  @media (min-width: 1024px) { .el-sticky { position: sticky; } }
+
+  .el-faq-n { color: #B9A99C; }
+  .el-faq.is-open .el-faq-n { color: #C2410C; }
+  .el-faq-ic { background: #FBF3EC; color: #1C130E; transform: rotate(0deg); transition: all .3s; }
+  .el-faq.is-open .el-faq-ic { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .el-faq.is-open { border-color: #FFD8BE; }
+  .el-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .el-faq.is-open .el-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .el *, .el *::before, .el *::after { animation: none !important; transition: none !important; } [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.el') as HTMLElement | null;
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+
+    const MODELS: { n: string; p: string; cap: string; matched: number; total: number; f: [string, string, number][] }[] = [
+      { n: 'Samsung Galaxy S24 Ultra · 512GB · Titanium Black', p: '$1,299.99', cap: '512GB', matched: 4, total: 5, f: [['SKU', 'SM-S928U-512-BK', 0], ['UPC', '887276789012', 1], ['GTIN', '00887276789012', 1], ['MPN', 'SM-S928UZKFXAA', 1], ['BRAND', 'Samsung', 0], ['CATEGORY', 'Smartphones', 0], ['CAPACITY', '512GB', 0], ['COLOR', 'Titanium Black', 0]] },
+      { n: 'Sony WH-1000XM5 · Black', p: '$329.99', cap: 'Black', matched: 5, total: 5, f: [['SKU', 'WH1000XM5-B', 0], ['UPC', '027242923782', 1], ['GTIN', '04548736132610', 1], ['MPN', 'WH1000XM5/B', 1], ['BRAND', 'Sony', 0], ['CATEGORY', 'Headphones', 0], ['VARIANT', 'Over-ear', 0], ['COLOR', 'Black', 0]] },
+      { n: 'LG C3 OLED 65" · OLED65C3PUA', p: '$1,599.99', cap: '65"', matched: 3, total: 4, f: [['SKU', 'LG-OLED65C3', 0], ['UPC', '195174049325', 1], ['GTIN', '00195174049325', 1], ['MPN', 'OLED65C3PUA', 1], ['BRAND', 'LG', 0], ['CATEGORY', 'TVs', 0], ['SIZE', '65"', 0], ['YEAR', '2023', 0]] },
+    ];
+    const cellHTML = (k: string, v: string, id: number, on: boolean, i: number) =>
+      `<div style="padding:8px 10px;border-radius:10px;background:${id ? (on ? '#FFF4EC' : '#FFF9F4') : '#FFFFFF'};border:1px solid ${id ? (on ? '#F7631E' : '#FFD8BE') : '#F5ECE5'};display:flex;flex-direction:column;gap:3px;transition:all .3s;animation:el-in .35s ease ${(i * 0.05).toFixed(2)}s both"><span style="display:flex;align-items:center;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:${id ? '#C2410C' : '#7F7066'}">${k}<span data-el-chk style="display:${on ? 'inline' : 'none'};color:#1E7A3D">✓</span></span><span style="font-family:'Geist Mono',monospace;font-size:12px;font-weight:500;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v}</span></div>`;
+
+    // refs
+    const chips = qa('[data-el-chip]');
+    const idgrid = q('[data-el-idgrid]'), mname = q('[data-el-mname]'), mprice = q('[data-el-mprice]');
+    const caps = qa('[data-el-cap]'), matchedEl = q('[data-el-matched]'), totalEl = q('[data-el-total]');
+    const slideNow = q('[data-el-slidenow]'), slideDot = root.querySelector('[data-el-slidedot]') as SVGElement | null, slideLine = root.querySelector('[data-el-slideline]') as SVGElement | null;
+    const varMk = q('[data-el-varmk]'), varLine = q('[data-el-varline]'), varBox = q('[data-el-varbox]'), varTag = q('[data-el-vartag]'), varNote = q('[data-el-varnote]');
+    const mdBar = q('[data-el-mdbar]'), mdMarks = qa('[data-el-mdmark]'), mdTag = q('[data-el-mdtag]');
+    const pasteEl = q('[data-el-paste]'), sellers = qa('[data-el-seller]');
+    const spDot = q('[data-el-spdot]'), spLabel = q('[data-el-splabel]');
+    const alertEl = q('[data-el-alert]'), chans = qa('[data-el-chan]');
+
+    const mdMarksData: [string, number][] = [['SLOW SKU', 12], ['NEW MODEL', 58], ['REPORT', 92]];
+    const sellTags: [string, boolean][] = [['SAME MPN', false], ['SAME MPN', false], ['NO MATCH', true]];
+    const ids = ['UPC 887276789012', 'GTIN 00887276789012', 'MPN SM-S928UZKFXAA'];
+
+    let tick = 0, lastMi = 0;
+    function paint() {
+      const tk = tick;
+      // hero product card
+      const mi = Math.floor(tk / 6) % 3, md = MODELS[mi], hi = tk % 6;
+      if (mi !== lastMi) {
+        lastMi = mi;
+        if (idgrid) idgrid.innerHTML = md.f.map(([k, v, id], i) => cellHTML(k, v, id, false, i)).join('');
+        if (mname) mname.textContent = md.n;
+        if (mprice) mprice.textContent = md.p;
+        caps.forEach((c) => (c.textContent = md.cap));
+        if (matchedEl) matchedEl.textContent = String(md.matched);
+        if (totalEl) totalEl.textContent = String(md.total);
+      }
+      const cells = idgrid ? idgrid.children : null;
+      md.f.forEach(([, , id], i) => {
+        const on = !!id && hi >= 1 && hi - 1 <= i;
+        const cell = cells ? (cells[i] as HTMLElement) : null; if (!cell) return;
+        cell.style.background = id ? (on ? '#FFF4EC' : '#FFF9F4') : '#FFFFFF';
+        cell.style.borderColor = id ? (on ? '#F7631E' : '#FFD8BE') : '#F5ECE5';
+        const chk = cell.querySelector('[data-el-chk]') as HTMLElement | null;
+        if (chk) chk.style.display = on ? 'inline' : 'none';
+      });
+      // chips
+      const cph = Math.floor(tk / 3) % 3;
+      chips.forEach((el, i) => { const on = i === cph; el.style.background = on ? '#FFF4EC' : '#FFFFFF'; el.style.borderColor = on ? '#FFD8BE' : '#EFE3DA'; const d = el.querySelector('[data-el-chipdot]') as HTMLElement | null; if (d) d.style.background = on ? '#F7631E' : '#D7C6BA'; });
+      // problem 1 slide
+      const sp = Math.floor(tk / 2) % 4, sx = [20, 100, 180, 280][sp], sy = [25, 52, 76, 96][sp];
+      if (slideNow) slideNow.textContent = ['$1,299', '$1,229', '$1,169', '$1,099'][sp] + (sp ? ' · −' + [0, 5, 10, 15][sp] + '%' : '');
+      if (slideDot) { slideDot.setAttribute('cx', String(sx)); slideDot.setAttribute('cy', String(sy)); }
+      if (slideLine) { slideLine.setAttribute('x1', String(sx)); slideLine.setAttribute('x2', String(sx)); slideLine.setAttribute('y2', String(sy)); }
+      // problem 2 variant
+      const vp = Math.floor(tk / 3) % 2;
+      if (varMk) { varMk.textContent = vp ? '✕' : '?'; varMk.style.background = vp ? '#B42318' : '#B9A99C'; }
+      if (varLine) varLine.style.background = vp ? '#F5C6C3' : '#EFE3DA';
+      if (varBox) varBox.style.borderColor = vp ? '#F5C6C3' : '#EFE3DA';
+      if (varTag) { varTag.style.background = vp ? '#FDECEB' : '#1C130E'; varTag.style.color = vp ? '#B42318' : '#FFFFFF'; }
+      if (varNote) { varNote.textContent = vp ? 'Different capacity · not the same product' : 'Title match: 100% identical'; varNote.style.color = vp ? '#B42318' : '#7F7066'; }
+      // problem 3 markdown
+      const mp = tk % 8, mdW = Math.min(100, mp * 16);
+      if (mdBar) mdBar.style.width = mdW + '%';
+      mdMarks.forEach((el, i) => { const x = mdMarksData[i][1]; const hit = mdW >= x; const red = i === 1; const dot = el.querySelector('[data-el-mddot]') as HTMLElement | null; const txt = el.querySelector('[data-el-mdtxt]') as HTMLElement | null; if (dot) { dot.style.background = hit ? (red ? '#B42318' : '#1C130E') : '#FFFFFF'; dot.style.borderColor = hit ? (red ? '#B42318' : '#1C130E') : '#E2D3C8'; } if (txt) txt.style.color = hit ? (red ? '#B42318' : '#1C130E') : '#B9A99C'; });
+      const late = mdW >= 92;
+      if (mdTag) { mdTag.textContent = late ? 'TOO LATE TO MARK DOWN' : 'WAITING FOR MONDAY'; mdTag.style.background = late ? '#FDECEB' : '#FFFFFF'; mdTag.style.borderColor = late ? '#F5C6C3' : '#EFE3DA'; mdTag.style.color = late ? '#B42318' : '#7F7066'; }
+      // why 1 sellers
+      if (pasteEl) pasteEl.textContent = ids[Math.floor(tk / 2) % 3];
+      const up = Math.floor(tk / 2) % 4;
+      sellers.forEach((el, i) => { const on = i < up, bad = sellTags[i][1]; const tag = el.querySelector('[data-el-stag]') as HTMLElement | null; if (tag) { tag.textContent = on ? (bad ? 'NO MATCH' : 'SAME MPN ✓') : 'CHECKING'; tag.style.color = on ? (bad ? '#B42318' : '#1E7A3D') : '#7F7066'; } el.style.opacity = on ? '1' : '.45'; el.style.borderColor = on ? (bad ? '#F5C6C3' : '#BFE5CC') : '#EFE3DA'; el.style.background = on ? (bad ? '#FFF7F6' : '#F6FBF7') : '#FFFFFF'; });
+      // why 2 smartprice
+      const spPos: [number, string] = [[22, '$1,099'], [48, '$1,199'], [86, '$1,299']][Math.floor(tk / 3) % 3] as [number, string];
+      if (spDot) spDot.style.left = spPos[0] + '%';
+      if (spLabel) { spLabel.style.left = spPos[0] + '%'; spLabel.textContent = spPos[1]; }
+      // why 3 alert + chans
+      if (alertEl) alertEl.style.display = (tk % 4 >= 1) ? 'flex' : 'none';
+      const ach = Math.floor(tk / 2) % 3;
+      chans.forEach((el, i) => { const on = i === ach; el.style.background = on ? '#1C130E' : '#FFFFFF'; el.style.borderColor = on ? '#1C130E' : '#EFE3DA'; el.style.color = on ? '#FFFFFF' : '#3A302A'; });
+    }
+    paint();
+    setInterval(() => { tick++; paint(); }, 1000);
+
+    // ---- price-history range tabs ----
+    const RANGES: [string, number][] = [['14D', 14], ['30D', 30], ['90D', 90], ['1Y', 365]];
+    const series = (base: number, drift: number, wob: number, seed: number) => { const pts: string[] = []; for (let i = 0; i <= 24; i++) { const x = i / 24 * 600; const v = base - drift * (i / 24) + Math.sin(i * 0.9 + seed) * wob + (i % 7 === seed % 7 ? -wob * 1.6 : 0); pts.push(x.toFixed(0) + ',' + v.toFixed(1)); } return pts.join(' '); };
+    const hYou = root.querySelector('[data-el-hyou]') as SVGElement | null, hA = root.querySelector('[data-el-ha]') as SVGElement | null, hB = root.querySelector('[data-el-hb]') as SVGElement | null;
+    const hStart = q('[data-el-hstart]'), hSummary = q('[data-el-hsummary]');
+    const rangeBtns = qa('[data-el-range]');
+    const draws = ['el-draw 1.2s ease both', 'el-draw 1.2s ease .15s both', 'el-draw 1.2s ease .3s both'];
+    let range = 2;
+    function paintRange() {
+      const [rl, rd] = RANGES[range], k = rd / 90;
+      if (hYou) hYou.setAttribute('points', series(55, 22 * k, 3, 1));
+      if (hA) hA.setAttribute('points', series(62, 34 * k, 6, 3));
+      if (hB) hB.setAttribute('points', series(40, 14 * k, 4, 5));
+      const lo = Math.round(1299 - 200 * Math.min(1, k));
+      if (hStart) hStart.textContent = '−' + rl;
+      if (hSummary) hSummary.textContent = 'Range $' + lo.toLocaleString() + ' – $1,299 over ' + rl + ' · You are 2nd lowest today';
+      rangeBtns.forEach((b, i) => { const on = range === i; b.style.background = on ? '#1C130E' : 'transparent'; b.style.color = on ? '#FFFFFF' : '#3A302A'; b.setAttribute('aria-selected', String(on)); });
+      [hYou, hA, hB].forEach((p, i) => { if (!p) return; p.style.animation = 'none'; void (p as unknown as HTMLElement).getBoundingClientRect(); p.style.animation = draws[i]; });
+    }
+    rangeBtns.forEach((b, i) => b.addEventListener('click', () => { range = i; paintRange(); }));
+
+    // ---- faq ----
+    qa('[data-el-faqbtn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-el-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-el-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-el-faqbtn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    // ---- reveal ----
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>
