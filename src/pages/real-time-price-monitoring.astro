@@ -1,0 +1,739 @@
+---
+// Native Astro port of the design package's Real-Time Price Monitoring page.
+// Static initial render + the two animation loops and interactions reimplemented in
+// vanilla JS: sticky scrollspy subnav + scroll-progress bar; hero live-collection
+// source rows cycling render→price→matched + pages-today counter + freshness timers
+// (1300ms); auto-advancing 5-step engine (260ms) with prev/next and five swapping
+// self-animating panels; FAQ. Uses design tokens + real brand-logo marquees.
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+
+const src = [
+  ['Marketplace A', 'MA', 'MARKETPLACE', '$184.99'], ['Retailer B', 'RB', 'RETAILER', '$189.00'],
+  ['PriceCompare', 'PC', 'COMPARISON', '$179.90'], ['Reseller 0871', 'R7', 'RESELLER', '$176.50'], ['Regional store', 'RS', 'REGIONAL', '€172.00'],
+].map(([n, ab, type, price]) => ({ n, ab, type, price }));
+const brandLogos = ['amazon', 'shopify', 'walmart', 'ebay', 'target', 'flipkart', 'etsy', 'magento', 'woocommerce', 'bigcommerce', 'salesforce', 'sap'];
+const logoLoop = [...brandLogos, ...brandLogos];
+const clientGrid = ['amazon', 'walmart', 'shopify', 'ebay', 'target', 'flipkart', 'etsy', 'bigcommerce', 'magento', 'woocommerce'];
+const subItems = [['basics', 'Basics'], ['who', "Who it's for"], ['problem', 'Problem'], ['engine', 'How it works'], ['monday', 'Monday'], ['compare', 'Before & after'], ['proof', 'Proof'], ['faq', 'FAQ']];
+const steps5 = [
+  { t: 'Collect', b1: 'We monitor [marketplaces, retailer sites, comparison engines] across [X countries, X currencies, X languages].', b2: 'Owned extraction captures the sellers who never show up in a data feed.', mv: '[X]', ml: 'sources monitored' },
+  { t: 'Render & unblock', b1: 'Headless rendering reads JavaScript-heavy pages — variants, infinite scroll, prices that load only after a click.', b2: 'Rotating proxies and managed fingerprints clear bot defenses on the hardest sites, including [Amazon & Cloudflare-protected stores].', mv: '[X]%', ml: 'pages rendered' },
+  { t: 'Match', b1: 'We match by [EAN/UPC, attributes, image] — including items with no barcode and across pack-size or variant differences.', b2: 'Human review on every match our models flag as uncertain.', mv: '[X]%', ml: 'match accuracy' },
+  { t: 'Validate', b1: 'Each data point clears anomaly checks before you see it — a price that drops 90% overnight gets caught, not shipped.', b2: 'When a competitor redesigns a page, the extractor self-heals instead of feeding you silent blanks.', mv: '[X]%', ml: 'anomalies caught' },
+  { t: 'Deliver', b1: 'Guaranteed refresh by tier: priority SKUs every [X], standard catalog every [Y] — stated, not implied.', b2: 'Take the data however you work: [API, export, S3, Snowflake, webhook].', mv: '[X] min', ml: 'refresh, top tier' },
+];
+const stepLabels = ['Collect', 'Render & Unblock', 'Match', 'Validate', 'Deliver'];
+const retailRows = [
+  { n: 'You', p: '$159.00', fw: 600, bg: 'var(--pl-accent-tint)', tag: '', tagD: 'none', tbg: 'transparent', tc: 'var(--pl-muted)', td: 'none' },
+  { n: 'Retailer B', p: '$149.00', fw: 400, bg: 'transparent', tag: 'PROMO −6%', tagD: 'flex', tbg: 'var(--pl-danger-tint)', tc: 'var(--pl-danger-ink)', td: 'none' },
+  { n: 'Marketplace A', p: '$157.50', fw: 400, bg: 'transparent', tag: '', tagD: 'none', tbg: 'transparent', tc: 'var(--pl-muted)', td: 'none' },
+  { n: 'D2C store C', p: '$162.00', fw: 400, bg: 'transparent', tag: 'OUT OF STOCK', tagD: 'flex', tbg: 'var(--pl-sand)', tc: 'var(--pl-muted)', td: 'line-through' },
+].map((r, i) => ({ ...r, dl: (i * 0.1).toFixed(1) }));
+const brandRows = [
+  { n: 'Authorized retailer', p: '$179.00', tag: 'AT MAP', tbg: 'var(--pl-accent-tint)', tbc: 'var(--pl-accent-line)', tc: 'var(--pl-accent-ink)', pc: 'var(--pl-ink)', ts: '', bg: 'transparent' },
+  { n: 'Seller 2841 · Marketplace', p: '$164.70', tag: '−8% MAP', tbg: 'var(--pl-danger-tint)', tbc: 'var(--pl-danger-line)', tc: 'var(--pl-danger-ink)', pc: 'var(--pl-danger-ink)', ts: 'Seller 2841 · $164.70 · 14:32:07', bg: '#FFF7F6' },
+  { n: 'Regional reseller · DE', p: '€179.00', tag: 'AT MAP', tbg: 'var(--pl-accent-tint)', tbc: 'var(--pl-accent-line)', tc: 'var(--pl-accent-ink)', pc: 'var(--pl-ink)', ts: '', bg: 'transparent' },
+  { n: 'Marketplace seller 0098', p: '$181.00', tag: 'ABOVE', tbg: 'var(--pl-sand)', tbc: 'var(--pl-line)', tc: 'var(--pl-ink-2)', pc: 'var(--pl-ink)', ts: '', bg: 'transparent' },
+].map((r, i) => ({ ...r, tsD: r.ts ? 'block' : 'none', dl: (i * 0.1).toFixed(1) }));
+const delivers = ['API', 'Export', 'S3', 'Snowflake', 'Webhook'].map((t, i) => ({ t, y: [11.8, 30.9, 50, 69.1, 88.2][i] }));
+const monday = [
+  { n: '01', ts: 'MON 09:00 · FRESHNESS', t: "You price against data that's [minutes/hours] old, not days old — so you stop reacting late." },
+  { n: '02', ts: 'MON 09:15 · COVERAGE', t: 'You see the full competitive set, long-tail sellers included, not just the obvious players.' },
+  { n: '03', ts: 'MON 09:30 · TIME BACK', t: 'You stop burning analyst hours cleaning broken scrapes and chasing missing SKUs.' },
+];
+const baRows = [
+  { k: 'Data freshness', b: 'Prices pulled once a day, stale by lunch.', a: "Continuous collection, so you price against what's live on site now." },
+  { k: 'Coverage', b: 'Top SKUs and obvious competitors only. Resellers and regional sites go unseen.', a: 'The full competitive set across your whole catalogue, long-tail sellers included.' },
+  { k: 'Analyst time', b: 'Hours spent cleaning broken scrapes and chasing missing SKUs.', a: 'Matched, cleaned data arrives ready to use. Your team works on decisions.' },
+  { k: 'Response', b: "You find out about a competitor's price cut after it has cost you sales.", a: 'Price, promo and stock changes reach you as they happen.' },
+];
+const uptime = Array.from({ length: 60 }, (_, i) => ({ c: i === 23 ? 'var(--pl-warn-line)' : 'var(--pl-accent)', dl: (i * 0.012).toFixed(3) }));
+const faqData = [
+  ["Can competitors tell we're monitoring them?", 'No. Collection runs through rotating proxies and managed fingerprints, so requests look like ordinary shopper traffic and are not tied back to your company.'],
+  ['How fresh is the data, really?', 'Refresh is guaranteed by tier: priority SKUs every [X], standard catalog every [Y]. Every data point carries a timestamp so you can see exactly how old it is.'],
+  ['Can you match products with no EAN or UPC?', 'Yes. We match by [EAN/UPC, attributes, image], handle pack-size and variant differences, and send every uncertain match to human review.'],
+  ['Do you handle bot-protected and JavaScript-heavy sites?', 'Yes. Headless rendering reads prices that load via JavaScript or after a click, and rotating proxies clear bot defenses on sites including [Amazon & Cloudflare-protected stores].'],
+  ['What happens when a competitor changes their site?', 'The extractor self-heals when a page is redesigned, and anomaly checks stop broken or implausible values from reaching you. You never receive silent blanks.'],
+  ['Can we get the data into our own stack?', 'Yes. Take the data however you work: [API, export, S3, Snowflake, webhook].'],
+  ['Will it scale from hundreds to millions of SKUs?', 'Yes. Coverage scales with your catalog, with [X] B SKUs already under coverage and refresh tiers that keep priority SKUs fast as volume grows.'],
+].map(([q, a], i) => ({ q, a, n: '0' + (i + 1) }));
+---
+<PriceLeapLayout
+  title="Real-Time Price Monitoring · PriceLeap"
+  description="PriceLeap pulls live e-commerce prices from the sites you compete on, refreshing priority SKUs in minutes — clean, matched, decision-ready data that doesn't break when a competitor changes their page."
+>
+  <div class="rt">
+    <!-- SUBNAV (scrollspy + progress) -->
+    <div class="rt-subnav" style="position:sticky;top:64px;z-index:55;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--pl-line-soft)">
+      <div style="max-width:1280px;margin:0 auto;padding:0 clamp(20px,4vw,40px);height:46px;display:flex;align-items:center;gap:20px">
+        <span style="flex:none;display:flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-ink)"><span style="width:7px;height:7px;border-radius:50%;background:var(--pl-gradient);animation:pi-pulse 1.8s infinite"></span>Price Monitoring</span>
+        <nav style="display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0">
+          {subItems.map(([id, t]) => (
+            <a href={`#${id}`} class="rt-sub" data-rt-sub={id} style={`flex:none;height:30px;padding:0 10px;display:flex;align-items:center;border-radius:8px;font-size:13px;color:${id === 'basics' ? 'var(--pl-ink)' : 'var(--pl-muted)'};background:${id === 'basics' ? 'var(--pl-sand)' : 'transparent'};transition:background .2s,color .2s`}>{t}</a>
+          ))}
+        </nav>
+      </div>
+      <div data-rt-progress style="height:2px;background:var(--pl-gradient);width:0%;transition:width .15s linear"></div>
+    </div>
+
+    <!-- HERO -->
+    <section id="top" style="position:relative;border-bottom:1px solid var(--pl-line);overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%);mask-image:radial-gradient(ellipse 70% 80% at 75% 35%,#000 10%,transparent 70%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-8%;top:-20%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.14),transparent);pointer-events:none"></div>
+      <div class="rt-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(48px,7vw,96px) clamp(20px,4vw,40px) clamp(56px,6vw,88px);gap:clamp(40px,5vw,64px);align-items:center">
+        <div style="min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--pl-muted)"><a href="/" style="color:var(--pl-muted)">Product</a><span style="color:var(--pl-line-xstrong)">/</span><span style="color:var(--pl-ink)">Real-Time Price Monitoring</span></div>
+          <span style="margin-top:28px;display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:50%;background:var(--pl-gradient);animation:pi-pulse 1.8s ease-out infinite"></span>Real-Time Price Monitoring</span>
+          <h1 style="margin:18px 0 0;font-family:Geist,sans-serif;font-size:clamp(38px,5.4vw,68px);line-height:1.02;letter-spacing:-.045em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">The data engine behind </span><span style="font-weight:700">every price decision you trust</span></h1>
+          <p style="margin:22px 0 0;max-width:580px;font-size:18px;line-height:1.6;color:var(--pl-ink-2);text-wrap:pretty">PriceLeap pulls live e-commerce prices from the sites you actually compete on, refreshing priority SKUs every [X minutes]. You get clean, matched, decision-ready data — not a scrape that breaks the moment a competitor changes their page.</p>
+          <div style="margin-top:30px;display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+            <a href="/book-a-demo" style="height:48px;padding:0 22px;display:inline-flex;align-items:center;border-radius:12px;background:var(--pl-gradient);color:var(--pl-surface);font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.9)">Book a demo</a>
+            <a href="#engine" style="height:48px;padding:0 18px;display:inline-flex;align-items:center;gap:10px;border-radius:12px;color:var(--pl-ink);font-family:Geist,sans-serif;font-weight:500;font-size:15px">How the engine works<span style="color:var(--pl-accent-ink)">→</span></a>
+          </div>
+        </div>
+        <div style="position:relative;min-width:0">
+          <div style="position:relative;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:20px;box-shadow:0 40px 80px -40px rgba(60,30,15,.28),0 0 0 6px rgba(255,255,255,.7);overflow:hidden">
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream)">
+              <span style="display:flex;gap:5px"><span style="width:9px;height:9px;border-radius:50%;background:var(--pl-line)"></span><span style="width:9px;height:9px;border-radius:50%;background:var(--pl-line)"></span><span style="width:9px;height:9px;border-radius:50%;background:var(--pl-line)"></span></span>
+              <span style="font-size:13px;font-weight:500;color:var(--pl-ink)">Live collection</span>
+              <span style="font-size:12px;color:var(--pl-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">· Sonix ANC 700 Headphones</span>
+              <span style="margin-left:auto;flex:none;display:flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;background:var(--pl-accent-tint);border:1px solid var(--pl-accent-line);font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-accent-ink)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-gradient);animation:pi-pulse 1.6s infinite"></span>LIVE</span>
+            </div>
+            <div style="position:relative;padding:4px 16px 8px">
+              <span aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:40px;background:linear-gradient(180deg,transparent,rgba(247,99,30,.10),transparent);animation:pi-scan 3.6s linear infinite;pointer-events:none"></span>
+              <div style="display:grid;grid-template-columns:minmax(0,1.3fr) 92px minmax(0,1fr);gap:12px;padding:9px 0;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-faint)"><span>SOURCE</span><span>TYPE</span><span style="text-align:right">STATUS</span></div>
+              {src.map((r, i) => (
+                <div style="display:grid;grid-template-columns:minmax(0,1.3fr) 92px minmax(0,1fr);gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--pl-line-soft)">
+                  <div style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:28px;height:28px;flex:none;border-radius:8px;background:var(--pl-sand);border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-ink-2);display:flex;align-items:center;justify-content:center">{r.ab}</span><span style="font-size:13px;font-weight:500;color:var(--pl-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{r.n}</span></div>
+                  <span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-muted)">{r.type}</span>
+                  <div class="rt-status" data-rt-status={i} data-price={r.price} style="justify-self:end;display:flex;align-items:center;gap:8px">
+                    <span class="rt-p0" style="display:flex;align-items:center;gap:6px;font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-faint)"><span style="width:12px;height:12px;border-radius:50%;border:2px solid var(--pl-line);border-top-color:var(--pl-accent);animation:pi-spin .8s linear infinite"></span>Rendering</span>
+                    <span class="rt-p1" style="display:none;padding:2px 6px;border-radius:5px;font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-ink)">{r.price}</span>
+                    <span class="rt-p2" style="display:none;align-items:center;gap:8px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-ink)">{r.price}</span><span style="height:20px;padding:0 7px;display:flex;align-items:center;border-radius:5px;background:var(--pl-accent-tint);border:1px solid var(--pl-accent-line);font-family:'Geist Mono',monospace;font-size:9.5px;color:var(--pl-accent-ink)">✓ MATCHED</span></span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--pl-line-soft);border-top:1px solid var(--pl-line-soft)">
+              <div style="background:var(--pl-cream);padding:12px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:var(--pl-faint)">PAGES TODAY</div><div data-rt-pages style="margin-top:3px;font-family:Geist,sans-serif;font-size:18px;font-weight:600;letter-spacing:-.02em;color:var(--pl-ink)">1,284,512</div></div>
+              <div style="background:var(--pl-cream);padding:12px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:var(--pl-faint)">LAST CHANGE</div><div data-rt-last style="margin-top:3px;font-family:Geist,sans-serif;font-size:18px;font-weight:600;letter-spacing:-.02em;color:var(--pl-ink)">3s ago</div></div>
+              <div style="background:var(--pl-cream);padding:12px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:var(--pl-faint)">PRIORITY TIER</div><div style="margin-top:3px;font-family:Geist,sans-serif;font-size:18px;font-weight:600;letter-spacing:-.02em;color:var(--pl-accent-ink)">every [X]</div></div>
+            </div>
+          </div>
+          <div class="rt-badge" style="position:absolute;left:-28px;bottom:-22px;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:14px;padding:10px 14px;box-shadow:0 20px 40px -24px rgba(60,30,15,.35);display:flex;align-items:center;gap:10px">
+            <span style="width:28px;height:28px;border-radius:8px;background:var(--pl-ink);color:var(--pl-accent);display:flex;align-items:center;justify-content:center;font-size:13px">◈</span>
+            <div><div style="font-size:12px;font-weight:600;color:var(--pl-ink)">Bot defense cleared</div><div style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-muted)">Headless render · rotating proxy</div></div>
+          </div>
+          <div class="rt-badge" style="position:absolute;right:-18px;top:-18px;background:var(--pl-surface);border:1px solid var(--pl-accent-line);border-radius:12px;padding:8px 12px;box-shadow:0 20px 40px -24px rgba(194,65,12,.45);display:flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-accent-ink)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-gradient);animation:pi-blink 1s steps(1) infinite"></span>Self-healed · page layout changed</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BASICS -->
+    <section id="basics" style="border-bottom:1px solid var(--pl-line)">
+      <div class="rt-split" style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:center">
+        <div data-reveal>
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>The basics</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">What is </span><span style="font-weight:700">real-time price monitoring?</span></h2>
+          <p style="margin:20px 0 0;font-size:17px;line-height:1.7;color:var(--pl-ink-2);text-wrap:pretty">Real-time price monitoring is the continuous collection of competitor prices, promotions and stock status from the sites where your products are sold. Instead of checking a handful of pages by hand, software captures every change as it happens, matches it to your catalogue, and shows where you stand on each SKU.</p>
+        </div>
+        <div data-reveal style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:22px;overflow:hidden;box-shadow:0 30px 60px -40px rgba(60,30,15,.3)">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--pl-line-soft);flex-wrap:wrap">
+            <div><div style="font-size:14px;font-weight:600;color:var(--pl-ink)">One competitor, one day</div><div style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--pl-faint)">08:00 – 20:00 · EARBUDS PRO 2</div></div>
+            <div style="display:flex;gap:12px;font-size:12px;color:var(--pl-ink-2)"><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--pl-faint)"></span>Manual check</span><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--pl-gradient)"></span>Continuous</span></div>
+          </div>
+          <div style="padding:20px 20px 16px;background:var(--pl-cream)">
+            <svg viewBox="0 0 560 220" style="display:block;width:100%;height:auto;overflow:visible">
+              <line x1="0" y1="60" x2="560" y2="60" stroke="#F5ECE5"></line><line x1="0" y1="120" x2="560" y2="120" stroke="#F5ECE5"></line><line x1="0" y1="180" x2="560" y2="180" stroke="#F5ECE5"></line>
+              <path d="M0,70 L120,70 L120,130 L200,130 L200,70 L320,70 L320,150 L380,150 L380,100 L470,100 L470,70 L560,70" fill="none" stroke="#1C130E" stroke-width="2.5" pathLength="1" style="stroke-dasharray:1;animation:pi-draw 2.4s ease both"></path>
+              <line x1="47" y1="40" x2="47" y2="196" stroke="#7F7066" stroke-dasharray="3 4"></line>
+              <circle cx="47" cy="70" r="6" fill="#FFFFFF" stroke="#7F7066" stroke-width="2"></circle>
+              <rect x="10" y="16" width="76" height="20" rx="5" fill="#FBF3EC" stroke="#EFE3DA"></rect><text x="48" y="30" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#665A51">09:00 CHECK</text>
+              <g style="animation:pi-pop .5s ease 1.2s both;transform-origin:160px 130px"><circle cx="160" cy="130" r="7" fill="#F7631E" stroke="#FFFFFF" stroke-width="2"></circle><rect x="122" y="144" width="76" height="20" rx="5" fill="#FFF4EC" stroke="#FFD8BE"></rect><text x="160" y="158" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#C2410C">PROMO −12%</text></g>
+              <g style="animation:pi-pop .5s ease 1.7s both;transform-origin:350px 150px"><circle cx="350" cy="150" r="7" fill="#F7631E" stroke="#FFFFFF" stroke-width="2"></circle><rect x="306" y="164" width="88" height="20" rx="5" fill="#FFF4EC" stroke="#FFD8BE"></rect><text x="350" y="178" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#C2410C">PRICE CUT −18%</text></g>
+              <g style="animation:pi-pop .5s ease 2.1s both;transform-origin:425px 100px"><circle cx="425" cy="100" r="7" fill="#F7631E" stroke="#FFFFFF" stroke-width="2"></circle><rect x="384" y="72" width="82" height="20" rx="5" fill="#FFF4EC" stroke="#FFD8BE"></rect><text x="425" y="86" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#C2410C">OUT OF STOCK</text></g>
+            </svg>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-faint)"><span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--pl-line-soft);border-top:1px solid var(--pl-line-soft)">
+            <div style="background:var(--pl-surface);padding:14px 20px"><div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-faint)">MANUAL</div><div style="margin-top:4px;font-size:14px;color:var(--pl-ink)">1 check · <span style="color:var(--pl-danger-ink)">3 changes missed</span></div></div>
+            <div style="background:var(--pl-accent-tint);padding:14px 20px"><div style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-accent-ink)">PRICELEAP</div><div style="margin-top:4px;font-size:14px;color:var(--pl-ink)">Continuous · <span style="color:var(--pl-accent-ink)">3 of 3 caught</span></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHO IT'S FOR -->
+    <section id="who" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream)">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>Who it's for</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">Who should be </span><span style="font-weight:700">using it?</span></h2>
+          <p style="margin:18px 0 0;max-width:680px;font-size:17px;line-height:1.65;color:var(--pl-ink-2);text-wrap:pretty">Any business that sells online against competitors or through resellers. Whether you are a retailer setting your own prices or a brand protecting how others price your products, the same live data drives the decision.</p>
+        </div>
+        <div data-reveal style="margin-top:52px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px">
+          <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:24px;overflow:hidden;display:flex;flex-direction:column">
+            <div style="position:relative;padding:28px;background:var(--pl-cream);border-bottom:1px solid var(--pl-line-soft);overflow:hidden">
+              <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(var(--pl-line-alt) 1px,transparent 1px);background-size:16px 16px"></div>
+              <div style="position:relative;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:14px;box-shadow:0 20px 40px -28px rgba(60,30,15,.35);overflow:hidden">
+                <div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--pl-line-soft);font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--pl-faint)"><span>SHARED SKU · EARBUDS PRO 2</span><span style="color:var(--pl-accent-ink)">UPDATED 3M AGO</span></div>
+                {retailRows.map((r) => (
+                  <div style={`display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--pl-sand);background:${r.bg};animation:pi-in .5s ease ${r.dl}s both`}>
+                    <span style={`font-size:13px;font-weight:${r.fw};color:var(--pl-ink)`}>{r.n}</span>
+                    <span style={`height:20px;padding:0 7px;display:${r.tagD};align-items:center;border-radius:5px;background:${r.tbg};font-family:'Geist Mono',monospace;font-size:9.5px;color:${r.tc}`}>{r.tag}</span>
+                    <span style={`font-family:'Geist Mono',monospace;font-size:13px;color:var(--pl-ink);text-decoration:${r.td}`}>{r.p}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style="padding:28px;display:flex;flex-direction:column;gap:14px">
+              <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)">For retailers</span>
+              <h3 style="margin:0;font-family:Geist,sans-serif;font-size:24px;font-weight:600;letter-spacing:-.02em;color:var(--pl-ink)">Price monitoring for Retailers</h3>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                {['See every competitor price on the SKUs you share, updated through the day.', 'Catch promotions and out-of-stocks early enough to respond.', 'Reprice with confidence instead of guessing where the market is.'].map((t) => (
+                  <span style="display:flex;gap:12px;font-size:15px;line-height:1.55;color:var(--pl-ink-2)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>{t}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:24px;overflow:hidden;display:flex;flex-direction:column">
+            <div style="position:relative;padding:28px;background:var(--pl-cream);border-bottom:1px solid var(--pl-line-soft);overflow:hidden">
+              <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(var(--pl-line-alt) 1px,transparent 1px);background-size:16px 16px"></div>
+              <div style="position:relative;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:14px;box-shadow:0 20px 40px -28px rgba(60,30,15,.35);overflow:hidden">
+                <div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--pl-line-soft);font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--pl-faint)"><span>RESELLERS · SONIX ANC 700</span><span style="color:var(--pl-ink)">MAP $179.00</span></div>
+                {brandRows.map((r) => (
+                  <div style={`display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--pl-sand);background:${r.bg};animation:pi-in .5s ease ${r.dl}s both`}>
+                    <span style="min-width:0"><span style="display:block;font-size:13px;color:var(--pl-ink)">{r.n}</span><span style={`display:${r.tsD};font-family:'Geist Mono',monospace;font-size:9.5px;color:var(--pl-danger-ink)`}>{r.ts}</span></span>
+                    <span style={`height:20px;padding:0 7px;display:flex;align-items:center;border-radius:5px;background:${r.tbg};border:1px solid ${r.tbc};font-family:'Geist Mono',monospace;font-size:9.5px;color:${r.tc}`}>{r.tag}</span>
+                    <span style={`font-family:'Geist Mono',monospace;font-size:13px;color:${r.pc}`}>{r.p}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style="padding:28px;display:flex;flex-direction:column;gap:14px">
+              <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)">For brands &amp; manufacturers</span>
+              <h3 style="margin:0;font-family:Geist,sans-serif;font-size:24px;font-weight:600;letter-spacing:-.02em;color:var(--pl-ink)">Price monitoring for Brands</h3>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                {['Track how every reseller and marketplace seller prices your products.', 'Detect MAP violations with the seller, price and timestamp recorded.', 'Protect price positioning and channel relationships across regions.'].map((t) => (
+                  <span style="display:flex;gap:12px;font-size:15px;line-height:1.55;color:var(--pl-ink-2)"><span style="flex:none;margin-top:3px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span>{t}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CUSTOMERS -->
+    <section style="border-bottom:1px solid var(--pl-line)">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(56px,7vw,88px) clamp(20px,4vw,40px)">
+        <div data-reveal style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(24px,2.8vw,32px);letter-spacing:-.03em;color:var(--pl-ink)"><span style="font-weight:400">Who is </span><span style="font-weight:700">already using it?</span></h2>
+          <span style="display:flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.08em;color:var(--pl-muted)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-gradient);animation:pi-pulse 1.8s infinite"></span>MONITORING LIVE FOR THESE TEAMS</span>
+        </div>
+        <div data-reveal style="margin-top:28px;border:1px solid var(--pl-line);border-radius:20px;overflow:hidden;background:var(--pl-line);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:1px">
+          {clientGrid.map((f) => (
+            <div style="background:var(--pl-surface);height:96px;display:flex;align-items:center;justify-content:center;padding:12px"><img src={`/assets/logos/${f}.svg`} alt={f} loading="lazy" style="height:48px;max-width:160px;width:auto;object-fit:contain"></div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- PROBLEM -->
+    <section id="problem" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream)">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+        <div data-reveal style="max-width:760px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-danger-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-danger)"></span>The problem</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:700">Wrong data</span><span style="font-weight:400"> costs more than no data</span></h2>
+        </div>
+        <div data-reveal style="margin-top:48px;border:1px solid var(--pl-line);border-radius:24px;overflow:hidden;background:var(--pl-line);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:1px">
+          <div style="background:var(--pl-surface);display:flex;flex-direction:column">
+            <div style="height:190px;background:var(--pl-surface);border-bottom:1px solid var(--pl-line-soft);display:flex;align-items:center;justify-content:center;gap:16px;padding:20px">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:8px"><span style="position:relative;width:56px;height:56px;border-radius:50%;border:2px solid var(--pl-line);background:var(--pl-cream)"><span style="position:absolute;left:50%;top:50%;width:2px;height:20px;margin-left:-1px;background:var(--pl-ink);transform-origin:50% 0;transform:rotate(180deg)"></span><span style="position:absolute;left:50%;top:50%;width:2px;height:14px;margin-left:-1px;background:var(--pl-danger);transform-origin:50% 0;animation:pi-hand 4s linear infinite"></span></span><span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-faint)">09:00 → 13:00</span></div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <span style="height:30px;padding:0 10px;display:flex;align-items:center;gap:8px;border-radius:8px;border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--pl-muted);text-decoration:line-through">Pulled $189.00</span>
+                <span style="height:30px;padding:0 10px;display:flex;align-items:center;gap:8px;border-radius:8px;background:var(--pl-danger-tint);border:1px solid var(--pl-danger-line);font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--pl-danger-ink)">Live now $169.00</span>
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;gap:14px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-danger-ink)">01</span><p style="margin:0;font-size:16px;line-height:1.55;color:var(--pl-ink)">A price you pulled this morning is already stale by lunch — and you priced against it.</p></div>
+          </div>
+          <div style="background:var(--pl-surface);display:flex;flex-direction:column">
+            <div style="height:190px;background:var(--pl-surface);border-bottom:1px solid var(--pl-line-soft);display:flex;align-items:center;justify-content:center;padding:20px">
+              <div style="width:min(100%,260px);display:flex;flex-direction:column;gap:6px">
+                <span style="height:28px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;border-radius:8px;border:1px solid var(--pl-line);font-size:12px;color:var(--pl-ink)">Marketplace A<span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-accent-ink)">IN FEED</span></span>
+                <span style="height:28px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;border-radius:8px;border:1px dashed var(--pl-danger-line);background:var(--pl-danger-tint);font-size:12px;color:var(--pl-danger-ink);filter:blur(.4px)">Regional reseller<span style="font-family:'Geist Mono',monospace;font-size:10px">MISSING</span></span>
+                <span style="height:28px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;border-radius:8px;border:1px solid var(--pl-line);font-size:12px;color:var(--pl-ink)">Retailer B<span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-accent-ink)">IN FEED</span></span>
+                <span style="height:28px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;border-radius:8px;border:1px dashed var(--pl-danger-line);background:var(--pl-danger-tint);font-size:12px;color:var(--pl-danger-ink);filter:blur(.4px)">Long-tail seller<span style="font-family:'Geist Mono',monospace;font-size:10px">MISSING</span></span>
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;gap:14px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-danger-ink)">02</span><p style="margin:0;font-size:16px;line-height:1.55;color:var(--pl-ink)">Data feeds skip the resellers and regional sites quietly undercutting you.</p></div>
+          </div>
+          <div style="background:var(--pl-surface);display:flex;flex-direction:column">
+            <div style="height:190px;background:var(--pl-surface);border-bottom:1px solid var(--pl-line-soft);display:flex;align-items:center;justify-content:center;padding:20px">
+              <div style="width:min(100%,270px)">
+                <div style="display:flex;height:34px;border-radius:9px;overflow:hidden;border:1px solid var(--pl-line)">
+                  <span style="width:18%;background:var(--pl-gradient);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:9.5px;color:var(--pl-surface)">TOP</span>
+                  <span style="flex:1;background:repeating-linear-gradient(135deg,var(--pl-sand) 0 6px,var(--pl-surface) 6px 12px);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:9.5px;color:var(--pl-faint)">REST OF CATALOG</span>
+                </div>
+                <div style="margin-top:10px;display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10px"><span style="color:var(--pl-accent-ink)">REAL-TIME</span><span style="color:var(--pl-danger-ink)">DAILY</span></div>
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;gap:14px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-danger-ink)">03</span><p style="margin:0;font-size:16px;line-height:1.55;color:var(--pl-ink)">For most vendors, "real-time" means real-time for your top SKUs and daily for the rest.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENGINE (5-step) -->
+    <section id="engine" style="border-bottom:1px solid var(--pl-line);position:relative;overflow:hidden">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>How the engine works</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);max-width:820px;text-wrap:balance"><span style="font-weight:700">Five things go right</span><span style="font-weight:400"> before a price reaches you</span></h2>
+        </div>
+        <div data-reveal style="position:relative;margin-top:48px">
+          <div class="rt-steps" style="position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px">
+            <span aria-hidden="true" class="rt-stepline" style="position:absolute;left:10%;right:10%;height:2px;background:var(--pl-line-soft)"></span>
+            <span aria-hidden="true" class="rt-stepfill" data-rt-stepfill style="position:absolute;left:10%;height:2px;width:0%;background:var(--pl-gradient);transition:width .3s linear"></span>
+            {stepLabels.map((t, i) => (
+              <button type="button" class="rt-step" class:list={[{ 'is-on': i === 0 }]} data-rt-step={i} aria-pressed={i === 0 ? 'true' : 'false'} style="position:relative;border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0">
+                <span class="rt-step-dot" style="position:relative;border-radius:50%;font-family:'Geist Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .3s">{i + 1}</span>
+                <span class="rt-step-t" style="font-family:Geist,sans-serif;font-weight:600;transition:color .3s">{t}</span>
+              </button>
+            ))}
+          </div>
+
+          <div class="rt-eng" style="margin-top:36px;border:1px solid var(--pl-line);border-radius:24px;overflow:hidden;background:var(--pl-line);gap:1px">
+            <div style="background:var(--pl-surface);padding:clamp(24px,3.4vw,40px);display:flex;flex-direction:column;gap:20px">
+              <div style="display:flex;align-items:center;gap:14px"><span style="font-family:'Geist Mono',monospace;font-size:13px;color:var(--pl-accent-ink)"><span data-rt-curn>01</span> / 05</span><span style="height:1px;flex:1;background:var(--pl-line-soft)"></span></div>
+              <h3 data-rt-curt style="margin:0;font-family:Geist,sans-serif;font-size:clamp(26px,3vw,36px);font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">{steps5[0].t}</h3>
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <span style="display:flex;gap:12px;font-size:16px;line-height:1.6;color:var(--pl-ink-2)"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span><span data-rt-curb1>{steps5[0].b1}</span></span>
+                <span style="display:flex;gap:12px;font-size:16px;line-height:1.6;color:var(--pl-ink-2)"><span style="flex:none;margin-top:4px;width:18px;height:18px;border-radius:50%;background:var(--pl-gradient);color:var(--pl-surface);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span><span data-rt-curb2>{steps5[0].b2}</span></span>
+              </div>
+              <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-top:1px dashed var(--pl-line);padding-top:20px">
+                <div style="display:flex;align-items:baseline;gap:10px"><span data-rt-curmv style="font-family:Geist,sans-serif;font-size:32px;font-weight:600;letter-spacing:-.04em;color:var(--pl-ink)">{steps5[0].mv}</span><span data-rt-curml style="font-size:15px;color:var(--pl-muted)">{steps5[0].ml}</span></div>
+                <div style="display:flex;gap:8px">
+                  <button type="button" data-rt-prev aria-label="Previous step" style="width:40px;height:40px;border-radius:11px;border:1px solid var(--pl-line);background:var(--pl-surface);cursor:pointer;color:var(--pl-ink)">←</button>
+                  <button type="button" data-rt-next aria-label="Next step" style="width:40px;height:40px;border-radius:11px;border:1px solid var(--pl-accent);background:var(--pl-gradient);cursor:pointer;color:var(--pl-surface)">→</button>
+                </div>
+              </div>
+            </div>
+            <div style="position:relative;background:var(--pl-cream);min-height:420px;display:flex;align-items:center;justify-content:center;padding:clamp(20px,3vw,40px);overflow:hidden">
+              <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px);background-size:32px 32px;-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 30%,transparent 80%);mask-image:radial-gradient(ellipse at 50% 50%,#000 30%,transparent 80%)"></div>
+
+              <div class="rt-epanel" data-rt-epanel={0} style="position:relative;width:min(100%,460px);aspect-ratio:460 / 340">
+                <svg viewBox="0 0 460 340" style="position:absolute;inset:0;width:100%;height:100%">
+                  <path id="cl0" d="M70,60 C170,60 170,170 230,170" fill="none" stroke="#E9DCD2" stroke-width="1.5"></path>
+                  <path id="cl1" d="M70,170 L230,170" fill="none" stroke="#E9DCD2" stroke-width="1.5"></path>
+                  <path id="cl2" d="M70,280 C170,280 170,170 230,170" fill="none" stroke="#E9DCD2" stroke-width="1.5"></path>
+                  <path id="cl3" d="M390,60 C290,60 290,170 230,170" fill="none" stroke="#E9DCD2" stroke-width="1.5"></path>
+                  <path id="cl4" d="M390,280 C290,280 290,170 230,170" fill="none" stroke="#E9DCD2" stroke-width="1.5"></path>
+                  <circle r="4" fill="#F7631E"><animateMotion dur="2.2s" repeatCount="indefinite"><mpath href="#cl0"></mpath></animateMotion></circle>
+                  <circle r="4" fill="#F7631E"><animateMotion dur="2.2s" begin="-.5s" repeatCount="indefinite"><mpath href="#cl1"></mpath></animateMotion></circle>
+                  <circle r="4" fill="#F7631E"><animateMotion dur="2.2s" begin="-1s" repeatCount="indefinite"><mpath href="#cl2"></mpath></animateMotion></circle>
+                  <circle r="4" fill="#F7631E"><animateMotion dur="2.2s" begin="-1.4s" repeatCount="indefinite"><mpath href="#cl3"></mpath></animateMotion></circle>
+                  <circle r="4" fill="#F7631E"><animateMotion dur="2.2s" begin="-1.8s" repeatCount="indefinite"><mpath href="#cl4"></mpath></animateMotion></circle>
+                </svg>
+                <span style="position:absolute;left:15.2%;top:17.6%;transform:translate(-50%,-50%);height:34px;padding:0 12px;display:flex;align-items:center;border-radius:10px;background:var(--pl-surface);border:1px solid var(--pl-line);font-size:12px;color:var(--pl-ink);white-space:nowrap;box-shadow:0 10px 20px -14px rgba(60,30,15,.4)">Marketplaces</span>
+                <span style="position:absolute;left:15.2%;top:50%;transform:translate(-50%,-50%);height:34px;padding:0 12px;display:flex;align-items:center;border-radius:10px;background:var(--pl-surface);border:1px solid var(--pl-line);font-size:12px;color:var(--pl-ink);white-space:nowrap;box-shadow:0 10px 20px -14px rgba(60,30,15,.4)">Retailer sites</span>
+                <span style="position:absolute;left:15.2%;top:82.4%;transform:translate(-50%,-50%);height:34px;padding:0 12px;display:flex;align-items:center;border-radius:10px;background:var(--pl-surface);border:1px solid var(--pl-line);font-size:12px;color:var(--pl-ink);white-space:nowrap;box-shadow:0 10px 20px -14px rgba(60,30,15,.4)">Comparison engines</span>
+                <span style="position:absolute;left:84.8%;top:17.6%;transform:translate(-50%,-50%);height:34px;padding:0 12px;display:flex;align-items:center;border-radius:10px;background:var(--pl-surface);border:1px dashed var(--pl-accent-line);font-size:12px;color:var(--pl-accent-ink);white-space:nowrap">Resellers</span>
+                <span style="position:absolute;left:84.8%;top:82.4%;transform:translate(-50%,-50%);height:34px;padding:0 12px;display:flex;align-items:center;border-radius:10px;background:var(--pl-surface);border:1px dashed var(--pl-accent-line);font-size:12px;color:var(--pl-accent-ink);white-space:nowrap">Regional sites</span>
+                <span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:84px;height:84px;border-radius:24px;background:var(--pl-surface);border:1.5px solid var(--pl-accent);box-shadow:0 0 0 8px rgba(247,99,30,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><img src="/assets/pl-mark.png" alt="" width="24" height="23"><span style="font-family:'Geist Mono',monospace;font-size:9px;color:var(--pl-accent-ink)">COLLECT</span></span>
+                <span style="position:absolute;left:50%;bottom:0;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--pl-muted);white-space:nowrap">[X COUNTRIES · X CURRENCIES · X LANGUAGES]</span>
+              </div>
+
+              <div class="rt-epanel" data-rt-epanel={1} style="display:none;position:relative;width:min(100%,440px)">
+                <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:14px;overflow:hidden;box-shadow:0 30px 60px -36px rgba(60,30,15,.35)">
+                  <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream)"><span style="flex:1;height:24px;border-radius:7px;background:var(--pl-surface);border:1px solid var(--pl-line);display:flex;align-items:center;padding:0 10px;font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--pl-muted)">competitor-store.com/p/earbuds-pro-2</span></div>
+                  <div style="position:relative;padding:16px;display:grid;grid-template-columns:120px 1fr;gap:14px">
+                    <div style="position:relative;height:120px;border-radius:10px;overflow:hidden">
+                      <span style="position:absolute;inset:0;background:linear-gradient(90deg,var(--pl-line-soft) 0%,var(--pl-sand-2) 50%,var(--pl-line-soft) 100%);background-size:400px 100%;animation:pi-shimmer 1.4s linear infinite,pi-load 4s ease infinite"></span>
+                      <span style="position:absolute;inset:0;border-radius:10px;border:1px dashed var(--pl-line-xstrong);background:repeating-linear-gradient(135deg,var(--pl-sand) 0 6px,var(--pl-cream) 6px 12px);display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:9px;color:var(--pl-faint);animation:pi-show 4s ease infinite">product image</span>
+                    </div>
+                    <div style="position:relative;display:flex;flex-direction:column;gap:8px">
+                      <span style="height:12px;width:80%;border-radius:6px;background:linear-gradient(90deg,var(--pl-line-soft) 0%,var(--pl-sand-2) 50%,var(--pl-line-soft) 100%);background-size:400px 100%;animation:pi-shimmer 1.4s linear infinite,pi-load 4s ease infinite"></span>
+                      <span style="position:absolute;top:0;left:0;font-size:13px;font-weight:600;color:var(--pl-ink);animation:pi-show 4s ease infinite">Earbuds Pro 2 · White</span>
+                      <span style="margin-top:14px;display:flex;gap:6px;animation:pi-show 4s ease infinite"><span style="height:24px;padding:0 8px;display:flex;align-items:center;border-radius:6px;border:1.5px solid var(--pl-ink);font-size:11px">White</span><span style="height:24px;padding:0 8px;display:flex;align-items:center;border-radius:6px;border:1px solid var(--pl-line);font-size:11px;color:var(--pl-muted)">Black</span></span>
+                      <span style="display:flex;align-items:center;gap:8px;animation:pi-show 4s ease infinite"><span style="font-family:Geist,sans-serif;font-size:22px;font-weight:600;color:var(--pl-ink)">$149.00</span><span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-faint)">loaded via JS</span></span>
+                    </div>
+                  </div>
+                </div>
+                <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+                  <span style="height:30px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:9px;background:var(--pl-surface);border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--pl-ink-2);animation:pi-chip 4s ease infinite"><span style="width:12px;height:12px;border-radius:50%;border:2px solid var(--pl-line);border-top-color:var(--pl-accent);animation:pi-spin .8s linear infinite"></span>Headless render</span>
+                  <span style="height:30px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:9px;background:var(--pl-surface);border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--pl-ink-2);animation:pi-chip 4s ease .4s infinite">↻ Proxy rotated</span>
+                  <span style="height:30px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:9px;background:var(--pl-accent-tint);border:1px solid var(--pl-accent-line);font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--pl-accent-ink);animation:pi-chip 4s ease .8s infinite">◈ Bot check passed</span>
+                </div>
+              </div>
+
+              <div class="rt-epanel" data-rt-epanel={2} style="display:none;position:relative;width:min(100%,480px)">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) 56px minmax(0,1fr);align-items:center">
+                  <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:14px;padding:14px;box-shadow:0 20px 40px -28px rgba(60,30,15,.35)">
+                    <div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:var(--pl-faint)">COMPETITOR · NO BARCODE</div>
+                    <div style="margin-top:8px;font-size:13px;font-weight:500;line-height:1.4;color:var(--pl-ink)">Sonix 700 ANC Over-Ear (2 pack) Blk</div>
+                    <div style="margin-top:10px;height:56px;border-radius:8px;border:1px dashed var(--pl-line-xstrong);background:repeating-linear-gradient(135deg,var(--pl-sand) 0 6px,var(--pl-cream) 6px 12px)"></div>
+                  </div>
+                  <div style="position:relative;height:2px;background:var(--pl-line)"><span style="position:absolute;inset:0;background:var(--pl-gradient);transform-origin:left;animation:pi-link 3s ease infinite"></span></div>
+                  <div style="background:var(--pl-surface);border:1px solid var(--pl-accent-line);border-radius:14px;padding:14px;box-shadow:0 20px 40px -28px rgba(194,65,12,.45)">
+                    <div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:var(--pl-accent-ink)">YOUR SKU · SNX-700-BK</div>
+                    <div style="margin-top:8px;font-size:13px;font-weight:500;line-height:1.4;color:var(--pl-ink)">Sonix ANC 700 Headphones · Black</div>
+                    <div style="margin-top:10px;height:56px;border-radius:8px;border:1px dashed var(--pl-accent-line);background:repeating-linear-gradient(135deg,var(--pl-accent-tint) 0 6px,var(--pl-cream) 6px 12px)"></div>
+                  </div>
+                </div>
+                <div style="margin-top:18px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+                  <span style="height:34px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;border-radius:9px;background:var(--pl-surface);border:1px solid var(--pl-line);font-size:12px;animation:pi-chip 3s ease infinite"><span style="color:var(--pl-muted)">Brand &amp; model</span><span style="font-family:'Geist Mono',monospace;color:var(--pl-accent-ink)">✓ 1.00</span></span>
+                  <span style="height:34px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;border-radius:9px;background:var(--pl-surface);border:1px solid var(--pl-line);font-size:12px;animation:pi-chip 3s ease .2s infinite"><span style="color:var(--pl-muted)">Image similarity</span><span style="font-family:'Geist Mono',monospace;color:var(--pl-accent-ink)">✓ 0.96</span></span>
+                  <span style="height:34px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;border-radius:9px;background:var(--pl-surface);border:1px solid var(--pl-line);font-size:12px;animation:pi-chip 3s ease .4s infinite"><span style="color:var(--pl-muted)">Pack size</span><span style="font-family:'Geist Mono',monospace;color:var(--pl-ink)">2 → ÷2 unit</span></span>
+                  <span style="height:34px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;border-radius:9px;background:var(--pl-warn-tint);border:1px solid var(--pl-warn-line);font-size:12px;animation:pi-chip 3s ease .6s infinite"><span style="color:var(--pl-warn-ink)">Uncertain</span><span style="font-family:'Geist Mono',monospace;color:var(--pl-warn-ink)">→ Human review</span></span>
+                </div>
+              </div>
+
+              <div class="rt-epanel" data-rt-epanel={3} style="display:none;position:relative;width:min(100%,480px);flex-direction:column;gap:12px">
+                <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:14px;padding:16px;box-shadow:0 20px 40px -28px rgba(60,30,15,.35)">
+                  <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--pl-faint)"><span>INCOMING DATA POINTS</span><span>ANOMALY CHECK</span></div>
+                  <svg viewBox="0 0 440 150" style="display:block;width:100%;height:auto;margin-top:10px;overflow:visible">
+                    <line x1="0" y1="50" x2="440" y2="50" stroke="#F8EFE8"></line><line x1="0" y1="100" x2="440" y2="100" stroke="#F8EFE8"></line>
+                    <polyline points="0,46 60,48 120,44 180,47 240,45" fill="none" stroke="#F7631E" stroke-width="2.5" stroke-linecap="round"></polyline>
+                    <polyline points="300,46 360,44 440,47" fill="none" stroke="#F7631E" stroke-width="2.5" stroke-linecap="round"></polyline>
+                    <line x1="240" y1="45" x2="300" y2="46" stroke="#F7631E" stroke-width="2.5" stroke-dasharray="4 4"></line>
+                    <g style="animation:pi-spike 3.4s ease infinite"><line x1="270" y1="46" x2="270" y2="136" stroke="#E5483F" stroke-width="1.5" stroke-dasharray="3 3"></line><circle cx="270" cy="136" r="6" fill="#FFFFFF" stroke="#E5483F" stroke-width="2"></circle><rect x="282" y="118" width="128" height="24" rx="6" fill="#FDECEB" stroke="#F5C6C3"></rect><text x="346" y="134" text-anchor="middle" font-family="Geist Mono" font-size="10" fill="#C9372E">−90% · QUARANTINED</text></g>
+                  </svg>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                  <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:12px;padding:12px 14px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:var(--pl-faint)">SELECTOR</div><div style="margin-top:6px;font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--pl-danger-ink);text-decoration:line-through">.price-now</div><div style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--pl-accent-ink);animation:pi-show 3.4s ease infinite">[data-price] ✓</div></div>
+                  <div style="background:var(--pl-accent-tint);border:1px solid var(--pl-accent-line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;justify-content:center"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:var(--pl-accent-ink)">EXTRACTOR</div><div style="margin-top:6px;font-size:14px;font-weight:600;color:var(--pl-ink)">Self-healed</div><div style="font-size:12px;color:var(--pl-ink-2)">No silent blanks shipped</div></div>
+                </div>
+              </div>
+
+              <div class="rt-epanel" data-rt-epanel={4} style="display:none;position:relative;width:min(100%,460px);aspect-ratio:460 / 340">
+                <svg viewBox="0 0 460 340" style="position:absolute;inset:0;width:100%;height:100%">
+                  <path id="dl0" d="M120,170 C230,170 230,40 360,40" fill="none" stroke="#FFD8BE" stroke-width="1.5"></path>
+                  <path id="dl1" d="M120,170 C230,170 230,105 360,105" fill="none" stroke="#FFD8BE" stroke-width="1.5"></path>
+                  <path id="dl2" d="M120,170 L360,170" fill="none" stroke="#FFD8BE" stroke-width="1.5"></path>
+                  <path id="dl3" d="M120,170 C230,170 230,235 360,235" fill="none" stroke="#FFD8BE" stroke-width="1.5"></path>
+                  <path id="dl4" d="M120,170 C230,170 230,300 360,300" fill="none" stroke="#FFD8BE" stroke-width="1.5"></path>
+                  <circle r="4" fill="#F7631E"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#dl0"></mpath></animateMotion></circle>
+                  <circle r="4" fill="#F7631E"><animateMotion dur="2s" begin="-.4s" repeatCount="indefinite"><mpath href="#dl1"></mpath></animateMotion></circle>
+                  <circle r="4" fill="#F7631E"><animateMotion dur="2s" begin="-.8s" repeatCount="indefinite"><mpath href="#dl2"></mpath></animateMotion></circle>
+                  <circle r="4" fill="#F7631E"><animateMotion dur="2s" begin="-1.2s" repeatCount="indefinite"><mpath href="#dl3"></mpath></animateMotion></circle>
+                  <circle r="4" fill="#F7631E"><animateMotion dur="2s" begin="-1.6s" repeatCount="indefinite"><mpath href="#dl4"></mpath></animateMotion></circle>
+                </svg>
+                <div style="position:absolute;left:14%;top:50%;transform:translate(-50%,-50%);width:120px;background:var(--pl-surface);border:1.5px solid var(--pl-accent);border-radius:16px;padding:12px;box-shadow:0 0 0 6px rgba(247,99,30,.1)">
+                  <div style="font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:.06em;color:var(--pl-accent-ink)">REFRESH BY TIER</div>
+                  <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;font-size:11px;color:var(--pl-ink)"><span style="display:flex;justify-content:space-between"><span>Priority</span><span style="font-family:'Geist Mono',monospace">[X]</span></span><span style="display:flex;justify-content:space-between"><span>Standard</span><span style="font-family:'Geist Mono',monospace">[Y]</span></span></div>
+                </div>
+                {delivers.map((d) => (
+                  <span style={`position:absolute;left:84%;top:${d.y}%;transform:translate(-50%,-50%);height:34px;min-width:104px;padding:0 12px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;background:var(--pl-surface);border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-ink);box-shadow:0 10px 20px -14px rgba(60,30,15,.4)`}><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-gradient)"></span>{d.t}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MONDAY -->
+    <section id="monday" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream)">
+      <div class="rt-split" style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:start">
+        <div data-reveal class="rt-sticky" style="top:140px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>For the pricing manager</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">What changes on </span><span style="font-weight:700">Monday morning</span></h2>
+          <div style="margin-top:28px;display:inline-flex;align-items:stretch;border:1px solid var(--pl-line);border-radius:16px;overflow:hidden;background:var(--pl-surface);box-shadow:0 20px 40px -30px rgba(60,30,15,.35)">
+            <div style="width:84px;background:var(--pl-gradient);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 0"><span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em;color:var(--pl-ink)">MON</span><span style="font-family:Geist,sans-serif;font-size:30px;font-weight:700;color:var(--pl-ink);line-height:1.1">09</span></div>
+            <div style="padding:12px 18px;display:flex;flex-direction:column;justify-content:center;gap:2px"><span style="font-size:14px;font-weight:600;color:var(--pl-ink)">Weekly pricing review</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-accent-ink)">Data fresh as of 08:57</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          {monday.map((m) => (
+            <div data-reveal class="rt-monday" style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:18px;padding:26px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;align-items:start;transition:border-color .25s,transform .25s">
+              <span style="font-family:Geist,sans-serif;font-size:44px;font-weight:600;letter-spacing:-.05em;line-height:.9;color:var(--pl-accent)">{m.n}</span>
+              <div style="display:flex;flex-direction:column;gap:10px"><span style="align-self:flex-start;height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:var(--pl-sand);font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--pl-muted)">{m.ts}</span><p style="margin:0;font-size:18px;line-height:1.5;color:var(--pl-ink);text-wrap:pretty">{m.t}</p></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- BEFORE / AFTER -->
+    <section id="compare" style="border-bottom:1px solid var(--pl-line)">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>Before and after</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">Pricing without PriceLeap, </span><span style="font-weight:700">and with it</span></h2>
+        </div>
+        <div data-reveal class="rt-ba" style="margin-top:48px;position:relative;gap:16px;align-items:stretch">
+          <div style="background:var(--pl-cream);border:1px solid var(--pl-line);border-radius:24px;overflow:hidden">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--pl-line)">
+              <span style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:var(--pl-muted)">Before</span>
+              <span style="height:24px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:6px;border:1px solid var(--pl-line);background:var(--pl-surface);font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--pl-muted)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-faint)"></span>MANUAL</span>
+            </div>
+            {baRows.map((r) => (
+              <div class="rt-ba-cell" style="padding:20px 24px;border-bottom:1px solid var(--pl-line-soft);display:flex;flex-direction:column;gap:6px">
+                <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-faint)">{r.k}</span>
+                <span style="font-size:15px;line-height:1.55;color:var(--pl-muted)">{r.b}</span>
+              </div>
+            ))}
+          </div>
+          <div aria-hidden="true" class="rt-ba-arrow" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:48px;height:48px;border-radius:50%;background:var(--pl-surface);border:1px solid var(--pl-line);box-shadow:0 10px 24px -12px rgba(60,30,15,.35);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--pl-accent-ink)">→</div>
+          <div style="background:var(--pl-surface);border:1.5px solid var(--pl-accent);border-radius:24px;overflow:hidden;box-shadow:0 0 0 6px rgba(247,99,30,.08),0 30px 60px -40px rgba(194,65,12,.5)">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--pl-accent-line);background:var(--pl-accent-tint)">
+              <span style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:var(--pl-ink)">With PriceLeap</span>
+              <span style="height:24px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:6px;background:var(--pl-gradient);font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--pl-surface)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-ink);animation:pi-blink 1.2s steps(1) infinite"></span>LIVE</span>
+            </div>
+            {baRows.map((r) => (
+              <div class="rt-ba-cell" style="padding:20px 24px;border-bottom:1px solid var(--pl-line-soft);display:flex;flex-direction:column;gap:6px">
+                <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--pl-accent-ink)">{r.k}</span>
+                <span style="font-size:15px;line-height:1.55;color:var(--pl-ink)">{r.a}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROOF -->
+    <section id="proof" style="border-bottom:1px solid var(--pl-line);background:var(--pl-cream)">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>Proof</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:700">Enterprise-grade,</span><span style="font-weight:400"> not best-effort</span></h2>
+        </div>
+        <div data-reveal style="margin-top:48px;border:1px solid var(--pl-line);border-radius:24px;overflow:hidden;background:var(--pl-line);display:grid;gap:1px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:1px">
+            <div style="background:var(--pl-surface);padding:30px 26px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:clamp(40px,4.4vw,56px);font-weight:600;letter-spacing:-.045em;line-height:1;color:var(--pl-ink)">[X]%</span><span style="font-size:15px;color:var(--pl-muted)">data accuracy</span></div>
+            <div style="background:var(--pl-surface);padding:30px 26px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:clamp(40px,4.4vw,56px);font-weight:600;letter-spacing:-.045em;line-height:1;color:var(--pl-ink)">[X] min</span><span style="font-size:15px;color:var(--pl-muted)">end-to-end latency</span></div>
+            <div style="background:var(--pl-surface);padding:30px 26px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:clamp(40px,4.4vw,56px);font-weight:600;letter-spacing:-.045em;line-height:1;color:var(--pl-ink)">[X] B</span><span style="font-size:15px;color:var(--pl-muted)">SKUs under coverage</span></div>
+            <div style="background:var(--pl-surface);padding:30px 26px;display:flex;flex-direction:column;gap:8px"><span style="width:56px;height:56px;border-radius:16px;background:var(--pl-gradient);color:var(--pl-surface);font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px -14px rgba(247,99,30,.9)">✓</span><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:var(--pl-ink)">SOC 2 Type II</span><span style="font-size:14px;color:var(--pl-muted)">independently audited</span></div>
+          </div>
+          <div class="rt-proof2" style="display:grid;gap:1px">
+            <div style="background:var(--pl-surface);padding:22px 26px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <span style="height:40px;padding:0 16px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:13px;color:var(--pl-ink)"><span style="width:18px;height:18px;border-radius:50%;border:1.5px solid var(--pl-accent);color:var(--pl-accent-ink);font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>[GDPR]</span>
+              <span style="height:40px;padding:0 16px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid var(--pl-line);font-family:'Geist Mono',monospace;font-size:13px;color:var(--pl-ink)"><span style="width:18px;height:18px;border-radius:50%;border:1.5px solid var(--pl-accent);color:var(--pl-accent-ink);font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>[CCPA]</span>
+            </div>
+            <div style="background:var(--pl-surface);padding:22px 26px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+              <div style="flex:none"><div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:var(--pl-faint)">UPTIME SLA</div><div style="margin-top:2px;font-family:Geist,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">[99.X%]</div></div>
+              <div style="flex:1;min-width:200px;display:flex;align-items:flex-end;gap:2px;height:36px">
+                {uptime.map((u) => (<span style={`flex:1;height:100%;border-radius:2px;background:${u.c};transform-origin:bottom;animation:pi-uptime .5s ease ${u.dl}s both`}></span>))}
+              </div>
+              <span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--pl-muted)">LAST 60 DAYS</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" style="border-bottom:1px solid var(--pl-line)">
+      <div class="rt-split" style="max-width:1280px;margin:0 auto;padding:clamp(72px,9vw,120px) clamp(20px,4vw,40px);gap:clamp(32px,5vw,72px);align-items:start">
+        <div data-reveal class="rt-sticky" style="top:140px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-accent-ink)"><span style="width:7px;height:7px;border-radius:2px;background:var(--pl-gradient)"></span>FAQ</span>
+          <h2 style="margin:16px 0 0;font-family:Geist,sans-serif;font-size:clamp(30px,4vw,48px);line-height:1.06;letter-spacing:-.035em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">The questions evaluators </span><span style="font-weight:700">actually ask</span></h2>
+          <div style="margin-top:28px;background:var(--pl-cream);border:1px solid var(--pl-line);border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px;max-width:380px">
+            <span style="font-size:15px;color:var(--pl-ink-2)">Want to see it on your own SKUs?</span>
+            <a href="/book-a-demo" style="align-self:flex-start;height:40px;padding:0 16px;display:inline-flex;align-items:center;border-radius:10px;background:var(--pl-gradient);color:var(--pl-surface);font-family:Geist,sans-serif;font-weight:500;font-size:14px">Book a demo</a>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqData.map((qq, i) => (
+            <div class="rt-faq" class:list={[{ 'is-open': i === 0 }]} data-rt-faq style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:16px;overflow:hidden;transition:border-color .25s,box-shadow .25s">
+              <button type="button" data-rt-faq-btn aria-expanded={i === 0 ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:16px;padding:20px 22px;text-align:left">
+                <span class="rt-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--pl-faint)">{qq.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:17px;font-weight:500;color:var(--pl-ink)">{qq.q}</span>
+                <span class="rt-faq-plus" style="flex:none;width:30px;height:30px;border-radius:9px;background:var(--pl-sand);color:var(--pl-ink);display:flex;align-items:center;justify-content:center;transition:transform .3s,background .3s"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="rt-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 22px 22px 58px;font-size:15px;line-height:1.65;color:var(--pl-ink-2)">{qq.a}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="demo" style="padding:clamp(20px,3vw,28px);border-bottom:1px solid var(--pl-line)">
+      <div class="rt-cta" style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:28px;padding:clamp(64px,9vw,104px) clamp(20px,4vw,48px);gap:clamp(32px,5vw,64px);align-items:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(var(--pl-line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--pl-line-soft) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 80% at 75% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 80% at 75% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;right:-120px;bottom:-200px;width:620px;height:420px;background:radial-gradient(closest-side,rgba(247,99,30,.18),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;gap:22px">
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(32px,4.4vw,56px);line-height:1.04;letter-spacing:-.045em;color:var(--pl-ink);text-wrap:balance"><span style="font-weight:400">See your real competitors' prices, </span><span style="font-weight:700">live, in the demo</span></h2>
+          <p style="margin:0;max-width:560px;font-size:17px;line-height:1.6;color:var(--pl-ink-2);text-wrap:pretty">We'll pull live data on your own SKUs during the call. You'll see freshness and match accuracy on your actual catalog — not a canned demo.</p>
+          <a href="/book-a-demo" style="align-self:flex-start;height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:var(--pl-gradient);color:var(--pl-surface);font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.9)">Book a demo</a>
+        </div>
+        <div data-reveal style="position:relative;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:18px;box-shadow:0 30px 60px -36px rgba(60,30,15,.35);overflow:hidden">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--pl-line-soft);display:flex;align-items:center;gap:10px">
+            <span style="flex:1;height:36px;border-radius:10px;border:1px solid var(--pl-accent);box-shadow:0 0 0 4px rgba(247,99,30,.14);display:flex;align-items:center;padding:0 12px;font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-ink)">your-sku-here<span style="display:inline-block;width:7px;height:15px;margin-left:2px;background:var(--pl-gradient);animation:pi-blink 1s steps(1) infinite"></span></span>
+            <span style="height:36px;padding:0 12px;display:flex;align-items:center;border-radius:10px;background:var(--pl-ink);color:var(--pl-surface);font-size:13px">Pull live</span>
+          </div>
+          {[['Marketplace A', '$184.99'], ['Retailer B', '$189.00'], ['Reseller 0871', '$176.50']].map(([n, p], i) => (
+            <div style={`display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--pl-sand);animation:pi-in .5s ease ${(i * 0.15).toFixed(2)}s both`}>
+              <span style="font-size:13px;color:var(--pl-ink)">{n}</span>
+              <span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--pl-ink)">{p}</span>
+              <span class="rt-ctaf" data-rt-ctaf={i} style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--pl-accent-ink)">{[1, 4, 8][i]}m ago</span>
+            </div>
+          ))}
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--pl-line-soft)">
+            <div style="background:var(--pl-cream);padding:12px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:var(--pl-faint)">FRESHNESS</div><div style="margin-top:2px;font-size:15px;font-weight:600;color:var(--pl-ink)">Your catalog</div></div>
+            <div style="background:var(--pl-cream);padding:12px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:var(--pl-faint)">MATCH ACCURACY</div><div style="margin-top:2px;font-size:15px;font-weight:600;color:var(--pl-ink)">Your catalog</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRUSTED BY -->
+    <section style="border-bottom:1px solid var(--pl-line)">
+      <div class="rt-logo" style="max-width:1280px;margin:0 auto">
+        <div class="rt-logolabel" style="padding:22px clamp(20px,4vw,40px);display:flex;align-items:center;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--pl-muted)">Trusted by teams at</div>
+        <div style="overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)">
+          <div style="display:flex;width:max-content;animation:pi-marquee 32s linear infinite">
+            {logoLoop.map((n) => (<div style="flex:none;width:188px;height:104px;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--pl-line-soft)"><img src={`/assets/logos/${n}.svg`} alt={n} loading="lazy" style="height:50px;max-width:168px;width:auto;object-fit:contain"></div>))}
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .rt { background: var(--pl-surface); overflow-x: clip; }
+  @keyframes pi-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.5); } 100% { box-shadow: 0 0 0 8px rgba(247,99,30,0); } }
+  @keyframes pi-scan { 0% { top: 0; opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+  @keyframes pi-flash { 0% { background: var(--pl-accent-tint); } 100% { background: transparent; } }
+  @keyframes pi-pop { 0% { opacity: 0; transform: scale(.6); } 70% { transform: scale(1.08); } 100% { opacity: 1; transform: none; } }
+  @keyframes pi-blink { 50% { opacity: 0; } }
+  @keyframes pi-spin { to { transform: rotate(360deg); } }
+  @keyframes pi-marquee { to { transform: translateX(-50%); } }
+  @keyframes pi-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes pi-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes pi-hand { to { transform: rotate(360deg); } }
+  @keyframes pi-uptime { 0% { transform: scaleY(.2); } 100% { transform: none; } }
+  @keyframes pi-shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+  @keyframes pi-load { 0%,45% { opacity: 1; } 55%,100% { opacity: 0; } }
+  @keyframes pi-show { 0%,45% { opacity: 0; } 55%,100% { opacity: 1; } }
+  @keyframes pi-chip { 0%,10% { opacity: 0; transform: translateY(5px); } 28%,100% { opacity: 1; transform: none; } }
+  @keyframes pi-spike { 0%,55% { opacity: 0; } 70%,100% { opacity: 1; } }
+  @keyframes pi-link { 0%,15% { transform: scaleX(0); } 40%,100% { transform: scaleX(1); } }
+  @media (prefers-reduced-motion: reduce) { .rt *, .rt *::before, .rt *::after { animation: none !important; transition: none !important; } }
+
+  .rt-hero { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1000px) { .rt-hero { grid-template-columns: minmax(0,1.02fr) minmax(0,1fr); } }
+  .rt-badge { display: none; }
+  @media (min-width: 760px) { .rt-badge { display: flex; } }
+  .rt-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1000px) { .rt-split { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); } }
+  .rt-sticky { position: relative; }
+  @media (min-width: 1000px) { .rt-sticky { position: sticky; } }
+  .rt-eng { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1000px) { .rt-eng { grid-template-columns: minmax(0,1fr) minmax(0,1.1fr); } }
+  .rt-ba { display: grid; grid-template-columns: 1fr; }
+  .rt-ba-arrow { display: none; }
+  @media (min-width: 1000px) { .rt-ba { grid-template-columns: 1fr 1fr; } .rt-ba-arrow { display: flex; } .rt-ba-cell { min-height: 104px; } }
+  .rt-proof2 { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1000px) { .rt-proof2 { grid-template-columns: minmax(0,1fr) minmax(0,2fr); } }
+  .rt-cta { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1000px) { .rt-cta { grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr); } }
+  .rt-logo { display: grid; grid-template-columns: 1fr; }
+  .rt-logolabel { border-bottom: 1px solid var(--pl-line); }
+  @media (min-width: 760px) { .rt-logo { grid-template-columns: 260px minmax(0,1fr); } .rt-logolabel { border-right: 1px solid var(--pl-line); border-bottom: none; } }
+
+  /* step dots */
+  .rt-stepline, .rt-stepfill { top: 18px; }
+  .rt-step-dot { width: 36px; height: 36px; background: var(--pl-surface); border: 1.5px solid var(--pl-line); color: var(--pl-faint); }
+  .rt-step-t { font-size: 0; color: var(--pl-faint); }
+  @media (min-width: 760px) { .rt-stepline, .rt-stepfill { top: 24px; } .rt-step-dot { width: 48px; height: 48px; } .rt-step-t { font-size: 14px; } }
+  .rt-step.is-on .rt-step-dot, .rt-step.is-done .rt-step-dot { background: var(--pl-accent); border-color: var(--pl-accent); color: var(--pl-ink); }
+  .rt-step.is-on .rt-step-dot { box-shadow: 0 0 0 6px rgba(247,99,30,.18); }
+  .rt-step.is-on .rt-step-t { color: var(--pl-ink); }
+
+  .rt-monday:hover { border-color: var(--pl-accent-line); transform: translateX(4px); }
+  .rt-faq.is-open { border-color: var(--pl-accent-line); box-shadow: 0 18px 36px -28px rgba(194,65,12,.5); }
+  .rt-faq.is-open .rt-faq-plus { background: var(--pl-accent); transform: rotate(45deg); }
+  .rt-faq.is-open .rt-faq-n { color: var(--pl-accent-ink); }
+  .rt-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .35s ease; }
+  .rt-faq.is-open .rt-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.rt');
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+
+    // ---- subnav scrollspy + progress ----
+    const ids = ['basics', 'who', 'problem', 'engine', 'monday', 'compare', 'proof', 'faq'];
+    const subs = qa('[data-rt-sub]'), progress = q('[data-rt-progress]');
+    const onScroll = () => {
+      let a = ids[0];
+      ids.forEach((id) => { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top < 160) a = id; });
+      subs.forEach((s) => { const on = s.getAttribute('data-rt-sub') === a; s.style.color = on ? 'var(--pl-ink)' : 'var(--pl-muted)'; s.style.background = on ? 'var(--pl-sand)' : 'transparent'; });
+      const d = document.documentElement, max = d.scrollHeight - window.innerHeight;
+      if (progress) progress.style.width = (max > 0 ? Math.min(100, window.scrollY / max * 100) : 0) + '%';
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    // ---- 1300ms loop: hero source phases + pages + freshness ----
+    const statuses = qa('[data-rt-status]'), pagesEl = q('[data-rt-pages]'), lastEl = q('[data-rt-last]'), ctafs = qa('[data-rt-ctaf]');
+    let tick = 0, pages = 1284512;
+    const paintHero = () => {
+      statuses.forEach((cell, i) => {
+        const ph = (tick + i * 2) % 6, p = ph < 2 ? 0 : ph < 3 ? 1 : 2;
+        const p0 = cell.querySelector('.rt-p0') as HTMLElement, p1 = cell.querySelector('.rt-p1') as HTMLElement, p2 = cell.querySelector('.rt-p2') as HTMLElement;
+        if (p0) p0.style.display = p === 0 ? 'flex' : 'none';
+        if (p1) { p1.style.display = p === 1 ? 'inline-block' : 'none'; if (p === 1) { p1.style.animation = 'none'; void p1.offsetWidth; p1.style.animation = 'pi-flash 1.2s ease'; } }
+        if (p2) p2.style.display = p === 2 ? 'flex' : 'none';
+      });
+      if (pagesEl) pagesEl.textContent = pages.toLocaleString('en-US');
+      if (lastEl) lastEl.textContent = ((tick % 9) + 3) + 's ago';
+      const mins = (tick % 50) + 1;
+      ctafs.forEach((el, i) => (el.textContent = (mins + [0, 3, 7][i]) + 'm ago'));
+    };
+    paintHero();
+    setInterval(() => { tick++; pages += 37 + Math.floor(Math.random() * 40); paintHero(); }, 1300);
+
+    // ---- 260ms loop: engine step auto-advance ----
+    const stepsData = [
+      { t: 'Collect', b1: 'We monitor [marketplaces, retailer sites, comparison engines] across [X countries, X currencies, X languages].', b2: 'Owned extraction captures the sellers who never show up in a data feed.', mv: '[X]', ml: 'sources monitored' },
+      { t: 'Render & unblock', b1: 'Headless rendering reads JavaScript-heavy pages — variants, infinite scroll, prices that load only after a click.', b2: 'Rotating proxies and managed fingerprints clear bot defenses on the hardest sites, including [Amazon & Cloudflare-protected stores].', mv: '[X]%', ml: 'pages rendered' },
+      { t: 'Match', b1: 'We match by [EAN/UPC, attributes, image] — including items with no barcode and across pack-size or variant differences.', b2: 'Human review on every match our models flag as uncertain.', mv: '[X]%', ml: 'match accuracy' },
+      { t: 'Validate', b1: 'Each data point clears anomaly checks before you see it — a price that drops 90% overnight gets caught, not shipped.', b2: 'When a competitor redesigns a page, the extractor self-heals instead of feeding you silent blanks.', mv: '[X]%', ml: 'anomalies caught' },
+      { t: 'Deliver', b1: 'Guaranteed refresh by tier: priority SKUs every [X], standard catalog every [Y] — stated, not implied.', b2: 'Take the data however you work: [API, export, S3, Snowflake, webhook].', mv: '[X] min', ml: 'refresh, top tier' },
+    ];
+    const stepBtns = qa('[data-rt-step]'), epanels = qa('[data-rt-epanel]'), stepFill = q('[data-rt-stepfill]');
+    let step = 0, stepP = 0;
+    const paintStep = () => {
+      stepBtns.forEach((el, i) => { el.classList.toggle('is-on', i === step); el.classList.toggle('is-done', i < step); el.setAttribute('aria-pressed', String(i === step)); const d = el.querySelector('.rt-step-dot') as HTMLElement; if (d) d.textContent = i < step ? '✓' : String(i + 1); });
+      epanels.forEach((el, i) => (el.style.display = i === step ? (i === 3 ? 'flex' : 'block') : 'none'));
+      if (stepFill) stepFill.style.width = Math.min(80, (step + stepP) / 4 * 80) + '%';
+      const d = stepsData[step];
+      const set = (sel: string, v: string) => { const el = q(sel); if (el) el.textContent = v; };
+      set('[data-rt-curn]', '0' + (step + 1)); set('[data-rt-curt]', d.t); set('[data-rt-curb1]', d.b1); set('[data-rt-curb2]', d.b2); set('[data-rt-curmv]', d.mv); set('[data-rt-curml]', d.ml);
+    };
+    stepBtns.forEach((el, i) => el.addEventListener('click', () => { step = i; stepP = 0; paintStep(); }));
+    q('[data-rt-prev]')?.addEventListener('click', () => { step = (step + 4) % 5; stepP = 0; paintStep(); });
+    q('[data-rt-next]')?.addEventListener('click', () => { step = (step + 1) % 5; stepP = 0; paintStep(); });
+    paintStep();
+    setInterval(() => {
+      stepP += 0.04;
+      if (stepP >= 1) { step = (step + 1) % 5; stepP = 0; paintStep(); }
+      else if (stepFill) stepFill.style.width = Math.min(80, (step + stepP) / 4 * 80) + '%';
+    }, 260);
+
+    // ---- faq ----
+    qa('[data-rt-faq-btn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-rt-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-rt-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-rt-faq-btn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    // ---- reveal ----
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>
