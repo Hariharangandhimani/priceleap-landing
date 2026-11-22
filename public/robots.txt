@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://priceleap.ai/sitemap.xml
+Sitemap: https://priceleap.ai/sitemap-index.xml
