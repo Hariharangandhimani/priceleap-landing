@@ -52,7 +52,7 @@ const FQ: [string, string][] = [
   ['Does priceleap.ai contact resellers or enforce MAP for us?', 'No. priceleap.ai is software. It shows each reseller’s price next to your MAP, flags sellers you haven’t authorized and tracks stock-outs. Your channel or legal team decides what to do, and can export the data to Google Sheets or Excel to share it.'],
 ];
 const faqs = FQ.map(([q, a], i) => ({ q, a, n: String(i + 1).padStart(2, '0'), open: i === 0 }));
-const logoSlots = ['[Logo 1]', '[Logo 2]', '[Logo 3]', '[Logo 4]', '[Logo 5]', '[Logo 6]'];
+const logoSlots = ['amazon', 'walmart', 'target', 'shopify', 'ebay', 'bigcommerce'];
 
 const jsonLd = [{
   '@context': 'https://schema.org', '@type': 'FAQPage',
@@ -114,7 +114,7 @@ const jsonLd = [{
       <div class="fb-logos" style="position:relative;border-top:1px solid #EFE3DA;background:#FFFFFF;display:grid">
         <div class="fb-logolabel" style="padding:20px clamp(16px,4vw,40px);display:flex;align-items:center;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#665A51">Trusted by brand teams at</div>
         <div class="fb-logogrid" style="display:grid;gap:1px;background:#F5ECE5">
-          {logoSlots.map((l) => (<div style="background:#FFFFFF;height:76px;display:flex;align-items:center;justify-content:center"><span style="height:32px;padding:0 14px;display:flex;align-items:center;border-radius:8px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 6px,#FFFCF9 6px 12px);font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">{l}</span></div>))}
+          {logoSlots.map((l) => (<div style="background:#FFFFFF;height:76px;display:flex;align-items:center;justify-content:center;padding:12px"><img src={`/assets/logos/${l}.svg`} alt={l} loading="lazy" style="height:30px;max-width:140px;width:auto;object-fit:contain" /></div>))}
         </div>
       </div>
     </section>
