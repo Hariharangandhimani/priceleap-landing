@@ -1,0 +1,473 @@
+---
+// Native Astro port of the design package's "For Brands & Manufacturers" solution page.
+// Static initial render + the full 900ms animation loop and interactions reimplemented
+// in vanilla JS: hero MAP/MSRP reseller table (cycling ShopLine below-MAP / Kitchen Hub
+// stock-out + counters), an auto-advancing "what brands ask" panel switcher (5 panels,
+// also clickable, auto-advance stops on click), vs-spreadsheet, unauthorized-seller
+// scan, stock-out grid and FAQ. Responsive via CSS media queries.
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+
+type Tag = [string, string, string, string];
+const tag = (k: string): Tag => (({ ok: ['AT MAP', '#EEF8F1', '#BFE5CC', '#1E7A3D'], above: ['ABOVE MAP', '#FBF3EC', '#EFE3DA', '#3A302A'], below: ['−7% BELOW MAP', '#FDECEB', '#F5C6C3', '#B42318'], unauth: ['UNAUTHORIZED', '#FFF4EC', '#FFD8BE', '#C2410C'], oos: ['OUT OF STOCK', '#FBF3EC', '#EFE3DA', '#665A51'] } as Record<string, Tag>)[k]);
+
+// hero table (tk=0 → hp=0: ShopLine at MAP, Kitchen Hub low)
+const heroRaw: [string, string, string, string, string][] = [
+  ['Appliance World', 'AW', '$149.00', 'In stock', 'ok'],
+  ['ShopLine', 'SL', '$149.00', 'In stock', 'ok'],
+  ['Amazon · Aero Store', 'AZ', '$159.00', 'In stock', 'above'],
+  ['Kitchen Hub', 'KH', '$149.00', 'Low', 'ok'],
+  ['Walmart Marketplace', 'WM', '$152.00', 'In stock', 'above'],
+  ['deal-depot-88', 'D8', '$129.00', 'In stock', 'unauth'],
+];
+const heroRows = heroRaw.map(([n, ab, p, st, k]) => { const [t, tb, tbc, tc] = tag(k); const bad = k === 'below' || k === 'unauth'; return { n, ab, p, tag: t, tb, tbc, tc, s: st, pc: bad ? '#B42318' : '#1C130E', bg: bad ? '#FFFCF9' : '#FFFFFF', sc: st === 'Out' ? '#B42318' : st === 'Low' ? '#C2410C' : '#665A51', sd: st === 'Out' ? '#B42318' : st === 'Low' ? '#F7631E' : '#1E7A3D' }; });
+
+const ASKS: [string, string, string, string][] = [
+  ['“Who’s advertising us under MAP?”', 'Each reseller’s price on the same row as your MAP, with a MAP filter on the dashboard', '', 'MAP filter · below MAP'],
+  ['“Who’s selling us without our approval?”', 'Sellers outside your authorized list, flagged', '[confirm: how the list is set up]', 'Authorized list check'],
+  ['“Which resellers are out of stock?”', 'Stock status for every reseller you track, plus an alert when one runs out', '', 'Reseller stock'],
+  ['“Our MAP changes for the holiday promo.”', 'MAP and MSRP per product, each with its own validity period', '', 'MAP & MSRP validity periods'],
+  ['“Is our own store breaking policy?”', 'Alerts when your price drops below MAP or goes above MSRP', '', 'Your store vs policy'],
+];
+const asksInit = ASKS.map(([q, a, cf], i) => { const on = i === 0; return { q, a, cf, cfD: cf ? 'inline' : 'none', on, bb: i < 4 ? '1px solid #F5ECE5' : 'none', bg: on ? '#FFF9F4' : '#FFFFFF', bar: on ? '#F7631E' : 'transparent' }; });
+
+const mapRows = [['Appliance World', '$149.00', 'ok'], ['ShopLine', '$139.00', 'below'], ['Amazon · Aero Store', '$159.00', 'above'], ['deal-depot-88', '$129.00', 'below']].map(([n, p, k], i) => { const [t, tb, tbc, tc] = tag(k); const b = k === 'below'; return { n, p, tag: b ? 'BELOW MAP' : t, tb, tbc, tc, pc: b ? '#B42318' : '#1C130E', bg: b ? '#FFF7F6' : '#FFFFFF', dl: (i * .08).toFixed(2) }; });
+const authRows = [['Appliance World', true], ['ShopLine', true], ['deal-depot-88', false], ['Kitchen Hub', true]].map(([n, ok], i) => ({ n, mk: ok ? '✓' : '!', ib: ok ? '#1C130E' : '#F7631E', ic: '#FFFFFF', tag: ok ? 'AUTHORIZED' : 'NOT ON LIST', tc: ok ? '#1E7A3D' : '#C2410C', bc: ok ? '#F5ECE5' : '#FFD8BE', bg: ok ? '#FFFFFF' : '#FFF9F4', dl: (i as number * .08).toFixed(2) }));
+// v2 stock (sp=false), v3 periods (pp=false → ALWAYS), v4 own (op=0 → $189 ok)
+const stockRowsV2 = [['Appliance World', 'In stock'], ['ShopLine', 'In stock'], ['Kitchen Hub', 'Low stock'], ['Walmart Marketplace', 'In stock']].map(([n, st]) => { const out = st === 'Out of stock', low = st === 'Low stock'; return { n, s: st, sc: out ? '#B42318' : low ? '#C2410C' : '#665A51', sd: out ? '#B42318' : low ? '#F7631E' : '#1E7A3D', bc: out ? '#F5C6C3' : '#EFE3DA', bg: out ? '#FFF7F6' : '#FFFFFF' }; });
+const periodsInit = [['MAP', 'Standard $149.00', 'Holiday MAP $129.00', '#F7631E'], ['MSRP', 'Standard $199.00', 'Holiday MSRP $179.00', '#1C130E']].map(([k, std, promo, pb]) => ({ k, std, promo, range: 'ALWAYS', l: 100, w: 0, pb }));
+
+const sheet = [['Appl. World', '$149', '$149', 'Mon'], ['ShopLine', '$149', '$149', 'Mon'], ['Kitchen Hub', '—', '$149', 'not yet']].flat().map((t) => ({ t, c: t === 'not yet' || t === '—' ? '#B42318' : '#3A302A' }));
+const authList = ['Appliance World', 'ShopLine', 'Amazon · Aero Store', 'Kitchen Hub'];
+// section 04 found (fp=0 → all checking)
+const foundRaw: [string, string, boolean][] = [['Appliance World', 'appliance-world.com', true], ['ShopLine', 'Shopify store', true], ['Amazon · Aero Store', 'Amazon', true], ['deal-depot-88', 'Amazon third-party', false], ['bargain.bin.shop', 'eBay', false]];
+const foundInit = foundRaw.map(([n, ch]) => ({ n, ch, tag: 'CHECKING…', tb: '#FFFFFF', tbc: '#EFE3DA', tc: '#7F7066', bg: '#FFFFFF' }));
+// section 05 stockGrid (sg=false → Kitchen Hub low)
+const stockGrid = [['Appliance World', 'In stock', '$149.00'], ['ShopLine', 'In stock', '$149.00'], ['Kitchen Hub', 'Low stock', '$149.00'], ['Amazon · Aero', 'In stock', '$159.00'], ['Walmart Mkt', 'In stock', '$152.00'], ['HomeCart', 'In stock', '$155.00']].map(([n, st, p]) => { const out = st === 'Out of stock', low = st === 'Low stock'; return { n, s: st, p, sc: out ? '#B42318' : low ? '#C2410C' : '#665A51', sd: out ? '#B42318' : low ? '#F7631E' : '#1E7A3D', bc: out ? '#1C130E' : '#EFE3DA', bg: out ? '#FFF7F6' : '#FFFFFF' }; });
+
+const FQ: [string, string][] = [
+  ['How do I track the resellers that sell my products?', 'Paste each reseller’s product URL into priceleap.ai, or add it as a competitor on a product you already track. You then see that reseller’s price, stock and price history next to your own. Group products by brand line or channel to keep the weekly review short.'],
+  ['Can I set MAP and MSRP for a set period, like a promo window?', 'Yes. Each product has MAP and MSRP fields, and each can carry a validity period, so a promotional MAP applies only during its window. priceleap.ai also alerts you when your own price drops below MAP or rises above MSRP, so your store stays inside the policy you set.'],
+  ['Does priceleap.ai check reseller prices against my MAP automatically?', 'The MAP alerts in priceleap.ai apply to your own listings. Reseller prices sit on the same row as your MAP, and the dashboard has a MAP filter, so a reseller below MAP is easy to spot in a review. MAP policy in depth lives on the MAP Monitoring page.'],
+  ['Can I track resellers that sell on Amazon and Walmart?', 'Yes. Add the Amazon or Walmart product page for each listing, the same way as any reseller site, and its price and stock show next to your MAP and MSRP. If you sell there too, connecting your seller account brings in your own listings.'],
+  ['Does priceleap.ai contact resellers or enforce MAP for us?', 'No. priceleap.ai is software. It shows each reseller’s price next to your MAP, flags sellers you haven’t authorized and tracks stock-outs. Your channel or legal team decides what to do, and can export the data to Google Sheets or Excel to share it.'],
+];
+const faqs = FQ.map(([q, a], i) => ({ q, a, n: String(i + 1).padStart(2, '0'), open: i === 0 }));
+const logoSlots = ['[Logo 1]', '[Logo 2]', '[Logo 3]', '[Logo 4]', '[Logo 5]', '[Logo 6]'];
+
+const jsonLd = [{
+  '@context': 'https://schema.org', '@type': 'FAQPage',
+  mainEntity: FQ.map(([q, a]) => ({ '@type': 'Question', name: q.replace(/’/g, "'"), acceptedAnswer: { '@type': 'Answer', text: a.replace(/’/g, "'") } })),
+}];
+---
+<PriceLeapLayout
+  title="Reseller Price Monitoring Software for Brands | priceleap.ai"
+  description="See what each reseller charges for your products, next to your MAP and MSRP, and spot sellers you never authorized."
+  jsonLd={jsonLd}
+>
+  <div class="fb" style="min-height:100vh;background:#FFFCF9;overflow-x:clip">
+
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-10%;top:-25%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.10),transparent);pointer-events:none"></div>
+      <div class="fb-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(40px,6vw,84px) clamp(16px,4vw,40px) clamp(48px,6vw,80px);gap:clamp(36px,4.5vw,64px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px">
+          <nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:#665A51"><a href="#" style="color:#665A51">Solutions</a><span style="color:#D7C6BA">›</span><span style="color:#1C130E">For Brands &amp; Manufacturers</span></nav>
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>For Brands &amp; Manufacturers</span>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(36px,5vw,62px);line-height:1.03;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Reseller price monitoring software</span><span style="font-weight:400"> for brands and manufacturers</span></h1>
+          <p style="margin:0;max-width:560px;font-size:18px;line-height:1.65;color:#3A302A;text-wrap:pretty">See what each reseller charges for your products, next to your MAP and MSRP, and spot sellers you never authorized.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+            <a href="/book-a-demo" style="height:48px;padding:0 22px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+            <a href="#monitor" style="height:48px;padding:0 18px;display:inline-flex;align-items:center;border-radius:12px;border:1px solid #EFE3DA;background:#FFFFFF;color:#1C130E;font-family:Geist,sans-serif;font-weight:500;font-size:15px">See how it works →</a>
+          </div>
+        </div>
+
+        <figure style="margin:0;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div style="position:relative;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;box-shadow:0 48px 90px -52px rgba(60,30,15,.45),0 0 0 6px rgba(255,255,255,.7)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+              <span style="min-width:0"><span style="display:block;font-size:13.5px;font-weight:600;color:#1C130E">Aero 360 Blender · 1.5L</span><span style="display:block;font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066">MAP $149.00 · MSRP $199.00</span></span>
+              <span style="display:flex;gap:6px;flex:none"><span style="height:24px;padding:0 9px;display:flex;align-items:center;border-radius:6px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;color:#FFFFFF">MAP FILTER</span></span>
+            </div>
+            <div style="position:relative;overflow-x:auto">
+              <span aria-hidden="true" style="position:absolute;left:0;right:0;height:36px;background:linear-gradient(180deg,transparent,rgba(247,99,30,.07),transparent);animation:fb-scan 4s linear infinite;pointer-events:none"></span>
+              <div style="min-width:460px">
+                <div style="display:grid;grid-template-columns:minmax(0,1.4fr) 84px 74px minmax(0,1.1fr);gap:10px;padding:9px 16px;border-bottom:1px solid #F5ECE5;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066"><span>RESELLER</span><span>PRICE</span><span>STOCK</span><span>STATUS</span></div>
+                {heroRows.map((r, i) => (
+                  <div data-fb-hrow={i === 1 ? '1' : i === 3 ? '3' : undefined} style={`display:grid;grid-template-columns:minmax(0,1.4fr) 84px 74px minmax(0,1.1fr);gap:10px;align-items:center;padding:11px 16px;border-bottom:1px solid #F5ECE5;background:${r.bg};transition:background .4s`}>
+                    <span style="display:flex;align-items:center;gap:9px;min-width:0"><span style="width:26px;height:26px;flex:none;border-radius:7px;background:#FBF3EC;border:1px solid #EFE3DA;font-family:'Geist Mono',monospace;font-size:9.5px;color:#3A302A;display:flex;align-items:center;justify-content:center">{r.ab}</span><span style="font-size:13px;font-weight:500;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{r.n}</span></span>
+                    <span data-fb-hprice={i === 1 ? '1' : undefined} style={`justify-self:start;padding:1px 5px;border-radius:5px;font-family:'Geist Mono',monospace;font-size:12.5px;color:${r.pc}`}>{r.p}</span>
+                    <span style={`display:flex;align-items:center;gap:5px;font-size:11.5px;color:${r.sc}`}><span data-fb-hdot={i === 3 ? '1' : undefined} style={`width:6px;height:6px;border-radius:50%;background:${r.sd}`}></span><span data-fb-hstock={i === 3 ? '1' : undefined}>{r.s}</span></span>
+                    <span data-fb-htag={i === 1 ? '1' : i === 3 ? '3' : undefined} style={`justify-self:start;height:22px;padding:0 8px;display:flex;align-items:center;gap:5px;border-radius:6px;background:${r.tb};border:1px solid ${r.tbc};font-family:'Geist Mono',monospace;font-size:9.5px;color:${r.tc};white-space:nowrap`}>{r.tag}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:#F5ECE5">
+              <div style="background:#FFFFFF;padding:12px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">BELOW MAP</div><div data-fb-nbelow style="margin-top:2px;font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:#B42318">1</div></div>
+              <div style="background:#FFFFFF;padding:12px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">UNAUTHORIZED</div><div style="margin-top:2px;font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:#C2410C">1</div></div>
+              <div style="background:#FFFFFF;padding:12px 16px"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">OUT OF STOCK</div><div data-fb-noos style="margin-top:2px;font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:#1C130E">0</div></div>
+            </div>
+          </div>
+          <figcaption style="font-size:13px;color:#665A51;text-align:center">Reseller prices on the same row as your MAP and MSRP</figcaption>
+        </figure>
+      </div>
+      <div class="fb-logos" style="position:relative;border-top:1px solid #EFE3DA;background:#FFFFFF;display:grid">
+        <div class="fb-logolabel" style="padding:20px clamp(16px,4vw,40px);display:flex;align-items:center;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#665A51">Trusted by brand teams at</div>
+        <div class="fb-logogrid" style="display:grid;gap:1px;background:#F5ECE5">
+          {logoSlots.map((l) => (<div style="background:#FFFFFF;height:76px;display:flex;align-items:center;justify-content:center"><span style="height:32px;padding:0 14px;display:flex;align-items:center;border-radius:8px;border:1px dashed #E2D3C8;background:repeating-linear-gradient(135deg,#FBF3EC 0 6px,#FFFCF9 6px 12px);font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">{l}</span></div>))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 HOW DO YOU MONITOR -->
+    <section id="monitor" style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>One screen</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;max-width:860px;text-wrap:balance"><span style="font-weight:400">How do you monitor what resellers </span><span style="font-weight:700">charge for your products?</span></h2>
+          <p style="margin:0;max-width:640px;font-size:16.5px;line-height:1.65;color:#3A302A">Add each reseller's product page once, and priceleap.ai answers these on one screen.</p>
+        </div>
+        <div data-reveal class="fb-ask" style="margin-top:44px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#EFE3DA;display:grid;gap:1px">
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px;padding:12px 20px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#7F7066"><span>WHAT BRANDS ASK</span><span class="fb-anshead">WHAT YOU SEE IN PRICELEAP.AI</span></div>
+            {asksInit.map((a, i) => (
+              <button type="button" data-fb-ask={i} aria-pressed={a.on ? 'true' : 'false'} class="fb-askrow" style={`position:relative;border:none;border-bottom:${a.bb};background:${a.bg};cursor:pointer;text-align:left;display:grid;gap:8px 16px;padding:16px 20px;transition:background .3s`}>
+                <span aria-hidden="true" data-fb-askbar style={`position:absolute;left:0;top:0;bottom:0;width:3px;background:${a.bar};transition:background .3s`}></span>
+                <span style="font-family:Geist,sans-serif;font-size:15.5px;font-weight:600;line-height:1.4;color:#1C130E">{a.q}</span>
+                <span style="font-size:14px;line-height:1.55;color:#3A302A">{a.a}<span style={`display:${a.cfD};font-family:'Geist Mono',monospace;font-size:11px;color:#7F7066`}> {a.cf}</span></span>
+              </button>
+            ))}
+          </div>
+
+          <div style="position:relative;background:#FFF9F4;padding:clamp(18px,2.6vw,28px);display:flex;flex-direction:column;justify-content:center;min-height:400px;overflow:hidden">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(#EFE3DA 1px,transparent 1px);background-size:18px 18px;-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 30%,transparent 80%);mask-image:radial-gradient(ellipse at 50% 50%,#000 30%,transparent 80%)"></div>
+            <div data-fb-askcard style="position:relative;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;overflow:hidden;box-shadow:0 30px 60px -40px rgba(60,30,15,.4);animation:fb-in .35s ease">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span data-fb-asktitle style="font-size:13px;font-weight:600;color:#1C130E">MAP filter · below MAP</span><span style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">EXAMPLE</span></div>
+
+              <div data-fb-askpanel="0" style="padding:6px 0">
+                {mapRows.map((r) => (
+                  <div style={`display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 14px;background:${r.bg};animation:fb-in .3s ease ${r.dl}s both`}><span style="font-size:13px;color:#1C130E">{r.n}</span><span style={`font-family:'Geist Mono',monospace;font-size:12.5px;color:${r.pc}`}>{r.p}</span><span style={`height:20px;padding:0 7px;display:flex;align-items:center;border-radius:5px;background:${r.tb};border:1px solid ${r.tbc};font-family:'Geist Mono',monospace;font-size:9.5px;color:${r.tc}`}>{r.tag}</span></div>
+                ))}
+                <div style="margin:6px 14px 8px;padding-top:10px;border-top:1px dashed #EFE3DA;display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066"><span>MAP $149.00</span><span>FILTER · BELOW MAP</span></div>
+              </div>
+
+              <div data-fb-askpanel="1" hidden style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+                {authRows.map((r) => (
+                  <div style={`display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-radius:11px;border:1px solid ${r.bc};background:${r.bg};animation:fb-in .3s ease ${r.dl}s both`}><span style={`width:22px;height:22px;border-radius:50%;background:${r.ib};color:${r.ic};font-size:10px;display:flex;align-items:center;justify-content:center`}>{r.mk}</span><span style="font-size:13px;color:#1C130E">{r.n}</span><span style={`font-family:'Geist Mono',monospace;font-size:9.5px;color:${r.tc}`}>{r.tag}</span></div>
+                ))}
+              </div>
+
+              <div data-fb-askpanel="2" hidden style="padding:14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+                {stockRowsV2.map((r, i) => (
+                  <div data-fb-v2row={i === 2 ? '1' : undefined} style={`padding:12px;border-radius:12px;border:1px solid ${r.bc};background:${r.bg};display:flex;flex-direction:column;gap:6px;transition:all .4s`}><span style="font-size:13px;font-weight:600;color:#1C130E">{r.n}</span><span style={`display:flex;align-items:center;gap:6px;font-size:12px;color:${r.sc}`}><span data-fb-v2dot={i === 2 ? '1' : undefined} style={`width:7px;height:7px;border-radius:50%;background:${r.sd}`}></span><span data-fb-v2stock={i === 2 ? '1' : undefined}>{r.s}</span></span></div>
+                ))}
+                <div data-fb-oosalert style="grid-column:1 / -1;display:none;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;background:#1C130E;color:#FFFFFF;font-size:12.5px;animation:fb-pop .35s ease"><span style="width:7px;height:7px;border-radius:50%;background:#FB8A2E;animation:fb-pulse 1.6s infinite"></span>Alert · Kitchen Hub is out of stock</div>
+              </div>
+
+              <div data-fb-askpanel="3" hidden style="padding:16px 14px;display:flex;flex-direction:column;gap:14px">
+                {periodsInit.map((p, i) => (
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066"><span>{p.k}</span><span data-fb-prange={String(i)}>{p.range}</span></div>
+                    <div style="position:relative;height:30px;border-radius:8px;background:#FBF3EC;overflow:hidden">
+                      <span style="position:absolute;top:0;bottom:0;left:0;width:100%;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:8px;display:flex;align-items:center;padding:0 10px;font-family:'Geist Mono',monospace;font-size:11.5px;color:#1C130E">{p.std}</span>
+                      <span data-fb-pbar={String(i)} style={`position:absolute;top:0;bottom:0;left:${p.l}%;width:${p.w}%;background:${p.pb};border-radius:8px;display:flex;align-items:center;padding:0 10px;font-family:'Geist Mono',monospace;font-size:11px;color:#FFFFFF;white-space:nowrap;overflow:hidden;transition:all .6s ease`}>{p.promo}</span>
+                    </div>
+                  </div>
+                ))}
+                <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:9.5px;color:#B9A99C"><span>OCT</span><span>NOV</span><span>DEC</span><span>JAN</span></div>
+              </div>
+
+              <div data-fb-askpanel="4" hidden style="padding:14px;display:flex;flex-direction:column;gap:10px">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px;border-radius:12px;border:1px solid #EFE3DA"><span><span style="display:block;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">YOUR STORE</span><span style="display:block;font-size:13.5px;font-weight:600;color:#1C130E">aero-official.com</span></span><span data-fb-ownp style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:#1C130E;transition:color .3s">$189.00</span></div>
+                <div style="position:relative;height:8px;border-radius:8px;background:#F5ECE5;margin:10px 4px 18px"><span style="position:absolute;left:30%;right:20%;top:0;bottom:0;background:#FFE3CF;border-radius:8px"></span><span style="position:absolute;left:30%;top:-5px;bottom:-5px;width:2px;background:#1C130E"></span><span style="position:absolute;left:80%;top:-5px;bottom:-5px;width:2px;background:#1C130E"></span><span style="position:absolute;top:16px;left:30%;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:9.5px;color:#3A302A">MAP</span><span style="position:absolute;top:16px;left:80%;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:9.5px;color:#3A302A">MSRP</span><span data-fb-owndot style="position:absolute;top:50%;left:70%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#F7631E;border:3px solid #FFFFFF;box-shadow:0 0 0 1px #F7631E;transition:left 1s ease"></span></div>
+                <div data-fb-ownalert style="display:none;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;background:#FDECEB;border:1px solid #F5C6C3;font-size:12.5px;color:#B42318;animation:fb-pop .35s ease">⚠ <span data-fb-ownalerttext></span></div>
+              </div>
+            </div>
+            <div style="position:relative;margin-top:14px;display:flex;justify-content:center;gap:6px">
+              {[0, 1, 2, 3, 4].map((i) => (<span data-fb-askdot={i} style={`width:${i === 0 ? '22px' : '6px'};height:6px;border-radius:6px;background:${i === 0 ? '#F7631E' : '#E2D3C8'};transition:all .3s`}></span>))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 VS SPREADSHEET -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Compare</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Reseller price monitoring</span><span style="font-weight:400"> vs spreadsheet audits</span></h2>
+        </div>
+        <div data-reveal class="fb-vs" style="margin-top:44px;position:relative;display:grid;gap:16px">
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #F5ECE5"><span style="font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:#665A51">Spreadsheet audits</span><span style="height:24px;padding:0 9px;display:flex;align-items:center;border-radius:6px;border:1px solid #EFE3DA;font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066">MANUAL</span></div>
+            <div style="padding:18px 22px;background:#FFFCF9;border-bottom:1px solid #F5ECE5">
+              <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;font-family:'Geist Mono',monospace;font-size:10px">
+                <span style="padding:5px 6px;background:#F5ECE5;color:#665A51">Reseller</span><span style="padding:5px 6px;background:#F5ECE5;color:#665A51">Price</span><span style="padding:5px 6px;background:#F5ECE5;color:#665A51">MAP</span><span style="padding:5px 6px;background:#F5ECE5;color:#665A51">Checked</span>
+                {sheet.map((c) => (<span style={`padding:5px 6px;background:#FFFFFF;border:1px solid #F5ECE5;color:${c.c};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`}>{c.t}</span>))}
+              </div>
+            </div>
+            <div style="padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+              <div><div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#7F7066">HOW IT WORKS</div><p style="margin:6px 0 0;font-size:15px;line-height:1.6;color:#665A51">Someone opens each reseller's page, copies the price into a sheet and checks it against MAP. It misses anything that changes between checks.</p></div>
+              <div><div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#7F7066">BEST FOR</div><p style="margin:6px 0 0;font-size:15px;line-height:1.6;color:#665A51">A handful of SKUs and key accounts</p></div>
+            </div>
+          </div>
+          <div class="fb-vsbadge" aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:46px;height:46px;border-radius:50%;background:#FFFFFF;border:1px solid #EFE3DA;box-shadow:0 10px 24px -12px rgba(60,30,15,.35);align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:12px;color:#1C130E">VS</div>
+          <div style="background:#FFFFFF;border:1.5px solid #1C130E;border-radius:22px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 30px 60px -40px rgba(60,30,15,.4)">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span style="font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:#1C130E">priceleap.ai</span><span style="height:24px;padding:0 9px;display:flex;align-items:center;border-radius:6px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;color:#FFFFFF">1x–3x DAILY</span></div>
+            <div style="padding:18px 22px;background:#FFFCF9;border-bottom:1px solid #F5ECE5">
+              <svg viewBox="0 0 300 70" style="display:block;width:100%;height:70px;overflow:visible"><line x1="0" y1="34" x2="300" y2="34" stroke="#1C130E" stroke-dasharray="3 4" opacity=".35"></line><text x="300" y="30" text-anchor="end" font-family="Geist Mono" font-size="9" fill="#7F7066">MAP</text><polyline points="0,22 40,24 80,20 120,26 160,46 200,44 240,24 300,22" fill="none" stroke="#F7631E" stroke-width="2.2" stroke-linejoin="round"></polyline><g fill="#1C130E"><circle cx="0" cy="22" r="2.6"></circle><circle cx="40" cy="24" r="2.6"></circle><circle cx="80" cy="20" r="2.6"></circle><circle cx="120" cy="26" r="2.6"></circle><circle cx="160" cy="46" r="3.4" fill="#B42318"></circle><circle cx="200" cy="44" r="3.4" fill="#B42318"></circle><circle cx="240" cy="24" r="2.6"></circle><circle cx="300" cy="22" r="2.6"></circle></g></svg>
+              <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066"><span>PRICE HISTORY · SHOPLINE</span><span style="color:#B42318">2 dips below MAP caught</span></div>
+            </div>
+            <div style="padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+              <div><div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#C2410C">HOW IT WORKS</div><p style="margin:6px 0 0;font-size:15px;line-height:1.6;color:#1C130E">You add each reseller's product URL to a product group once. Prices, stock and <a href="/real-time-price-monitoring" style="font-weight:600">price history</a> then build up on a 1x to 3x daily schedule.</p></div>
+              <div><div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#C2410C">BEST FOR</div><p style="margin:6px 0 0;font-size:15px;line-height:1.6;color:#1C130E">A catalog or reseller list too long to check by hand</p></div>
+            </div>
+          </div>
+        </div>
+        <div data-reveal style="margin-top:14px;border:1px dashed #E2D3C8;border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:center;gap:10px;background:#FFFFFF;font-family:'Geist Mono',monospace;font-size:11.5px;color:#7F7066;text-align:center">[Data slot: anonymized reseller snapshot from priceleap.ai tracking data]</div>
+      </div>
+    </section>
+
+    <!-- 04 UNAUTHORIZED SELLERS -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="fb-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:center">
+        <div data-reveal style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Unauthorized sellers</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.6vw,44px);line-height:1.08;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">How do you find sellers </span><span style="font-weight:700">you never authorized?</span></h2>
+          <p style="margin:0;font-size:16.5px;line-height:1.7;color:#3A302A">priceleap.ai flags listings of your products from sellers that aren't on your authorized list. <span style="font-family:'Geist Mono',monospace;font-size:12px;color:#7F7066">[confirm: how the list is set up and where flags appear]</span></p>
+          <p style="margin:0;font-size:16.5px;line-height:1.7;color:#3A302A">It tells you which listings to look at. What happens next is your channel team's call.</p>
+        </div>
+        <div data-reveal class="fb-auth" style="min-width:0;display:grid;gap:12px;align-items:stretch">
+          <div style="background:#FFF9F4;border:1px solid #EFE3DA;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:8px">
+            <span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#7F7066">AUTHORIZED LIST</span>
+            {authList.map((a) => (<span style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;background:#FFFFFF;border:1px solid #F5ECE5;font-size:13px;color:#1C130E"><span style="width:16px;height:16px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:8px;display:flex;align-items:center;justify-content:center">✓</span>{a}</span>))}
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;overflow:hidden;box-shadow:0 40px 80px -52px rgba(60,30,15,.42)">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span style="font-size:13px;font-weight:600;color:#1C130E">Listings found · Aero 360</span><span style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">EXAMPLE</span></div>
+            {foundInit.map((f, i) => (
+              <div data-fb-found={i} style={`display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 14px;border-bottom:1px solid #F5ECE5;background:${f.bg};transition:background .4s`}><span style="min-width:0"><span style="display:block;font-size:13px;font-weight:500;color:#1C130E">{f.n}</span><span style="display:block;font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066">{f.ch}</span></span><span data-fb-foundtag style={`height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:${f.tb};border:1px solid ${f.tbc};font-family:'Geist Mono',monospace;font-size:9.5px;color:${f.tc};transition:all .4s`}>{f.tag}</span></div>
+            ))}
+            <div style="padding:10px 14px;font-size:12px;color:#665A51">Flags point you to listings. Your channel team decides what happens next.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 STOCK-OUTS -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div class="fb-splitr" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(36px,5vw,72px);align-items:center">
+        <div data-reveal class="fb-s5panel" style="min-width:0;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 40px 80px -52px rgba(60,30,15,.42)">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span style="font-size:13.5px;font-weight:600;color:#1C130E">Reseller stock · Aero 360</span><span style="font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066">LAST CHECK 09:00</span></div>
+          <div class="fb-stockgrid" style="padding:16px;display:grid;gap:8px">
+            {stockGrid.map((r, i) => (
+              <div data-fb-sgrow={i === 2 ? '1' : undefined} style={`padding:12px;border-radius:12px;border:1px solid ${r.bc};background:${r.bg};display:flex;flex-direction:column;gap:6px;transition:all .5s`}><span style="font-size:13px;font-weight:600;color:#1C130E">{r.n}</span><span style={`display:flex;align-items:center;gap:6px;font-size:12px;color:${r.sc}`}><span data-fb-sgdot={i === 2 ? '1' : undefined} style={`width:7px;height:7px;border-radius:50%;background:${r.sd}`}></span><span data-fb-sgstock={i === 2 ? '1' : undefined}>{r.s}</span></span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:#665A51">{r.p}</span></div>
+            ))}
+          </div>
+          <div data-fb-so style="display:none;margin:0 16px 16px;border-radius:14px;overflow:hidden;border:1px solid #1C130E;animation:fb-pop .35s ease">
+            <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;background:#1C130E;color:#FFFFFF;font-size:13px"><span style="width:7px;height:7px;border-radius:50%;background:#FB8A2E;animation:fb-pulse 1.6s infinite"></span>Alert · Kitchen Hub sold out<span style="margin-left:auto;font-family:'Geist Mono',monospace;font-size:10px;color:#FB8A2E">EMAIL · SLACK</span></div>
+            <div style="padding:11px 14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:#1C130E"><span>Who's selling in its place?</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:#C2410C">deal-depot-88 · $129.00 · unauthorized</span></div>
+          </div>
+        </div>
+        <div data-reveal class="fb-s5text" style="display:flex;flex-direction:column;gap:18px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Stock-outs</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(28px,3.6vw,44px);line-height:1.08;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">What happens when a reseller </span><span style="font-weight:700">runs out of stock?</span></h2>
+          <p style="margin:0;font-size:16.5px;line-height:1.7;color:#3A302A">priceleap.ai tracks stock for every reseller you add and can send <a href="#" style="font-weight:600">an alert</a> when one sells out. That's the moment to check who's selling in its place.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="fb-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <div data-reveal class="fb-sticky" style="top:96px;display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>FAQ</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Reseller price monitoring </span><span style="font-weight:700">FAQs</span></h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((q) => (
+            <div class="fb-faq" class:list={[{ 'is-open': q.open }]} data-fb-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-fb-faqbtn aria-expanded={q.open ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="fb-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px">{q.n}</span>
+                <span role="heading" aria-level="3" style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{q.q}</span>
+                <span class="fb-faq-ic" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="fb-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{q.a}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-220px;width:640px;height:400px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.14),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:20px">
+          <h2 style="margin:0;max-width:820px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,52px);line-height:1.06;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">See your resellers' prices next to your MAP, </span><span style="font-weight:700">on your own products.</span></h2>
+          <span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:#7F7066">[confirm demo format with sales]</span>
+          <a href="/book-a-demo" style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .fb { background: #FFFCF9; overflow-x: clip; }
+  @keyframes fb-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.5); } 100% { box-shadow: 0 0 0 9px rgba(247,99,30,0); } }
+  @keyframes fb-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes fb-pop { 0% { opacity: 0; transform: scale(.92); } 100% { opacity: 1; transform: none; } }
+  @keyframes fb-flash { 0% { background: #FFE9D9; } 100% { background: transparent; } }
+  @keyframes fb-scan { 0% { top: 0; } 100% { top: 100%; } }
+
+  .fb-hero { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .fb-hero { grid-template-columns: minmax(0,.95fr) minmax(0,1.05fr); } }
+  .fb-logos { grid-template-columns: 1fr; }
+  .fb-logolabel { border-bottom: 1px solid #EFE3DA; }
+  .fb-logogrid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  @media (min-width: 720px) { .fb-logos { grid-template-columns: 260px minmax(0,1fr); } .fb-logolabel { border-right: 1px solid #EFE3DA; border-bottom: none; } }
+  @media (min-width: 900px) { .fb-logogrid { grid-template-columns: repeat(6,minmax(0,1fr)); } }
+  .fb-ask { grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .fb-ask { grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); } }
+  .fb-askrow { grid-template-columns: 1fr; }
+  .fb-anshead { display: none; }
+  @media (min-width: 720px) { .fb-askrow { grid-template-columns: minmax(0,1fr) minmax(0,1.3fr); } .fb-anshead { display: block; } }
+  .fb-vs { grid-template-columns: 1fr; }
+  .fb-vsbadge { display: none; }
+  @media (min-width: 1024px) { .fb-vs { grid-template-columns: 1fr 1fr; } .fb-vsbadge { display: flex; } }
+  .fb-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .fb-split { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); } }
+  .fb-auth { grid-template-columns: 1fr; }
+  @media (min-width: 640px) { .fb-auth { grid-template-columns: minmax(0,.75fr) minmax(0,1.25fr); } }
+  .fb-splitr { display: grid; grid-template-columns: 1fr; }
+  .fb-s5panel { order: 1; }
+  @media (min-width: 1024px) { .fb-splitr { grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr); } .fb-s5panel { order: 0; } }
+  .fb-stockgrid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  @media (min-width: 560px) { .fb-stockgrid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+  .fb-sticky { position: static; }
+  @media (min-width: 1024px) { .fb-sticky { position: sticky; } }
+
+  .fb-faq-n { color: #B9A99C; }
+  .fb-faq.is-open .fb-faq-n { color: #C2410C; }
+  .fb-faq-ic { background: #FBF3EC; color: #1C130E; transform: rotate(0deg); transition: all .3s; }
+  .fb-faq.is-open .fb-faq-ic { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .fb-faq.is-open { border-color: #FFD8BE; }
+  .fb-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .fb-faq.is-open .fb-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .fb *, .fb *::before, .fb *::after { animation: none !important; transition: none !important; } [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.fb') as HTMLElement | null;
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+    const tag = (k: string): string[] => (({ ok: ['AT MAP', '#EEF8F1', '#BFE5CC', '#1E7A3D'], above: ['ABOVE MAP', '#FBF3EC', '#EFE3DA', '#3A302A'], below: ['−7% BELOW MAP', '#FDECEB', '#F5C6C3', '#B42318'], unauth: ['UNAUTHORIZED', '#FFF4EC', '#FFD8BE', '#C2410C'], oos: ['OUT OF STOCK', '#FBF3EC', '#EFE3DA', '#665A51'] } as Record<string, string[]>)[k]);
+
+    // hero refs
+    const hPrice = q('[data-fb-hprice="1"]'), hTagSL = q('[data-fb-htag="1"]'), hRowSL = q('[data-fb-hrow="1"]');
+    const hStock = q('[data-fb-hstock="1"]'), hDot = q('[data-fb-hdot="1"]'), hTagKH = q('[data-fb-htag="3"]');
+    const nBelow = q('[data-fb-nbelow]'), nOos = q('[data-fb-noos]');
+    // ask refs
+    const askBtns = qa('[data-fb-ask]'), askCard = q('[data-fb-askcard]'), askTitle = q('[data-fb-asktitle]');
+    const askPanels = qa('[data-fb-askpanel]'), askDots = qa('[data-fb-askdot]');
+    const ASK_TITLES = ['MAP filter · below MAP', 'Authorized list check', 'Reseller stock', 'MAP & MSRP validity periods', 'Your store vs policy'];
+    // v2 refs
+    const v2stock = q('[data-fb-v2stock="1"]'), v2dot = q('[data-fb-v2dot="1"]'), v2row = q('[data-fb-v2row="1"]'), oosAlert = q('[data-fb-oosalert]');
+    // v3 refs
+    const pRange0 = q('[data-fb-prange="0"]'), pRange1 = q('[data-fb-prange="1"]'), pBar0 = q('[data-fb-pbar="0"]'), pBar1 = q('[data-fb-pbar="1"]');
+    // v4 refs
+    const ownP = q('[data-fb-ownp]'), ownDot = q('[data-fb-owndot]'), ownAlert = q('[data-fb-ownalert]'), ownAlertText = q('[data-fb-ownalerttext]');
+    // section 04 / 05
+    const foundRows = qa('[data-fb-found]');
+    const sgStock = q('[data-fb-sgstock="1"]'), sgDot = q('[data-fb-sgdot="1"]'), sgRow = q('[data-fb-sgrow="1"]'), soAlert = q('[data-fb-so]');
+
+    const foundOk = [true, true, true, false, false];
+    const ownData: [number, string, string, string][] = [[189.00, 'none', '', '#1C130E'], [139.00, 'flex', 'Your price $139.00 is below MAP $149.00', '#B42318'], [209.00, 'flex', 'Your price $209.00 is above MSRP $199.00', '#B42318']];
+
+    let tick = 0, ask = 0, askAuto = true, lastHp = 0, lastAsk = -1;
+
+    function paintAsk() {
+      askBtns.forEach((b, i) => { const on = i === ask; b.style.background = on ? '#FFF9F4' : '#FFFFFF'; b.setAttribute('aria-pressed', String(on)); const bar = b.querySelector('[data-fb-askbar]') as HTMLElement | null; if (bar) bar.style.background = on ? '#F7631E' : 'transparent'; });
+      askDots.forEach((d, i) => { const on = i === ask; d.style.width = on ? '22px' : '6px'; d.style.background = on ? '#F7631E' : '#E2D3C8'; });
+      askPanels.forEach((p) => { p.hidden = Number(p.getAttribute('data-fb-askpanel')) !== ask; });
+      if (askTitle) askTitle.textContent = ASK_TITLES[ask];
+      if (ask !== lastAsk) { lastAsk = ask; if (askCard) { askCard.style.animation = 'none'; void askCard.offsetWidth; askCard.style.animation = 'fb-in .35s ease'; } }
+    }
+
+    function paint() {
+      const tk = tick;
+      // hero (hp)
+      const hp = Math.floor(tk / 3) % 4;
+      const shopBelow = hp >= 1 && hp < 3, hubOos = hp >= 2;
+      if (hp !== lastHp) {
+        lastHp = hp;
+        // ShopLine
+        if (hPrice) { hPrice.textContent = shopBelow ? '$139.00' : '$149.00'; hPrice.style.color = shopBelow ? '#B42318' : '#1C130E'; hPrice.style.animation = 'none'; if (hp === 1) { void hPrice.offsetWidth; hPrice.style.animation = 'fb-flash 1.2s ease'; } }
+        if (hTagSL) { const t = tag(shopBelow ? 'below' : 'ok'); hTagSL.textContent = shopBelow ? 'BELOW MAP' : t[0]; hTagSL.style.background = t[1]; hTagSL.style.borderColor = t[2]; hTagSL.style.color = t[3]; }
+        if (hRowSL) hRowSL.style.background = shopBelow ? '#FFFCF9' : '#FFFFFF';
+        // Kitchen Hub
+        const kst = hubOos ? 'Out' : 'Low';
+        if (hStock) hStock.textContent = kst;
+        if (hDot) hDot.style.background = hubOos ? '#B42318' : '#F7631E';
+        if (hStock) hStock.parentElement!.style.color = hubOos ? '#B42318' : '#C2410C';
+        if (hTagKH) { const t = tag(hubOos ? 'oos' : 'ok'); hTagKH.textContent = t[0]; hTagKH.style.background = t[1]; hTagKH.style.borderColor = t[2]; hTagKH.style.color = t[3]; }
+        if (nBelow) nBelow.textContent = String(shopBelow ? 2 : 1);
+        if (nOos) nOos.textContent = String(hubOos ? 1 : 0);
+      }
+      // ask auto-advance (every 6 ticks)
+      if (askAuto && (tk + 1) % 6 === 0) { ask = (ask + 1) % 5; paintAsk(); }
+      // v2 (sp)
+      const sp = tk % 6 >= 3;
+      if (v2stock) v2stock.textContent = sp ? 'Out of stock' : 'Low stock';
+      if (v2dot) v2dot.style.background = sp ? '#B42318' : '#F7631E';
+      if (v2stock) v2stock.parentElement!.style.color = sp ? '#B42318' : '#C2410C';
+      if (v2row) { v2row.style.borderColor = sp ? '#F5C6C3' : '#EFE3DA'; v2row.style.background = sp ? '#FFF7F6' : '#FFFFFF'; }
+      if (oosAlert) oosAlert.style.display = sp ? 'flex' : 'none';
+      // v3 (pp)
+      const pp = tk % 6 >= 2;
+      [pRange0, pRange1].forEach((el) => { if (el) el.textContent = pp ? 'NOV 20 – JAN 02' : 'ALWAYS'; });
+      [pBar0, pBar1].forEach((el) => { if (el) { el.style.left = (pp ? 42 : 100) + '%'; el.style.width = (pp ? 42 : 0) + '%'; } });
+      // v4 (op)
+      const op = Math.floor(tk / 2) % 3, own = ownData[op], ownX = ((own[0] - 119) / (219 - 119) * 100).toFixed(1);
+      if (ownP) { ownP.textContent = '$' + own[0].toFixed(2); ownP.style.color = own[3]; }
+      if (ownDot) ownDot.style.left = ownX + '%';
+      if (ownAlert) ownAlert.style.display = own[1];
+      if (ownAlertText) ownAlertText.textContent = own[2];
+      // section 04 found (fp)
+      const fp = tk % 10;
+      foundRows.forEach((row, i) => { const checked = fp >= i + 1; const ok = foundOk[i]; const flag = checked && !ok; const el = row.querySelector('[data-fb-foundtag]') as HTMLElement | null; if (el) { el.textContent = !checked ? 'CHECKING…' : ok ? 'AUTHORIZED' : 'FLAGGED'; el.style.background = flag ? '#FFF4EC' : checked ? '#EEF8F1' : '#FFFFFF'; el.style.borderColor = flag ? '#FFD8BE' : checked ? '#BFE5CC' : '#EFE3DA'; el.style.color = flag ? '#C2410C' : checked ? '#1E7A3D' : '#7F7066'; } row.style.background = flag ? '#FFF9F4' : '#FFFFFF'; });
+      // section 05 stockGrid (sg)
+      const sg = tk % 8 >= 4;
+      if (sgStock) sgStock.textContent = sg ? 'Out of stock' : 'Low stock';
+      if (sgDot) sgDot.style.background = sg ? '#B42318' : '#F7631E';
+      if (sgStock) sgStock.parentElement!.style.color = sg ? '#B42318' : '#C2410C';
+      if (sgRow) { sgRow.style.borderColor = sg ? '#1C130E' : '#EFE3DA'; sgRow.style.background = sg ? '#FFF7F6' : '#FFFFFF'; }
+      if (soAlert) soAlert.style.display = sg ? 'block' : 'none';
+    }
+    paint();
+    setInterval(() => { tick++; paint(); }, 900);
+
+    // ask click (stops auto-advance)
+    askBtns.forEach((b, i) => b.addEventListener('click', () => { ask = i; askAuto = false; paintAsk(); }));
+
+    // faq
+    qa('[data-fb-faqbtn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-fb-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-fb-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-fb-faqbtn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    // reveal
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>

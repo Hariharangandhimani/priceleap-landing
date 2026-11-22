@@ -1,0 +1,474 @@
+---
+// Native Astro port of the design package's "Automotive Parts & Accessories" solution page.
+// Static initial render + the full 1s animation loop and interactions reimplemented in
+// vanilla JS: hero Product-Groups card (cycling context menu + ZIP toggle + toast),
+// four problem demos (part-number fan, spec match, fitment list, regional bars),
+// step flow, before/after, "why teams pick us" demos and FAQ. Responsive via CSS media.
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+
+const MENU: [string, string, number][] = [
+  ['View in Price Intelligence', 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6', 0],
+  ['Price history', 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 7v5l3 2', 0],
+  ['Re-run / Fetch now', 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7', 0],
+  ['Manage competitors', 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8a4 4 0 1 0 0 8M22 21v-2a4 4 0 0 0-3-3.9', 1],
+  ['Set ZIP code', 'M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12zM12 6.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5', 0],
+  ['Rename group', 'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z', 0],
+  ['Edit rules & alerts', 'M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4', 0],
+  ['Delete group', 'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14', 0],
+];
+const menuItemsInit = MENU.map(([t, ico, ai], i) => ({ t, ico, aiD: ai ? 'inline-flex' : 'none', sepD: i === 3 || i === 7 ? 'block' : 'none', bg: 'transparent', c: i === 7 ? '#B42318' : '#1C130E', ic: i === 7 ? '#B42318' : '#665A51' }));
+
+const gData: [string, string, string, number, number, string][] = [
+  ['Brake Pads · Ceramic', 'BP', '#C2410C', 148, 6, 'Auto'],
+  ['Tires · All-season', 'TI', '#1C130E', 92, 8, '75201'],
+  ['Batteries · AGM', 'BA', '#7F7066', 64, 5, 'Auto'],
+  ['Wiper Blades', 'WB', '#B9A99C', 210, 4, 'Auto'],
+];
+const groupsInit = gData.map(([n, ini, ab, p, c, z], i) => ({ n, ini, ab, p, c, zip: z, act: i === 0, bb: i < 3 ? '1px solid #F5ECE5' : 'none', bg: i === 0 ? '#FFF9F4' : '#FFFFFF', hasZip: z !== 'Auto', zc: z !== 'Auto' ? '#1C130E' : '#7F7066' }));
+
+const chipsInit = ['ZIP code per product group', 'MPN, UPC and GTIN on every product', 'Fetch now before a pricing call']
+  .map((t, i) => { const on = i === 1; return { t, bg: on ? '#FFF4EC' : '#FFFFFF', bc: on ? '#FFD8BE' : '#EFE3DA', dot: on ? '#F7631E' : '#D7C6BA' }; });
+
+// problem 1 part-number fan (q1=0 → none lit)
+const pn1Init = [['OE 04465-33471', 16], ['OES D1210', 48], ['Brand A · 7921', 80], ['Brand B · CD1210', 112], ['+ 9 more', 144]].map(([t, y]) => ({ t, y, d: 'M96,80 C150,80 150,' + y + ' 196,' + y, lc: '#EFE3DA', bc: '#EFE3DA', c: '#B9A99C' }));
+// problem 2 spec match (q2=0 → no marks)
+const spec2Init = [['Ceramic', 'Semi-metallic', 1], ['2019 fitment', '2016 fitment', 1], ['Front axle', 'Front axle', 0]].map(([a, b, bad]) => ({ a, b, mk: '', bg: '#FFFFFF', bc: '#EFE3DA', mc: bad ? '#B42318' : '#1E7A3D' }));
+// problem 3 fitment list (q3=0)
+const fit3Init = [['ValuePad Economy', 'Private label', '$29.99', 'pl'], ['StopRight Basic', 'Private label', '$34.50', 'pl'], ['Your premium set', 'Ceramic · OE equivalent', '$64.99', 'you']].map(([n, t, p, k], i) => ({ n, t, p, k, bb: i < 2 ? '1px solid #F5ECE5' : 'none', bg: '#FFFFFF', tc: k === 'pl' ? '#7F7066' : '#C2410C', pc: '#1C130E' }));
+// problem 4 regional bars (q4=0)
+const reg4Init = [['60614', 58.40], ['75201', 54.10], ['94103', 61.80], ['10001', 59.20]].map(([z, p]) => ({ z, over: (p as number) > 58.4, p: '$' + (p as number).toFixed(2), w: Math.round(((p as number) - 40) / 25 * 100), c: '#1C130E' }));
+const avgX = Math.round((58.38 - 40) / 25 * 100);
+
+// solution flow (fp=0 → step 0 active)
+const flowInit = [
+  ['01', 'Group parts by line', 'Brake Pads · Ceramic', 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z'],
+  ['02', 'Add competitor listings', '6 listings · MPN checked', 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1'],
+  ['03', 'Set a ZIP code', '60614 · Chicago', 'M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12zM12 6.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5'],
+  ['04', 'Get a price inside your limits', 'SmartPrice $61.20', 'M3 17l6-6 4 4 8-8M15 7h6v6'],
+].map(([n, t, v, ico], i) => { const on = i === 0; return { n, t, v, ico, bc: on ? '#FFD8BE' : '#EFE3DA', sh: on ? '0 24px 48px -30px rgba(247,99,30,.55)' : 'none', ib: on ? '#1C130E' : '#FFFFFF', ibc: on ? '#1C130E' : '#EFE3DA', ic: on ? '#FFFFFF' : '#C2410C', vc: on ? '#C2410C' : '#7F7066' }; });
+
+const baRows = [
+  ['Matching parts', 'Analysts cross-reference part numbers by hand, and wrong-year or wrong-spec listings slip into the comparison.', 'MPN, UPC and GTIN stored on every product, so a competitor listing is quick to check before it counts.'],
+  ['Choosing the competition', 'Private-label listings on the same fitment page drag the reference price down.', 'Each product group has its own competitor set, so economy sellers stay out of a premium line.'],
+  ['Regional prices', 'One national price, checked from one location.', 'A ZIP code per product group for location-specific prices.'],
+  ['Refresh', 'Fast-moving categories like brakes and tires are repriced long after the market has moved.', 'Prices checked 1 to 3 times a day, plus Fetch now before a pricing call.'],
+].map(([k, b, a], i) => ({ k, b, a, bb: i < 3 ? '1px solid #F5ECE5' : 'none' }));
+
+// why: sellers (sp2=0 → all suggested)
+const sellersInit = [['AutoZone', 0], ['RockAuto', 0], ['Private-label seller', 1], ['Advance Auto Parts', 0]].map(([n]) => ({ n, tag: 'SUGGESTED', o: '1', td: 'none', bc: '#EFE3DA', bg: '#FFFFFF', tc: '#6D4AC9' }));
+const chansInit = ['Email', 'Slack', 'In-app'].map((t, i) => { const on = i === 0; return { t, bg: on ? '#1C130E' : '#FFFFFF', bc: on ? '#1C130E' : '#EFE3DA', c: on ? '#FFFFFF' : '#3A302A' }; });
+
+const FQ: [string, string, boolean?][] = [
+  ['Can I compare prices by part number?', 'Every product record stores its MPN, UPC and GTIN, which makes it quick to check that a competitor listing is the same part before you compare prices. For matching in depth, see ', true],
+  ['Can I track prices for one region or ZIP code?', 'Yes. Set a ZIP code on a product group and its prices are checked for that location. Run one group per region if your prices differ across markets.'],
+  ['How are private-label and economy brands handled?', 'You choose. Each product group has its own competitor set, so leave private-label sellers out of a premium line and keep them in an economy one.'],
+  ['What about used, remanufactured and take-off parts?', "Leave those sellers out of the product group's competitor set, so they never count against your new-part price."],
+];
+const faqs = FQ.map(([q, a, link], i) => ({ q, a, hasLink: !!link, n: '0' + (i + 1), open: i === 0 }));
+
+const jsonLd = [{
+  '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
+    { '@type': 'Question', name: 'Can I compare prices by part number?', acceptedAnswer: { '@type': 'Answer', text: 'Every product record stores its MPN, UPC and GTIN, which makes it quick to check that a competitor listing is the same part before you compare prices. For matching in depth, see Product Matching.' } },
+    { '@type': 'Question', name: 'Can I track prices for one region or ZIP code?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. Set a ZIP code on a product group and its prices are checked for that location. Run one group per region if your prices differ across markets.' } },
+    { '@type': 'Question', name: 'How are private-label and economy brands handled?', acceptedAnswer: { '@type': 'Answer', text: 'You choose. Each product group has its own competitor set, so leave private-label sellers out of a premium line and keep them in an economy one.' } },
+    { '@type': 'Question', name: 'What about used, remanufactured and take-off parts?', acceptedAnswer: { '@type': 'Answer', text: "Leave those sellers out of the product group's competitor set, so they never count against your new-part price." } },
+  ],
+}];
+---
+<PriceLeapLayout
+  title="Auto Parts Price Monitoring Software | priceleap.ai"
+  description="Track competitor prices on every part, by region if you need it, with MPN, UPC and GTIN on each product and recommendations you approve. Book a Demo."
+  jsonLd={jsonLd}
+>
+  <div class="ap" style="min-height:100vh;background:#FFFCF9;overflow-x:clip">
+
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 65% 75% at 78% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-10%;top:-25%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.10),transparent);pointer-events:none"></div>
+      <div class="ap-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(40px,6vw,84px) clamp(16px,4vw,40px) clamp(48px,6vw,88px);gap:clamp(36px,4.5vw,64px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px">
+          <nav aria-label="Breadcrumb" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:#665A51"><a href="#" style="color:#665A51">Solutions</a><span style="color:#D7C6BA">›</span><a href="#" style="color:#665A51">By Industry</a><span style="color:#D7C6BA">›</span><span style="color:#1C130E">Automotive Parts &amp; Accessories</span></nav>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+            <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>For Automotive Parts &amp; Accessories</span>
+            <span style="height:24px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:12px;color:#1C130E"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2.2"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"></path><circle cx="12" cy="9" r="2.5"></circle></svg>Regional pricing by ZIP code</span>
+          </div>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(36px,5vw,62px);line-height:1.03;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Price monitoring</span><span style="font-weight:400"> for auto parts and accessories</span></h1>
+          <p style="margin:0;max-width:580px;font-size:17.5px;line-height:1.65;color:#3A302A;text-wrap:pretty">priceleap.ai tracks the competitor listings you match to each part, by region if you set a ZIP code, and shows their price and stock next to yours. MPN, UPC and GTIN sit on every product record, so your team can check it's the same part.</p>
+          <a href="/book-a-demo" style="align-self:flex-start;height:48px;padding:0 22px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            {chipsInit.map((c) => (<span data-ap-chip style={`height:32px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:9px;background:${c.bg};border:1px solid ${c.bc};font-size:13px;color:#1C130E;transition:all .35s`}><span data-ap-chipdot style={`width:6px;height:6px;border-radius:50%;background:${c.dot};transition:background .35s`}></span>{c.t}</span>))}
+          </div>
+        </div>
+
+        <figure style="margin:0;min-width:0;display:flex;flex-direction:column;gap:10px">
+          <div style="position:relative;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:visible;box-shadow:0 48px 90px -52px rgba(60,30,15,.45),0 0 0 6px rgba(255,255,255,.7)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;border-radius:22px 22px 0 0">
+              <span style="font-size:13.5px;font-weight:600;color:#1C130E">Product Groups</span>
+              <span style="height:28px;padding:0 10px;display:flex;align-items:center;gap:6px;border-radius:8px;background:#1C130E;font-size:12px;color:#FFFFFF">+ New group</span>
+            </div>
+            <div class="ap-gcols" style="display:grid;gap:10px;padding:9px 16px;border-bottom:1px solid #F5ECE5;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066"><span>GROUP</span><span class="ap-gextra">COMPETITORS</span><span>LOCATION</span><span></span></div>
+            {groupsInit.map((g) => (
+              <div class="ap-gcols" style={`position:relative;display:grid;gap:10px;align-items:center;padding:13px 16px;border-bottom:${g.bb};background:${g.bg};transition:background .35s`}>
+                <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style={`width:30px;height:30px;flex:none;border-radius:8px;background:${g.ab};color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10px;display:flex;align-items:center;justify-content:center`}>{g.ini}</span><span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{g.n}</span><span style="display:block;font-size:11px;color:#7F7066">{g.p} parts</span></span></span>
+                <span class="ap-gextra" style="justify-self:start;height:26px;padding:0 9px;align-items:center;gap:6px;border-radius:999px;border:1px solid #EFE3DA;font-size:11.5px;color:#1C130E;white-space:nowrap"><span style="display:flex;gap:2px"><span style="width:6px;height:6px;border-radius:50%;background:#F59E0B"></span><span style="width:6px;height:6px;border-radius:50%;background:#3B82F6"></span><span style="width:6px;height:6px;border-radius:50%;background:#EF4444"></span></span>{g.c} competitors</span>
+                <span data-ap-g0zip={g.act ? '1' : undefined} style={`justify-self:start;height:26px;padding:0 9px;display:flex;align-items:center;gap:5px;border-radius:999px;border:1px solid ${g.act ? '#EFE3DA' : '#EFE3DA'};background:#FFFFFF;font-family:'Geist Mono',monospace;font-size:11px;color:${g.zc};white-space:nowrap;transition:all .35s`}><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"></path></svg><span data-ap-g0ziptext={g.act ? '1' : undefined}>{g.zip}</span></span>
+                <span data-ap-g0menubtn={g.act ? '1' : undefined} style={`justify-self:end;width:30px;height:30px;border-radius:8px;border:1px solid ${g.act ? '#F7631E' : '#EFE3DA'};background:#FFFFFF;color:#1C130E;display:flex;align-items:center;justify-content:center;font-size:14px;letter-spacing:1px;transition:border-color .3s`}>⋯</span>
+                {g.act && (
+                  <div data-ap-menu role="menu" style="position:absolute;right:12px;top:calc(100% - 6px);z-index:5;width:min(250px,calc(100% - 24px));background:#FFFFFF;border:1px solid #EFE3DA;border-radius:14px;box-shadow:0 30px 60px -28px rgba(60,30,15,.45);padding:6px;animation:ap-pop .25s ease">
+                    {menuItemsInit.map((m) => (
+                      <div><div style={`display:${m.sepD};height:1px;margin:4px 6px;background:#F5ECE5`}></div>
+                      <div data-ap-mi role="menuitem" style={`display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;background:${m.bg};font-size:13px;color:${m.c};transition:background .25s`}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style={`flex:none;color:${m.ic}`}><path d={m.ico}></path></svg>
+                        <span style="flex:1">{m.t}</span>
+                        <span style={`display:${m.aiD};height:18px;padding:0 6px;align-items:center;border-radius:5px;background:#F4F0FF;border:1px solid #DDD3FA;font-family:'Geist Mono',monospace;font-size:9.5px;color:#6D4AC9`}>AI</span>
+                      </div></div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid #F5ECE5;background:#FFF9F4;border-radius:0 0 22px 22px;min-height:52px">
+              <span style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#1C130E"><span style="width:20px;height:20px;flex:none;border-radius:6px;background:#1C130E;color:#FFFFFF;display:flex;align-items:center;justify-content:center"><svg data-ap-toastsvg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path data-ap-toastpath d="M12 5v14M5 12h14"></path></svg></span><span data-ap-toast>Manage competitors · 4 sellers suggested</span></span>
+            </div>
+          </div>
+          <figcaption style="font-size:13px;color:#665A51;text-align:center">Each product line gets its own competitors, ZIP code and rules</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 02 PROBLEM -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>The problem</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Pricing parts starts with </span><span style="font-weight:700">finding the right part</span></h2>
+        </div>
+        <div class="ap-pgrid" style="margin-top:48px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#EFE3DA;display:grid;gap:1px">
+          <div data-reveal style="background:#FFFFFF;display:flex;flex-direction:column;min-width:0">
+            <div style="position:relative;height:210px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;padding:20px;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:relative;width:100%;max-width:300px;height:160px">
+              <svg aria-hidden="true" viewBox="0 0 300 160" style="position:absolute;inset:0;width:100%;height:100%">
+                {pn1Init.map((p) => (<path data-ap-pn1line d={p.d} fill="none" stroke={p.lc} stroke-width="1.5" style="transition:stroke .4s"></path>))}
+              </svg>
+              <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);width:96px;padding:10px;border-radius:12px;background:#1C130E;color:#FFFFFF;display:flex;flex-direction:column;gap:4px"><span style="font-family:'Geist Mono',monospace;font-size:9px;color:#FB8A2E">ONE PART</span><span style="font-size:12px;font-weight:600;line-height:1.25">Front brake pad set</span></div>
+              {pn1Init.map((p) => (<span data-ap-pn1label style={`position:absolute;right:0;top:${p.y}px;transform:translateY(-50%);height:24px;padding:0 8px;display:flex;align-items:center;gap:6px;border-radius:6px;background:#FFFFFF;border:1px solid ${p.bc};font-family:'Geist Mono',monospace;font-size:10px;color:${p.c};white-space:nowrap;transition:all .4s`}>{p.t}</span>))}
+            </div></div>
+            <div style="padding:24px 26px 28px;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">01</span><p style="margin:0;font-size:16px;line-height:1.6;color:#1C130E;text-wrap:pretty">A single pad set carries an OE number, an OES number and a dozen aftermarket equivalents, each listed by a different seller under a different brand.</p></div>
+          </div>
+          <div data-reveal style="background:#FFFFFF;display:flex;flex-direction:column;min-width:0">
+            <div style="position:relative;height:210px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;padding:20px;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="width:100%;max-width:300px;display:flex;flex-direction:column;gap:8px">
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:#7F7066"><span>YOUR PART</span><span>TITLE MATCH</span></div>
+              {spec2Init.map((r) => (
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">
+                  <span style="height:30px;padding:0 10px;display:flex;align-items:center;border-radius:8px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:12px;color:#1C130E">{r.a}</span>
+                  <span data-ap-spec style={`height:30px;padding:0 10px;display:flex;align-items:center;justify-content:space-between;gap:6px;border-radius:8px;background:${r.bg};border:1px solid ${r.bc};font-size:12px;color:#1C130E;transition:all .4s`}>{r.b}<span data-ap-specmk style={`font-family:'Geist Mono',monospace;font-size:11px;color:${r.mc}`}>{r.mk}</span></span>
+                </div>
+              ))}
+            </div></div>
+            <div style="padding:24px 26px 28px;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">02</span><p style="margin:0;font-size:16px;line-height:1.6;color:#1C130E;text-wrap:pretty">Matching on title compares a ceramic set to a semi-metallic one, or a 2019 fitment to a 2016 one, and your price follows the wrong part.</p></div>
+          </div>
+          <div data-reveal style="background:#FFFFFF;display:flex;flex-direction:column;min-width:0">
+            <div style="position:relative;height:210px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;padding:20px;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="width:100%;max-width:300px;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:14px;overflow:hidden">
+              <div style="padding:8px 12px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:#7F7066">FITS 2019 CAMRY · SORT: PRICE ↑</div>
+              {fit3Init.map((r) => (
+                <div data-ap-fit3row={r.k === 'you' ? '1' : undefined} style={`display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 12px;border-bottom:${r.bb};background:${r.bg};transition:background .4s`}>
+                  <span style="min-width:0"><span style="display:block;font-size:12px;font-weight:600;color:#1C130E">{r.n}</span><span style={`display:block;font-family:'Geist Mono',monospace;font-size:9.5px;color:${r.tc}`}>{r.t}</span></span>
+                  <span data-ap-fit3price={r.k === 'you' ? '1' : undefined} style={`font-family:'Geist Mono',monospace;font-size:12.5px;font-weight:600;color:${r.pc}`}>{r.p}</span>
+                </div>
+              ))}
+            </div></div>
+            <div style="padding:24px 26px 28px;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">03</span><p style="margin:0;font-size:16px;line-height:1.6;color:#1C130E;text-wrap:pretty">Marketplace resellers list private-label stock at economy prices on the same fitment page, so a correctly priced premium part looks expensive.</p></div>
+          </div>
+          <div data-reveal style="background:#FFFFFF;display:flex;flex-direction:column;min-width:0">
+            <div style="position:relative;height:210px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;padding:20px;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="width:100%;max-width:300px;display:flex;flex-direction:column;gap:7px">
+              {reg4Init.map((r) => (
+                <div style="display:grid;grid-template-columns:56px minmax(0,1fr) 54px;gap:8px;align-items:center">
+                  <span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#665A51">{r.z}</span>
+                  <span style="position:relative;height:10px;border-radius:10px;background:#F5ECE5"><span data-ap-regbar={r.over ? '1' : undefined} style={`position:absolute;left:0;top:0;bottom:0;width:${r.w}%;border-radius:10px;background:${r.c};transition:width .8s ease`}></span><span data-ap-avgline style={`position:absolute;top:-4px;bottom:-4px;left:${avgX}%;width:1.5px;background:#1C130E;opacity:0.35;transition:opacity .4s`}></span></span>
+                  <span data-ap-regprice={r.over ? '1' : undefined} style={`font-family:'Geist Mono',monospace;font-size:11.5px;font-weight:600;color:${r.c};text-align:right`}>{r.p}</span>
+                </div>
+              ))}
+              <span data-ap-avgtag style="margin-top:4px;align-self:center;height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:#FFFFFF;border:1px solid #EFE3DA;font-family:'Geist Mono',monospace;font-size:9.5px;color:#665A51;white-space:nowrap;transition:all .4s">NATIONAL AVG $58.38</span>
+            </div></div>
+            <div style="padding:24px 26px 28px;display:flex;flex-direction:column;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:#C2410C">04</span><p style="margin:0;font-size:16px;line-height:1.6;color:#1C130E;text-wrap:pretty">The same part sells at different prices from one region to the next, and a national average hides where you're overpriced.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 SOLUTION -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1100px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>The solution</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Price each part against </span><span style="font-weight:700">the right listings</span></h2>
+          <p style="margin:0;max-width:720px;font-size:17px;line-height:1.7;color:#3A302A;text-wrap:pretty">Group your parts by line, add the competitor listings for each part, and set a ZIP code where prices vary by region. priceleap.ai checks prices and stock on a schedule and recommends a price inside the floor and ceiling you set.</p>
+        </div>
+        <div data-reveal class="ap-flow" style="margin-top:44px;position:relative;display:grid;gap:10px">
+          <svg class="ap-flowline" aria-hidden="true" viewBox="0 0 1000 20" preserveAspectRatio="none" style="position:absolute;left:12.5%;right:12.5%;top:34px;width:75%;height:20px;overflow:visible"><line x1="0" y1="10" x2="1000" y2="10" stroke="#E2D3C8" stroke-width="1.5" vector-effect="non-scaling-stroke"></line><line x1="0" y1="10" x2="1000" y2="10" stroke="#F7631E" stroke-width="1.5" stroke-dasharray="4 10" vector-effect="non-scaling-stroke" style="animation:ap-dash 1s linear infinite"></line></svg>
+          {flowInit.map((f) => (
+            <div data-ap-flow style={`position:relative;background:#FFFFFF;border:1px solid ${f.bc};border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:${f.sh};transition:all .4s`}>
+              <span data-ap-flowicon style={`width:40px;height:40px;border-radius:12px;background:${f.ib};border:1px solid ${f.ibc};color:${f.ic};display:flex;align-items:center;justify-content:center;transition:all .4s`}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d={f.ico}></path></svg></span>
+              <span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#7F7066">STEP {f.n}</span>
+              <span style="font-family:Geist,sans-serif;font-size:16px;font-weight:600;color:#1C130E">{f.t}</span>
+              <span data-ap-flowval style={`font-family:'Geist Mono',monospace;font-size:11px;color:${f.vc};transition:color .4s`}>{f.v}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 BEFORE & AFTER -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Before &amp; after</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">What changes on </span><span style="font-weight:700">the pricing desk</span></h2>
+        </div>
+        <div data-reveal class="ap-ba" style="margin-top:44px;position:relative;display:grid;gap:16px">
+          <div style="background:#FFFCF9;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #EFE3DA"><span style="font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:#665A51">Before</span><span style="height:24px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:6px;border:1px solid #EFE3DA;background:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066"><span style="width:6px;height:6px;border-radius:50%;background:#B9A99C"></span>MANUAL</span></div>
+            {baRows.map((r) => (<div class="ap-barow" style={`padding:18px 22px;border-bottom:${r.bb};display:flex;flex-direction:column;gap:6px`}><span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#7F7066">{r.k}</span><span style="font-size:15px;line-height:1.55;color:#665A51">{r.b}</span></div>))}
+          </div>
+          <div class="ap-baarrow" aria-hidden="true" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;width:46px;height:46px;border-radius:50%;background:#FFFFFF;border:1px solid #EFE3DA;box-shadow:0 10px 24px -12px rgba(60,30,15,.35);align-items:center;justify-content:center;font-size:16px;color:#C2410C">→</div>
+          <div style="background:#FFFFFF;border:1.5px solid #1C130E;border-radius:22px;overflow:hidden;box-shadow:0 30px 60px -40px rgba(60,30,15,.4)">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span style="font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:#1C130E">With priceleap.ai</span><span style="height:24px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:6px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;color:#FFFFFF"><span style="width:6px;height:6px;border-radius:50%;background:#FB8A2E"></span>SCHEDULED</span></div>
+            {baRows.map((r) => (<div class="ap-barow" style={`padding:18px 22px;border-bottom:${r.bb};display:flex;flex-direction:column;gap:6px`}><span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:#C2410C">{r.k}</span><span style="font-size:15px;line-height:1.55;color:#1C130E">{r.a}</span></div>))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 WHY TEAMS PICK US -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>Why teams pick us</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Made for </span><span style="font-weight:700">parts catalogues</span></h2>
+        </div>
+        <div data-reveal class="ap-three" style="margin-top:44px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#EFE3DA;display:grid;gap:1px">
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:170px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,260px);display:flex;flex-direction:column;gap:6px">
+                {sellersInit.map((s) => (<div data-ap-seller style={`display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 10px;border-radius:9px;border:1px solid ${s.bc};background:${s.bg};opacity:${s.o};transition:all .4s`}><span data-ap-sellername style={`font-size:12px;color:#1C130E;text-decoration:${s.td}`}>{s.n}</span><span data-ap-sellertag style={`font-family:'Geist Mono',monospace;font-size:9.5px;color:${s.tc}`}>{s.tag}</span></div>))}
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">AI help choosing competitors</span><p style="margin:0;font-size:15px;line-height:1.6;color:#665A51"><a href="#" style="font-weight:600">Manage competitors</a> suggests sellers for each product group, and you decide who stays.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:170px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,260px)">
+                <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066"><span>BRAKE PADS · GROUP</span><span style="color:#C2410C">SMARTPRICE</span></div>
+                <div style="position:relative;margin:30px 4px 26px;height:8px;border-radius:8px;background:#F5ECE5">
+                  <span style="position:absolute;left:22%;right:22%;top:0;bottom:0;border-radius:8px;background:#FFE3CF"></span>
+                  <span style="position:absolute;left:22%;top:-5px;bottom:-5px;width:2px;background:#1C130E"></span>
+                  <span style="position:absolute;left:78%;top:-5px;bottom:-5px;width:2px;background:#1C130E"></span>
+                  <span style="position:absolute;top:15px;left:22%;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:9.5px;color:#3A302A">Floor</span>
+                  <span style="position:absolute;top:15px;left:78%;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:9.5px;color:#3A302A">Ceiling</span>
+                  <span data-ap-spdot style="position:absolute;top:50%;left:50%;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#F7631E;border:3px solid #FFFFFF;box-shadow:0 0 0 1px #F7631E;transition:left 1.2s cubic-bezier(.2,.7,.2,1)"></span>
+                  <span data-ap-splabel style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);height:20px;padding:0 7px;display:flex;align-items:center;border-radius:5px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;color:#FFFFFF;white-space:nowrap;transition:left 1.2s cubic-bezier(.2,.7,.2,1)">$61.20</span>
+                </div>
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">Rules per product line</span><p style="margin:0;font-size:15px;line-height:1.6;color:#665A51">Price position, floor and ceiling are set per product group, and <a href="/dynamic-pricing-software" style="font-weight:600">SmartPrice</a> recommends a price inside them.</p></div>
+          </div>
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:170px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;display:flex;align-items:center;justify-content:center;padding:18px">
+              <div style="width:min(100%,260px);display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:9px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:12px;color:#1C130E"><span>Alert when price drops</span><span style="font-family:'Geist Mono',monospace;color:#C2410C">≥ 5%</span></div>
+                <div data-ap-alert style="display:none;align-items:center;gap:10px;padding:10px 12px;border-radius:11px;background:#1C130E;color:#FFFFFF;font-size:12px;animation:ap-pop .35s ease"><span style="width:7px;height:7px;flex:none;border-radius:50%;background:#FB8A2E;animation:ap-pulse 1.6s infinite"></span><span style="flex:1">Rival B · Ceramic pad set <b style="color:#FB8A2E">−7%</b></span><span data-ap-alertch style="font-family:'Geist Mono',monospace;font-size:9.5px;color:#FB8A2E">EMAIL</span></div>
+                <div style="display:flex;gap:5px">{chansInit.map((c) => (<span data-ap-chan style={`flex:1;height:26px;display:flex;align-items:center;justify-content:center;border-radius:7px;border:1px solid ${c.bc};background:${c.bg};font-size:11.5px;color:${c.c};transition:all .3s`}>{c.t}</span>))}</div>
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><span style="font-family:Geist,sans-serif;font-size:18px;font-weight:600;color:#1C130E">An alert when a rival drops</span><p style="margin:0;font-size:15px;line-height:1.6;color:#665A51"><a href="#" style="font-weight:600">Price drop alerts</a> at the percentage you set, by email, Slack or in-app.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="ap-split" style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <div data-reveal class="ap-sticky" style="top:96px;display:flex;flex-direction:column;gap:16px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E"></span>FAQ</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Auto parts price monitoring </span><span style="font-weight:700">FAQs</span></h2>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((q) => (
+            <div class="ap-faq" class:list={[{ 'is-open': q.open }]} data-ap-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-ap-faqbtn aria-expanded={q.open ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="ap-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px">{q.n}</span>
+                <span role="heading" aria-level="3" style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{q.q}</span>
+                <span class="ap-faq-ic" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="ap-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{q.a}{q.hasLink && (<><a href="/product-matching" style="font-weight:600">Product Matching</a>.</>)}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-220px;width:640px;height:400px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.14),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:22px">
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">See your own parts </span><span style="font-weight:700">in a demo</span></h2>
+          <a href="/book-a-demo" style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .ap { background: #FFFCF9; overflow-x: clip; }
+  @keyframes ap-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.5); } 100% { box-shadow: 0 0 0 9px rgba(247,99,30,0); } }
+  @keyframes ap-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes ap-pop { 0% { opacity: 0; transform: translateY(-4px) scale(.97); } 100% { opacity: 1; transform: none; } }
+  @keyframes ap-spin { to { transform: rotate(360deg); } }
+  @keyframes ap-dash { to { stroke-dashoffset: -20; } }
+
+  .ap-hero { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ap-hero { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } }
+  .ap-gcols { grid-template-columns: minmax(0,1fr) auto 30px; }
+  .ap-gextra { display: none; }
+  @media (min-width: 720px) { .ap-gcols { grid-template-columns: minmax(0,1.5fr) minmax(0,1fr) auto 30px; } .ap-gextra { display: flex; } }
+  .ap-pgrid { grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .ap-pgrid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  .ap-flow { grid-template-columns: 1fr; }
+  .ap-flowline { display: none; }
+  @media (min-width: 720px) { .ap-flow { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  @media (min-width: 1024px) { .ap-flow { grid-template-columns: repeat(4,minmax(0,1fr)); } .ap-flowline { display: block; } }
+  .ap-ba { grid-template-columns: 1fr; }
+  .ap-baarrow { display: none; }
+  .ap-barow { min-height: 0; }
+  @media (min-width: 1024px) { .ap-ba { grid-template-columns: 1fr 1fr; } .ap-baarrow { display: flex; } .ap-barow { min-height: 108px; } }
+  .ap-three { grid-template-columns: 1fr; }
+  @media (min-width: 960px) { .ap-three { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+  .ap-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ap-split { grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); } }
+  .ap-sticky { position: static; }
+  @media (min-width: 1024px) { .ap-sticky { position: sticky; } }
+
+  .ap-faq-n { color: #B9A99C; }
+  .ap-faq.is-open .ap-faq-n { color: #C2410C; }
+  .ap-faq-ic { background: #FBF3EC; color: #1C130E; transform: rotate(0deg); transition: all .3s; }
+  .ap-faq.is-open .ap-faq-ic { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .ap-faq.is-open { border-color: #FFD8BE; }
+  .ap-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .ap-faq.is-open .ap-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .ap *, .ap *::before, .ap *::after { animation: none !important; transition: none !important; } [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.ap') as HTMLElement | null;
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+
+    const CYCLE: [number, string, string][] = [
+      [3, 'Manage competitors · 4 sellers suggested', 'M8 12l3 3 5-5'],
+      [4, 'ZIP code set · 60614 Chicago', 'M8 12l3 3 5-5'],
+      [2, 'Fetching prices for Brake Pads · Ceramic…', 'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7'],
+      [6, 'Rules saved · floor and ceiling per group', 'M8 12l3 3 5-5'],
+    ];
+    const PLUS = 'M12 5v14M5 12h14';
+
+    // hero refs
+    const chips = qa('[data-ap-chip]');
+    const g0zip = q('[data-ap-g0zip="1"]'), g0ziptext = q('[data-ap-g0ziptext="1"]'), g0menubtn = q('[data-ap-g0menubtn="1"]');
+    const menu = q('[data-ap-menu]'), menuItems = qa('[data-ap-mi]');
+    const toast = q('[data-ap-toast]'), toastSvg = q('[data-ap-toastsvg]'), toastPath = q('[data-ap-toastpath]');
+    // problem refs
+    const pn1lines = qa('[data-ap-pn1line]'), pn1labels = qa('[data-ap-pn1label]');
+    const specCells = qa('[data-ap-spec]'), specMarks = qa('[data-ap-specmk]');
+    const fit3row = q('[data-ap-fit3row="1"]'), fit3price = q('[data-ap-fit3price="1"]');
+    const avgLines = qa('[data-ap-avgline]'), avgTag = q('[data-ap-avgtag]');
+    const regBars = qa('[data-ap-regbar="1"]'), regPrices = qa('[data-ap-regprice="1"]'); // only "over" ones
+    // flow / why refs
+    const flows = qa('[data-ap-flow]'), flowIcons = qa('[data-ap-flowicon]'), flowVals = qa('[data-ap-flowval]');
+    const sellers = qa('[data-ap-seller]');
+    const spDot = q('[data-ap-spdot]'), spLabel = q('[data-ap-splabel]');
+    const alertEl = q('[data-ap-alert]'), alertCh = q('[data-ap-alertch]'), chans = qa('[data-ap-chan]');
+
+    const specBad = [true, true, false];
+    const sellerRm = [false, false, true, false];
+    const spPosData: [number, string][] = [[50, '$61.20'], [32, '$57.90'], [68, '$64.10']];
+    const flowIco = ['#1C130E', '#FFFFFF']; // placeholder not used
+
+    let tick = 0, lastMenuOpen = true;
+
+    function paint() {
+      const tk = tick;
+      const ph = Math.floor(tk / 3) % 4, step = tk % 3;
+      const hiIdx = CYCLE[ph][0], menuOpen = step < 2, zipSet = ph >= 1;
+      // chips
+      chips.forEach((el, i) => { const on = (ph === 1 && i === 0) || (ph === 2 && i === 2) || ((ph === 0 || ph === 3) && i === 1); el.style.background = on ? '#FFF4EC' : '#FFFFFF'; el.style.borderColor = on ? '#FFD8BE' : '#EFE3DA'; const d = el.querySelector('[data-ap-chipdot]') as HTMLElement | null; if (d) d.style.background = on ? '#F7631E' : '#D7C6BA'; });
+      // group 0 zip
+      if (g0ziptext) g0ziptext.textContent = zipSet ? '60614' : 'Auto';
+      if (g0zip) { const hl = zipSet && ph === 1; g0zip.style.background = hl ? '#FFF4EC' : '#FFFFFF'; g0zip.style.borderColor = hl ? '#FFD8BE' : '#EFE3DA'; g0zip.style.color = zipSet ? '#1C130E' : '#7F7066'; }
+      // group 0 menu button + dropdown
+      if (g0menubtn) g0menubtn.style.borderColor = menuOpen ? '#F7631E' : '#EFE3DA';
+      if (menu) { menu.style.display = menuOpen ? 'block' : 'none'; if (menuOpen && !lastMenuOpen) { menu.style.animation = 'none'; void menu.offsetWidth; menu.style.animation = 'ap-pop .25s ease'; } }
+      lastMenuOpen = menuOpen;
+      menuItems.forEach((el, i) => { const on = i === hiIdx && step >= 1; const del = i === 7; el.style.background = on ? '#FFF4EC' : 'transparent'; el.style.color = del ? '#B42318' : on ? '#C2410C' : '#1C130E'; const svg = el.querySelector('svg') as SVGElement | null; if (svg) (svg as unknown as HTMLElement).style.color = del ? '#B42318' : on ? '#C2410C' : '#665A51'; });
+      // toast
+      if (toast) toast.textContent = CYCLE[ph][1];
+      if (toastPath) toastPath.setAttribute('d', (step >= 2 || ph === 2) ? CYCLE[ph][2] : PLUS);
+      if (toastSvg) toastSvg.style.animation = (ph === 2 && step < 2) ? 'ap-spin 1s linear infinite' : 'none';
+      // problem 1 (q1)
+      const q1 = tk % 6;
+      pn1lines.forEach((el, k) => { el.setAttribute('stroke', k < q1 ? '#F7631E' : '#EFE3DA'); });
+      pn1labels.forEach((el, k) => { const on = k < q1; el.style.borderColor = on ? '#FFD8BE' : '#EFE3DA'; el.style.color = on ? '#C2410C' : '#B9A99C'; });
+      // problem 2 (q2)
+      const q2 = Math.floor(tk / 2) % 2;
+      specCells.forEach((el, i) => { const bad = specBad[i]; const show = !!q2 && bad; el.style.background = show ? '#FDECEB' : '#FFFFFF'; el.style.borderColor = show ? '#F5C6C3' : '#EFE3DA'; const mk = specMarks[i]; if (mk) mk.textContent = q2 ? (bad ? '≠' : '=') : ''; });
+      // problem 3 (q3)
+      const q3 = Math.floor(tk / 3) % 2;
+      if (fit3row) fit3row.style.background = q3 ? '#FFF4EC' : '#FFFFFF';
+      if (fit3price) fit3price.style.color = q3 ? '#C2410C' : '#1C130E';
+      // problem 4 (q4)
+      const q4 = Math.floor(tk / 3) % 2;
+      regBars.forEach((el) => (el.style.background = q4 ? '#B42318' : '#1C130E'));
+      regPrices.forEach((el) => (el.style.color = q4 ? '#B42318' : '#1C130E'));
+      avgLines.forEach((el) => (el.style.opacity = q4 ? '1' : '0.35'));
+      if (avgTag) { avgTag.textContent = q4 ? 'NATIONAL AVG $58.38 · HIDES 2 OVERPRICED ZIPS' : 'NATIONAL AVG $58.38'; avgTag.style.background = q4 ? '#FDECEB' : '#FFFFFF'; avgTag.style.borderColor = q4 ? '#F5C6C3' : '#EFE3DA'; avgTag.style.color = q4 ? '#B42318' : '#665A51'; }
+      // solution flow (fp)
+      const fp = tk % 5;
+      flows.forEach((el, i) => { const on = fp === i, done = fp > i; el.style.borderColor = on ? '#FFD8BE' : '#EFE3DA'; el.style.boxShadow = on ? '0 24px 48px -30px rgba(247,99,30,.55)' : 'none'; const ic = flowIcons[i]; if (ic) { ic.style.background = on || done ? '#1C130E' : '#FFFFFF'; ic.style.borderColor = on || done ? '#1C130E' : '#EFE3DA'; ic.style.color = on || done ? '#FFFFFF' : '#C2410C'; } const v = flowVals[i]; if (v) v.style.color = on ? '#C2410C' : '#7F7066'; });
+      // why sellers (sp2)
+      const sp2 = Math.floor(tk / 2) % 4;
+      sellers.forEach((el, i) => { const rm = sellerRm[i]; const removed = rm && sp2 >= 2; const kept = !rm && sp2 >= 3; const name = el.querySelector('[data-ap-sellername]') as HTMLElement | null; const t = el.querySelector('[data-ap-sellertag]') as HTMLElement | null; if (t) { t.textContent = removed ? 'REMOVED' : kept ? 'KEPT ✓' : 'SUGGESTED'; t.style.color = removed ? '#B42318' : kept ? '#1E7A3D' : '#6D4AC9'; } if (name) name.style.textDecoration = removed ? 'line-through' : 'none'; el.style.opacity = removed ? '.5' : '1'; el.style.borderColor = removed ? '#F5C6C3' : kept ? '#BFE5CC' : '#EFE3DA'; el.style.background = removed ? '#FFF7F6' : kept ? '#F6FBF7' : '#FFFFFF'; });
+      // why smartprice
+      const spPos = spPosData[Math.floor(tk / 3) % 3];
+      if (spDot) spDot.style.left = spPos[0] + '%';
+      if (spLabel) { spLabel.style.left = spPos[0] + '%'; spLabel.textContent = spPos[1]; }
+      // why alert + chans
+      if (alertEl) alertEl.style.display = (tk % 4 >= 1) ? 'flex' : 'none';
+      const ach = Math.floor(tk / 2) % 3;
+      if (alertCh) alertCh.textContent = ['EMAIL', 'SLACK', 'IN-APP'][ach];
+      chans.forEach((el, i) => { const on = i === ach; el.style.background = on ? '#1C130E' : '#FFFFFF'; el.style.borderColor = on ? '#1C130E' : '#EFE3DA'; el.style.color = on ? '#FFFFFF' : '#3A302A'; });
+    }
+    paint();
+    setInterval(() => { tick++; paint(); }, 1000);
+
+    // faq
+    qa('[data-ap-faqbtn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-ap-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-ap-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-ap-faqbtn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    // reveal
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>
