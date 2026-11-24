@@ -1,0 +1,248 @@
+---
+// Native Astro port of the design package's "For Ecommerce Managers" role page.
+// Static initial render + the 1s loop reimplemented in vanilla JS: the day selector
+// auto-advances every 4s (until the user clicks a day), re-rendering the notification
+// center (filters, unread badge, notes); the "everyday problems" row highlight cycles;
+// FAQ accordion; scroll-reveal.
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+
+const H: Record<string, string> = { pie: '/price-intelligence-engine', dps: '/dynamic-pricing-software', no: '#' };
+const P = (s: string) => { const m = s.match(/^([\s\S]*?)\[\[(.+?)\|(\w+)\]\]([\s\S]*)$/); return m ? { a1: m[1], lt: m[2], lh: H[m[3]], a2: m[4], ld: 'inline' } : { a1: s, lt: '', lh: '#', a2: '', ld: 'none' }; };
+
+const eyebrow = 'For Ecommerce Managers';
+const chips = ['Alerts by email, Slack or in-app', 'Failed checks flagged', 'New products by URL'];
+const faqH1 = 'Ecommerce manager';
+const ctaH = "See your catalog's alerts in a demo";
+
+const ecmDays = [
+  ['Monday', 'Open the notification center, filter to Price and Stock, and see what changed over the weekend.'],
+  ['Tuesday', "Paste the URLs of this week's new products and let priceleap.ai [[find their competitors|no]]."],
+  ['Wednesday', "Check Failed Fetches and look into any product whose last check didn't come back."],
+  ['Thursday', 'Open new products showing No match and add the right competitor URL.'],
+  ['Friday', "Export the week's prices for the trading meeting."],
+].map(([day, t]) => ({ day, t: P(t) }));
+
+// [tag, iconBg, tagBorder, tagColor, icon, title, meta]
+const NOTES: Record<string, string[]> = {
+  Price: ['PRICE DROP', '#1C130E', '#EFE3DA', '#1C130E', '▼', 'Price drop — Sony WH-1000XM5 at a competitor', 'Electronics_Product_Monitor · 1 hr ago · Email'],
+  Stock: ['OUT OF STOCK', '#F59E0B', '#FBD89A', '#B45309', '▢', 'Out of stock — boAt Airdopes Alpha, 35H Battery, 13mm Drivers', 'Flipkart_ElectronicsProducts_31Oct2026 · 3 hr ago · Slack'],
+  Digest: ['DIGEST', '#7C3AED', '#DDD3F8', '#6D28D9', '≡', 'Weekly digest — price changes across your groups', 'All groups · 6 hr ago · Email'],
+  System: ['SYSTEM', '#B42318', '#F5C6C3', '#B42318', '!', 'Failed fetch — last check returned no result', 'Deals_Weekly · 2 hr ago · In-app'],
+};
+const fmapByDay = [['Price', 'Stock'], ['Price'], ['System'], ['Price'], ['Digest']];
+const allFilters = ['All', 'Price', 'Stock', 'Digest', 'System'];
+
+const ecmProb = [
+  ['Alerts get lost in the inbox.', 'The in-app [[notification center|no]], filtered by Price, Stock, Digest or System. Each alert shows the channel it was sent on.'],
+  ['Every new teammate sets alerts up differently.', 'Workspace settings, where notification defaults apply to the whole team.'],
+  ['A competitor price looks out of date.', 'The Seen column on the product page shows when each competitor was last checked.'],
+  ['A shared workspace needs tighter access.', 'Require two-factor authentication for every member in workspace settings.'],
+].map(([p, w], i, a) => ({ p, w: P(w), bb: i < a.length - 1 ? '1px solid #F5ECE5' : 'none' }));
+
+const faqRaw: [string, string][] = [
+  ['What does Failed Fetches mean?', "It counts the products whose last price check didn't return a result. The card sits on the dashboard next to Out of Stock and Market Position, so you can see at a glance how many need attention and look into them before the next scheduled check runs."],
+  ['Can I add products by pasting a list of URLs?', 'Yes. Paste product URLs one per line, or use the Upload file and Connect catalog options. Then choose whether priceleap.ai finds competitors for the whole group with AI, or tracks only the competitor URLs you assign yourself, which saves credits.'],
+  ['Can I see only stock alerts?', "Yes. Filter the notification center to Stock and out-of-stock alerts show on their own. The Price, Digest and System filters work the same way, and Mark all read clears the list once you've worked through it. The bell in the header shows how many alerts are still unread."],
+];
+const faqs = faqRaw.map(([q, a], i) => ({ q, a: P(a), n: String(i + 1).padStart(2, '0'), open: i === 0 }));
+
+const site = 'https://priceleap.ai';
+const faqText = (a: string) => a.replace(/\[\[(.+?)\|\w+\]\]/g, '$1');
+const jsonLd = [
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqRaw.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: faqText(a) } })) },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: site + '/' },
+    { '@type': 'ListItem', position: 2, name: 'Solutions', item: site + '/solutions/' },
+    { '@type': 'ListItem', position: 3, name: 'Ecommerce Managers', item: site + '/solutions/ecommerce-managers' },
+  ] },
+];
+---
+<PriceLeapLayout
+  title="Pricing Tool for Ecommerce Managers | priceleap.ai"
+  description="Keep your catalog priced right from one place: competitor prices on every tracked product, filterable alerts, failed checks flagged, and new products added by URL."
+  jsonLd={jsonLd}
+>
+  <div class="ec" data-notes={JSON.stringify(NOTES)} data-fmap={JSON.stringify(fmapByDay)} style="min-height:100vh;background:#FFFCF9;overflow-x:clip">
+
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 70% 80% at 85% 50%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 70% 80% at 85% 50%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-12%;top:-30%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.09),transparent);pointer-events:none"></div>
+      <div style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(48px,7vw,96px) clamp(16px,4vw,40px) clamp(56px,7vw,96px);display:grid;grid-template-columns:1fr;gap:clamp(36px,4.5vw,64px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px;align-items:flex-start;text-align:left">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>{eyebrow}</span>
+          <h1 style="margin:0;max-width:880px;font-family:Geist,sans-serif;font-size:clamp(38px,5.6vw,72px);line-height:1.02;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Pricing tool</span><span style="font-weight:400"> for ecommerce managers</span></h1>
+          <p style="margin:0;max-width:680px;font-size:18px;line-height:1.65;color:#3A302A;text-wrap:pretty">Keeping an online catalog priced right is daily work. priceleap.ai keeps it in one place: competitor prices for every product you track, alerts you can filter, failed checks flagged, and new products added by pasting their URLs.</p>
+          <a href="/book-a-demo" style="height:48px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            {chips.map((c) => (<span style="height:34px;padding:0 13px 0 9px;display:inline-flex;align-items:center;gap:9px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:13.5px;font-weight:500;color:#1C130E;box-shadow:0 6px 14px -12px rgba(60,30,15,.5)"><span style="width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>{c}</span>))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 A WEEK OF CATALOG PRICING -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1280px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">A week of catalog pricing </span><span style="font-weight:700">in priceleap.ai</span></h2>
+        <div data-reveal class="ec-week" style="margin-top:40px;display:grid;gap:clamp(20px,3vw,40px);align-items:start">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            {ecmDays.map((d, i) => (
+              <button type="button" data-ec-day={i} style="text-align:left;border:1px solid #F5ECE5;background:#FFFCF9;border-radius:16px;padding:16px 18px;display:grid;grid-template-columns:92px minmax(0,1fr);gap:14px;align-items:start;cursor:pointer;transition:all .3s">
+                <span style="display:flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:#7F7066"><span data-ec-dot style="width:7px;height:7px;border-radius:50%;background:#E2D3C8"></span>{d.day}</span>
+                <span style="font-size:15px;line-height:1.55;color:#1C130E">{d.t.a1}<a href={d.t.lh} style={`display:${d.t.ld};font-weight:600`}>{d.t.lt}</a>{d.t.a2}</span>
+              </button>
+            ))}
+          </div>
+          <figure class="ec-sticky" style="top:96px;margin:0;min-width:0;display:flex;flex-direction:column;gap:12px">
+            <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 48px 90px -52px rgba(60,30,15,.45)">
+              <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #F5ECE5"><span style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:#1C130E">Notifications</span><span data-ec-unread style="min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#1C130E;color:#FFFFFF;font-size:11px;display:flex;align-items:center;justify-content:center">6</span><span style="margin-left:auto;font-size:12.5px;font-weight:500;color:#C2410C">Mark all read</span></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #F5ECE5">
+                {allFilters.map((t) => (<span data-ec-filter={t} style="height:28px;padding:0 12px;display:flex;align-items:center;border-radius:999px;border:1px solid #EFE3DA;background:#FFFFFF;font-size:12px;font-weight:500;color:#3A302A;transition:all .3s">{t}</span>))}
+              </div>
+              <div data-ec-notes style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:8px;min-height:268px">
+                <span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#7F7066">TODAY</span>
+              </div>
+            </div>
+            <figcaption style="font-size:13px;color:#665A51;text-align:center">The notification center, with filters for Price, Stock, Digest and System</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 EVERYDAY PROBLEMS -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Everyday catalog problems,</span><span style="font-weight:400"> and where to look</span></h2>
+        <div data-reveal style="margin-top:40px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#FFFFFF;box-shadow:0 40px 80px -56px rgba(60,30,15,.35)">
+          <div class="ec-row ec-rowhead" style="padding:14px 22px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066"><span>THE PROBLEM</span><span></span><span style="color:#C2410C">WHERE TO LOOK IN PRICELEAP.AI</span></div>
+          {ecmProb.map((r) => (
+            <div data-ec-prob class="ec-row" style={`align-items:center;padding:20px 22px;border-bottom:${r.bb};background:#FFFFFF;transition:background .4s`}>
+              <span style="display:flex;gap:14px;align-items:flex-start"><span style="flex:none;width:26px;height:26px;border-radius:8px;background:#FDECEB;border:1px solid #F5C6C3;color:#B42318;font-size:12px;display:flex;align-items:center;justify-content:center">!</span><span style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;line-height:1.45;color:#1C130E">{r.p}</span></span>
+              <span class="ec-arrow" data-ec-probarrow style="width:32px;height:32px;border-radius:50%;background:#FBF3EC;color:#B9A99C;font-size:13px;align-items:center;justify-content:center;transition:all .4s">→</span>
+              <span data-ec-probcell style="padding:14px 16px;border-radius:14px;background:#FFFFFF;border:1px solid #F5ECE5;font-size:15px;line-height:1.6;color:#1C130E;transition:border-color .4s"><span class="ec-moblab" style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#C2410C;margin-bottom:4px">WHERE TO LOOK IN PRICELEAP.AI</span>{r.w.a1}<a href={r.w.lh} style={`display:${r.w.ld};font-weight:600`}>{r.w.lt}</a>{r.w.a2}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="ec-split" style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <h2 data-reveal class="ec-sticky" style="top:96px;margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">{faqH1} </span><span style="font-weight:700">FAQs</span></h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((qq) => (
+            <div class="ec-faq" class:list={[{ 'is-open': qq.open }]} data-ec-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-ec-faqbtn aria-expanded={qq.open ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="ec-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px">{qq.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{qq.q}</span>
+                <span class="ec-faq-ic" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="ec-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{qq.a.a1}<a href={qq.a.lh} style={`display:${qq.a.ld};font-weight:600`}>{qq.a.lt}</a>{qq.a.a2}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#1C130E;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-240px;width:680px;height:420px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.32),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:26px">
+          <h2 style="margin:0;max-width:820px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;font-weight:600;color:#FFFFFF;text-wrap:balance">{ctaH}</h2>
+          <a href="/book-a-demo" style="height:52px;padding:0 26px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15.5px;box-shadow:0 14px 30px -12px rgba(247,99,30,.9)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .ec { background: #FFFCF9; overflow-x: clip; }
+  @keyframes rp-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .ec-week { grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ec-week { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } }
+  .ec-sticky { position: static; }
+  @media (min-width: 1024px) { .ec-sticky { position: sticky; } }
+  .ec-row { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .ec-arrow { display: none; }
+  .ec-moblab { display: block; }
+  .ec-rowhead { display: none; }
+  @media (min-width: 720px) { .ec-row { grid-template-columns: minmax(0,1fr) 32px minmax(0,1.15fr); } .ec-arrow { display: flex; } .ec-moblab { display: none; } .ec-rowhead { display: grid; } }
+  .ec-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ec-split { grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); } }
+
+  .ec-faq-n { color: #B9A99C; }
+  .ec-faq.is-open .ec-faq-n { color: #C2410C; }
+  .ec-faq-ic { background: #FBF3EC; color: #1C130E; transform: rotate(0deg); transition: all .3s; }
+  .ec-faq.is-open .ec-faq-ic { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .ec-faq.is-open { border-color: #FFD8BE; }
+  .ec-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .ec-faq.is-open .ec-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .ec *, .ec *::before, .ec *::after { animation: none !important; transition: none !important; } [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.ec') as HTMLElement | null;
+  if (root) {
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+    const NOTES = JSON.parse(root.dataset.notes || '{}') as Record<string, string[]>;
+    const fmap = JSON.parse(root.dataset.fmap || '[]') as string[][];
+    const dayBtns = qa('[data-ec-day]'), filters = qa('[data-ec-filter]');
+    const unread = root.querySelector('[data-ec-unread]') as HTMLElement | null;
+    const notesEl = root.querySelector('[data-ec-notes]') as HTMLElement | null;
+    const probs = qa('[data-ec-prob]');
+    let tk = 0, day = 0, dayAuto = true;
+
+    function note(k: string, dl: string) {
+      const [tag, ib, tbc, tc, ic, t, m] = NOTES[k];
+      return `<div style="display:grid;grid-template-columns:32px minmax(0,1fr);gap:12px;padding:12px;border-radius:14px;background:#FFF9F4;border:1px solid #F5ECE5;animation:rp-in .35s ease ${dl}s both"><span style="width:32px;height:32px;border-radius:9px;background:${ib};color:#FFFFFF;font-size:12px;display:flex;align-items:center;justify-content:center">${ic}</span><span style="min-width:0"><span style="display:inline-flex;height:20px;padding:0 7px;align-items:center;border-radius:5px;border:1px solid ${tbc};background:#FFFFFF;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:${tc}">${tag}</span><span style="display:block;margin-top:6px;font-size:13px;font-weight:600;line-height:1.4;color:#1C130E">${t}</span><span style="display:block;margin-top:4px;font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">${m}</span></span></div>`;
+    }
+    function paintDay() {
+      const keys = fmap[day];
+      dayBtns.forEach((b, i) => {
+        const on = i === day;
+        b.style.border = '1px solid ' + (on ? '#FFD8BE' : '#F5ECE5'); b.style.background = on ? '#FFFFFF' : '#FFFCF9';
+        b.style.boxShadow = on ? '0 20px 40px -30px rgba(247,99,30,.55)' : 'none';
+        const dc = b.querySelector('span') as HTMLElement; if (dc) dc.style.color = on ? '#C2410C' : '#7F7066';
+        const dot = b.querySelector('[data-ec-dot]') as HTMLElement; if (dot) dot.style.background = on ? '#F7631E' : '#E2D3C8';
+      });
+      filters.forEach((f) => {
+        const on = keys.includes(f.dataset.filter || '');
+        f.style.borderColor = on ? '#FFD8BE' : '#EFE3DA'; f.style.background = on ? '#FFF4EC' : '#FFFFFF'; f.style.color = on ? '#C2410C' : '#3A302A';
+      });
+      if (unread) unread.textContent = String(6 - day);
+      if (notesEl) notesEl.innerHTML = '<span style="font-family:\'Geist Mono\',monospace;font-size:10px;letter-spacing:.1em;color:#7F7066">TODAY</span>' + keys.map((k, i) => note(k, (i * 0.12).toFixed(2))).join('');
+    }
+    function paintProb() {
+      const hot = Math.floor(tk / 3) % probs.length;
+      probs.forEach((el, i) => {
+        const on = i === hot; el.style.background = on ? '#FFFCF9' : '#FFFFFF';
+        const ar = el.querySelector('[data-ec-probarrow]') as HTMLElement; if (ar) { ar.style.background = on ? '#1C130E' : '#FBF3EC'; ar.style.color = on ? '#FFFFFF' : '#B9A99C'; }
+        (el.querySelector('[data-ec-probcell]') as HTMLElement).style.borderColor = on ? '#FFD8BE' : '#F5ECE5';
+      });
+    }
+    paintDay(); paintProb();
+    dayBtns.forEach((b, i) => b.addEventListener('click', () => { day = i; dayAuto = false; paintDay(); }));
+    setInterval(() => { tk++; if (dayAuto && tk % 4 === 0) day = (day + 1) % 5; paintDay(); paintProb(); }, 1000);
+
+    qa('[data-ec-faqbtn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-ec-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-ec-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-ec-faqbtn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>
