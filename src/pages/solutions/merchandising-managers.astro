@@ -1,0 +1,222 @@
+---
+// Native Astro port of the design package's "For Merchandising Managers" role page.
+// Static initial render + the 1s loop reimplemented in vanilla JS: the product-groups
+// table row that re-checks on a cycle, and the group-settings highlight; FAQ accordion;
+// scroll-reveal. One shared header + footer via layout.
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+
+const H: Record<string, string> = { pie: '/price-intelligence-engine', dps: '/dynamic-pricing-software', no: '#' };
+const P = (s: string) => { const m = s.match(/^([\s\S]*?)\[\[(.+?)\|(\w+)\]\]([\s\S]*)$/); return m ? { a1: m[1], lt: m[2], lh: H[m[3]], a2: m[4], ld: 'inline' } : { a1: s, lt: '', lh: '#', a2: '', ld: 'none' }; };
+
+const eyebrow = 'For Merchandising Managers';
+const chips = ['A schedule per product group', 'Stock-outs for you and competitors', 'Group price history'];
+const faqH1 = 'Merchandising manager';
+const ctaH = 'See your ranges in a demo';
+
+const merRows = [['EL', '#7C3AED', 'Electronics_Product_Monitor', '6', 'Schedule', 'Nov 10, 2:53 PM', '3 competitors', false], ['CT', '#0891B2', 'Category_Home_Kitchen', '3', 'Schedule', 'Nov 10, 1:49 PM', '10 competitors', false], ['DE', '#D97706', 'Deals_Weekly', '4', 'Schedule', 'Nov 5, 4:04 PM', '7 competitors', false], ['FL', '#DC2626', 'Flipkart_Electronics', '9', '3:00 pm Kolkata (IST)', 'Nov 10, 3:03 PM', '3 competitors', true]].map(([ab, av, n, pr, sch, at, cp, every]) => ({ ab, av, n, pr, sch, at, cp, every }));
+const merSig = [['A competitor runs out of a product you range', 'A competitor out-of-stock [[alert|no]] by email, Slack or in-app', "Hold your price and give the product more visibility while they're out"], ['Your own product runs out', 'The Out of Stock card counts your store as well as competitors', 'Reorder, or swap the product in your promotion'], ['A new seller starts ranging your products', 'Only the sellers you track, so a new one needs adding', 'Add it with [[Manage competitors|no]] on the group before the next range review'], ['A competitor cuts prices across a whole range', '[[Price history|pie]] for the whole group', 'Decide whether to promote now or bring a markdown forward']].map(([s, w, n]) => ({ s, w: P(w), n: P(n) }));
+const merSet = [['Schedule', 'Sets the time of day the group is checked, such as every day at 3:00 pm', 'Product Groups list', 'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20M12 6v6l4 2'], ['Competitors', 'The sellers the group is compared with', 'Group menu: Manage competitors', 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8a4 4 0 1 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'], ['Location', 'Auto, or a ZIP code for location-specific prices', 'Group menu: Set ZIP code', 'M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12zM12 11a2 2 0 1 0 0-4a2 2 0 1 0 0 4'], ['Rules and alerts', "The group's price position, floor, ceiling and alerts", 'Group menu: Edit rules & alerts', 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0']].map(([s, d, l, ico], i, a) => ({ s, d, l, ico, no: '0' + (i + 1), bb: i < a.length - 1 ? '1px solid #F5ECE5' : 'none' }));
+
+const faqRaw: [string, string][] = [
+  ['Can I track my own out-of-stock products too?', 'Yes. The Out of Stock card on the dashboard counts products out of stock in your store as well as at competitors. You can also filter the product table by stock status before a range review, so the gaps in your own range show up first.'],
+  ['Can different product groups be checked at different times?', 'Yes. Each product group has its own schedule, so a fast-moving range can be checked at a different time of day from a slow one. How many checks a day you get depends on your plan, and Fetch now runs an extra check when you need one.'],
+  ['Can I group products by range or brand?', 'Yes. Product groups are yours to name and fill, so you can build them by range, brand, season or supplier. Each group gets its own competitors, schedule, location and rules, so every range keeps its own setup, and a change to one group never touches the others.'],
+];
+const faqs = faqRaw.map(([q, a], i) => ({ q, a: P(a), n: String(i + 1).padStart(2, '0'), open: i === 0 }));
+
+const site = 'https://priceleap.ai';
+const jsonLd = [
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqRaw.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: site + '/' },
+    { '@type': 'ListItem', position: 2, name: 'Solutions', item: site + '/solutions/' },
+    { '@type': 'ListItem', position: 3, name: 'Merchandising Managers', item: site + '/solutions/merchandising-managers' },
+  ] },
+];
+---
+<PriceLeapLayout
+  title="Pricing Tool for Merchandising Managers | priceleap.ai"
+  description="Group your products the way you merchandise them, check each group on its own schedule, and flag stock-outs on both sides — yours and your competitors'."
+  jsonLd={jsonLd}
+>
+  <div class="me" style="min-height:100vh;background:#FFFCF9;overflow-x:clip">
+
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 70% 80% at 78% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 70% 80% at 78% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-12%;top:-30%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.09),transparent);pointer-events:none"></div>
+      <div class="me-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(48px,7vw,96px) clamp(16px,4vw,40px) clamp(56px,7vw,96px);gap:clamp(36px,4.5vw,64px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px;align-items:flex-start;text-align:left">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>{eyebrow}</span>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(38px,5.2vw,66px);line-height:1.02;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Pricing tool</span><span style="font-weight:400"> for merchandising managers</span></h1>
+          <p style="margin:0;max-width:600px;font-size:18px;line-height:1.65;color:#3A302A;text-wrap:pretty">Ranging, promoting and marking down all depend on how competitors price the same products. priceleap.ai groups your products the way you merchandise them, checks each group on its own schedule, and flags stock-outs on both sides.</p>
+          <a href="/book-a-demo" style="height:48px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            {chips.map((c) => (<span style="height:34px;padding:0 13px 0 9px;display:inline-flex;align-items:center;gap:9px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:13.5px;font-weight:500;color:#1C130E;box-shadow:0 6px 14px -12px rgba(60,30,15,.5)"><span style="width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>{c}</span>))}
+          </div>
+        </div>
+
+        <figure style="margin:0;min-width:0;display:flex;flex-direction:column;gap:12px">
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 48px 90px -52px rgba(60,30,15,.45),0 0 0 6px rgba(255,255,255,.7)">
+            <div class="me-gcols" style="display:grid;gap:10px;padding:11px 14px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:#7F7066"><span>GROUP</span><span>SCHEDULE</span><span>SEARCHED AT</span><span class="me-full">COMPETITORS</span><span class="me-full">LOCATION</span></div>
+            {merRows.map((r, i) => (
+              <div data-me-row={i} class="me-gcols" style={`display:grid;gap:10px;align-items:center;padding:13px 14px;border-bottom:1px solid #F5ECE5;background:${i === 0 ? '#FFF9F4' : '#FFFFFF'};transition:background .4s`}>
+                <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style={`width:30px;height:30px;flex:none;border-radius:8px;background:${r.av};color:#FFFFFF;font-size:10.5px;font-weight:700;display:flex;align-items:center;justify-content:center`}>{r.ab}</span><span style="min-width:0"><span style="display:block;font-size:12.5px;font-weight:600;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{r.n}</span><span style="display:block;font-size:10.5px;color:#7F7066">{r.pr} products</span></span></span>
+                <span style="justify-self:start;padding:5px 9px;border-radius:8px;border:1px solid #EFE3DA;font-size:11px;line-height:1.3;color:#1C130E"><span style={`display:${r.every ? 'block' : 'none'};font-family:'Geist Mono',monospace;font-size:9px;color:#7F7066`}>EVERY DAY</span>{r.sch}</span>
+                <span style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#1C130E"><span data-me-spin style="display:none;width:11px;height:11px;flex:none;border-radius:50%;border:2px solid #F5ECE5;border-top-color:#F7631E;animation:rp-spin .8s linear infinite"></span><span data-me-at style="padding:0 3px;border-radius:4px">{i === 0 ? 'Checking…' : r.at}</span></span>
+                <span class="me-full" style="justify-self:start;height:24px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:999px;border:1px solid #EFE3DA;font-size:11px;color:#1C130E"><span style="display:flex;gap:2px"><span style="width:5px;height:5px;border-radius:50%;background:#F59E0B"></span><span style="width:5px;height:5px;border-radius:50%;background:#3B82F6"></span><span style="width:5px;height:5px;border-radius:50%;background:#EF4444"></span></span>{r.cp}</span>
+                <span class="me-full" style="justify-self:start;height:24px;padding:0 9px;display:flex;align-items:center;border-radius:999px;background:#FBF3EC;font-size:11px;color:#3A302A">⌖ Auto</span>
+              </div>
+            ))}
+          </div>
+          <figcaption style="font-size:13px;color:#665A51;text-align:center">Each product group has its own schedule, competitors and location</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 02 MARKET SIGNALS -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Market signals</span><span style="font-weight:400"> and what merchandisers do next</span></h2>
+        <div data-reveal style="margin-top:40px;display:flex;flex-direction:column;gap:10px">
+          <div class="me-sig me-sighead" style="padding:0 20px;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#7F7066"><span>SIGNAL</span><span></span><span>WHAT PRICELEAP.AI SHOWS</span><span></span><span>USUAL NEXT STEP</span></div>
+          {merSig.map((r) => (
+            <div class="me-sig" style="align-items:center;padding:18px 20px;border-radius:18px;background:#FFFFFF;border:1px solid #EFE3DA">
+              <span style="display:flex;gap:12px;align-items:flex-start"><span style="flex:none;margin-top:3px;width:8px;height:8px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span><span style="font-family:Geist,sans-serif;font-size:16px;font-weight:600;line-height:1.4;color:#1C130E">{r.s}</span></span>
+              <span class="me-arrow" style="color:#D7C6BA;font-size:14px">→</span>
+              <span style="font-size:14.5px;line-height:1.55;color:#3A302A"><span class="me-moblab" style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#7F7066;margin-bottom:4px">WHAT PRICELEAP.AI SHOWS</span>{r.w.a1}<a href={r.w.lh} style={`display:${r.w.ld};font-weight:600`}>{r.w.lt}</a>{r.w.a2}</span>
+              <span class="me-arrow" style="color:#D7C6BA;font-size:14px">→</span>
+              <span style="padding:12px 14px;border-radius:12px;background:#FFF9F4;border:1px solid #F5ECE5;font-size:14.5px;line-height:1.55;color:#1C130E"><span class="me-moblab" style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#C2410C;margin-bottom:4px">USUAL NEXT STEP</span>{r.n.a1}<a href={r.n.lh} style={`display:${r.n.ld};font-weight:600`}>{r.n.lt}</a>{r.n.a2}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 GROUP SETTINGS -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Settings</span><span style="font-weight:400"> for each product group</span></h2>
+        <div data-reveal style="margin-top:40px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#FFFFFF;box-shadow:0 40px 80px -56px rgba(60,30,15,.35)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 22px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066"><span style="display:flex;align-items:center;gap:8px;color:#1C130E"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>PRODUCT GROUP</span><span>4 SETTINGS</span></div>
+          {merSet.map((r, i) => (
+            <div data-me-set={i} class="me-set" style={`display:grid;gap:16px;align-items:center;padding:20px 22px;border-bottom:${r.bb};background:${i === 0 ? '#FFF9F4' : '#FFFFFF'};transition:background .4s`}>
+              <span data-me-seticon style={`width:44px;height:44px;border-radius:12px;background:${i === 0 ? '#1C130E' : '#FFF4EC'};border:1px solid ${i === 0 ? '#1C130E' : '#FFD8BE'};color:${i === 0 ? '#FFFFFF' : '#C2410C'};display:flex;align-items:center;justify-content:center;transition:all .4s`}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d={r.ico}></path></svg></span>
+              <span style="min-width:0"><span style="display:block;font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:#1C130E">{r.s}</span><span style="display:block;margin-top:4px;font-size:14.5px;line-height:1.55;color:#3A302A">{r.d}</span></span>
+              <span class="me-where" style="height:30px;padding:0 12px;display:inline-flex;align-items:center;gap:8px;border-radius:9px;border:1px solid #EFE3DA;background:#FFFFFF;font-family:'Geist Mono',monospace;font-size:11px;color:#3A302A;white-space:nowrap"><span style="color:#B9A99C">WHERE</span>{r.l}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="me-split" style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <h2 data-reveal class="me-sticky" style="top:96px;margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">{faqH1} </span><span style="font-weight:700">FAQs</span></h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((qq) => (
+            <div class="me-faq" class:list={[{ 'is-open': qq.open }]} data-me-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-me-faqbtn aria-expanded={qq.open ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="me-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px">{qq.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{qq.q}</span>
+                <span class="me-faq-ic" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="me-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{qq.a.a1}<a href={qq.a.lh} style={`display:${qq.a.ld};font-weight:600`}>{qq.a.lt}</a>{qq.a.a2}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#1C130E;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-240px;width:680px;height:420px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.32),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:26px">
+          <h2 style="margin:0;max-width:820px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;font-weight:600;color:#FFFFFF;text-wrap:balance">{ctaH}</h2>
+          <a href="/book-a-demo" style="height:52px;padding:0 26px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15.5px;box-shadow:0 14px 30px -12px rgba(247,99,30,.9)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .me { background: #FFFCF9; overflow-x: clip; }
+  @keyframes rp-spin { to { transform: rotate(360deg); } }
+  @keyframes rp-flash { 0% { background: #FFE9D9; } 100% { background: transparent; } }
+
+  .me-hero { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .me-hero { grid-template-columns: minmax(0,.95fr) minmax(0,1.05fr); } }
+  .me-gcols { grid-template-columns: minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr); }
+  .me-full { display: none; }
+  @media (min-width: 640px) { .me-gcols { grid-template-columns: minmax(0,1.5fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) 70px; } .me-full { display: flex; } }
+  .me-gcols.me-gcols span.me-full:first-of-type { }
+  .me-sig { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  .me-arrow { display: none; }
+  .me-moblab { display: block; }
+  .me-sighead { display: none; }
+  @media (min-width: 1024px) { .me-sig { grid-template-columns: minmax(0,1fr) 16px minmax(0,1.1fr) 16px minmax(0,1.1fr); } .me-arrow { display: block; } .me-moblab { display: none; } .me-sighead { display: grid; } }
+  .me-set { grid-template-columns: 44px minmax(0,1fr); }
+  .me-where { grid-column: 2; justify-self: start; margin-top: 4px; }
+  @media (min-width: 720px) { .me-set { grid-template-columns: 44px minmax(0,1fr) auto; } .me-where { grid-column: auto; justify-self: end; margin-top: 0; } }
+  .me-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .me-split { grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); } }
+  .me-sticky { position: static; }
+  @media (min-width: 1024px) { .me-sticky { position: sticky; } }
+
+  .me-faq-n { color: #B9A99C; }
+  .me-faq.is-open .me-faq-n { color: #C2410C; }
+  .me-faq-ic { background: #FBF3EC; color: #1C130E; transform: rotate(0deg); transition: all .3s; }
+  .me-faq.is-open .me-faq-ic { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .me-faq.is-open { border-color: #FFD8BE; }
+  .me-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .me-faq.is-open .me-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .me *, .me *::before, .me *::after { animation: none !important; transition: none !important; } [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.me') as HTMLElement | null;
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+    const rows = qa('[data-me-row]'), sets = qa('[data-me-set]');
+    const atText = ['Nov 10, 2:53 PM', 'Nov 10, 1:49 PM', 'Nov 5, 4:04 PM', 'Nov 10, 3:03 PM'];
+    let tk = 0;
+    function paint() {
+      const hot = Math.floor(tk / 4) % 4, sub = tk % 4;
+      rows.forEach((el, i) => {
+        const on = i === hot, checking = on && sub < 2;
+        el.style.background = on ? '#FFF9F4' : '#FFFFFF';
+        const at = el.querySelector('[data-me-at]') as HTMLElement, spin = el.querySelector('[data-me-spin]') as HTMLElement;
+        at.textContent = checking ? 'Checking…' : on ? 'Just now' : atText[i];
+        spin.style.display = checking ? 'inline-block' : 'none';
+        at.style.animation = on && sub === 2 ? 'rp-flash 1.2s ease' : 'none';
+      });
+      const sHot = Math.floor(tk / 3) % 4;
+      sets.forEach((el, i) => {
+        const on = i === sHot; el.style.background = on ? '#FFF9F4' : '#FFFFFF';
+        const ic = el.querySelector('[data-me-seticon]') as HTMLElement; ic.style.background = on ? '#1C130E' : '#FFF4EC'; ic.style.borderColor = on ? '#1C130E' : '#FFD8BE'; ic.style.color = on ? '#FFFFFF' : '#C2410C';
+      });
+    }
+    paint();
+    setInterval(() => { tk++; paint(); }, 1000);
+
+    qa('[data-me-faqbtn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-me-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-me-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-me-faqbtn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>
