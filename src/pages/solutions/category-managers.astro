@@ -1,0 +1,246 @@
+---
+// Native Astro port of the design package's "For Category Managers" role page.
+// Static initial render + the 1s animation loop reimplemented in vanilla JS: price-
+// trend column toggle, cycling dashboard filters, and the weekly-review checklist that
+// fills on scroll; FAQ accordion; scroll-reveal. One shared header + footer via layout.
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+
+const H: Record<string, string> = { pie: '/price-intelligence-engine', dps: '/dynamic-pricing-software', no: '#' };
+const P = (s: string) => { const m = s.match(/^([\s\S]*?)\[\[(.+?)\|(\w+)\]\]([\s\S]*)$/); return m ? { a1: m[1], lt: m[2], lh: H[m[3]], a2: m[4], ld: 'inline' } : { a1: s, lt: '', lh: '#', a2: '', ld: 'none' }; };
+
+const eyebrow = 'For Category Managers';
+const chips = ['Filter by brand, category and stock', 'Price position on every SKU', 'Columns you choose'];
+const faqH1 = 'Category manager';
+const ctaH = 'See your category in a demo';
+
+const catFilters = ['Stock Status', 'All Brands', 'All Categories', 'MAP'];
+const catRows = [
+  ['OPPO K14 Plus 5G (Solar Orange)', 'flipkart.com', '₹32,999.00', '+0.0% vs avg', 'Competitive', 'Lowest among tracked sellers', 'c', '0,14 20,14 40,13 70,12', '#FFE3CF'],
+  ['Crayola Ultimate Light Board', 'walmart.com', '$19.19', '-4.3% vs avg', 'Competitive', '20% under highest', 'c', '0,8 25,10 45,14 70,16', '#E7EEF9'],
+  ['Squishmallows: Original 5"', 'walmart.com', '$21.98', '+0.0% vs avg', 'Unknown', '+ add competitor URL', 'u', '0,12 70,12', '#F5ECE5'],
+].map(([n, site, p, vs, pos, note, k, tr, tile]) => ({ n, site, p, vs, pos, note, tr, tile, posBg: k === 'c' ? '#EAF6EE' : '#FBF3EC', posBc: k === 'c' ? '#BFE5CC' : '#EFE3DA', posC: k === 'c' ? '#1E7A3D' : '#665A51' }));
+const catToggles = [['Product', 'lock'], ['Your Price', 1], ['Position vs Market', 1], ['Price Trend', 1], ['Dynamic Price', 1], ['Competitors', 1], ['Group', 0], ['MAP / MSRP', 1]].map(([t, on]) => ({ t, lockD: on === 'lock' ? 'inline' : 'none', swD: on === 'lock' ? 'none' : 'inline-block', bg: on ? '#1C130E' : '#E2D3C8', x: on ? '13px' : '2px', c: t === 'Price Trend' ? '#C2410C' : '#1C130E' }));
+const catQa = [
+  ['Which SKUs are priced above the market?', 'Position vs Market marks them Premium and shows how far above the lowest tracked seller they are.'],
+  ['Which competitors moved this week?', '[[Price Velocity|pie]] counts the products whose price went up, down or both over 7, 30 or 90 days.'],
+  ['How many SKUs are we the cheapest on?', 'The Market Position card splits matched products into cheapest and above.'],
+  ['Which SKUs have no competitor match yet?', 'They show as Unknown, and + add puts the right [[competitor URL|no]] on the product.'],
+  ['How does one brand look against the market?', 'The brand and category filters narrow the whole table to that slice.'],
+].map(([q, a], i, arr) => ({ q, a: P(a), n: '0' + (i + 1), bb: i < arr.length - 1 ? '1px solid #F5ECE5' : 'none' }));
+const catCheck = ['Filter the dashboard to your category, and to a brand if the review needs it.', 'Pick the columns the review needs in the Columns panel and hide the rest.', 'Sort by Position vs Market and open the Premium SKUs first.', 'Check the competitor list behind each Premium SKU before you change anything.', 'Add competitor URLs to the SKUs still marked Unknown.', 'Look at the Market Position card again once your price changes go live.'].map((t, i) => ({ t, no: String(i + 1).padStart(2, '0') }));
+
+const faqRaw: [string, string][] = [
+  ['Can I review one category at a time?', "Yes. Filter the dashboard by category, or put the category's products in their own product group and switch to it with the group selector. The KPI cards and the product table then show only that category, so the review starts from the right list."],
+  ['Can I choose which columns my team sees?', 'Yes. The Columns panel lets you show, hide and reorder columns such as Your Price, Position vs Market, Price Trend, Competitors and MAP / MSRP. The Product column always stays, so every row is easy to identify when you work through the list.'],
+  ['What do the Position vs Market labels mean?', 'Each product gets a label from where your price sits among the competitors you track: Competitive or Premium, with Premium rows showing how far you sit above the lowest seller. Unknown means priceleap.ai has no competitor price for the product yet, which usually means a competitor URL still needs adding.'],
+  ['Can I see price trends across a category?', 'Yes. Filter to the category and the Price Trend column shows a small trend line and the percentage change for every product. It tells you which SKUs are drifting before the weekly review, without opening each product one by one.'],
+];
+const faqs = faqRaw.map(([q, a], i) => ({ q, a: P(a), n: String(i + 1).padStart(2, '0'), open: i === 0 }));
+
+const site = 'https://priceleap.ai';
+const jsonLd = [
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqRaw.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: site + '/' },
+    { '@type': 'ListItem', position: 2, name: 'Solutions', item: site + '/solutions/' },
+    { '@type': 'ListItem', position: 3, name: 'Category Managers', item: site + '/solutions/category-managers' },
+  ] },
+];
+---
+<PriceLeapLayout
+  title="Pricing Tool for Category Managers | priceleap.ai"
+  description="Track the competitors you choose for every SKU in your category and see where each sits: above market, cheapest or unmatched — ready for your weekly review."
+  jsonLd={jsonLd}
+>
+  <div class="cm" style="min-height:100vh;background:#FFFCF9;overflow-x:clip">
+
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 70% 80% at 78% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 70% 80% at 78% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-12%;top:-30%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.09),transparent);pointer-events:none"></div>
+      <div class="cm-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(48px,7vw,96px) clamp(16px,4vw,40px) clamp(56px,7vw,96px);gap:clamp(36px,4.5vw,64px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px;align-items:flex-start;text-align:left">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>{eyebrow}</span>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(38px,5.2vw,66px);line-height:1.02;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Pricing tool</span><span style="font-weight:400"> for category managers</span></h1>
+          <p style="margin:0;max-width:600px;font-size:18px;line-height:1.65;color:#3A302A;text-wrap:pretty">priceleap.ai tracks the competitors you choose for every product in your category and shows where each SKU sits: priced above the market, the cheapest, or not yet matched. Filter by brand, category or stock status and take that list into your weekly review.</p>
+          <a href="/book-a-demo" style="height:48px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            {chips.map((c) => (<span style="height:34px;padding:0 13px 0 9px;display:inline-flex;align-items:center;gap:9px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:13.5px;font-weight:500;color:#1C130E;box-shadow:0 6px 14px -12px rgba(60,30,15,.5)"><span style="width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>{c}</span>))}
+          </div>
+        </div>
+
+        <figure style="margin:0;min-width:0;display:flex;flex-direction:column;gap:12px">
+          <div style="position:relative;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;box-shadow:0 48px 90px -52px rgba(60,30,15,.45),0 0 0 6px rgba(255,255,255,.7)">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid #F5ECE5;background:#FFF9F4">
+              <span style="font-size:12.5px;color:#665A51;margin-right:auto">Showing all products</span>
+              {catFilters.map((t, i) => (<span data-cm-filter={i} style={`height:26px;padding:0 9px;display:flex;align-items:center;gap:5px;border-radius:7px;border:1px solid ${i === 0 ? '#FFD8BE' : '#EFE3DA'};background:${i === 0 ? '#FFF4EC' : '#FFFFFF'};font-size:11.5px;color:${i === 0 ? '#C2410C' : '#3A302A'};transition:all .3s`}>{t}<span style="font-size:8px;opacity:.6">▾</span></span>))}
+              <span style="height:26px;padding:0 9px;display:flex;align-items:center;gap:6px;border-radius:7px;border:1.5px solid #1C130E;background:#FFFFFF;font-size:11.5px;font-weight:600;color:#1C130E">▥ Columns</span>
+            </div>
+            <div data-cm-thead class="cm-tablehead" style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr) minmax(0,1.1fr) 70px;gap:10px;padding:9px 14px;border-bottom:1px solid #F5ECE5;font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:#7F7066;transition:all .4s"><span>PRODUCT</span><span>YOUR PRICE</span><span>POSITION VS MARKET</span><span data-cm-trendhead style="animation:rp-in .3s ease">PRICE TREND</span></div>
+            {catRows.map((r) => (
+              <div data-cm-row class="cm-tablerow" style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.9fr) minmax(0,1.1fr) 70px;gap:10px;align-items:center;padding:13px 14px;border-bottom:1px solid #F5ECE5;transition:all .4s">
+                <span style="display:flex;align-items:center;gap:10px;min-width:0"><span style={`width:34px;height:34px;flex:none;border-radius:9px;background:${r.tile};border:1px solid #F5ECE5`}></span><span style="min-width:0"><span style="display:block;font-size:12.5px;font-weight:600;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{r.n}</span><span style="display:block;font-family:'Geist Mono',monospace;font-size:10px;color:#7F7066">{r.site}</span></span></span>
+                <span><span style="display:block;font-family:Geist,sans-serif;font-size:14px;font-weight:600;color:#1C130E">{r.p}</span><span style="display:block;font-size:10.5px;color:#665A51">{r.vs}</span></span>
+                <span><span style={`display:inline-flex;height:22px;padding:0 8px;align-items:center;border-radius:6px;background:${r.posBg};border:1px solid ${r.posBc};font-size:11.5px;font-weight:600;color:${r.posC}`}>{r.pos}</span><span style="display:block;margin-top:4px;font-size:10.5px;color:#665A51">{r.note}</span></span>
+                <svg data-cm-trendcell viewBox="0 0 70 24" width="70" height="24" style="animation:rp-in .3s ease"><polyline points={r.tr} fill="none" stroke="#1C130E" stroke-width="1.6" stroke-linecap="round"></polyline></svg>
+              </div>
+            ))}
+            <div class="cm-colpanel" style="position:absolute;right:12px;top:50px;width:206px;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:14px;box-shadow:0 30px 50px -24px rgba(60,30,15,.45);overflow:hidden">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #F5ECE5"><span style="font-size:12.5px;font-weight:600;color:#1C130E">Columns</span><span style="font-size:10.5px;color:#7F7066">Reset</span></div>
+              <div style="padding:6px 12px 10px;display:flex;flex-direction:column">
+                {catToggles.map((t) => (<div style={`display:flex;align-items:center;gap:8px;padding:5px 0;font-size:11.5px;color:${t.c}`}><span style="font-size:9px;color:#D7C6BA">⋮⋮</span><span style="flex:1">{t.t}</span><span style={`display:${t.lockD};font-size:10px;color:#7F7066`}>🔒</span><span style={`display:${t.swD};position:relative;width:26px;height:15px;border-radius:999px;background:${t.bg};transition:background .3s`}><span style={`position:absolute;top:2px;left:${t.x};width:11px;height:11px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .3s`}></span></span></div>))}
+              </div>
+            </div>
+          </div>
+          <figcaption style="font-size:13px;color:#665A51;text-align:center">Choose which columns your category review shows</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 02 CATEGORY QUESTIONS -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Which category questions does </span><span style="font-weight:700">priceleap.ai answer?</span></h2>
+        <div data-reveal style="margin-top:40px;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#FFFFFF">
+          <div class="cm-two" style="display:grid;background:#FFF9F4;border-bottom:1px solid #EFE3DA;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#7F7066"><span style="padding:14px 22px">THE QUESTION</span><span class="cm-ansHead" style="padding:14px 22px;border-left:1px solid #EFE3DA">WHERE PRICELEAP.AI ANSWERS IT</span></div>
+          {catQa.map((r) => (
+            <div class="cm-two" style={`display:grid;border-bottom:${r.bb}`}>
+              <div style="padding:20px 22px;display:flex;gap:14px;align-items:flex-start"><span style="flex:none;width:26px;height:26px;border-radius:8px;background:#FFF4EC;border:1px solid #FFD8BE;font-family:'Geist Mono',monospace;font-size:10.5px;color:#C2410C;display:flex;align-items:center;justify-content:center">{r.n}</span><span style="font-family:Geist,sans-serif;font-size:16.5px;font-weight:600;line-height:1.4;color:#1C130E">{r.q}</span></div>
+              <div class="cm-anscell" style="font-size:15px;line-height:1.6;color:#3A302A">{r.a.a1}<a href={r.a.lh} style={`display:${r.a.ld};font-weight:600`}>{r.a.lt}</a>{r.a.a2}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 WEEKLY CHECKLIST -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Checklist</span><span style="font-weight:400"> for the weekly category review</span></h2>
+        <div data-reveal data-cm-checkwrap style="margin-top:40px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#FFFFFF;box-shadow:0 40px 80px -56px rgba(60,30,15,.35)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 22px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066"><span style="display:flex;align-items:center;gap:8px;color:#1C130E"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>WEEKLY CATEGORY REVIEW</span><span style="display:flex;align-items:center;gap:12px"><span data-cm-donen>0</span> OF 6 DONE<span style="width:120px;height:5px;border-radius:5px;background:#F5ECE5;overflow:hidden"><span data-cm-pct style="display:block;height:100%;width:0%;border-radius:5px;background:#1C130E;transition:width .5s ease"></span></span></span></div>
+          <ol class="cm-chk" style="margin:0;padding:0;list-style:none;display:grid;gap:1px;background:#F5ECE5">
+            {catCheck.map((c) => (
+              <li data-cm-check style="background:#FFFFFF;padding:20px 22px;display:grid;grid-template-columns:28px minmax(0,1fr);gap:16px;align-items:start;transition:background .4s">
+                <span data-cm-checkbox style="width:28px;height:28px;border-radius:8px;background:#FFFFFF;border:1.5px solid #E2D3C8;color:#FFFFFF;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .35s"></span>
+                <span><span data-cm-checkno style="display:block;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#7F7066">STEP {c.no}</span><span data-cm-checktext style="display:block;margin-top:6px;font-size:15.5px;line-height:1.55;color:#1C130E;transition:color .4s">{c.t}</span></span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="cm-split" style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <h2 data-reveal class="cm-sticky" style="top:96px;margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">{faqH1} </span><span style="font-weight:700">FAQs</span></h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((q) => (
+            <div class="cm-faq" class:list={[{ 'is-open': q.open }]} data-cm-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-cm-faqbtn aria-expanded={q.open ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="cm-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px">{q.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{q.q}</span>
+                <span class="cm-faq-ic" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="cm-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{q.a.a1}<a href={q.a.lh} style={`display:${q.a.ld};font-weight:600`}>{q.a.lt}</a>{q.a.a2}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#1C130E;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-240px;width:680px;height:420px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.32),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:26px">
+          <h2 style="margin:0;max-width:820px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;font-weight:600;color:#FFFFFF;text-wrap:balance">{ctaH}</h2>
+          <a href="/book-a-demo" style="height:52px;padding:0 26px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15.5px;box-shadow:0 14px 30px -12px rgba(247,99,30,.9)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .cm { background: #FFFCF9; overflow-x: clip; }
+  @keyframes rp-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.5); } 100% { box-shadow: 0 0 0 9px rgba(247,99,30,0); } }
+  @keyframes rp-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .cm-hero { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .cm-hero { grid-template-columns: minmax(0,.95fr) minmax(0,1.05fr); } }
+  .cm-colpanel { display: none; }
+  @media (min-width: 560px) { .cm-colpanel { display: block; } }
+  .cm-two { grid-template-columns: 1fr; }
+  .cm-ansHead { display: none; }
+  .cm-anscell { padding: 0 22px 20px 62px; border-left: none; }
+  @media (min-width: 720px) { .cm-two { grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); } .cm-ansHead { display: block; } .cm-anscell { padding: 20px 22px; border-left: 1px solid #F5ECE5; } }
+  .cm-chk { grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .cm-chk { grid-template-columns: 1fr 1fr; } }
+  .cm-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .cm-split { grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); } }
+  .cm-sticky { position: static; }
+  @media (min-width: 1024px) { .cm-sticky { position: sticky; } }
+
+  .cm-faq-n { color: #B9A99C; }
+  .cm-faq.is-open .cm-faq-n { color: #C2410C; }
+  .cm-faq-ic { background: #FBF3EC; color: #1C130E; transform: rotate(0deg); transition: all .3s; }
+  .cm-faq.is-open .cm-faq-ic { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .cm-faq.is-open { border-color: #FFD8BE; }
+  .cm-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .cm-faq.is-open .cm-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .cm *, .cm *::before, .cm *::after { animation: none !important; transition: none !important; } [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.cm') as HTMLElement | null;
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+    const col4 = 'minmax(0,1.5fr) minmax(0,.9fr) minmax(0,1.1fr) 70px', col3 = 'minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.2fr)';
+    const filters = qa('[data-cm-filter]'), thead = q('[data-cm-thead]'), trendHead = q('[data-cm-trendhead]'), rows = qa('[data-cm-row]'), trendCells = qa('[data-cm-trendcell]');
+    const checks = qa('[data-cm-check]'), doneN = q('[data-cm-donen]'), pct = q('[data-cm-pct]');
+    let tk = 0, seen = false;
+    function paint() {
+      const trendOn = Math.floor(tk / 3) % 2 === 0, fHot = Math.floor(tk / 2) % 3;
+      filters.forEach((el, i) => { const on = i === fHot; el.style.borderColor = on ? '#FFD8BE' : '#EFE3DA'; el.style.background = on ? '#FFF4EC' : '#FFFFFF'; el.style.color = on ? '#C2410C' : '#3A302A'; });
+      const grid = trendOn ? col4 : col3;
+      if (thead) thead.style.gridTemplateColumns = grid;
+      rows.forEach((r) => (r.style.gridTemplateColumns = grid));
+      if (trendHead) trendHead.style.display = trendOn ? 'block' : 'none';
+      trendCells.forEach((c) => (c.style.display = trendOn ? 'block' : 'none'));
+      // checklist (only once revealed)
+      const done = seen ? Math.min(6, tk % 10) : 0;
+      if (doneN) doneN.textContent = String(done);
+      if (pct) pct.style.width = Math.round(done / 6 * 100) + '%';
+      checks.forEach((li, i) => {
+        const d = i < done, cur = i === done;
+        li.style.background = cur ? '#FFF9F4' : '#FFFFFF';
+        const box = li.querySelector('[data-cm-checkbox]') as HTMLElement; box.textContent = d ? '✓' : ''; box.style.background = d ? '#1C130E' : '#FFFFFF'; box.style.borderColor = d ? '#1C130E' : cur ? '#F7631E' : '#E2D3C8';
+        (li.querySelector('[data-cm-checkno]') as HTMLElement).style.color = cur ? '#C2410C' : '#7F7066';
+        (li.querySelector('[data-cm-checktext]') as HTMLElement).style.color = d ? '#665A51' : '#1C130E';
+      });
+    }
+    paint();
+    setInterval(() => { tk++; paint(); }, 1000);
+
+    // faq
+    qa('[data-cm-faqbtn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-cm-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-cm-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-cm-faqbtn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    // reveal (+ start checklist fill when its card is seen)
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); if ((e.target as HTMLElement).hasAttribute('data-cm-checkwrap')) { seen = true; paint(); } } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); seen = true; paint(); }
+  }
+</script>
