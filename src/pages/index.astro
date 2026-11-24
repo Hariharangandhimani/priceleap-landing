@@ -1,0 +1,790 @@
+---
+// Native Astro port of the design package's homepage.
+// Static initial render + the five dc timers and the scrubbing product tour
+// reimplemented in vanilla JS: hero refreshed-count ticker; auto-playing 4-chapter
+// product tour (Add products / Monitor / Analyze / Automate) with chapter tabs +
+// play-pause; "Inside PriceLeap" auto-advancing tabs; accuracy match-pipeline
+// (stage + item cycling); how-it-works stepper; integrations orbit (CSS/SMIL);
+// testimonial switcher. Uses PriceLeapLayout's one shared header + footer.
+import PriceLeapLayout from '../layouts/PriceLeapLayout.astro';
+
+const brandLogos = ['amazon', 'shopify', 'walmart', 'ebay', 'target', 'flipkart', 'etsy', 'magento', 'woocommerce', 'bigcommerce', 'salesforce', 'sap'];
+
+// CH 0 initial urls (sp=0 → empty, caret on first)
+const tourNavIco = ['M12 5v14M5 12h14', 'M3 3v18h18M7 15l4-4 3 3 5-6', 'M4 7l8-4 8 4v10l-8 4-8-4zM4 7l8 4 8-4M12 11v10', 'M3 17l6-6 4 4 8-8M15 7h6v6'];
+const chapMeta = [['01', 'Add products', 'Paste URLs · AI finds rivals'], ['02', 'Monitor', 'Live prices & market position'], ['03', 'Analyze', 'Price history & competitors'], ['04', 'Automate', 'Rules, margins & alerts']];
+
+// Inside-PriceLeap tabs
+const tabDefs = [
+  ['01', 'Add products', 'Paste URLs, upload a file, or connect your catalog.', 'Add Products', 'AI tracks pricing, finds competitors and monitors their prices.'],
+  ['02', 'Monitor the market', 'Every price move, stock-out and promo, as it happens.', 'Market Monitor', 'Live feed of competitor changes across every tracked SKU.'],
+  ['03', 'Dynamic pricing', 'Rules with floors, ceilings and MAP built in.', 'Dynamic Pricing', 'Set guardrails once; PriceLeap recommends inside them.'],
+  ['04', 'Ask the Agent', 'Plain-English answers on prices, rivals and alerts.', 'PriceLeap Agent', 'Ask anything about your catalog and the market.'],
+];
+const feed = [
+  { time: '23:14', type: 'PRICE DROP', text: 'Retailer B cut True Wireless Earbuds Pro', delta: '-2.4%', c: '#e5484d' },
+  { time: '23:09', type: 'STOCK-OUT', text: 'Marketplace A is out of stock on Smart Fitness Watch 46mm', delta: '0 units', c: '#e08a00' },
+  { time: '22:57', type: 'PROMO', text: 'D2C store C launched 20% off on Portable Bluetooth Speaker', delta: '20% off', c: 'var(--pl-accent-end)' },
+  { time: '22:41', type: 'PRICE RISE', text: 'Marketplace D raised 4K Action Camera Pro', delta: '+3.1%', c: 'var(--pl-accent-ink)' },
+  { time: '22:30', type: 'NEW LISTING', text: 'New model detected: Mechanical Keyboard TKL v2', delta: '+1 SKU', c: 'var(--pl-muted-2)' },
+];
+const tracking = [
+  { n: 'Marketplace A · Headphones', w: 28, p: '₹25,490' }, { n: 'Retailer B · Headphones', w: 96, p: '₹24,790' },
+  { n: 'D2C store C · Earbuds', w: 74, p: '₹18,990' }, { n: 'Marketplace D · Speakers', w: 50, p: '₹6,290' },
+];
+// Accuracy pipeline items
+const pItems = [
+  { you: 'Wireless ANC Headphones', sku: 'WH-ANC-700', src: 'RETAILER B', match: 'Sonix ANC 700 Over-Ear', price: '₹24,790', kind: 'Exact match', conf: 99.1 },
+  { you: 'Smart Fitness Watch 46mm', sku: 'SFW-46-BLK', src: 'D2C STORE C', match: 'FitPro 46 mm Smartwatch — Midnight', price: '₹9,990', kind: 'Similar product', conf: 97.8 },
+  { you: 'Portable Bluetooth Speaker', sku: 'PBS-MINI-4', src: 'MARKETPLACE D', match: 'Mini Boom 4 Wireless Speaker', price: '₹6,290', kind: 'White-label', conf: 95.4 },
+];
+const sd = [
+  ['01', 'MATCH', 'AI matching', 'Exact, similar, and white-label products — even without barcodes.', '1,204,860 matched', 'M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z'],
+  ['02', 'QC', 'Human quality control', 'Every match reviewed by a trained QC analyst before it counts.', '100% reviewed', 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6'],
+  ['03', 'ANOMALY', 'Anomaly detection', 'Automated checks flag price and match outliers in real time.', '312 outliers held', 'M3 12h4l3-8 4 16 3-8h4'],
+  ['04', 'SLA', 'Accuracy SLA in writing', 'A contractual guarantee — not a marketing number.', '[PLACEHOLDER]% guaranteed', 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3zM9 12l2 2 4-4'],
+];
+const hwDefs = [
+  ['Connect your catalog', 'Upload your products or sync from Shopify, marketplaces, or a feed in minutes.', 'DAY 1'],
+  ['We match & monitor', 'AI matches every product and human QC verifies it — then we track prices in real time.', 'DAY 2–3'],
+  ['Get pricing intelligence', 'See your price index, competitive gaps, and the biggest pricing opportunities.', 'DAY 4'],
+  ['Optimize & act', 'Push dynamic pricing rules or apply AI recommendations to win on margin.', 'DAY 5'],
+];
+const testiData = [
+  ['HM', 'Head of Marketplace Pricing', 'Consumer Electronics', '28% → 90%+', 'BUY BOX WIN RATE', "We were losing the Buy Box on over 60% of our top 200 SKUs and had no idea until the damage was done. PriceLeap's decision engine started catching competitor undercuts within minutes and responding automatically inside our margin floor. Our Buy Box win rate went from 28% to over 90% in six weeks — without a single manual price change."],
+  ['VP', 'VP of Trading & Pricing', 'Home & Appliances', '8,000 SKUs', 'MONITORED SIMULTANEOUSLY', "With 8,000 SKUs across appliances, kitchenware, and furniture, we couldn't monitor pricing manually. We were reacting to price changes 4–6 hours after they happened — by which time we'd already lost sales. PriceLeap monitors the entire catalog simultaneously. The margin protection system alone saved us from three separate price wars that would have cost us six figures combined."],
+  ['EP', 'eCommerce & Parts Pricing Manager', 'Automotive Parts · Online Parts Retailer', '~19%', 'GROSS MARGIN RECOVERED', "Automotive parts pricing is complex — the same part has 40 different competitor listings, varying by fitment, brand, and condition. We were systematically underpricing because our team couldn't keep up with how competitors were moving. PriceLeap mapped our parts catalog to competitor listings automatically and immediately found pricing gaps we had no idea existed. We recovered nearly 19% gross margin on parts in the first quarter by simply pricing correctly rather than conservatively."],
+];
+const inLogos = [['shopify', 'Shopify', '15.91'], ['amazon', 'Amazon', '38.64'], ['flipkart', 'Flipkart', '61.36'], ['magento', 'Magento', '84.09']];
+const outLogos = [['slack', 'Slack', '15.91'], ['snowflake', 'Snowflake', '38.64'], ['salesforce', 'Salesforce', '61.36'], ['googlesheets', 'Sheets', '84.09']];
+---
+<PriceLeapLayout
+  title="PriceLeap · Competitor Price Tracking & Dynamic Pricing Intelligence"
+  description="PriceLeap gives e-commerce and marketplace teams real-time competitor price tracking, verified data accuracy and dynamic pricing that protects every point of margin — in one workspace."
+>
+  <div class="plh">
+    <!-- ANNOUNCEMENT -->
+    <div style="padding:12px 12px 0">
+      <div style="background:var(--pl-ink-deep);color:var(--pl-surface);border-radius:10px;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:14px;text-align:center">
+        <span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.08em;background:var(--pl-ink);color:var(--pl-surface);padding:2px 7px;border-radius:5px;font-weight:500">NEW</span>
+        <span>PriceLeap Agent answers pricing questions in plain English, right inside your dashboard.</span>
+        <a href="#agent" style="color:var(--pl-surface);text-decoration:underline;text-underline-offset:3px;font-weight:500">See it in action →</a>
+      </div>
+    </div>
+
+    <div class="plh-frame" style="max-width:1240px;margin:0 auto;position:relative">
+      <span aria-hidden="true" class="plh-frameline" style="left:0"></span>
+      <span aria-hidden="true" class="plh-frameline" style="right:0"></span>
+
+      <!-- HERO -->
+      <section class="plh-hero" style="position:relative;text-align:center;overflow:hidden">
+        <div style="position:absolute;inset:0;background-image:radial-gradient(var(--pl-line-strong) 1px,transparent 1px);background-size:22px 22px;-webkit-mask-image:radial-gradient(ellipse at 50% 40%,#000 0%,transparent 70%);mask-image:radial-gradient(ellipse at 50% 40%,#000 0%,transparent 70%);opacity:.7"></div>
+        <div style="position:absolute;left:50%;top:-180px;width:720px;height:420px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.12),rgba(251,138,46,.08),transparent);pointer-events:none"></div>
+        <div style="position:relative;display:flex;flex-direction:column;align-items:center">
+          <div style="display:inline-flex;align-items:center;gap:10px;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:999px;padding:6px 8px 6px 14px;font-size:13px;color:var(--pl-ink-2);box-shadow:0 1px 2px rgba(0,0,0,.04)">Pricing intelligence for e-commerce &amp; marketplaces<span style="width:20px;height:20px;border-radius:50%;background:var(--pl-ink);color:var(--pl-surface);display:flex;align-items:center;justify-content:center;font-size:11px">›</span></div>
+          <h1 style="margin:28px 0 0;font-size:clamp(40px,5.6vw,68px);line-height:1.04;letter-spacing:-.035em;font-weight:500;max-width:1060px;text-wrap:balance">Price with confidence on data<br />you can <span style="background:var(--pl-gradient-text);-webkit-background-clip:text;background-clip:text;color:transparent">actually trust.</span></h1>
+          <p style="margin:26px 0 0;font-size:19px;line-height:1.6;color:var(--pl-muted-2);max-width:680px;text-wrap:pretty">PriceLeap gives e-commerce and marketplace teams real-time competitor price tracking, verified data accuracy, and dynamic pricing that protects <span style="background:#FBEFE6;color:var(--pl-ink);padding:1px 8px;border-radius:6px">every point of margin.</span></p>
+          <div style="display:flex;gap:12px;margin-top:36px;flex-wrap:wrap;justify-content:center">
+            <a href="/book-a-demo" style="background:var(--pl-gradient);color:var(--pl-surface);font-weight:500;font-size:16px;padding:15px 26px;border-radius:14px;box-shadow:0 14px 30px -12px rgba(247,99,30,.75)">Book a demo</a>
+            <a href="#product" style="display:flex;align-items:center;gap:12px;background:var(--pl-surface);border:1px solid var(--pl-line);color:var(--pl-ink);font-weight:500;font-size:16px;padding:8px 18px 8px 8px;border-radius:14px"><span style="display:flex"><span style="width:30px;height:30px;border-radius:50%;background:var(--pl-accent);color:var(--pl-surface);font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;display:flex;align-items:center;justify-content:center;border:2px solid var(--pl-surface)">₹</span><span style="width:30px;height:30px;border-radius:50%;background:var(--pl-accent-end);color:var(--pl-surface);font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;display:flex;align-items:center;justify-content:center;border:2px solid var(--pl-surface);margin-left:-8px">%</span><span style="width:30px;height:30px;border-radius:50%;background:var(--pl-ink);color:var(--pl-surface);font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;display:flex;align-items:center;justify-content:center;border:2px solid var(--pl-surface);margin-left:-8px">↗</span></span>See a sample of your competitor data <span style="color:var(--pl-faint-2)">›</span></a>
+          </div>
+          <div style="margin-top:28px;display:flex;align-items:center;gap:10px;font-size:14px;color:var(--pl-muted)"><span style="width:8px;height:8px;border-radius:50%;background:var(--pl-accent);animation:plpulse 1.6s infinite"></span><span data-plh-count style="font-family:'Geist Mono',ui-monospace,monospace;color:var(--pl-ink)">35,26,158</span> prices refreshed today</div>
+        </div>
+      </section>
+
+      <!-- PRODUCT TOUR -->
+      <section id="product" class="plh-tour" style="position:relative;border-bottom:1px solid var(--pl-line);background:linear-gradient(var(--pl-canvas),var(--pl-sand))">
+        <div style="max-width:1120px;margin:0 auto">
+          <div role="region" aria-label="PriceLeap product tour" style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:20px;overflow:hidden;box-shadow:0 40px 80px -48px rgba(60,30,15,.45),0 0 0 6px rgba(255,255,255,.7)">
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream)">
+              <div style="display:flex;gap:6px;flex:none"><span style="width:10px;height:10px;border-radius:50%;background:var(--pl-line)"></span><span style="width:10px;height:10px;border-radius:50%;background:var(--pl-line)"></span><span style="width:10px;height:10px;border-radius:50%;background:var(--pl-line)"></span></div>
+              <div style="flex:1;min-width:0;display:flex;justify-content:center"><div style="max-width:380px;width:100%;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:8px;padding:4px 12px;font-family:'Geist Mono',ui-monospace,monospace;font-size:11.5px;color:var(--pl-muted-2)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-accent);flex:none"></span><span data-plh-turl style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">app.priceleap.ai/add-products</span></div></div>
+              <span data-plh-tchap class="plh-twide" style="flex:none;font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.08em;color:var(--pl-faint)">01 / 04 · ADD PRODUCTS</span>
+            </div>
+            <div class="plh-tbody" style="display:flex">
+              <aside aria-hidden="true" class="plh-tside" style="width:58px;flex:none;border-right:1px solid var(--pl-line-soft);background:var(--pl-cream);flex-direction:column;align-items:center;gap:8px;padding:14px 0">
+                <img src="/assets/pl-mark.png" alt="" width="28" height="28" style="display:block;width:28px;height:28px;object-fit:contain;margin-bottom:8px" />
+                {tourNavIco.map((ico, i) => (<span data-plh-tnav={i} style={`width:36px;height:36px;border-radius:10px;border:1px solid ${i === 0 ? 'var(--pl-accent-line)' : 'transparent'};background:${i === 0 ? 'var(--pl-accent-tint)' : 'transparent'};color:${i === 0 ? 'var(--pl-accent-ink)' : 'var(--pl-faint-2)'};display:flex;align-items:center;justify-content:center;transition:all .3s`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d={ico}></path></svg></span>))}
+                <span style="margin-top:auto;width:30px;height:30px;border-radius:50%;background:var(--pl-ink);color:var(--pl-surface);font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;display:flex;align-items:center;justify-content:center">SK</span>
+              </aside>
+              <div style="flex:1;min-width:0;position:relative;overflow:hidden">
+
+                <!-- CHAPTER 0 -->
+                <div data-plh-chap="0" style="height:100%;animation:pltourin .45s ease"><div style="height:100%;display:flex;flex-direction:column">
+                  <div style="display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--pl-line-soft);min-height:46px"><span style="font-size:14px;font-weight:600;color:var(--pl-ink);white-space:nowrap">Add Products</span><span class="plh-twide" style="font-size:12.5px;color:var(--pl-faint);border-left:1px solid var(--pl-line-soft);padding-left:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">AI tracks pricing, finds competitors and monitors their prices.</span><span style="margin-left:auto;flex:none"><span style="background:var(--pl-ink);color:var(--pl-surface);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:500">+ Add products</span></span></div>
+                  <div class="plh-tadd" style="flex:1;min-height:0;display:grid;gap:14px;padding:14px 18px">
+                    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+                      <div style="display:flex;gap:18px;border-bottom:1px solid var(--pl-line-soft);font-size:12.5px"><span style="padding:0 0 8px;border-bottom:2px solid var(--pl-accent);color:var(--pl-ink);font-weight:600">Paste URLs</span><span style="padding:0 0 8px;color:var(--pl-faint)">Upload file</span><span style="padding:0 0 8px;color:var(--pl-faint)">Connect catalog</span></div>
+                      <div style="background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:12px;padding:12px 14px;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;line-height:1.75;min-height:108px">
+                        <div style="color:var(--pl-faint-2)">Paste multiple URLs (one per line):</div>
+                        {[0, 1, 2].map((i) => (<div style="color:var(--pl-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:21px"><span data-plh-url={i}></span><span data-plh-urlcaret={i} style={`display:${i === 0 ? 'inline-block' : 'none'};width:7px;height:14px;margin-left:1px;vertical-align:-2px;background:var(--pl-accent);animation:plblink 1s steps(1) infinite`}></span></div>))}
+                      </div>
+                      <div class="plh-topt" style="display:grid;gap:8px">
+                        <div data-plh-opt style="border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:12px;padding:11px 12px;transition:all .35s"><div style="display:flex;align-items:center;gap:8px"><span data-plh-optdot style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--pl-line-xstrong);background:var(--pl-surface);flex:none;transition:all .3s"></span><span style="font-size:13px;font-weight:600;color:var(--pl-ink)">Find &amp; monitor competitors</span></div><div style="margin:6px 0 0 22px;font-size:11.5px;line-height:1.45;color:var(--pl-muted)">AI discovers competing products and tracks their prices.</div></div>
+                        <div style="border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:12px;padding:11px 12px"><div style="display:flex;align-items:center;gap:8px"><span style="width:14px;height:14px;border-radius:50%;border:1.5px solid var(--pl-line-xstrong);flex:none"></span><span style="font-size:13px;font-weight:600;color:var(--pl-ink)">Track my product URLs</span></div><div style="margin:6px 0 0 22px;font-size:11.5px;line-height:1.45;color:var(--pl-muted)">Assign competitor URLs yourself, whenever you're ready.</div></div>
+                      </div>
+                      <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><span style="font-size:12.5px;color:var(--pl-ink-2)">Adding <b data-plh-titems style="font-family:'Geist Mono',ui-monospace,monospace">0</b> items to <span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11.5px;border:1px solid var(--pl-line-soft);border-radius:6px;padding:2px 7px">Mirrorless Cameras ▾</span></span><span data-plh-findbtn style="background:var(--pl-ink);color:var(--pl-surface);border-radius:9px;padding:8px 14px;font-size:12.5px;font-weight:500;transition:all .2s">Find competitors →</span></div>
+                    </div>
+                    <div style="background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;min-height:200px">
+                      <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream)"><span style="width:26px;height:26px;border-radius:8px;background:var(--pl-ink);color:var(--pl-surface);display:flex;align-items:center;justify-content:center;font-size:12px">✦</span><div style="min-width:0"><div style="font-size:13px;font-weight:600;color:var(--pl-ink)">AI competitor discovery</div><div data-plh-tstatus style="font-size:11.5px;color:var(--pl-muted)">Waiting for URLs</div></div><span data-plh-tspin style="margin-left:auto;display:none;width:14px;height:14px;border-radius:50%;border:2px solid var(--pl-line-soft);border-top-color:var(--pl-accent);animation:pltspin .8s linear infinite"></span><span data-plh-tdone style="margin-left:auto;display:none;width:20px;height:20px;border-radius:50%;background:var(--pl-ink);color:var(--pl-surface);font-size:10px;align-items:center;justify-content:center">✓</span></div>
+                      <div style="padding:8px 14px;display:flex;flex-direction:column;flex:1">
+                        <div data-plh-twait style="display:flex;flex:1;align-items:center;justify-content:center;text-align:center;font-size:12.5px;color:var(--pl-faint-2);padding:20px 0">Competitors appear here as soon as you add URLs.</div>
+                        {[['Amazon', '$1,099.00', 'var(--pl-accent)', 1], ['Target', '$1,099.00', '#E5484D', 1], ['Newegg', '$1,099.00', '#2F9E6B', 1], ['Best Buy', 'No match', '#3B6FD8', 0]].map((f, i) => (<div data-plh-found={i} style={`display:none;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--pl-line-soft);opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s`}><span style={`width:8px;height:8px;border-radius:50%;background:${f[2]};flex:none`}></span><span style="font-size:13px;font-weight:500;color:var(--pl-ink)">{f[0]}</span><span style={`margin-left:auto;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:${f[3] ? 'var(--pl-ink)' : 'var(--pl-faint-2)'}`}>{f[1]}</span><span style={`font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;letter-spacing:.06em;border-radius:5px;padding:2px 6px;background:${f[3] ? 'var(--pl-accent-tint)' : 'var(--pl-sand)'};color:${f[3] ? 'var(--pl-accent-ink)' : 'var(--pl-faint)'}`}>{f[3] ? 'MATCHED' : 'NO MATCH'}</span></div>))}
+                      </div>
+                    </div>
+                  </div>
+                </div></div>
+
+                <!-- CHAPTER 1 -->
+                <div data-plh-chap="1" hidden style="height:100%"><div style="height:100%;display:flex;flex-direction:column">
+                  <div style="display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--pl-line-soft);min-height:46px"><span style="font-size:14px;font-weight:600;color:var(--pl-ink);white-space:nowrap">Price Intelligence</span><span class="plh-twide" style="font-size:12.5px;color:var(--pl-faint);border-left:1px solid var(--pl-line-soft);padding-left:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">Monitor competitor prices and track your market position.</span><span style="margin-left:auto;flex:none"><span style="display:flex;align-items:center;gap:6px;font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;color:var(--pl-faint)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-accent);animation:plpulse 1.6s infinite"></span>LIVE · <span data-plh-clock>00:00:00</span></span></span></div>
+                  <div style="flex:1;min-height:0;padding:14px 18px;display:flex;flex-direction:column;gap:12px">
+                    <div class="plh-tkpi" style="display:grid;gap:8px">
+                      {[['CATALOG', 'Active products'], ['MARKET POSITION', 'Cheapest'], ['OUT OF STOCK', 'Competitor products'], ['PRICE INDEX', 'Good']].map((k, i) => (<div style="background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:12px;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0"><div style="min-width:0"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;letter-spacing:.12em;color:var(--pl-faint)">{k[0]}</div><div data-plh-kpi={i} style={`margin-top:4px;font-size:24px;font-weight:600;letter-spacing:-.02em;color:${i === 1 ? 'var(--pl-accent-ink)' : 'var(--pl-ink)'}`}>0</div><div style="font-size:11.5px;color:var(--pl-faint)">{k[1]}</div></div></div>))}
+                    </div>
+                    <div style="background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:12px;overflow:hidden">
+                      <div class="plh-twide plh-trow" style="padding:9px 14px;background:var(--pl-cream);border-bottom:1px solid var(--pl-line-soft);font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;letter-spacing:.1em;color:var(--pl-faint)"><span>PRODUCT</span><span>YOUR PRICE</span><span class="plh-twide">POSITION VS MARKET</span><span class="plh-twide">SMART PRICE</span><span class="plh-twide">COMPETITORS</span></div>
+                      {[['Canon EOS RP Full-Frame Mirrorless', 'walmart.com', '$910.48', '−13.4% vs avg', 'Competitive', '17% under highest', '$1,077.02', '+18.3% vs yours'], ['Canon EOS R100 Mirrorless', 'walmart.com', '$539.99', '−16.2% vs avg', 'Competitive', '28% under highest', '$503.69', '−6.7% vs yours'], ['Sony a7 IV Mirrorless Camera', 'walmart.com', '$2,098.00', '+0.0% vs avg', 'Unknown', 'Awaiting matches', '$2,098.00', '+0.0%']].map((r, i) => (
+                        <div data-plh-row={i} class="plh-trow" style="align-items:center;padding:10px 14px;border-bottom:1px solid var(--pl-sand);opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s">
+                          <div style="display:flex;align-items:center;gap:10px;min-width:0"><span style="width:32px;height:32px;flex:none;border-radius:8px;border:1px solid var(--pl-line-soft);background:repeating-linear-gradient(135deg,var(--pl-sand) 0 4px,var(--pl-surface) 4px 8px)"></span><span style="min-width:0"><span style="display:block;font-size:13px;font-weight:600;color:var(--pl-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{r[0]}</span><span style="display:block;font-size:11px;color:var(--pl-faint)">{r[1]}</span></span></div>
+                          <div class="plh-tprice"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:13px;font-weight:500;color:var(--pl-ink)">{r[2]}</div><div style={`font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;color:${r[3][0] === '−' ? 'var(--pl-accent-ink)' : 'var(--pl-faint)'}`}>{r[3]}</div></div>
+                          <div class="plh-twide"><div style={`font-size:12.5px;font-weight:600;color:${r[4] === 'Competitive' ? 'var(--pl-accent-ink)' : 'var(--pl-muted)'}`}>{r[4]}</div><div style="font-size:11px;color:var(--pl-faint)">{r[5]}</div></div>
+                          <div class="plh-twide"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:13px;font-weight:500;color:var(--pl-ink)">{r[6]}</div><div style={`font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;color:${r[7][0] === '+' ? 'var(--pl-accent-ink)' : r[7][0] === '−' ? 'var(--pl-danger-ink)' : 'var(--pl-faint)'}`}>{r[7]}</div></div>
+                          <div class="plh-twide" style="display:flex;flex-direction:column;gap:3px;min-width:0">
+                            {(i === 0 ? [['Amazon', '$1,099.00', 'var(--pl-accent)'], ['Target', '$1,099.00', '#E5484D']] : i === 1 ? [['Amazon', '$749.00', 'var(--pl-accent)'], ['Target', '$513.97', '#E5484D']] : [['Amazon', 'No match', 'var(--pl-accent)'], ['Best Buy', 'No match', '#3B6FD8']]).map((c, ci) => (<span data-plh-comp={i === 0 && ci === 1 ? 'flash' : undefined} style="display:flex;align-items:center;gap:6px;font-size:11.5px;white-space:nowrap;padding:1px 4px;margin:0 -4px;border-radius:5px;transition:background .4s"><span style={`width:6px;height:6px;border-radius:50%;background:${c[2]}`}></span><span style="color:var(--pl-ink-2)">{c[0]}</span><span data-plh-compp style={`font-family:'Geist Mono',ui-monospace,monospace;color:${c[1] === 'No match' ? 'var(--pl-faint-2)' : 'var(--pl-ink)'}`}>{c[1]}</span></span>))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div data-plh-ttoast style="position:absolute;left:18px;right:18px;bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);border-radius:12px;padding:10px 12px;box-shadow:0 18px 40px -24px rgba(60,30,15,.5);opacity:0;transform:translateY(12px);transition:opacity .35s,transform .35s;pointer-events:none">
+                    <span style="width:28px;height:28px;flex:none;border-radius:8px;background:var(--pl-ink);color:var(--pl-surface);display:flex;align-items:center;justify-content:center;font-size:12px">✦</span>
+                    <div style="flex:1;min-width:200px"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12.5px;font-weight:600;color:var(--pl-ink)">PriceLeap Agent</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9px;letter-spacing:.1em;color:var(--pl-accent-ink);border:1px solid var(--pl-accent-line);background:var(--pl-surface);border-radius:5px;padding:1px 6px">PRICE DROP</span></div><div style="font-size:12.5px;line-height:1.45;color:var(--pl-ink-2)">Target cut Canon EOS RP by 4.5%. SmartPrice $1,044.05 keeps you above your margin floor.</div></div>
+                    <div style="display:flex;gap:6px"><span style="background:var(--pl-ink);color:var(--pl-surface);font-size:11.5px;font-weight:500;padding:6px 10px;border-radius:7px">Apply price</span><span style="border:1px solid var(--pl-line-strong);background:var(--pl-surface);font-size:11.5px;padding:6px 10px;border-radius:7px">Dismiss</span></div>
+                  </div>
+                </div></div>
+
+                <!-- CHAPTER 2 -->
+                <div data-plh-chap="2" hidden style="height:100%"><div style="height:100%;display:flex;flex-direction:column">
+                  <div style="display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--pl-line-soft);min-height:46px"><span style="font-size:14px;font-weight:600;color:var(--pl-ink);white-space:nowrap">Product detail</span><span class="plh-twide" style="font-size:12.5px;color:var(--pl-faint);border-left:1px solid var(--pl-line-soft);padding-left:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">Price Intelligence</span><span style="margin-left:auto;display:flex;align-items:center;gap:8px;flex:none"><span style="border:1px solid var(--pl-line-soft);border-radius:8px;padding:5px 10px;font-size:12px">Export</span><span style="background:var(--pl-ink);color:var(--pl-surface);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:500">Edit group rule</span></span></div>
+                  <div style="flex:1;min-height:0;padding:12px 18px;display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;align-items:center;gap:12px;min-width:0"><span style="border:1px solid var(--pl-line-soft);border-radius:8px;padding:5px 10px;font-size:12px;flex:none">‹ Back</span><span style="width:36px;height:36px;flex:none;border-radius:9px;border:1px solid var(--pl-line-soft);background:repeating-linear-gradient(135deg,var(--pl-sand) 0 4px,var(--pl-surface) 4px 8px)"></span><div style="min-width:0"><div style="font-size:14px;font-weight:600;color:var(--pl-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Apple 13" MacBook Neo (A18 Pro, Blush, Touch ID)</div><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;color:var(--pl-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">SKU MBN-13-A18-BLS · Laptops · Apple</div></div></div>
+                    <div class="plh-tkpi" style="display:grid;gap:8px">
+                      <div style="border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);border-radius:12px;padding:10px 12px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;letter-spacing:.12em;color:var(--pl-faint)">YOUR PRICE</div><div style="margin-top:3px;font-family:'Geist Mono',ui-monospace,monospace;font-size:19px;font-weight:500;color:var(--pl-ink)">$799.00</div><div style="font-size:11px;color:var(--pl-danger-ink)">+14.3% vs market avg</div></div>
+                      <div style="background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:12px;padding:10px 12px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;letter-spacing:.12em;color:var(--pl-faint)">SMART PRICE</div><div data-plh-smart style="margin-top:3px;font-family:'Geist Mono',ui-monospace,monospace;font-size:19px;font-weight:500;color:var(--pl-ink)">$799.00</div><div style="font-size:11px;color:var(--pl-faint)">Recommended</div></div>
+                      <div style="background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:12px;padding:10px 12px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;letter-spacing:.12em;color:var(--pl-faint)">MARKET RANK</div><div style="margin-top:3px;font-family:'Geist Mono',ui-monospace,monospace;font-size:19px;font-weight:500;color:var(--pl-ink)">2/2</div><div style="font-size:11px;color:var(--pl-faint)">Premium</div></div>
+                      <div style="background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:12px;padding:10px 12px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;letter-spacing:.12em;color:var(--pl-faint)">TRACKING</div><div style="margin-top:3px;font-family:'Geist Mono',ui-monospace,monospace;font-size:19px;font-weight:500;color:var(--pl-ink)">3</div><div style="font-size:11px;color:var(--pl-faint)">competitors</div></div>
+                    </div>
+                    <div class="plh-tadd" style="flex:1;min-height:0;display:grid;gap:10px">
+                      <div style="background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:12px;padding:11px 13px;display:flex;flex-direction:column;min-width:0">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:12.5px;font-weight:600;color:var(--pl-ink)">Price history · 90d</span><span style="margin-left:auto;display:flex;gap:6px;font-size:10.5px"><span style="display:flex;align-items:center;gap:5px;border:1px solid var(--pl-line-soft);border-radius:999px;padding:2px 8px"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-ink)"></span>Your price</span><span style="display:flex;align-items:center;gap:5px;border:1px solid var(--pl-accent-line);border-radius:999px;padding:2px 8px;color:var(--pl-accent-ink)"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-accent)"></span>Amazon</span></span></div>
+                        <svg viewBox="0 0 520 130" preserveAspectRatio="none" style="display:block;width:100%;flex:1;min-height:96px;margin-top:8px;overflow:visible"><line x1="0" y1="20" x2="520" y2="20" stroke="#F5ECE5"></line><line x1="0" y1="65" x2="520" y2="65" stroke="#F5ECE5"></line><line x1="0" y1="110" x2="520" y2="110" stroke="#F5ECE5"></line><path data-plh-drawa d="M0,28 L130,28 L130,24 L330,24 L330,28 L520,28" fill="none" stroke="#1C130E" stroke-width="2.5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" vector-effect="non-scaling-stroke"></path><path data-plh-drawb d="M0,58 C70,56 120,62 180,70 S300,84 360,96 S460,104 520,108" fill="none" stroke="#F7631E" stroke-width="2.5" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" vector-effect="non-scaling-stroke"></path></svg>
+                        <div style="display:flex;justify-content:space-between;font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;color:var(--pl-faint-2);margin-top:4px"><span>Aug 12</span><span>Sep 26</span><span>Nov 10</span></div>
+                      </div>
+                      <div style="background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-width:0">
+                        <div style="padding:10px 13px;border-bottom:1px solid var(--pl-line-soft);display:flex;align-items:center;gap:8px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;letter-spacing:.12em;color:var(--pl-faint)">COMPETITORS</div><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;border:1px solid var(--pl-line-soft);border-radius:999px;padding:0 6px">3</span></div>
+                        {[['Amazon', 'var(--pl-accent)', '$699.05', 'var(--pl-ink)', 'IN STOCK', 'var(--pl-accent-tint)', 'var(--pl-accent-ink)'], ['Newegg', '#8B5CF6', 'No match', 'var(--pl-faint-2)', '—', 'var(--pl-sand)', 'var(--pl-faint-2)'], ['Best Buy', '#3B6FD8', 'No match', 'var(--pl-faint-2)', '—', 'var(--pl-sand)', 'var(--pl-faint-2)']].map((c, i) => (<div data-plh-comp2={i} style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:9px 13px;border-bottom:1px solid var(--pl-sand);opacity:0;transition:opacity .35s"><span style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--pl-ink)"><span style={`width:7px;height:7px;border-radius:50%;background:${c[1]}`}></span>{c[0]}</span><span style={`font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:${c[3]}`}>{c[2]}</span><span style={`font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;border-radius:5px;padding:2px 6px;background:${c[5]};color:${c[6]}`}>{c[4]}</span></div>))}
+                        <div data-plh-sum style="margin-top:auto;padding:10px 13px;background:var(--pl-cream);font-size:12px;line-height:1.45;color:var(--pl-ink-2);opacity:0;transition:opacity .4s">You are <b>#2 of 2</b> tracked sellers. Amazon is <span style="color:var(--pl-danger-ink)">$99.95 cheaper</span>.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div></div>
+
+                <!-- CHAPTER 3 -->
+                <div data-plh-chap="3" hidden style="height:100%"><div style="height:100%;display:flex;flex-direction:column">
+                  <div style="display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--pl-line-soft);min-height:46px"><span style="font-size:14px;font-weight:600;color:var(--pl-ink);white-space:nowrap">Dynamic Pricing</span><span class="plh-twide" style="font-size:12.5px;color:var(--pl-faint);border-left:1px solid var(--pl-line-soft);padding-left:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">Set how prices adjust automatically and when to get notified.</span><span style="margin-left:auto;flex:none"><span style="border:1px solid var(--pl-line-soft);border-radius:8px;padding:5px 10px;font-size:12px">Agent</span></span></div>
+                  <div style="flex:1;min-height:0;padding:12px 18px;display:flex;flex-direction:column;gap:10px">
+                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--pl-accent-line);background:var(--pl-cream-2);border-radius:11px;padding:8px 10px"><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11.5px;border:1px solid var(--pl-accent-line);background:var(--pl-surface);border-radius:6px;padding:2px 8px;color:var(--pl-ink)">Mirrorless Cameras ▾</span><span data-plh-draft style="font-size:12px;color:var(--pl-muted)">Unsaved draft</span><span style="font-size:12px;font-weight:600;color:var(--pl-ink)">· Watching Amazon, Walmart</span><span data-plh-save style="margin-left:auto;font-size:12px;font-weight:500;border-radius:8px;padding:6px 12px;background:var(--pl-ink);color:var(--pl-surface);transition:all .25s">Save rule</span></div>
+                    <div class="plh-trule" style="flex:1;min-height:0;display:grid;gap:10px">
+                      <div style="background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:0">
+                        <div><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;letter-spacing:.12em;color:var(--pl-faint)">RULE NAME</div><div style="margin-top:5px;display:flex;gap:8px"><div data-plh-namebox style="flex:1;min-width:0;border:1px solid var(--pl-accent-line);border-radius:9px;padding:7px 10px;font-size:13px;color:var(--pl-ink);min-height:33px;transition:border-color .3s"><span data-plh-rulename></span><span data-plh-namecaret style="display:inline-block;width:6px;height:13px;margin-left:1px;vertical-align:-2px;background:var(--pl-accent);animation:pltblink 1s steps(1) infinite"></span></div><span style="display:flex;border:1px solid var(--pl-line-soft);border-radius:9px;overflow:hidden;font-size:12px;flex:none"><span style="padding:7px 10px;background:var(--pl-ink);color:var(--pl-surface)">Single</span><span style="padding:7px 10px">Multi</span></span></div></div>
+                        <div data-plh-pos style="border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:10px;padding:9px 10px;transition:all .35s"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;letter-spacing:.12em;color:var(--pl-faint)">POSITION</div><div style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--pl-ink)"><span style="border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);color:var(--pl-accent-ink);border-radius:7px;padding:4px 8px">Set a gap</span><span style="font-family:'Geist Mono',ui-monospace,monospace;border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:7px;padding:4px 9px">5</span><span style="border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:7px;padding:4px 8px">% ▾</span><span style="border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:7px;padding:4px 8px">Lower ▾</span><span style="color:var(--pl-faint)">than</span><span style="border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:7px;padding:4px 8px">The cheapest ▾</span></div></div>
+                        <div data-plh-mar style="border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:10px;padding:9px 10px;transition:all .35s"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;letter-spacing:.12em;color:var(--pl-faint)">MARGIN / MARKUP</div><div style="margin-top:6px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;color:var(--pl-ink)"><span style="border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:7px;padding:5px 8px">Min · Total cost <b style="font-family:'Geist Mono',ui-monospace,monospace">+5</b></span><span style="border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:7px;padding:5px 8px">Max · Total cost <b style="font-family:'Geist Mono',ui-monospace,monospace">+20</b></span></div></div>
+                        <div style="margin-top:auto"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9.5px;letter-spacing:.12em;color:var(--pl-faint)">LANDSCAPE</div><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><span style="font-size:12px;border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);color:var(--pl-accent-ink);border-radius:7px;padding:3px 8px">Amazon ×</span><span style="font-size:12px;border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);color:var(--pl-accent-ink);border-radius:7px;padding:3px 8px">Walmart ×</span></div></div>
+                      </div>
+                      <div style="background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-width:0">
+                        <div style="padding:10px 13px;border-bottom:1px solid var(--pl-line-soft);font-size:12.5px;font-weight:600;color:var(--pl-ink)">Notifications &amp; Alerts</div>
+                        {[['Price drop alert', 'A competitor drops by 10% · via Email', '↓', 'var(--pl-accent-ink)'], ['Competitor out of stock', 'A rival goes out of stock · via Slack', '□', 'var(--pl-accent-ink)'], ['MAP violation', 'Price drops below ≤ MAP · via Email', '!', '#B06D00'], ['Weekly digest', 'Summary of price movements · via Email', '◷', 'var(--pl-muted)']].map((a, i) => (<div data-plh-alert={i} style="display:grid;grid-template-columns:26px minmax(0,1fr) 34px;gap:10px;align-items:center;padding:9px 13px;border-bottom:1px solid var(--pl-sand);background:var(--pl-surface);transition:background .35s"><span style={`width:26px;height:26px;border-radius:7px;background:var(--pl-sand);color:${a[3]};display:flex;align-items:center;justify-content:center;font-size:11px`}>{a[2]}</span><span style="min-width:0"><span style="display:block;font-size:12.5px;font-weight:600;color:var(--pl-ink)">{a[0]}</span><span style="display:block;font-size:11px;color:var(--pl-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{a[1]}</span></span><span data-plh-alerttrack style="position:relative;width:32px;height:18px;border-radius:999px;background:var(--pl-line-strong);transition:background .3s"><span data-plh-alertknob style="position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--pl-surface);box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .3s"></span></span></div>))}
+                      </div>
+                    </div>
+                  </div>
+                  <div data-plh-savedtoast style="position:absolute;left:50%;bottom:16px;transform:translate(-50%,10px);opacity:0;transition:opacity .35s,transform .35s;display:flex;align-items:center;gap:10px;background:var(--pl-ink);color:var(--pl-surface);border-radius:999px;padding:8px 14px 8px 8px;font-size:12.5px;white-space:nowrap;box-shadow:0 16px 34px -16px rgba(28,19,14,.7);pointer-events:none"><span style="width:22px;height:22px;border-radius:50%;background:var(--pl-accent);display:flex;align-items:center;justify-content:center;font-size:11px">✓</span>Rule saved · SmartPrice applied to 45 cameras</div>
+                </div></div>
+
+              </div>
+            </div>
+          </div>
+          <div role="tablist" aria-label="Tour chapters" class="plh-chapbar" style="margin-top:12px;display:grid;gap:1px;background:var(--pl-line);border:1px solid var(--pl-line);border-radius:16px;overflow:hidden">
+            <button type="button" data-plh-play aria-label="Pause tour" style="background:var(--pl-surface);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:60px;padding:0">
+              <span style="width:34px;height:34px;border-radius:50%;background:var(--pl-ink);color:var(--pl-surface);display:flex;align-items:center;justify-content:center">
+                <span data-plh-playicon style="display:flex;gap:3px"><span style="width:3px;height:11px;border-radius:1px;background:var(--pl-surface)"></span><span style="width:3px;height:11px;border-radius:1px;background:var(--pl-surface)"></span></span>
+              </span>
+            </button>
+            {chapMeta.map((c, i) => (
+              <button type="button" role="tab" data-plh-chaptab={i} aria-selected={i === 0 ? 'true' : 'false'} style={`position:relative;border:none;background:${i === 0 ? 'var(--pl-surface)' : 'var(--pl-cream)'};cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;min-width:0;transition:background .25s`}>
+                <span aria-hidden="true" style="position:absolute;left:0;right:0;top:0;height:2px;background:transparent"><span data-plh-chapprog={i} style={`display:block;height:100%;width:${i === 0 ? 0 : 0}%;background:${i === 0 ? 'var(--pl-accent)' : 'var(--pl-accent-line)'};transition:width .1s linear`}></span></span>
+                <span class="plh-chapnum" style={`width:26px;height:26px;flex:none;border-radius:50%;border:1px solid ${i === 0 ? 'var(--pl-ink)' : 'var(--pl-line)'};background:${i === 0 ? 'var(--pl-ink)' : 'var(--pl-surface)'};color:${i === 0 ? 'var(--pl-surface)' : 'var(--pl-faint)'};font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;align-items:center;justify-content:center;transition:all .25s`}>{c[0]}</span>
+                <span style="min-width:0"><span class="plh-chapt" style={`display:block;font-weight:600;color:${i === 0 ? 'var(--pl-ink)' : 'var(--pl-muted)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis`}>{c[1]}</span><span class="plh-chapd" style="font-size:12px;color:var(--pl-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{c[2]}</span></span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <!-- TRUSTED -->
+      <section style="border-bottom:1px solid var(--pl-line)">
+        <div class="plh-trust" style="display:grid">
+          <div class="plh-trustlabel" style="padding:22px 28px;display:flex;flex-direction:column;justify-content:center;gap:6px;border-right:1px solid var(--pl-line);background:var(--pl-cream)">
+            <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600"><span style="width:16px;height:16px;border-radius:50%;background:var(--pl-ink);color:var(--pl-surface);font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>Trusted &amp; certified</div>
+            <div style="font-size:13px;line-height:1.5;color:var(--pl-muted)">Certified, compliant and partnered with the platforms enterprise teams rely on.</div>
+          </div>
+          <div style="overflow:hidden;position:relative;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)">
+            <div style="display:flex;width:max-content;animation:plmarquee 28s linear infinite">
+              {[...Array(4)].flatMap(() => [['iso-9001.webp', 'ISO 9001'], ['cmmi.webp', 'CMMI Level 3'], ['iso-27001.avif', 'ISO 27001'], ['gdpr.webp', 'GDPR']]).map(([src, alt]) => (<div style="flex:none;width:240px;height:96px;border-right:1px solid var(--pl-line);display:flex;align-items:center;justify-content:center;background:var(--pl-surface)"><img src={`/assets/${src}`} alt={alt} loading="lazy" style="max-height:44px;max-width:150px;object-fit:contain" /></div>))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- COST OF BAD DATA -->
+      <section class="plh-sec" style="border-bottom:1px solid var(--pl-line)">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:48px;align-items:end">
+          <div>
+            <div style="display:flex;align-items:center;gap:14px;font-size:13px"><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">//</span><span style="display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--pl-line-strong);padding-bottom:4px"><span style="width:7px;height:7px;background:#e5484d;transform:rotate(45deg)"></span>The cost of bad data</span><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">\\</span></div>
+            <h2 style="margin:22px 0 0;font-size:clamp(34px,4.6vw,52px);line-height:1.08;letter-spacing:-.03em;font-weight:500;text-wrap:balance">Bad pricing data costs you margin <span style="color:#e5484d">every single day.</span></h2>
+          </div>
+          <p style="margin:0;font-size:18px;line-height:1.6;color:var(--pl-muted);max-width:460px">Most pricing tools hand you a dashboard and hope for the best. Sound familiar?</p>
+        </div>
+        <div class="plh-pain" style="margin-top:48px;display:grid;gap:1px;background:var(--pl-line);border:1px solid var(--pl-line);border-radius:20px;overflow:hidden">
+          {[['01', 'STALE', "Stale competitor prices you can't act on"], ['02', 'MISMATCH', 'Wrong product matches skewing your view'], ['03', 'MANUAL', 'Manual price-checking across dozens of sites'], ['04', 'LEAK', 'Discounting that quietly gives away margin']].map((p) => (
+            <div style="background:var(--pl-surface);padding:26px 24px 28px;display:flex;flex-direction:column;gap:40px;min-height:200px">
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:13px;color:var(--pl-faint-2)">{p[0]}</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.12em;color:#c4373c;background:#fff5f5;border:1px solid #f5c2c4;border-radius:5px;padding:2px 7px">{p[1]}</span></div>
+              <div style="margin-top:auto;display:flex;gap:12px;align-items:flex-start"><span style="width:20px;height:20px;flex:none;margin-top:3px;border-radius:50%;border:1.5px solid #f5c2c4;color:#e5484d;font-size:11px;display:flex;align-items:center;justify-content:center">×</span><span style="font-size:19px;font-weight:500;line-height:1.35;letter-spacing:-.01em">{p[2]}</span></div>
+            </div>
+          ))}
+        </div>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--pl-accent-tint);border:1px solid var(--pl-accent-line);border-radius:16px;padding:18px 22px">
+          <span style="width:40px;height:40px;flex:none;border-radius:11px;background:var(--pl-ink);color:var(--pl-surface);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">✓</span>
+          <span style="flex:1;min-width:240px;font-size:17px;line-height:1.5;font-weight:500">PriceLeap fixes the root cause: accurate data, refreshed in real time, turned into pricing moves you can trust.</span>
+          <a href="#how" style="color:var(--pl-accent-ink);font-weight:500;white-space:nowrap">See how it works →</a>
+        </div>
+      </section>
+
+      <!-- INSIDE PRICELEAP -->
+      <section class="plh-sec" style="border-bottom:1px solid var(--pl-line)">
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <div style="display:flex;align-items:center;gap:14px;font-size:13px;color:var(--pl-ink)"><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">//</span><span style="display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--pl-line-strong);padding-bottom:4px"><span style="width:7px;height:7px;background:var(--pl-accent-end);transform:rotate(45deg)"></span>Inside PriceLeap</span><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">\\</span></div>
+          <h2 style="margin:22px 0 0;font-size:clamp(34px,4.6vw,52px);line-height:1.08;letter-spacing:-.03em;font-weight:500;max-width:880px;text-wrap:balance">From a list of URLs to a repriced catalog <span style="color:var(--pl-ink);">— in one workspace.</span></h2>
+          <p style="margin:20px 0 0;font-size:18px;line-height:1.6;color:var(--pl-muted);max-width:620px">Add products, watch the market, set the rules, and ask the Agent when you need an answer fast.</p>
+        </div>
+        <div style="margin-top:52px;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:22px;overflow:hidden;box-shadow:0 40px 80px -56px rgba(60,30,15,.35)">
+          <div role="tablist" class="plh-ipt" style="display:grid;gap:1px;background:var(--pl-line)">
+            {tabDefs.map((t, i) => (
+              <button type="button" role="tab" data-plh-iptab={i} aria-selected={i === 0 ? 'true' : 'false'} style={`text-align:left;font:inherit;color:inherit;cursor:pointer;border:none;background:${i === 0 ? 'var(--pl-surface)' : 'var(--pl-cream)'};padding:20px 22px 22px;position:relative;transition:background .25s`}>
+                <span aria-hidden="true" style={`position:absolute;left:0;right:0;top:0;height:3px;background:var(--pl-line-soft);opacity:${i === 0 ? 1 : 0}`}><span data-plh-iptprog={i} style={`display:block;height:100%;width:${i === 0 ? 0 : 0}%;background:linear-gradient(90deg,var(--pl-accent),var(--pl-accent-end));transition:width .1s linear`}></span></span>
+                <div style="display:flex;align-items:center;gap:10px"><span class="plh-iptnum" style={`width:28px;height:28px;border-radius:50%;background:${i === 0 ? 'var(--pl-ink)' : 'var(--pl-surface)'};color:${i === 0 ? 'var(--pl-surface)' : 'var(--pl-faint)'};border:1px solid ${i === 0 ? 'var(--pl-ink)' : 'var(--pl-line)'};font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all .25s`}>{t[0]}</span><span style={`font-size:17px;font-weight:500;color:${i === 0 ? 'var(--pl-ink)' : 'var(--pl-muted)'}`}>{t[1]}</span></div>
+                <div style="margin-top:10px;font-size:14px;line-height:1.5;color:var(--pl-muted)">{t[2]}</div>
+                <span aria-hidden="true" data-plh-iptcaret={i} style={`display:${i === 0 ? 'block' : 'none'};position:absolute;left:50%;bottom:-7px;width:14px;height:14px;margin-left:-7px;background:var(--pl-cream);border-left:1px solid var(--pl-line-soft);border-top:1px solid var(--pl-line-soft);transform:rotate(45deg);z-index:2`}></span>
+              </button>
+            ))}
+          </div>
+          <div style="position:relative;display:flex;align-items:center;gap:14px;padding:14px 22px;border-top:1px solid var(--pl-line-soft);border-bottom:1px solid var(--pl-line-soft);background:var(--pl-cream)">
+            <span data-plh-panelt style="font-size:15px;font-weight:500">Add Products</span>
+            <span data-plh-panels style="font-size:13px;color:var(--pl-faint);border-left:1px solid var(--pl-line);padding-left:14px">AI tracks pricing, finds competitors and monitors their prices.</span>
+            <span data-plh-paneln style="margin-left:auto;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-faint)">01 / 04</span>
+          </div>
+          <div style="padding:28px;min-height:420px">
+            <div data-plh-ippanel="0">
+              <div style="display:flex;gap:28px;border-bottom:1px solid var(--pl-line-soft);font-size:15px"><span style="padding:10px 2px;border-bottom:2px solid var(--pl-accent-line);color:var(--pl-accent-ink);font-weight:500">Paste URLs</span><span style="padding:10px 2px;color:var(--pl-muted)">Upload file</span><span style="padding:10px 2px;color:var(--pl-muted)">Connect catalog</span></div>
+              <div style="margin-top:20px;background:var(--pl-cream);border:1px solid var(--pl-line-soft);border-radius:14px;padding:20px 22px;font-family:'Geist Mono',ui-monospace,monospace;font-size:14px;line-height:2;color:var(--pl-ink)"><div style="color:var(--pl-faint-2)">Paste multiple URLs (one per line):</div><div>https://amazon.com/product/wh-anc-700</div><div>https://walmart.com/product/sonix-anc-700</div><div>https://target.com/product/wh-anc-700</div><div>https://bestbuy.com/product/anc-700</div><div style="width:9px;height:18px;background:var(--pl-accent);margin-top:4px;animation:plblink 1s steps(1) infinite"></div></div>
+              <div style="margin-top:16px;border:1px solid var(--pl-line-soft);border-radius:14px;padding:20px 22px"><div style="font-size:16px;font-weight:600">How should we track this group?</div><div style="font-size:14px;color:var(--pl-muted);margin-top:4px">Pick once — you can flip individual products later from the dashboard.</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:16px"><div style="border:1.5px solid var(--pl-accent-line);background:var(--pl-accent-tint);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="width:18px;height:18px;border-radius:50%;border:5px solid var(--pl-accent-line);background:var(--pl-surface)"></span><span style="font-weight:500">Find &amp; monitor competitors</span><span style="margin-left:auto;font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-faint);border:1px solid var(--pl-accent-line);border-radius:5px;padding:2px 6px">AI POWERED</span></div><div style="border:1px solid var(--pl-line-soft);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="width:18px;height:18px;border-radius:50%;border:1.5px solid var(--pl-line-xstrong)"></span><span style="font-weight:500">Track your product URLs</span><span style="margin-left:auto;font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-faint);border:1px solid var(--pl-line-soft);border-radius:5px;padding:2px 6px">SAVE CREDITS</span></div></div></div>
+            </div>
+            <div data-plh-ippanel="1" hidden>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                {feed.map((f) => (<div class="plh-feedrow" style="align-items:center;border:1px solid var(--pl-line-soft);border-radius:12px;padding:14px 18px;font-size:14px"><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-faint)">{f.time}</span><span style={`font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.08em;color:${f.c};border:1px solid ${f.c};border-radius:5px;padding:3px 7px;justify-self:start`}>{f.type}</span><span>{f.text}</span><span style={`font-family:'Geist Mono',ui-monospace,monospace;font-size:13px;color:${f.c}`}>{f.delta}</span></div>))}
+              </div>
+            </div>
+            <div data-plh-ippanel="2" hidden>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
+                <div style="border:1px solid var(--pl-line-soft);border-radius:14px;padding:22px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.12em;color:var(--pl-faint)">RULE SET · HEADPHONES</div><div style="display:grid;grid-template-columns:90px 1fr;row-gap:16px;margin-top:20px;font-size:15px"><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-faint)">RULE</span><span>Beat lowest rival by 1%</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-faint)">FLOOR</span><span>Margin ≥ 18%</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-faint)">CEILING</span><span>MSRP</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-faint)">MAP</span><span>Never below ₹23,990</span></div></div>
+                <div style="border:1.5px solid var(--pl-accent-line);background:var(--pl-accent-tint);border-radius:14px;padding:22px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.12em;color:var(--pl-faint)">AI RECOMMENDATION</div><div style="display:flex;align-items:baseline;gap:12px;margin-top:20px"><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:16px;color:var(--pl-faint-2);text-decoration:line-through">₹24,990</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:40px;font-weight:500;letter-spacing:-.02em">₹24,540</span></div><div style="font-size:14px;color:var(--pl-muted);margin-top:6px">Competitive and inside your floor</div><div style="display:flex;gap:8px;margin-top:20px"><span style="background:var(--pl-ink);color:var(--pl-surface);font-size:13px;font-weight:500;padding:8px 14px;border-radius:9px">Apply price</span><span style="border:1px solid var(--pl-line-soft);background:var(--pl-surface);font-size:13px;padding:8px 14px;border-radius:9px">Edit rule</span></div></div>
+              </div>
+            </div>
+            <div data-plh-ippanel="3" hidden>
+              <div style="max-width:720px;display:flex;flex-direction:column;gap:14px">
+                <div style="align-self:flex-end;background:#e3fbec;border:1px solid var(--pl-accent-line);color:var(--pl-ink);border-radius:14px 14px 4px 14px;padding:12px 16px;font-size:15px">Which earbuds are we losing the buy box on this week?</div>
+                <div style="align-self:flex-start;background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:14px 14px 14px 4px;padding:16px 18px;font-size:15px;line-height:1.6;max-width:600px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.12em;color:var(--pl-faint);margin-bottom:6px">PRICELEAP AGENT</div>Two SKUs. True Wireless Earbuds Pro is 2.2% above the lowest rival after Retailer B's cut, and TWS-LITE is out of stock at Marketplace A, so you're the cheapest there already. Matching on TWS-PRO-2 keeps margin at 19.1%.<div style="display:flex;gap:8px;margin-top:12px"><span style="background:var(--pl-ink);color:var(--pl-surface);font-size:12px;font-weight:500;padding:6px 12px;border-radius:8px">Match TWS-PRO-2</span><span style="border:1px solid var(--pl-line-soft);font-size:12px;padding:6px 12px;border-radius:8px">Open report</span></div></div>
+                <div style="display:flex;align-items:center;gap:10px;border:1px solid var(--pl-line-soft);border-radius:12px;padding:12px 16px;color:var(--pl-faint-2);font-size:14px">Ask about prices, rivals or alerts…<span style="margin-left:auto;width:28px;height:28px;border-radius:8px;background:var(--pl-ink);color:var(--pl-surface);display:flex;align-items:center;justify-content:center">↑</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CAPABILITIES -->
+      <section id="capabilities" class="plh-sec" style="border-bottom:1px solid var(--pl-line)">
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <div style="display:flex;align-items:center;gap:14px;font-size:13px"><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">//</span><span style="display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--pl-line-strong);padding-bottom:4px"><span style="width:7px;height:7px;background:var(--pl-accent);transform:rotate(45deg)"></span>Core capabilities</span><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">\\</span></div>
+          <h2 style="margin:22px 0 0;font-size:clamp(34px,4.6vw,52px);line-height:1.08;letter-spacing:-.03em;font-weight:500;max-width:860px;text-wrap:balance">Everything you need to monitor, decide, and <span style="color:var(--pl-ink);">win on price.</span></h2>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:0;margin-top:52px;border:1px solid var(--pl-line);border-radius:20px;overflow:hidden;background:var(--pl-line)">
+          <div style="flex:7 1 520px;background:var(--pl-surface);padding:32px;margin:0 1px 1px 0;display:flex;flex-direction:column;gap:22px">
+            <div style="width:46px;height:46px;border-radius:12px;border:1px solid var(--pl-line-soft);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -10px rgba(247,99,30,.5)"><span style="width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,var(--pl-accent),var(--pl-accent-line-2))"></span></div>
+            <div><h3 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em">Real-Time Competitor Price Tracking</h3><p style="margin:10px 0 0;font-size:15px;line-height:1.6;color:var(--pl-muted);max-width:560px">Track every competitor, marketplace, and SKU with prices refreshed as often as every [PLACEHOLDER] — so you act on what's true right now, not yesterday.</p></div>
+            <div style="border:1px solid var(--pl-line-soft);border-radius:12px;overflow:hidden;margin-top:auto">{tracking.map((r) => (<div style="display:flex;align-items:center;gap:16px;padding:12px 16px;border-bottom:1px solid var(--pl-sand);font-size:14px"><span style="flex:1">{r.n}</span><span style="width:110px;height:4px;border-radius:4px;background:var(--pl-line-soft)"><span style={`display:block;height:100%;width:${r.w}%;border-radius:4px;background:linear-gradient(90deg,var(--pl-accent),var(--pl-accent-end))`}></span></span><span style="font-family:'Geist Mono',ui-monospace,monospace;width:80px;text-align:right">{r.p}</span></div>))}</div>
+          </div>
+          <div style="flex:5 1 380px;background:var(--pl-surface);padding:32px;margin:0 1px 1px 0;display:flex;flex-direction:column;gap:22px">
+            <div style="width:46px;height:46px;border-radius:12px;border:1px solid var(--pl-line-soft);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -10px rgba(251,138,46,.6)"><span style="width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--pl-accent-end),var(--pl-accent-line-2))"></span></div>
+            <div><h3 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em">Pricing Intelligence &amp; Price Index</h3><p style="margin:10px 0 0;font-size:15px;line-height:1.6;color:var(--pl-muted)">See exactly where you stand with a live price index, positioning views, and SKU-level insight across your entire catalog.</p></div>
+            <div style="margin-top:auto"><div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:56px;font-weight:500;letter-spacing:-.04em">105.4</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:13px;color:var(--pl-faint)">▼ 3.6% vs market</span></div><div style="display:flex;gap:4px;height:8px;margin-top:14px"><span style="flex:3;border-radius:4px;background:var(--pl-ink)"></span><span style="flex:4.6;border-radius:4px;background:var(--pl-accent-line)"></span><span style="flex:1.4;border-radius:4px;background:#e5484d"></span></div><div style="display:flex;justify-content:space-between;margin-top:10px;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.08em;color:var(--pl-faint)"><span>CHEAPEST</span><span>COMPETITIVE</span><span>ABOVE</span></div></div>
+          </div>
+          <div style="flex:5 1 380px;background:var(--pl-surface);padding:32px;margin:0 1px 1px 0;display:flex;flex-direction:column;gap:22px">
+            <div style="width:46px;height:46px;border-radius:12px;border:1px solid var(--pl-line-soft);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -10px rgba(247,99,30,.5)"><span style="width:15px;height:15px;transform:rotate(45deg);background:linear-gradient(135deg,var(--pl-accent),var(--pl-accent-end))"></span></div>
+            <div><h3 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em">AI Product Matching + Human QC</h3><p style="margin:10px 0 0;font-size:15px;line-height:1.6;color:var(--pl-muted)">Our AI matches identical and similar products — even without barcodes — and every match passes human quality control. The result: [PLACEHOLDER]% verified accuracy.</p></div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:auto;font-family:'Geist Mono',ui-monospace,monospace;font-size:13px;text-align:center"><span style="border:1px solid var(--pl-line-soft);border-radius:10px;padding:12px 0;color:var(--pl-muted-2)">Match</span><span style="border:1.5px solid var(--pl-accent-line);border-radius:10px;padding:12px 0;color:var(--pl-accent-ink);background:var(--pl-accent-tint)">Review</span><span style="border-radius:10px;padding:12px 0;color:var(--pl-ink-deep);background:linear-gradient(90deg,var(--pl-accent),var(--pl-accent-end))">Verify ✓</span></div>
+          </div>
+          <div style="flex:7 1 520px;background:var(--pl-surface);padding:32px;margin:0 1px 1px 0;display:flex;flex-direction:column;gap:22px">
+            <div style="width:46px;height:46px;border-radius:12px;border:1px solid var(--pl-line-soft);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -10px rgba(251,138,46,.6)"><span style="width:18px;height:18px;border-radius:4px;background:linear-gradient(135deg,var(--pl-accent-end),var(--pl-accent-line-2))"></span></div>
+            <div><h3 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em">Dynamic Pricing Software</h3><p style="margin:10px 0 0;font-size:15px;line-height:1.6;color:var(--pl-muted);max-width:560px">Set rules or let AI recommend the optimal price for every product, balancing competitiveness and margin automatically as the market moves.</p></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:auto"><div style="border:1px solid var(--pl-line-soft);border-radius:12px;padding:16px 18px;display:grid;grid-template-columns:76px 1fr;row-gap:10px;font-size:14px"><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--pl-faint)">RULE</span><span>Beat lowest rival by 1%</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--pl-faint)">FLOOR</span><span>Margin ≥ 18%</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--pl-faint)">CEILING</span><span>MSRP</span></div><div style="border:1.5px solid var(--pl-accent-line);background:var(--pl-accent-tint);border-radius:12px;padding:16px 18px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.1em;color:var(--pl-faint)">AI RECOMMENDATION</div><div style="display:flex;align-items:baseline;gap:10px;margin-top:8px"><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:13px;color:var(--pl-faint-2);text-decoration:line-through">₹24,990</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:28px;font-weight:500">₹24,540</span></div><div style="font-size:13px;color:var(--pl-muted);margin-top:4px">Competitive and inside your floor</div></div></div>
+          </div>
+          <div style="flex:6 1 440px;background:var(--pl-surface);padding:32px;margin:0 1px 1px 0;display:flex;flex-direction:column;gap:22px">
+            <div style="width:46px;height:46px;border-radius:12px;border:1px solid var(--pl-line-soft);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -10px rgba(247,99,30,.5)"><span style="width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--pl-accent),var(--pl-accent-line-2))"></span></div>
+            <div><h3 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em">Competitor &amp; Market Intelligence</h3><p style="margin:10px 0 0;font-size:15px;line-height:1.6;color:var(--pl-muted)">Go beyond price. Track assortment, promotions, stock availability, and new-product launches to understand every competitor's full strategy.</p></div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:auto"><div style="border:1px solid var(--pl-line-soft);border-radius:10px;padding:12px 14px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.1em;color:var(--pl-faint)">ASSORTMENT</div><div style="font-size:14px;margin-top:4px">+12 new SKUs</div></div><div style="border:1px solid var(--pl-line-soft);border-radius:10px;padding:12px 14px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.1em;color:var(--pl-faint)">PROMOTIONS</div><div style="font-size:14px;margin-top:4px">3 active campaigns</div></div><div style="border:1px solid var(--pl-line-soft);border-radius:10px;padding:12px 14px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.1em;color:var(--pl-faint)">STOCK</div><div style="font-size:14px;margin-top:4px">Rival out of stock</div></div><div style="border:1px solid var(--pl-line-soft);border-radius:10px;padding:12px 14px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.1em;color:var(--pl-faint)">LAUNCHES</div><div style="font-size:14px;margin-top:4px">New model detected</div></div></div>
+          </div>
+          <div style="flex:6 1 440px;background:var(--pl-surface);padding:32px;margin:0 1px 1px 0;display:flex;flex-direction:column;gap:22px">
+            <div style="width:46px;height:46px;border-radius:12px;border:1px solid var(--pl-line-soft);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -10px rgba(251,138,46,.6);font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;font-weight:600;color:var(--pl-accent-end)">MAP</div>
+            <div><h3 style="margin:0;font-size:22px;font-weight:600;letter-spacing:-.01em">MAP &amp; Promotion Monitoring</h3><p style="margin:10px 0 0;font-size:15px;line-height:1.6;color:var(--pl-muted)">Protect your brand and channels with automated MAP compliance alerts and full visibility into competitor promotions.</p></div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:auto"><div style="display:flex;justify-content:space-between;align-items:center;border:1px solid #f5c2c4;background:#fff5f5;border-radius:10px;padding:13px 16px;font-size:14px"><span>MAP violation · Seller 2841</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:13px;color:#e5484d">-8.0% below MAP</span></div><div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--pl-line-soft);border-radius:10px;padding:13px 16px;font-size:14px;color:var(--pl-muted-2)"><span>Promotion detected · Marketplace</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:13px">20% off</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ACCURACY -->
+      <section id="accuracy" class="plh-sec" style="border-bottom:1px solid var(--pl-line);position:relative;overflow:hidden">
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <div style="display:flex;align-items:center;gap:14px;font-size:13px"><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">//</span><span style="display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--pl-line-strong);padding-bottom:4px"><span style="width:7px;height:7px;background:var(--pl-accent-end);transform:rotate(45deg)"></span>Data accuracy</span><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">\\</span></div>
+          <h2 style="margin:22px 0 0;font-size:clamp(34px,4.6vw,52px);line-height:1.08;letter-spacing:-.03em;font-weight:500;max-width:900px;text-wrap:balance">Real-time competitor data accuracy, <span style="color:var(--pl-ink);">proven — not promised.</span></h2>
+          <p style="margin:20px 0 0;font-size:18px;line-height:1.6;color:var(--pl-muted);max-width:640px">Everyone claims "99% accuracy." We show you how we get there — every match passes four checks before it reaches your dashboard.</p>
+        </div>
+        <div style="margin-top:52px;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:24px;overflow:hidden;box-shadow:0 40px 80px -56px rgba(60,30,15,.35)">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 24px;border-bottom:1px solid var(--pl-line-soft);font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.1em;color:var(--pl-faint)"><span style="display:flex;align-items:center;gap:8px;color:var(--pl-ink)"><span style="width:7px;height:7px;border-radius:50%;background:var(--pl-accent);animation:plpulse 1.6s infinite"></span>MATCH PIPELINE · LIVE</span><span style="display:flex;align-items:center;gap:10px">ITEM <span data-plh-itemno>2</span> OF 3<span data-plh-psku style="height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:var(--pl-sand);color:var(--pl-ink-2)">SFW-46-BLK</span></span></div>
+          <div class="plh-pipebody" style="display:grid;gap:1px;background:var(--pl-line-soft)">
+            <div style="background:var(--pl-cream);padding:clamp(22px,3vw,32px);display:flex;flex-direction:column;gap:14px">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.12em;color:var(--pl-faint)">NOW CHECKING</span><span data-plh-insplabel style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;padding:4px 10px;border-radius:999px;background:var(--pl-sand);color:var(--pl-ink-2);transition:all .3s">◌ Human QC review</span></div>
+              <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:16px;padding:16px 18px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.1em;color:var(--pl-faint)">YOUR PRODUCT</div><div data-plh-pyou style="margin-top:6px;font-size:16px;font-weight:600;color:var(--pl-ink)">Smart Fitness Watch 46mm</div><div data-plh-psku2 style="margin-top:4px;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--pl-faint)">SFW-46-BLK</div></div>
+              <div style="position:relative;height:34px;display:flex;align-items:center;justify-content:center"><span aria-hidden="true" style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:repeating-linear-gradient(180deg,var(--pl-line-strong) 0 4px,transparent 4px 8px)"></span><span data-plh-pkind style="position:relative;height:28px;padding:0 12px;display:flex;align-items:center;gap:8px;border-radius:999px;background:var(--pl-surface);border:1px solid var(--pl-line);font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;color:var(--pl-ink-2)">⇅ Similar product</span></div>
+              <div data-plh-pmatchbox style="background:var(--pl-surface);border:1px solid var(--pl-line-soft);border-radius:16px;padding:16px 18px;transition:border-color .4s"><div style="display:flex;justify-content:space-between;font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.1em;color:var(--pl-faint)"><span data-plh-psrc>D2C STORE C</span><span data-plh-pprice style="color:var(--pl-ink)">₹9,990</span></div><div data-plh-pmatch style="margin-top:6px;font-size:16px;font-weight:600;color:var(--pl-ink)">FitPro 46 mm Smartwatch — Midnight</div></div>
+              <div style="margin-top:auto;padding-top:8px"><div style="display:flex;justify-content:space-between;align-items:baseline;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.08em;color:var(--pl-faint)"><span>MATCH CONFIDENCE</span><span data-plh-conflabel style="font-family:Geist,sans-serif;font-size:22px;font-weight:600;letter-spacing:-.02em;color:var(--pl-ink)">32.0%</span></div><div style="height:6px;border-radius:6px;background:var(--pl-line-soft);margin-top:10px"><div data-plh-confbar style="height:100%;width:32%;border-radius:6px;background:var(--pl-ink);transition:width .6s ease"></div></div></div>
+            </div>
+            <div style="background:var(--pl-surface);padding:clamp(14px,2vw,20px) clamp(16px,2.6vw,28px);display:flex;flex-direction:column">
+              {sd.map((d, i) => (
+                <div data-plh-stage={i} style="position:relative;display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:16px;align-items:start;padding:16px 0;border-bottom:1px dashed var(--pl-line-soft)">
+                  <span data-plh-stageline aria-hidden="true" style={`display:${i < 3 ? 'block' : 'none'};position:absolute;left:21.5px;top:64px;bottom:-12px;width:1px;border-radius:1px;background:var(--pl-line);transition:background .4s`}></span>
+                  <div data-plh-stagenode style="position:relative;width:44px;height:44px;border-radius:14px;background:var(--pl-cream);border:1px solid var(--pl-line-soft);display:flex;align-items:center;justify-content:center;color:#B5A59A;transition:all .4s"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d={d[5]}></path></svg><span data-plh-stagemk style="position:absolute;right:-5px;bottom:-5px;width:18px;height:18px;border-radius:50%;border:2px solid var(--pl-surface);background:var(--pl-line-strong);color:var(--pl-surface);font-size:8.5px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .4s"></span></div>
+                  <div style="min-width:0;padding-top:2px"><div data-plh-staget style="font-size:17px;font-weight:600;letter-spacing:-.01em;color:var(--pl-faint);transition:color .4s">{d[2]}</div><div style="margin-top:4px;font-size:14px;line-height:1.55;color:var(--pl-muted);text-wrap:pretty">{d[3]}</div><div data-plh-stagestat style="margin-top:8px;font-family:'Geist Mono',ui-monospace,monospace;font-size:11.5px;color:var(--pl-faint)">{d[4]}</div></div>
+                  <span data-plh-stagepill style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;border-radius:999px;padding:3px 10px;background:var(--pl-cream);border:1px solid var(--pl-line-soft);font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.1em;color:var(--pl-faint-2);transition:all .4s"><span data-plh-stagepilldot style="width:5px;height:5px;border-radius:50%;background:var(--pl-line-xstrong)"></span><span data-plh-stagepilltext>QUEUED</span></span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div class="plh-pipekpi" style="display:grid;gap:1px;background:var(--pl-line-soft);border-top:1px solid var(--pl-line-soft)">
+            <div style="background:var(--pl-surface);padding:20px 24px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.12em;color:var(--pl-faint)">MATCHES VERIFIED</div><div data-plh-verified style="margin-top:8px;font-family:Geist,sans-serif;font-size:clamp(24px,2.6vw,30px);font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">12,04,878</div></div>
+            <div style="background:var(--pl-surface);padding:20px 24px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.12em;color:var(--pl-faint)">HUMAN-REVIEWED</div><div style="margin-top:8px;font-family:Geist,sans-serif;font-size:clamp(24px,2.6vw,30px);font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">100%</div></div>
+            <div style="background:var(--pl-surface);padding:20px 24px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.12em;color:var(--pl-faint)">OUTLIERS HELD TODAY</div><div style="margin-top:8px;font-family:Geist,sans-serif;font-size:clamp(24px,2.6vw,30px);font-weight:600;letter-spacing:-.03em;color:var(--pl-ink)">317</div></div>
+            <div style="background:var(--pl-surface);padding:20px 24px;min-width:0"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.12em;color:var(--pl-faint)">ACCURACY SLA</div><div style="margin-top:8px;font-family:Geist,sans-serif;font-size:clamp(20px,2vw,24px);font-weight:600;color:var(--pl-ink);word-break:break-all">[PLACEHOLDER]%</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 24px;border-top:1px solid var(--pl-line-soft);background:var(--pl-cream)"><span style="width:32px;height:32px;border-radius:10px;background:var(--pl-ink);display:flex;align-items:center;justify-content:center;color:var(--pl-surface);font-size:14px">✓</span><span style="flex:1;min-width:240px;font-size:16px;font-weight:500;color:var(--pl-ink)">Fewer than [PLACEHOLDER] matches is a false positive — backed by our SLA.</span><a href="#demo" style="color:var(--pl-accent-ink);font-weight:500">Book a demo →</a></div>
+        </div>
+      </section>
+
+      <!-- HOW IT WORKS -->
+      <section id="how" class="plh-sec" style="border-bottom:1px solid var(--pl-line)">
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <div style="display:flex;align-items:center;gap:14px;font-size:13px"><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">//</span><span style="display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--pl-line-strong);padding-bottom:4px"><span style="width:7px;height:7px;background:var(--pl-accent);transform:rotate(45deg)"></span>How it works</span><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">\\</span></div>
+          <h2 style="margin:22px 0 0;font-size:clamp(36px,5vw,60px);line-height:1.04;letter-spacing:-.035em;font-weight:500">Live in days, <span style="color:var(--pl-ink);">not months.</span></h2>
+          <p style="margin:18px 0 0;font-size:18px;line-height:1.6;color:var(--pl-muted);max-width:560px">Four steps from your catalog to live, margin-safe pricing.</p>
+        </div>
+        <div style="margin-top:52px;border:1px solid var(--pl-line);border-radius:22px;overflow:hidden;background:var(--pl-line);display:grid;gap:1px">
+          <div style="background:var(--pl-cream);padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap"><span style="display:flex;align-items:center;gap:8px;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.12em;color:var(--pl-ink)"><span style="width:7px;height:7px;border-radius:50%;background:var(--pl-accent);animation:plpulse 1.6s infinite"></span>ONBOARDING · STEP <span data-plh-hwno>02</span> OF 04</span><div style="flex:1;min-width:160px;height:4px;border-radius:4px;background:var(--pl-line)"><div data-plh-hwfill style="height:100%;width:50%;border-radius:4px;background:var(--pl-ink);transition:width .6s ease"></div></div><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--pl-faint)">~5 DAYS TO LIVE</span></div>
+          <div class="plh-hwgrid" style="display:grid;gap:1px">
+            {hwDefs.map((d, i) => (
+              <div data-plh-hwcard={i} style="background:#fdfcfa;padding:26px 22px 24px;display:flex;flex-direction:column;gap:16px;cursor:pointer;position:relative;transition:background .3s">
+                <span data-plh-hwbar style="position:absolute;left:0;right:0;top:0;height:2px;background:transparent;transition:background .3s"></span>
+                <div style="display:flex;justify-content:space-between;align-items:center"><span data-plh-hwnode style="width:36px;height:36px;border-radius:50%;background:var(--pl-surface);border:1px solid var(--pl-line);color:var(--pl-faint-2);font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;transition:all .3s">{d[0] && String(i + 1).padStart(2, '0')}</span><span data-plh-hwpill style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.12em;padding:3px 8px;border-radius:5px;background:var(--pl-sand);color:var(--pl-faint);transition:all .3s">{d[2]}</span></div>
+                <div><div data-plh-hwtitle style="font-size:19px;font-weight:600;letter-spacing:-.01em;color:var(--pl-muted);transition:color .3s">{d[0]}</div><div style="font-size:14px;line-height:1.55;color:var(--pl-muted);margin-top:8px;text-wrap:pretty">{d[1]}</div></div>
+                <div data-plh-hwdemo style="margin-top:auto;padding:12px;border-radius:12px;background:var(--pl-cream);border:1px dashed var(--pl-line);opacity:.55;transition:opacity .3s">
+                  {i === 0 && (<div style="display:flex;flex-direction:column;gap:6px">{[['Shopify', 'SYNCED'], ['catalog.csv', '12,480 rows'], ['Product feed', 'HOURLY']].map((x) => (<div style="display:flex;justify-content:space-between;align-items:center;border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:8px;padding:7px 10px;font-size:12px"><span style="display:flex;align-items:center;gap:7px"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-accent)"></span>{x[0]}</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;color:var(--pl-faint)">{x[1]}</span></div>))}</div>)}
+                  {i === 1 && (<div><div style="display:grid;grid-template-columns:1fr 26px 1fr;gap:6px;align-items:center"><div style="border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:8px;padding:8px;font-size:11px;line-height:1.35">Wireless ANC<br /><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9px;color:var(--pl-faint)">WH-ANC-700</span></div><span style="width:26px;height:26px;border-radius:50%;border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);color:var(--pl-accent-ink);font-size:11px;display:flex;align-items:center;justify-content:center">⇄</span><div style="border:1px solid var(--pl-accent-line);background:var(--pl-surface);border-radius:8px;padding:8px;font-size:11px;line-height:1.35">Sonix ANC 700<br /><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9px;color:var(--pl-faint)">99.1% match</span></div></div><div style="display:flex;gap:6px;margin-top:8px">{['✓ AI', '✓ QC', '✓ AUTO'].map((t) => (<span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9px;letter-spacing:.08em;color:var(--pl-accent-ink);border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);border-radius:4px;padding:2px 6px">{t}</span>))}</div></div>)}
+                  {i === 2 && (<div style="border:1px solid var(--pl-line-soft);background:var(--pl-surface);border-radius:8px;padding:10px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:20px;font-weight:500">105.4</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9px;color:var(--pl-faint)">▼ 3.6%</span></div><div style="display:flex;align-items:flex-end;gap:3px;height:28px;margin-top:8px">{[40, 55, 48, 62, 58, 70, 66, 80, 74, 88].map((h, bi) => (<span style={`flex:1;height:${h}%;border-radius:2px;background:${bi >= 7 ? 'var(--pl-ink)' : 'var(--pl-line)'}`}></span>))}</div></div>)}
+                  {i === 3 && (<div style="border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);border-radius:8px;padding:10px"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:9px;letter-spacing:.1em;color:var(--pl-faint)">AI RECOMMENDATION</div><div style="display:flex;align-items:baseline;gap:8px;margin-top:6px"><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--pl-faint-2);text-decoration:line-through">₹24,990</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:18px;font-weight:500">₹24,540</span></div><div style="margin-top:8px;display:inline-block;background:var(--pl-ink);color:var(--pl-surface);font-size:11px;font-weight:500;padding:4px 10px;border-radius:6px">Apply price</div></div>)}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style="background:var(--pl-surface);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap"><span style="font-size:15px;color:var(--pl-ink-2)">A dedicated onboarding lead sets up your first product groups with you.</span><a href="/book-a-demo" style="background:var(--pl-gradient);color:var(--pl-surface);font-weight:500;font-size:15px;padding:12px 20px;border-radius:12px;box-shadow:0 10px 24px -12px rgba(247,99,30,.8);white-space:nowrap">Book a demo</a></div>
+        </div>
+      </section>
+
+      <!-- INTEGRATIONS -->
+      <section id="integrations" class="plh-sec" style="border-bottom:1px solid var(--pl-line)">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:40px;align-items:center">
+          <div>
+            <div style="display:flex;align-items:center;gap:14px;font-size:13px"><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">//</span><span style="display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--pl-line-strong);padding-bottom:4px"><span style="width:7px;height:7px;background:var(--pl-accent-end);transform:rotate(45deg)"></span>Integrations &amp; security</span><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">\\</span></div>
+            <h2 style="margin:22px 0 0;font-size:clamp(38px,5vw,60px);line-height:1.04;letter-spacing:-.035em;font-weight:500">Fits your stack.<br /><span style="color:var(--pl-ink);">Secures your data.</span></h2>
+            <p style="margin:22px 0 0;font-size:18px;line-height:1.6;color:var(--pl-muted);max-width:520px">Connect Shopify, marketplaces, and your BI tools, or pull live data via API. Enterprise-ready with SSO, role-based access, and ISO 27001-aligned security.</p>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:32px;border:1px solid var(--pl-line);border-radius:14px;overflow:hidden;background:var(--pl-line);gap:1px;max-width:520px"><div style="background:var(--pl-surface);padding:18px"><div style="font-size:28px;font-weight:600;letter-spacing:-.02em">20+</div><div style="font-size:13px;color:var(--pl-muted)">native connectors</div></div><div style="background:var(--pl-surface);padding:18px"><div style="font-size:28px;font-weight:600;letter-spacing:-.02em">5 min</div><div style="font-size:13px;color:var(--pl-muted)">typical setup</div></div><div style="background:var(--pl-surface);padding:18px"><div style="font-size:28px;font-weight:600;letter-spacing:-.02em">API</div><div style="font-size:13px;color:var(--pl-muted)">REST &amp; webhooks</div></div></div>
+          </div>
+          <div style="display:flex;justify-content:center;min-width:0">
+            <div role="img" aria-label="Data flows in from Shopify, Amazon, Flipkart and Magento into PriceLeap, and insights flow out to Slack, Snowflake, Salesforce and Google Sheets" style="position:relative;width:min(100%,500px);aspect-ratio:500/440">
+              <span style="position:absolute;left:50%;top:50%;width:62%;height:70%;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(247,99,30,.16),transparent 70%);pointer-events:none"></span>
+              <div style="position:absolute;left:0;top:0;font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.12em;color:var(--pl-faint);display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-accent)"></span>DATA IN</div>
+              <div style="position:absolute;right:0;top:0;font-family:'Geist Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.12em;color:var(--pl-faint);display:flex;align-items:center;gap:6px">INSIGHTS OUT<span style="width:6px;height:6px;border-radius:50%;border:1.5px solid var(--pl-accent-end)"></span></div>
+              <svg viewBox="0 0 500 440" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible">
+                {[0, 1, 2, 3].map((i) => { const y = [70, 170, 270, 370][i]; return (<g><path id={`plin${i}`} d={`M78,${y} C160,${y} 160,220 222,220`} fill="none" stroke="#EFE3DA" stroke-width="1.5"></path><path d={`M78,${y} C160,${y} 160,220 222,220`} fill="none" stroke="#F7631E" stroke-width="1.5" stroke-dasharray="4 14" style="animation:pldash 1.2s linear infinite"></path><path id={`plout${i}`} d={`M278,220 C340,220 340,${y} 422,${y}`} fill="none" stroke="#EFE3DA" stroke-width="1.5"></path><path d={`M278,220 C340,220 340,${y} 422,${y}`} fill="none" stroke="#FB8A2E" stroke-width="1.5" stroke-dasharray="4 14" opacity=".7" style="animation:pldash 1.2s linear infinite"></path></g>); })}
+                <circle r="4" fill="#F7631E" stroke="#fff" stroke-width="1.5"><animateMotion dur="2.4s" begin="-2.4s" repeatCount="indefinite"><mpath href="#plin0"></mpath></animateMotion></circle><circle r="3.5" fill="#fff" stroke="#FB8A2E" stroke-width="1.5"><animateMotion dur="2.4s" begin="-1.2s" repeatCount="indefinite"><mpath href="#plout0"></mpath></animateMotion></circle><circle r="4" fill="#F7631E" stroke="#fff" stroke-width="1.5"><animateMotion dur="2.4s" begin="-1.8s" repeatCount="indefinite"><mpath href="#plin1"></mpath></animateMotion></circle><circle r="3.5" fill="#fff" stroke="#FB8A2E" stroke-width="1.5"><animateMotion dur="2.4s" begin="-1.8s" repeatCount="indefinite"><mpath href="#plout1"></mpath></animateMotion></circle><circle r="4" fill="#F7631E" stroke="#fff" stroke-width="1.5"><animateMotion dur="2.4s" begin="-1.2s" repeatCount="indefinite"><mpath href="#plin2"></mpath></animateMotion></circle><circle r="3.5" fill="#fff" stroke="#FB8A2E" stroke-width="1.5"><animateMotion dur="2.4s" begin="-0.0s" repeatCount="indefinite"><mpath href="#plout2"></mpath></animateMotion></circle><circle r="4" fill="#F7631E" stroke="#fff" stroke-width="1.5"><animateMotion dur="2.4s" begin="-0.6s" repeatCount="indefinite"><mpath href="#plin3"></mpath></animateMotion></circle><circle r="3.5" fill="#fff" stroke="#FB8A2E" stroke-width="1.5"><animateMotion dur="2.4s" begin="-0.6s" repeatCount="indefinite"><mpath href="#plout3"></mpath></animateMotion></circle>
+              </svg>
+              {inLogos.map(([m, lab, top]) => (<div style={`position:absolute;left:10%;top:${top}%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center`}><span style="width:56px;height:56px;border-radius:16px;border:1px solid var(--pl-line);background:var(--pl-surface);box-shadow:0 12px 26px -14px rgba(23,22,26,.35);display:flex;align-items:center;justify-content:center;position:relative"><img src={`/assets/logos/${m}.svg`} alt="" loading="lazy" style="width:28px;height:28px;object-fit:contain" /><span style="position:absolute;right:-4px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--pl-accent);border:1.5px solid var(--pl-surface)"></span></span><span style="position:absolute;top:100%;margin-top:6px;font-size:11px;color:var(--pl-faint);white-space:nowrap">{lab}</span></div>))}
+              {outLogos.map(([m, lab, top]) => (<div style={`position:absolute;left:90%;top:${top}%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center`}><span style="width:56px;height:56px;border-radius:16px;border:1px solid var(--pl-line);background:var(--pl-surface);box-shadow:0 12px 26px -14px rgba(23,22,26,.35);display:flex;align-items:center;justify-content:center;position:relative"><img src={`/assets/logos/${m}.svg`} alt="" loading="lazy" style="width:28px;height:28px;object-fit:contain" /><span style="position:absolute;left:-4px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:var(--pl-surface);border:1.5px solid var(--pl-accent-end)"></span></span><span style="position:absolute;top:100%;margin-top:6px;font-size:11px;color:var(--pl-faint);white-space:nowrap">{lab}</span></div>))}
+              <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center">
+                <span style="position:relative;width:104px;height:104px;display:flex;align-items:center;justify-content:center"><span style="position:absolute;inset:-14px;border-radius:50%;border:1px dashed var(--pl-accent-line-2);animation:plspin 24s linear infinite"></span><span style="position:absolute;left:50%;top:50%;width:104px;height:104px;border-radius:28px;border:1.5px solid var(--pl-accent-line);animation:plring 3s ease-out infinite"></span><span style="position:relative;width:104px;height:104px;border-radius:28px;border:1px solid var(--pl-accent-line);background:var(--pl-surface);box-shadow:0 0 0 8px rgba(247,99,30,.08),0 20px 50px -14px rgba(247,99,30,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px"><img src="/assets/pl-mark.png" alt="" width="44" height="44" style="display:block" /></span></span>
+                <span style="position:absolute;top:100%;margin-top:22px;height:24px;padding:0 10px;border-radius:999px;border:1px solid var(--pl-accent-line);background:var(--pl-accent-tint);display:flex;align-items:center;gap:6px;font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-accent-ink);white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:var(--pl-accent);animation:plpulse 1.6s infinite"></span>SYNCING LIVE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RESULTS -->
+      <section id="results" class="plh-sec" style="border-bottom:1px solid var(--pl-line)">
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center">
+          <div style="display:flex;align-items:center;gap:14px;font-size:13px"><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">//</span><span style="display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--pl-line-strong);padding-bottom:4px"><span style="width:7px;height:7px;background:var(--pl-accent);transform:rotate(45deg)"></span>Results</span><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">\\</span></div>
+          <h2 style="margin:22px 0 0;font-size:clamp(34px,4.6vw,52px);line-height:1.08;letter-spacing:-.03em;font-weight:500;text-wrap:balance">Better data. Better pricing. <span style="color:var(--pl-ink);">Measurable results.</span></h2>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:52px">
+          <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:18px;padding:28px;display:flex;flex-direction:column"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.12em;color:var(--pl-faint)">SALES LIFT</div><div style="margin-top:16px;font-size:72px;font-weight:600;letter-spacing:-.05em;line-height:1"><span style="color:var(--pl-ink);">+12</span><span style="font-size:24px;color:var(--pl-accent-end)">%</span></div><p style="margin:18px 0 0;font-size:15px;line-height:1.55;color:var(--pl-muted-2)">Average revenue growth on repriced SKUs in the first 90 days.</p><div style="border-top:1px solid var(--pl-line-soft);margin-top:auto;padding-top:20px"><div style="display:flex;align-items:flex-end;gap:6px;height:64px">{[34, 38, 36, 40, 56, 70, 84, 100].map((h, i) => (<span style={`flex:1;height:${h}%;border-radius:4px;background:${i < 4 ? '#FBEFE6' : i === 4 ? 'var(--pl-accent-line-2)' : i === 5 ? 'var(--pl-ink)' : i === 6 ? 'var(--pl-accent)' : 'var(--pl-accent-end)'}`}></span>))}</div><div style="display:flex;justify-content:space-between;margin-top:10px;font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.08em;color:var(--pl-faint)"><span>BEFORE</span><span style="color:var(--pl-accent-ink)">WITH PRICELEAP</span></div></div></div>
+          <div style="background:var(--pl-surface);border:1.5px solid var(--pl-accent-line);border-radius:18px;padding:28px;display:flex;flex-direction:column;box-shadow:0 20px 40px -24px rgba(247,99,30,.55)"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.12em;color:var(--pl-faint)">MARGIN GAIN</div><div style="margin-top:16px;font-size:72px;font-weight:600;letter-spacing:-.05em;line-height:1">+4.2<span style="font-size:24px;letter-spacing:0;margin-left:6px">pts</span></div><p style="margin:18px 0 0;font-size:15px;line-height:1.55;color:var(--pl-muted-2)">Gross margin recovered by pricing above rivals where you can.</p><div style="border-top:1px solid var(--pl-line-soft);margin-top:auto;padding-top:20px;display:grid;grid-template-columns:56px 1fr 48px;gap:10px 12px;align-items:center;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px"><span style="color:var(--pl-faint)">BEFORE</span><span style="height:6px;border-radius:6px;background:var(--pl-line-soft)"><span style="display:block;width:64%;height:100%;border-radius:6px;background:var(--pl-line-xstrong)"></span></span><span style="text-align:right">21.4%</span><span style="color:var(--pl-accent-ink)">AFTER</span><span style="height:6px;border-radius:6px;background:var(--pl-line-soft)"><span style="display:block;width:78%;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--pl-accent),var(--pl-accent-end))"></span></span><span style="text-align:right">25.6%</span><span style="grid-column:1/-1;color:var(--pl-faint-2);font-size:10px">AVG. GROSS MARGIN</span></div></div>
+          <div style="background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:18px;padding:28px;display:flex;flex-direction:column"><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.12em;color:var(--pl-faint)">TIME SAVED</div><div style="margin-top:16px;font-size:72px;font-weight:600;letter-spacing:-.05em;line-height:1">80<span style="font-size:24px;letter-spacing:0">%</span></div><p style="margin:18px 0 0;font-size:15px;line-height:1.55;color:var(--pl-muted-2)">Less time spent on manual competitor price checks.</p><div style="border-top:1px solid var(--pl-line-soft);margin-top:auto;padding-top:20px;display:grid;grid-template-columns:56px 1fr 40px;gap:10px 12px;align-items:center;font-family:'Geist Mono',ui-monospace,monospace;font-size:11px"><span style="color:var(--pl-faint)">MANUAL</span><span style="height:6px;border-radius:6px;background:var(--pl-line-soft)"><span style="display:block;width:100%;height:100%;border-radius:6px;background:var(--pl-line-xstrong)"></span></span><span style="text-align:right">20 h</span><span style="color:var(--pl-accent-ink)">AUTO</span><span style="height:6px;border-radius:6px;background:var(--pl-line-soft)"><span style="display:block;width:20%;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--pl-accent),var(--pl-accent-end))"></span></span><span style="text-align:right">4 h</span><span style="grid-column:1/-1;color:var(--pl-faint-2);font-size:10px">PRICE CHECKS PER WEEK</span></div></div>
+        </div>
+        <div style="margin-top:14px;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;color:var(--pl-faint-2)">Illustrative figures — replace with verified customer results.</div>
+        <div style="margin-top:96px;padding-top:80px;border-top:1px solid var(--pl-line)">
+          <div style="display:flex;flex-direction:column;align-items:center;text-align:center">
+            <div style="display:flex;align-items:center;gap:14px;font-size:13px"><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">//</span><span style="display:flex;align-items:center;gap:7px;border-bottom:1px solid var(--pl-line-strong);padding-bottom:4px"><span style="width:7px;height:7px;background:var(--pl-accent);transform:rotate(45deg)"></span>Testimonials</span><span style="color:var(--pl-line-xstrong);font-family:'Geist Mono',ui-monospace,monospace">\\</span></div>
+            <h2 style="margin:22px 0 0;font-size:clamp(34px,4.6vw,52px);line-height:1.08;letter-spacing:-.03em;font-weight:500">Real results. <span style="color:var(--pl-ink);">Real teams.</span></h2>
+          </div>
+          <div style="margin-top:48px;border:1px solid var(--pl-line);border-radius:22px;overflow:hidden;background:var(--pl-line);display:grid;gap:1px">
+            <div class="plh-tqgrid" style="display:grid;gap:1px">
+              <div style="background:var(--pl-cream);display:flex;flex-direction:column;gap:1px">
+                {testiData.map((t, i) => (<button type="button" data-plh-testi={i} style={`flex:1;font:inherit;color:inherit;text-align:left;cursor:pointer;border:none;background:${i === 0 ? 'var(--pl-surface)' : 'var(--pl-cream)'};padding:22px 22px;position:relative;display:flex;align-items:center;gap:14px;box-shadow:0 1px 0 var(--pl-line);min-width:0`}><span data-plh-testibar style={`position:absolute;left:0;top:0;bottom:0;width:3px;background:${i === 0 ? 'var(--pl-accent)' : 'transparent'}`}></span><span data-plh-testiav style={`width:44px;height:44px;flex:none;border-radius:12px;background:${i === 0 ? 'var(--pl-accent)' : 'var(--pl-surface)'};border:1px solid ${i === 0 ? 'var(--pl-accent)' : 'var(--pl-line)'};color:${i === 0 ? 'var(--pl-ink-deep)' : 'var(--pl-faint)'};font-family:'Geist Mono',ui-monospace,monospace;font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;transition:all .3s`}>{t[0]}</span><span style="min-width:0;display:flex;flex-direction:column;gap:3px"><span data-plh-testirole style={`font-size:14px;font-weight:600;color:${i === 0 ? 'var(--pl-ink)' : 'var(--pl-muted)'}`}>{t[1]}</span><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.1em;color:var(--pl-faint)">{t[2].toUpperCase()}</span></span></button>))}
+              </div>
+              <div style="background:var(--pl-surface);padding:clamp(28px,4vw,40px) clamp(22px,4vw,44px);position:relative;overflow:hidden;min-height:360px;display:flex;flex-direction:column">
+                <div style="position:absolute;inset:0;background-image:linear-gradient(#f1efea 1px,transparent 1px),linear-gradient(90deg,#f1efea 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:linear-gradient(135deg,transparent 45%,#000);mask-image:linear-gradient(135deg,transparent 45%,#000);pointer-events:none"></div>
+                <div style="position:relative;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><span style="font-size:64px;line-height:.6;color:var(--pl-accent);font-weight:600;height:30px">“</span><span style="display:flex;align-items:center;gap:10px"><span style="color:var(--pl-accent);letter-spacing:2px">★★★★★</span><span data-plh-tqno style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--pl-faint-2)">01 / 03</span></span></div>
+                <blockquote data-plh-tq style="position:relative;margin:22px 0 0;font-size:clamp(17px,2vw,22px);line-height:1.5;letter-spacing:-.01em;font-weight:500;color:var(--pl-ink);text-wrap:pretty;flex:1">“{testiData[0][5]}”</blockquote>
+                <div style="position:relative;margin-top:28px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding-top:20px;border-top:1px dashed var(--pl-line)"><div><div data-plh-tqrole style="font-size:15px;font-weight:600">Head of Marketplace Pricing</div><div data-plh-tqind style="font-size:13px;color:var(--pl-faint)">Consumer Electronics</div></div><div style="display:flex;gap:8px"><button type="button" data-plh-tqprev style="width:38px;height:38px;border-radius:11px;border:1px solid var(--pl-line);background:var(--pl-surface);cursor:pointer;font-size:14px;color:var(--pl-ink-2)">←</button><button type="button" data-plh-tqnext style="width:38px;height:38px;border-radius:11px;border:none;background:var(--pl-ink);cursor:pointer;font-size:14px;color:var(--pl-surface)">→</button></div></div>
+              </div>
+            </div>
+            <div class="plh-tsgrid" style="display:grid;gap:1px">
+              {testiData.map((t, i) => (<button type="button" data-plh-testistat={i} style={`cursor:pointer;border:none;text-align:left;font:inherit;background:${i === 0 ? 'var(--pl-accent-tint)' : 'var(--pl-surface)'};padding:22px 24px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;transition:background .3s`}><div><div data-plh-testistatv style={`font-size:30px;font-weight:600;letter-spacing:-.03em;color:${i === 0 ? 'var(--pl-accent-ink)' : 'var(--pl-ink)'}`}>{t[3]}</div><div style="font-family:'Geist Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.12em;color:var(--pl-faint);margin-top:4px">{t[4]}</div></div><span style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--pl-faint-2)">{t[0]}</span></button>))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section id="demo" style="padding:28px;border-bottom:1px solid var(--pl-line)">
+        <div style="position:relative;overflow:hidden;background:var(--pl-surface);border:1px solid var(--pl-line);border-radius:24px;padding:110px 32px;text-align:center;color:var(--pl-ink)">
+          <div style="position:absolute;inset:0;background-image:linear-gradient(#efede8 1px,transparent 1px),linear-gradient(90deg,#efede8 1px,transparent 1px);background-size:40px 40px;background-position:center;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 20%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 20%,transparent 75%);pointer-events:none"></div>
+          <div style="position:absolute;left:50%;top:50%;width:min(72%,760px);height:62%;transform:translate(-50%,-50%);border:1px solid var(--pl-line);border-radius:4px;pointer-events:none"><span style="position:absolute;left:-1px;top:-1px;width:14px;height:14px;border-top:1.5px solid var(--pl-accent-line);border-left:1.5px solid var(--pl-accent-line)"></span><span style="position:absolute;right:-1px;top:-1px;width:14px;height:14px;border-top:1.5px solid var(--pl-accent-line);border-right:1.5px solid var(--pl-accent-line)"></span><span style="position:absolute;left:-1px;bottom:-1px;width:14px;height:14px;border-bottom:1.5px solid var(--pl-accent-line);border-left:1.5px solid var(--pl-accent-line)"></span><span style="position:absolute;right:-1px;bottom:-1px;width:14px;height:14px;border-bottom:1.5px solid var(--pl-accent-line);border-right:1.5px solid var(--pl-accent-line)"></span></div>
+          <div style="position:absolute;left:50%;bottom:-160px;width:620px;height:320px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.14),transparent);pointer-events:none"></div>
+          <div style="position:relative"><h2 style="margin:0;font-size:clamp(36px,5vw,60px);line-height:1.04;letter-spacing:-.035em;font-weight:500;text-wrap:balance">Price with confidence on data you can <span style="color:var(--pl-ink);">actually trust.</span></h2><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:36px"><a href="/book-a-demo" style="background:var(--pl-gradient);color:var(--pl-surface);font-weight:500;font-size:16px;padding:15px 26px;border-radius:14px;box-shadow:0 14px 30px -12px rgba(247,99,30,.9)">Book a demo</a><a href="#product" style="background:var(--pl-surface);border:1px solid var(--pl-line);color:var(--pl-ink);font-weight:500;font-size:16px;padding:15px 22px;border-radius:14px">See a sample of your competitor data →</a></div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .plh { font-family: 'Geist', system-ui, sans-serif; color: var(--pl-ink); background: var(--pl-surface); }
+  .plh a { color: var(--pl-ink); text-decoration: none; }
+  .plh a:hover { color: var(--pl-accent); }
+  @keyframes plpulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.5); } 100% { box-shadow: 0 0 0 8px rgba(247,99,30,0); } }
+  @keyframes plblink { 50% { opacity: 0; } }
+  @keyframes plring { 0% { transform: translate(-50%,-50%) scale(1); opacity: .55; } 100% { transform: translate(-50%,-50%) scale(2.6); opacity: 0; } }
+  @keyframes plmarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes pldash { to { stroke-dashoffset: -18; } }
+  @keyframes plspin { to { transform: rotate(360deg); } }
+  @keyframes pltourin { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes pltspin { to { transform: rotate(360deg); } }
+  @keyframes pltblink { 50% { opacity: 0; } }
+
+  .plh-frameline { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--pl-line); pointer-events: none; z-index: 2; }
+  .plh-hero { padding: 88px 28px 44px; }
+  .plh-tour { padding: 4px 28px 64px; }
+  .plh-sec { padding: 96px 28px; }
+  @media (max-width: 639px) { .plh-hero { padding: 64px 16px 28px; } .plh-tour { padding: 4px 12px 40px; } .plh-sec { padding: 56px 16px; } }
+
+  .plh-tbody { height: 430px; }
+  @media (max-width: 639px) { .plh-tbody { height: auto; min-height: 440px; } }
+  .plh-tside { display: flex; }
+  @media (max-width: 759px) { .plh-tside { display: none; } }
+  @media (max-width: 859px) { .plh-twide { display: none !important; } }
+
+  .plh-tadd { grid-template-columns: 1fr; }
+  @media (min-width: 760px) { .plh-tadd { grid-template-columns: minmax(0,1.25fr) minmax(0,1fr); } }
+  .plh-topt { grid-template-columns: 1fr; }
+  @media (min-width: 520px) { .plh-topt { grid-template-columns: 1fr 1fr; } }
+  .plh-tkpi { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  @media (min-width: 760px) { .plh-tkpi { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+  .plh-trule { grid-template-columns: 1fr; }
+  @media (min-width: 760px) { .plh-trule { grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); } }
+  .plh-trow { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; }
+  @media (min-width: 860px) { .plh-trow { grid-template-columns: minmax(0,1.6fr) minmax(0,.9fr) minmax(0,1fr) minmax(0,.9fr) minmax(0,1.3fr); } }
+  .plh-tprice { text-align: right; }
+  @media (min-width: 860px) { .plh-tprice { text-align: left; } }
+
+  .plh-chapbar { grid-template-columns: 48px repeat(4,minmax(0,1fr)); }
+  .plh-chapbar [data-plh-chaptab] { padding: 10px 8px; }
+  .plh-chapt { font-size: 12px; }
+  .plh-chapnum { display: none; }
+  .plh-chapd { display: none; }
+  @media (min-width: 640px) { .plh-chapbar { grid-template-columns: 64px repeat(4,minmax(0,1fr)); } .plh-chapbar [data-plh-chaptab] { padding: 12px 16px; } .plh-chapt { font-size: 14px; } .plh-chapnum { display: flex; } }
+  @media (min-width: 960px) { .plh-chapd { display: block; } }
+
+  .plh-trust { grid-template-columns: 1fr; }
+  .plh-trustlabel { border-bottom: 1px solid var(--pl-line); }
+  @media (min-width: 860px) { .plh-trust { grid-template-columns: 300px minmax(0,1fr); } .plh-trustlabel { border-bottom: none; } }
+  .plh-pain { grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .plh-pain { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  @media (min-width: 1100px) { .plh-pain { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+  .plh-ipt { grid-template-columns: 1fr; }
+  @media (min-width: 560px) { .plh-ipt { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  @media (min-width: 900px) { .plh-ipt { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+  .plh-feedrow { display: grid; grid-template-columns: 1fr auto; gap: 16px; }
+  @media (min-width: 700px) { .plh-feedrow { grid-template-columns: 70px 130px 1fr auto; } }
+  .plh-pipebody { grid-template-columns: 1fr; }
+  @media (min-width: 960px) { .plh-pipebody { grid-template-columns: minmax(0,.85fr) minmax(0,1.15fr); } }
+  .plh-pipekpi { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  @media (min-width: 860px) { .plh-pipekpi { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+  .plh-hwgrid { grid-template-columns: 1fr; }
+  @media (min-width: 600px) { .plh-hwgrid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  @media (min-width: 1000px) { .plh-hwgrid { grid-template-columns: repeat(4,minmax(0,1fr)); } }
+  .plh-tqgrid { grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .plh-tqgrid { grid-template-columns: 340px minmax(0,1fr); } }
+  .plh-tsgrid { grid-template-columns: 1fr; }
+  @media (min-width: 640px) { .plh-tsgrid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+
+  @media (prefers-reduced-motion: reduce) { .plh *, .plh *::before, .plh *::after { animation: none !important; transition: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.plh') as HTMLElement | null;
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+    const clamp = (v: number) => Math.max(0, Math.min(1, v));
+
+    // ---------- hero count + clock (100ms) ----------
+    let count = 3526158;
+    const fmtIN = (n: number) => n.toLocaleString('en-IN');
+    const countEl = q('[data-plh-count]'), clockEl = q('[data-plh-clock]');
+
+    // ---------- Inside-PriceLeap tabs ----------
+    const ipMeta = [['Add Products', 'AI tracks pricing, finds competitors and monitors their prices.', '01'], ['Market Monitor', 'Live feed of competitor changes across every tracked SKU.', '02'], ['Dynamic Pricing', 'Set guardrails once; PriceLeap recommends inside them.', '03'], ['PriceLeap Agent', 'Ask anything about your catalog and the market.', '04']];
+    const ipTabs = qa('[data-plh-iptab]'), ipPanels = qa('[data-plh-ippanel]'), ipProgs = qa('[data-plh-iptprog]'), ipCarets = qa('[data-plh-iptcaret]');
+    const panelT = q('[data-plh-panelt]'), panelS = q('[data-plh-panels]'), panelN = q('[data-plh-paneln]');
+    let ipTab = 0, ipProg = 0, ipAuto = true;
+    function paintIp() {
+      ipTabs.forEach((b, i) => { const on = i === ipTab; b.style.background = on ? 'var(--pl-surface)' : 'var(--pl-cream)'; b.setAttribute('aria-selected', String(on)); const num = b.querySelector('.plh-iptnum') as HTMLElement | null; if (num) { num.style.background = on ? 'var(--pl-ink)' : 'var(--pl-surface)'; num.style.color = on ? 'var(--pl-surface)' : 'var(--pl-faint)'; num.style.borderColor = on ? 'var(--pl-ink)' : 'var(--pl-line)'; } const txt = b.querySelector('div span:last-child') as HTMLElement | null; if (txt) txt.style.color = on ? 'var(--pl-ink)' : 'var(--pl-muted)'; (b.querySelector('span[aria-hidden]') as HTMLElement).style.opacity = on ? '1' : '0'; });
+      ipCarets.forEach((c, i) => (c.style.display = i === ipTab ? 'block' : 'none'));
+      ipPanels.forEach((p) => (p.hidden = Number(p.getAttribute('data-plh-ippanel')) !== ipTab));
+      if (panelT) panelT.textContent = ipMeta[ipTab][0];
+      if (panelS) panelS.textContent = ipMeta[ipTab][1];
+      if (panelN) panelN.textContent = ipMeta[ipTab][2] + ' / 04';
+    }
+    ipTabs.forEach((b, i) => b.addEventListener('click', () => { ipTab = i; ipProg = 0; ipAuto = false; paintIp(); ipProgs.forEach((pr) => (pr.style.width = '0%')); }));
+    paintIp();
+
+    setInterval(() => {
+      count += Math.floor(Math.random() * 30 + 4);
+      if (countEl) countEl.textContent = fmtIN(count);
+      const d = new Date();
+      if (clockEl) clockEl.textContent = [d.getHours(), d.getMinutes(), d.getSeconds()].map((v) => String(v).padStart(2, '0')).join(':');
+      if (ipAuto) { let p = ipProg + 0.7; if (p >= 100) { if (ipTab >= 3) { ipAuto = false; p = 100; } else { p = 0; ipTab = ipTab + 1; paintIp(); } } ipProg = p; const bar = ipProgs[ipTab]; if (bar) bar.style.width = ipProg + '%'; }
+    }, 100);
+
+    // ---------- Accuracy pipeline (1400ms) ----------
+    const pItems = [
+      { you: 'Wireless ANC Headphones', sku: 'WH-ANC-700', src: 'RETAILER B', match: 'Sonix ANC 700 Over-Ear', price: '₹24,790', kind: 'Exact match', conf: 99.1 },
+      { you: 'Smart Fitness Watch 46mm', sku: 'SFW-46-BLK', src: 'D2C STORE C', match: 'FitPro 46 mm Smartwatch — Midnight', price: '₹9,990', kind: 'Similar product', conf: 97.8 },
+      { you: 'Portable Bluetooth Speaker', sku: 'PBS-MINI-4', src: 'MARKETPLACE D', match: 'Mini Boom 4 Wireless Speaker', price: '₹6,290', kind: 'White-label', conf: 95.4 },
+    ];
+    const stageLabels = ['AI matching', 'Human QC review', 'Anomaly check', 'SLA check'];
+    const stageEls = qa('[data-plh-stage]');
+    let stage = 1, item = 1;
+    function paintAcc() {
+      const pit = pItems[item], verified = stage >= 4;
+      q('[data-plh-itemno]')!.textContent = String(item + 1);
+      qa('[data-plh-psku], [data-plh-psku2]').forEach((e) => (e.textContent = pit.sku));
+      q('[data-plh-pyou]')!.textContent = pit.you;
+      q('[data-plh-pkind]')!.textContent = '⇅ ' + pit.kind;
+      q('[data-plh-psrc]')!.textContent = pit.src;
+      q('[data-plh-pprice]')!.textContent = pit.price;
+      q('[data-plh-pmatch]')!.textContent = pit.match;
+      const insp = q('[data-plh-insplabel]')!, box = q('[data-plh-pmatchbox]')!;
+      if (verified) { insp.textContent = 'Verified ✓'; insp.style.background = '#e3fbec'; insp.style.color = 'var(--pl-accent-ink)'; box.style.borderColor = 'var(--pl-accent)'; }
+      else { insp.textContent = '◌ ' + stageLabels[stage]; insp.style.background = 'var(--pl-sand)'; insp.style.color = 'var(--pl-ink-2)'; box.style.borderColor = 'var(--pl-line-soft)'; }
+      const confW = verified ? pit.conf : Math.min(pit.conf, stage * 24 + 8);
+      q('[data-plh-conflabel]')!.textContent = confW.toFixed(1) + '%';
+      q('[data-plh-confbar]')!.style.width = confW + '%';
+      q('[data-plh-verified]')!.textContent = fmtIN(1204877 + item + (verified ? 1 : 0));
+      stageEls.forEach((el, i) => {
+        const done = i < stage, act = i === stage;
+        const node = el.querySelector('[data-plh-stagenode]') as HTMLElement, mk = el.querySelector('[data-plh-stagemk]') as HTMLElement, pill = el.querySelector('[data-plh-stagepill]') as HTMLElement, pdot = el.querySelector('[data-plh-stagepilldot]') as HTMLElement, ptext = el.querySelector('[data-plh-stagepilltext]') as HTMLElement, title = el.querySelector('[data-plh-staget]') as HTMLElement, line = el.querySelector('[data-plh-stageline]') as HTMLElement;
+        node.style.background = done ? 'var(--pl-ink)' : act ? 'var(--pl-accent-tint)' : 'var(--pl-cream)';
+        node.style.borderColor = done ? 'var(--pl-ink)' : act ? 'var(--pl-accent-line)' : 'var(--pl-line-soft)';
+        node.style.color = done ? 'var(--pl-surface)' : act ? 'var(--pl-accent-ink)' : '#B5A59A';
+        node.style.boxShadow = act ? '0 0 0 5px rgba(247,99,30,.10)' : done ? '0 10px 20px -12px rgba(28,19,14,.6)' : 'none';
+        mk.style.background = done ? 'var(--pl-accent)' : act ? 'var(--pl-ink)' : 'var(--pl-line-strong)';
+        mk.textContent = done ? '✓' : act ? '•' : '';
+        title.style.color = done || act ? 'var(--pl-ink)' : 'var(--pl-faint)';
+        pill.style.background = done ? 'var(--pl-accent-tint)' : act ? 'var(--pl-ink)' : 'var(--pl-cream)';
+        pill.style.borderColor = done ? 'var(--pl-accent-line)' : act ? 'var(--pl-ink)' : 'var(--pl-line-soft)';
+        (pill.style as any).color = done ? 'var(--pl-accent-ink)' : act ? 'var(--pl-surface)' : 'var(--pl-faint-2)';
+        pdot.style.background = done ? 'var(--pl-accent)' : act ? 'var(--pl-accent-end)' : 'var(--pl-line-xstrong)';
+        ptext.textContent = done ? 'PASSED' : act ? 'RUNNING' : 'QUEUED';
+        if (line) line.style.background = i < stage ? 'var(--pl-accent)' : 'var(--pl-line)';
+      });
+    }
+    paintAcc();
+    setInterval(() => { if (stage < 4) stage++; else { stage = 0; item = (item + 1) % 3; } paintAcc(); }, 1400);
+
+    // ---------- How it works (2600ms) ----------
+    const hwPills = ['DAY 1', 'DAY 2–3', 'DAY 4', 'DAY 5'];
+    const hwCards = qa('[data-plh-hwcard]');
+    let step = 1;
+    function paintHw() {
+      q('[data-plh-hwno]')!.textContent = '0' + (step + 1);
+      q('[data-plh-hwfill]')!.style.width = (step + 1) * 25 + '%';
+      hwCards.forEach((el, i) => {
+        const done = i < step, act = i === step;
+        el.style.background = act ? 'var(--pl-surface)' : '#fdfcfa';
+        (el.querySelector('[data-plh-hwbar]') as HTMLElement).style.background = done || act ? 'var(--pl-accent)' : 'transparent';
+        const node = el.querySelector('[data-plh-hwnode]') as HTMLElement;
+        node.style.background = done ? 'var(--pl-accent)' : 'var(--pl-surface)';
+        node.style.borderColor = done || act ? 'var(--pl-accent)' : 'var(--pl-line)';
+        node.style.color = done ? 'var(--pl-ink-deep)' : act ? 'var(--pl-accent-ink)' : 'var(--pl-faint-2)';
+        node.style.boxShadow = act ? '0 0 0 5px rgba(247,99,30,.16)' : 'none';
+        node.textContent = done ? '✓' : '0' + (i + 1);
+        const pill = el.querySelector('[data-plh-hwpill]') as HTMLElement;
+        pill.style.background = act ? 'var(--pl-accent)' : done ? 'var(--pl-accent-tint)' : 'var(--pl-sand)';
+        pill.style.color = act ? 'var(--pl-ink-deep)' : done ? 'var(--pl-accent-ink)' : 'var(--pl-faint)';
+        pill.textContent = hwPills[i];
+        (el.querySelector('[data-plh-hwtitle]') as HTMLElement).style.color = done || act ? 'var(--pl-ink)' : 'var(--pl-muted)';
+        (el.querySelector('[data-plh-hwdemo]') as HTMLElement).style.opacity = act ? '1' : '.55';
+      });
+    }
+    hwCards.forEach((el, i) => el.addEventListener('click', () => { step = i; paintHw(); }));
+    paintHw();
+    setInterval(() => { step = (step + 1) % 4; paintHw(); }, 2600);
+
+    // ---------- Testimonials ----------
+    const T = [['HM', 'Head of Marketplace Pricing', 'Consumer Electronics', "We were losing the Buy Box on over 60% of our top 200 SKUs and had no idea until the damage was done. PriceLeap's decision engine started catching competitor undercuts within minutes and responding automatically inside our margin floor. Our Buy Box win rate went from 28% to over 90% in six weeks — without a single manual price change."], ['VP', 'VP of Trading & Pricing', 'Home & Appliances', "With 8,000 SKUs across appliances, kitchenware, and furniture, we couldn't monitor pricing manually. We were reacting to price changes 4–6 hours after they happened — by which time we'd already lost sales. PriceLeap monitors the entire catalog simultaneously. The margin protection system alone saved us from three separate price wars that would have cost us six figures combined."], ['EP', 'eCommerce & Parts Pricing Manager', 'Automotive Parts · Online Parts Retailer', "Automotive parts pricing is complex — the same part has 40 different competitor listings, varying by fitment, brand, and condition. We were systematically underpricing because our team couldn't keep up with how competitors were moving. PriceLeap mapped our parts catalog to competitor listings automatically and immediately found pricing gaps we had no idea existed. We recovered nearly 19% gross margin on parts in the first quarter by simply pricing correctly rather than conservatively."]];
+    const testiBtns = qa('[data-plh-testi]'), testiStats = qa('[data-plh-testistat]');
+    let tq = 0;
+    function paintTesti() {
+      testiBtns.forEach((b, i) => { const on = i === tq; b.style.background = on ? 'var(--pl-surface)' : 'var(--pl-cream)'; (b.querySelector('[data-plh-testibar]') as HTMLElement).style.background = on ? 'var(--pl-accent)' : 'transparent'; const av = b.querySelector('[data-plh-testiav]') as HTMLElement; av.style.background = on ? 'var(--pl-accent)' : 'var(--pl-surface)'; av.style.borderColor = on ? 'var(--pl-accent)' : 'var(--pl-line)'; av.style.color = on ? 'var(--pl-ink-deep)' : 'var(--pl-faint)'; (b.querySelector('[data-plh-testirole]') as HTMLElement).style.color = on ? 'var(--pl-ink)' : 'var(--pl-muted)'; });
+      testiStats.forEach((b, i) => { const on = i === tq; b.style.background = on ? 'var(--pl-accent-tint)' : 'var(--pl-surface)'; (b.querySelector('[data-plh-testistatv]') as HTMLElement).style.color = on ? 'var(--pl-accent-ink)' : 'var(--pl-ink)'; });
+      q('[data-plh-tq]')!.textContent = '“' + T[tq][3] + '”';
+      q('[data-plh-tqrole]')!.textContent = T[tq][1];
+      q('[data-plh-tqind]')!.textContent = T[tq][2];
+      q('[data-plh-tqno]')!.textContent = '0' + (tq + 1) + ' / 03';
+    }
+    testiBtns.forEach((b, i) => b.addEventListener('click', () => { tq = i; paintTesti(); }));
+    testiStats.forEach((b, i) => b.addEventListener('click', () => { tq = i; paintTesti(); }));
+    q('[data-plh-tqprev]')?.addEventListener('click', () => { tq = (tq + 2) % 3; paintTesti(); });
+    q('[data-plh-tqnext]')?.addEventListener('click', () => { tq = (tq + 1) % 3; paintTesti(); });
+
+    // ---------- Product tour (100ms scrubbing) ----------
+    const chapMeta = [['01'], ['02'], ['03'], ['04']];
+    const chapUrl = ['add-products', 'price-intelligence', 'products/macbook-neo', 'dynamic-pricing'];
+    const chapTitle = ['ADD PRODUCTS', 'MONITOR', 'ANALYZE', 'AUTOMATE'];
+    const U = ['https://amazon.com/dp/B07KQ1-canon-eos-rp', 'https://walmart.com/ip/canon-eos-r100', 'https://bestbuy.com/site/sony-a7-iv'];
+    const Ltot = U.reduce((a, u) => a + u.length, 0);
+    const chaps = qa('[data-plh-chap]'), chapTabs = qa('[data-plh-chaptab]'), chapProgs = qa('[data-plh-chapprog]'), tnavs = qa('[data-plh-tnav]');
+    const foundEls = qa('[data-plh-found]'), rowEls = qa('[data-plh-row]'), comp2Els = qa('[data-plh-comp2]'), alertEls = qa('[data-plh-alert]');
+    let sc = 0, sp = 0, tPlay = true;
+    const r = (a: number, b: number) => clamp((sp - a) / (b - a)), op = (a: number) => r(a, a + 0.08);
+
+    function paintChrome() {
+      q('[data-plh-turl]')!.textContent = 'app.priceleap.ai/' + chapUrl[sc];
+      q('[data-plh-tchap]')!.textContent = chapMeta[sc][0] + ' / 04 · ' + chapTitle[sc];
+      tnavs.forEach((el, i) => { const on = i === sc; el.style.borderColor = on ? 'var(--pl-accent-line)' : 'transparent'; el.style.background = on ? 'var(--pl-accent-tint)' : 'transparent'; el.style.color = on ? 'var(--pl-accent-ink)' : 'var(--pl-faint-2)'; });
+      chapTabs.forEach((b, i) => { const on = i === sc; b.style.background = on ? 'var(--pl-surface)' : 'var(--pl-cream)'; b.setAttribute('aria-selected', String(on)); const num = b.querySelector('.plh-chapnum') as HTMLElement; num.style.background = on ? 'var(--pl-ink)' : 'var(--pl-surface)'; num.style.color = on ? 'var(--pl-surface)' : 'var(--pl-faint)'; num.style.borderColor = on ? 'var(--pl-ink)' : 'var(--pl-line)'; (b.querySelector('.plh-chapt') as HTMLElement).style.color = on ? 'var(--pl-ink)' : 'var(--pl-muted)'; });
+    }
+    function showChap() { chaps.forEach((el) => { const on = Number(el.getAttribute('data-plh-chap')) === sc; el.hidden = !on; if (on) { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = 'pltourin .45s ease'; } }); paintChrome(); }
+
+    function paintTour() {
+      chapProgs.forEach((el, i) => (el.style.width = (i === sc ? sp * 100 : i < sc ? 100 : 0) + '%'));
+      if (sc === 0) {
+        let n = Math.floor(r(0.04, 0.42) * Ltot), caretAt = -1, items = 0;
+        U.forEach((u, i) => { const take = Math.max(0, Math.min(u.length, n)); n -= u.length; if (take === u.length) items++; if (caretAt < 0 && take < u.length) caretAt = i; const t = q(`[data-plh-url="${i}"]`); if (t) t.textContent = u.slice(0, take); });
+        if (caretAt < 0) caretAt = 2;
+        U.forEach((_, i) => { const c = q(`[data-plh-urlcaret="${i}"]`); if (c) c.style.display = (i === caretAt && sp < 0.5) ? 'inline-block' : 'none'; });
+        q('[data-plh-titems]')!.textContent = String(items);
+        const sel = sp > 0.48, opt = q('[data-plh-opt]')!, optdot = q('[data-plh-optdot]')!;
+        opt.style.borderColor = sel ? 'var(--pl-accent-line)' : 'var(--pl-line-soft)'; opt.style.background = sel ? 'var(--pl-cream-2)' : 'var(--pl-surface)';
+        optdot.style.border = sel ? '4px solid var(--pl-accent)' : '1.5px solid var(--pl-line-xstrong)';
+        const bp = sp > 0.57 && sp < 0.63, fb = q('[data-plh-findbtn]')!; fb.style.transform = 'scale(' + (bp ? 0.95 : 1) + ')'; fb.style.boxShadow = bp ? '0 0 0 4px rgba(247,99,30,.2)' : 'none';
+        const finding = sp > 0.62, done = sp > 0.92;
+        q('[data-plh-tstatus]')!.textContent = !finding ? 'Waiting for URLs' : done ? '3 matched · 1 no match · monitoring started' : 'Finding competitors…';
+        q('[data-plh-tspin]')!.style.display = finding && !done ? 'block' : 'none';
+        q('[data-plh-tdone]')!.style.display = done ? 'flex' : 'none';
+        q('[data-plh-twait]')!.style.display = finding ? 'none' : 'flex';
+        foundEls.forEach((el, i) => { const o = op(0.66 + i * 0.06); el.style.display = finding ? 'flex' : 'none'; el.style.opacity = String(o); el.style.transform = `translateY(${((1 - o) * 6).toFixed(1)}px)`; });
+      } else if (sc === 1) {
+        const cu = r(0, 0.25), KP = [45, 14, 11, 82];
+        KP.forEach((v, i) => { const k = q(`[data-plh-kpi="${i}"]`); if (k) k.textContent = String(Math.round(v * cu)); });
+        rowEls.forEach((el, i) => { const o = op(0.08 + i * 0.08); el.style.opacity = String(o); el.style.transform = `translateY(${((1 - o) * 8).toFixed(1)}px)`; });
+        const flash = sp > 0.6, fc = q('[data-plh-comp="flash"]'); if (fc) { fc.style.background = flash ? 'var(--pl-danger-tint)' : 'transparent'; const fp = fc.querySelector('[data-plh-compp]') as HTMLElement; fp.textContent = flash ? '$1,049.00' : '$1,099.00'; fp.style.color = flash ? 'var(--pl-danger-ink)' : 'var(--pl-ink)'; }
+        const toast = r(0.68, 0.76), tt = q('[data-plh-ttoast]')!; tt.style.opacity = String(toast); tt.style.transform = `translateY(${((1 - toast) * 12).toFixed(1)}px)`;
+      } else if (sc === 2) {
+        q('[data-plh-smart]')!.textContent = '$' + (799 - 113.93 * r(0.1, 0.4)).toFixed(2);
+        q('[data-plh-drawa]')!.setAttribute('stroke-dashoffset', (1 - r(0.08, 0.5)).toFixed(3));
+        q('[data-plh-drawb]')!.setAttribute('stroke-dashoffset', (1 - r(0.15, 0.6)).toFixed(3));
+        comp2Els.forEach((el, i) => (el.style.opacity = String(op(0.42 + i * 0.08))));
+        q('[data-plh-sum]')!.style.opacity = String(r(0.72, 0.8));
+      } else {
+        const saved = sp > 0.82;
+        q('[data-plh-draft]')!.textContent = saved ? 'Saved just now' : 'Unsaved draft';
+        const sv = q('[data-plh-save]')!; sv.textContent = saved ? 'Saved ✓' : 'Save rule'; sv.style.background = saved ? 'var(--pl-accent-tint)' : 'var(--pl-ink)'; sv.style.color = saved ? 'var(--pl-accent-ink)' : 'var(--pl-surface)'; sv.style.transform = 'scale(' + (sp > 0.8 && sp < 0.84 ? 0.94 : 1) + ')';
+        const name = 'Cameras · beat cheapest by 5%', nm = Math.floor(r(0.04, 0.24) * name.length);
+        q('[data-plh-rulename]')!.textContent = name.slice(0, nm);
+        q('[data-plh-namecaret]')!.style.display = sp < 0.3 ? 'inline-block' : 'none';
+        q('[data-plh-namebox]')!.style.borderColor = sp < 0.3 ? 'var(--pl-accent-line)' : 'var(--pl-line-soft)';
+        const posOn = sp > 0.27 && sp < 0.45, pos = q('[data-plh-pos]')!; pos.style.borderColor = posOn ? 'var(--pl-accent-line)' : 'var(--pl-line-soft)'; pos.style.background = posOn ? 'var(--pl-cream-2)' : 'var(--pl-surface)';
+        const marOn = sp > 0.42 && sp < 0.58, mar = q('[data-plh-mar]')!; mar.style.borderColor = marOn ? 'var(--pl-accent-line)' : 'var(--pl-line-soft)'; mar.style.background = marOn ? 'var(--pl-cream-2)' : 'var(--pl-surface)';
+        const th = [0.5, 0.58, 0.66, 0.74];
+        alertEls.forEach((el, i) => { const on = sp > th[i], fresh = on && sp < th[i] + 0.08; el.style.background = fresh ? 'var(--pl-cream-2)' : 'var(--pl-surface)'; (el.querySelector('[data-plh-alerttrack]') as HTMLElement).style.background = on ? 'var(--pl-accent)' : 'var(--pl-line-strong)'; (el.querySelector('[data-plh-alertknob]') as HTMLElement).style.left = on ? '16px' : '2px'; });
+        const sv2 = r(0.85, 0.91), st = q('[data-plh-savedtoast]')!; st.style.opacity = String(sv2); st.style.transform = `translate(-50%,${((1 - sv2) * 10).toFixed(1)}px)`;
+      }
+    }
+    showChap(); paintTour();
+    chapTabs.forEach((b, i) => b.addEventListener('click', () => { sc = i; sp = 0; showChap(); paintTour(); }));
+    const playBtn = q('[data-plh-play]'), playIcon = q('[data-plh-playicon]');
+    playBtn?.addEventListener('click', () => {
+      tPlay = !tPlay; if (sp >= 1) sp = 0;
+      playBtn.setAttribute('aria-label', tPlay ? 'Pause tour' : 'Play tour');
+      if (playIcon) { playIcon.innerHTML = tPlay ? '<span style="width:3px;height:11px;border-radius:1px;background:var(--pl-surface)"></span><span style="width:3px;height:11px;border-radius:1px;background:var(--pl-surface)"></span>' : '<span style="width:0;height:0;border-left:9px solid var(--pl-surface);border-top:6px solid transparent;border-bottom:6px solid transparent;margin-left:3px"></span>'; playIcon.style.cssText = tPlay ? 'display:flex;gap:3px' : 'display:flex'; }
+    });
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { tPlay = false; sp = 1; paintTour(); }
+    setInterval(() => {
+      if (!tPlay || document.hidden) return;
+      sp += 100 / 7500;
+      if (sp >= 1) { sc = (sc + 1) % 4; sp = 0; showChap(); }
+      paintTour();
+    }, 100);
+  }
+</script>
