@@ -1,0 +1,230 @@
+---
+// Native Astro port of the design package's "For Pricing Managers" role page.
+// Static initial render + the 1s loop reimplemented in vanilla JS: the hero Preview-
+// SmartPrice cycle + custom-percentage toggle, and the spreadsheet-vs comparison row
+// highlight; FAQ accordion; scroll-reveal. One shared header + footer via layout.
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+
+const H: Record<string, string> = { pie: '/price-intelligence-engine', dps: '/dynamic-pricing-software', no: '#' };
+const P = (s: string) => { const m = s.match(/^([\s\S]*?)\[\[(.+?)\|(\w+)\]\]([\s\S]*)$/); return m ? { a1: m[1], lt: m[2], lh: H[m[3]], a2: m[4], ld: 'inline' } : { a1: s, lt: '', lh: '#', a2: '', ld: 'none' }; };
+
+const eyebrow = 'For Pricing Managers';
+const chips = ['Rules per product group', 'Preview before you save', 'Floor and ceiling on total cost'];
+const faqH1 = 'Pricing manager';
+const ctaH = 'Bring your pricing rules to a demo';
+
+const prcCmp = [['Where rules live', "Formulas spread across each category's sheet", 'One named rule per product group, shown on every product page'], ['Which competitors count', 'Whoever was in the sheet that week', "Chosen per rule from the group's competitor set"], ['Margin limits', 'Checked after the price is set', 'A floor and ceiling on total cost, set in the rule'], ['Testing a change', 'Publish it and watch what happens', 'Preview SmartPrice on a product before saving']].map(([k, a, b], i, arr) => ({ k, a, b, no: '0' + (i + 1), bb: i < arr.length - 1 ? '1px solid #F5ECE5' : 'none' }));
+
+const faqRaw: [string, string][] = [
+  ['Can I choose which competitors a rule follows?', 'Yes. Each rule has its own competitor set, and only the competitors you include feed the recommendation. Leave out sellers you never compete with on price, such as [[marketplace resellers|no]] on a premium line, so they never pull the recommended price down.'],
+  ["What's the difference between setting a gap and matching a price?", 'A gap keeps you a set distance from the benchmark, as a percentage or an amount, above or below it. Matching sets your price equal to the benchmark, such as the cheapest competitor. Either way, the recommendation stays inside the floor and ceiling on total cost.'],
+  ['Can different product groups follow different rules?', "Yes. Rules are set per product group, so a high-volume group can sit just below the cheapest competitor while a premium group holds a gap above it. Changing one group's rule leaves every other group's recommendations exactly as they were."],
+  ['Can I see which rule produced a recommendation?', 'Yes. The product page shows the active pricing rule next to the SmartPrice it produced, with an Edit rule button. Your team can trace any recommendation back to the rule and to the competitor prices behind it before anyone signs it off.'],
+  ['Can a recommendation ever break MAP?', "You get a warning first. Turn on the SmartPrice MAP warning and priceleap.ai alerts you when a recommendation would fall below a product's MAP, before anyone on the team acts on it. MAP policy in depth lives on the [[MAP Monitoring|no]] page."],
+];
+const faqs = faqRaw.map(([q, a], i) => ({ q, a: P(a), n: String(i + 1).padStart(2, '0'), open: i === 0 }));
+
+const site = 'https://priceleap.ai';
+const faqText = (a: string) => a.replace(/\[\[(.+?)\|\w+\]\]/g, '$1');
+const jsonLd = [
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqRaw.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: faqText(a) } })) },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: site + '/' },
+    { '@type': 'ListItem', position: 2, name: 'Solutions', item: site + '/solutions/' },
+    { '@type': 'ListItem', position: 3, name: 'Pricing Managers', item: site + '/solutions/pricing-managers' },
+  ] },
+];
+---
+<PriceLeapLayout
+  title="Pricing Software for Pricing Managers | priceleap.ai"
+  description="Write your pricing strategy once per group: which competitors count, your position, floor and ceiling — turned into a SmartPrice recommendation to review."
+  jsonLd={jsonLd}
+>
+  <div class="pm" style="min-height:100vh;background:#FFFCF9;overflow-x:clip">
+
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 70% 80% at 78% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 70% 80% at 78% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-12%;top:-30%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.09),transparent);pointer-events:none"></div>
+      <div class="pm-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(48px,7vw,96px) clamp(16px,4vw,40px) clamp(56px,7vw,96px);gap:clamp(36px,4.5vw,64px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px;align-items:flex-start;text-align:left">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>{eyebrow}</span>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(38px,5.2vw,66px);line-height:1.02;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Pricing software</span><span style="font-weight:400"> for pricing managers</span></h1>
+          <p style="margin:0;max-width:600px;font-size:18px;line-height:1.65;color:#3A302A;text-wrap:pretty">Write your strategy once per product group: which competitors count, where you sit against the benchmark, and the floor and ceiling a price can't cross. priceleap.ai turns each rule into a <a href="/dynamic-pricing-software" style="font-weight:600">SmartPrice recommendation</a> for your team to review.</p>
+          <a href="/book-a-demo" style="height:48px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            {chips.map((c) => (<span style="height:34px;padding:0 13px 0 9px;display:inline-flex;align-items:center;gap:9px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:13.5px;font-weight:500;color:#1C130E;box-shadow:0 6px 14px -12px rgba(60,30,15,.5)"><span style="width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>{c}</span>))}
+          </div>
+        </div>
+
+        <figure style="margin:0;min-width:0;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;padding:18px;box-shadow:0 36px 70px -46px rgba(60,30,15,.45)">
+              <div style="display:flex;align-items:center;gap:10px"><span style="width:28px;height:28px;border-radius:8px;background:#FBF3EC;display:flex;align-items:center;justify-content:center;color:#1C130E">+</span><span style="font-family:Geist,sans-serif;font-size:16px;font-weight:600;color:#1C130E">Preview SmartPrice</span></div>
+              <div style="margin-top:14px;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">PRODUCT</div>
+              <div style="margin-top:6px;height:42px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #EFE3DA;border-radius:11px;font-size:12.5px;color:#1C130E"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Lenovo IdeaPad Slim 3 Laptop 2025 15.6″ FHD Touchscreen, AMD Ryzen 7 · $677.50</span><span style="font-size:9px;color:#7F7066">▾</span></div>
+              <div style="margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <span data-pm-prev style="height:36px;padding:0 16px;display:flex;align-items:center;gap:8px;border-radius:10px;border:1px solid #EFE3DA;background:#FFFFFF;color:#1C130E;font-size:13px;font-weight:500;transition:all .3s"><span data-pm-spin style="display:none;width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#FFFFFF;animation:rp-spin .8s linear infinite"></span>Preview</span>
+                <span data-pm-done style="display:none;align-items:center;gap:10px;flex-wrap:wrap;animation:rp-in .35s ease"><span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.06em;color:#7F7066">SMARTPRICE</span><span style="font-family:Geist,sans-serif;font-size:20px;font-weight:600;color:#1C130E">$643.63</span><span style="height:22px;padding:0 8px;display:flex;align-items:center;gap:6px;border-radius:6px;background:#FFF4EC;border:1px solid #FFD8BE;font-size:11px;color:#C2410C"><span style="width:6px;height:6px;border-radius:50%;background:#F7631E"></span>Beat cheapest by 5%</span></span>
+              </div>
+            </div>
+            <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;padding:18px;box-shadow:0 36px 70px -46px rgba(60,30,15,.45)">
+              <div style="display:flex;align-items:center;gap:10px"><span style="width:28px;height:28px;border-radius:8px;background:#FBF3EC;display:flex;align-items:center;justify-content:center;color:#1C130E;font-size:13px">⬡</span><span style="font-family:Geist,sans-serif;font-size:16px;font-weight:600;color:#1C130E">Market position rules</span></div>
+              <div style="margin-top:10px;font-size:12.5px;color:#665A51">Applies to <b style="color:#1C130E">Electronics_Product_Monitor_10Oct26</b></div>
+              <div style="margin-top:14px;display:flex;align-items:flex-start;gap:12px">
+                <span data-pm-cptoggle style="flex:none;position:relative;width:40px;height:22px;border-radius:999px;background:#E2D3C8;transition:background .3s"><span data-pm-cpknob style="position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .3s"></span></span>
+                <span><span style="display:block;font-size:13.5px;font-weight:600;color:#1C130E">Custom percentage rules</span><span data-pm-cpsub style="display:block;font-size:12px;color:#665A51">Standard rank-based rules (default PriceLeap behavior)</span></span>
+              </div>
+              <div data-pm-cpgrid style="display:none;margin-top:12px;grid-template-columns:1fr 1fr;gap:8px;animation:rp-in .3s ease">
+                <span style="padding:9px 11px;border-radius:10px;border:1px solid #F5ECE5;font-size:12px;color:#1C130E"><span style="display:block;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">COMPETITIVE</span>within [X]% of lowest</span>
+                <span style="padding:9px 11px;border-radius:10px;border:1px solid #F5ECE5;font-size:12px;color:#1C130E"><span style="display:block;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">PREMIUM</span>more than [X]% above</span>
+              </div>
+              <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><span style="height:34px;padding:0 14px;display:flex;align-items:center;border-radius:9px;background:#1C130E;color:#FFFFFF;font-size:12.5px;font-weight:500">Save market position rules</span><span style="height:34px;padding:0 14px;display:flex;align-items:center;border-radius:9px;border:1px solid #EFE3DA;color:#1C130E;font-size:12.5px">Reset to standard rules</span></div>
+            </div>
+          </div>
+          <figcaption style="font-size:13px;color:#665A51;text-align:center">Preview a recommendation, then set what counts as competitive for the group</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 02 STRATEGY TO RULES -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div data-reveal class="pm-pair" style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:14px">
+        <div style="position:relative;padding:clamp(24px,3vw,36px);border-radius:24px;background:#FFF9F4;border:1px solid #EFE3DA;display:flex;flex-direction:column;gap:18px">
+          <span style="align-self:flex-start;height:26px;padding:0 10px;display:flex;align-items:center;border-radius:7px;background:#1C130E;color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em">Q · 01</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(24px,2.8vw,32px);line-height:1.15;letter-spacing:-.03em;font-weight:600;color:#1C130E;text-wrap:balance">How do you turn a pricing strategy into rules?</h2>
+          <p style="margin:0;font-size:16px;line-height:1.7;color:#3A302A">Each product group gets a rule: a price position set as a gap from a benchmark, such as 5% below the cheapest competitor, or equal to it. You choose which competitors count and set a minimum and maximum level on <a href="#" style="font-weight:600">total cost</a>.</p>
+          <div style="margin-top:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px;border-radius:14px;background:#FFFFFF;border:1px solid #F5ECE5;font-family:'Geist Mono',monospace;font-size:11.5px;color:#1C130E"><span style="padding:5px 9px;border-radius:7px;background:#FBF3EC">Cheapest competitor</span><span style="color:#C2410C">−5%</span><span style="color:#D7C6BA">→</span><span style="padding:5px 9px;border-radius:7px;border:1px solid #FFD8BE;background:#FFF4EC;color:#C2410C">floor ≤ price ≤ ceiling</span></div>
+        </div>
+        <div style="position:relative;padding:clamp(24px,3vw,36px);border-radius:24px;background:#FFF9F4;border:1px solid #EFE3DA;display:flex;flex-direction:column;gap:18px">
+          <span style="align-self:flex-start;height:26px;padding:0 10px;display:flex;align-items:center;border-radius:7px;background:#1C130E;color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em">Q · 02</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(24px,2.8vw,32px);line-height:1.15;letter-spacing:-.03em;font-weight:600;color:#1C130E;text-wrap:balance">How do you know a rule will price the way you expect?</h2>
+          <p style="margin:0;font-size:16px;line-height:1.7;color:#3A302A">Preview SmartPrice on any product in the group before you save the rule. Market position rules then decide what counts as competitive or premium for that group, rank-based by default or by your own percentages.</p>
+          <div style="margin-top:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px;border-radius:14px;background:#FFFFFF;border:1px solid #F5ECE5;font-size:12.5px;color:#1C130E"><span style="height:28px;padding:0 12px;display:flex;align-items:center;border-radius:8px;border:1px solid #EFE3DA">Preview</span><span style="color:#D7C6BA">→</span><span style="font-family:'Geist Mono',monospace;font-size:11.5px">SmartPrice</span><span style="color:#D7C6BA">→</span><span style="height:28px;padding:0 12px;display:flex;align-items:center;border-radius:8px;background:#1C130E;color:#FFFFFF">Save rule</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 SPREADSHEET VS PRICELEAP.AI -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Pricing rules in a spreadsheet vs </span><span style="font-weight:700">in priceleap.ai</span></h2>
+        <div data-reveal style="margin-top:40px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#FFFFFF;box-shadow:0 40px 80px -56px rgba(60,30,15,.35)">
+          <div class="pm-cmprow" style="border-bottom:1px solid #EFE3DA">
+            <span class="pm-cmphead-key" style="padding:14px 22px;background:#FFF9F4"></span>
+            <span style="padding:14px 22px;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066;display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:3px;border:1.5px solid #D7C6BA"></span>IN A SPREADSHEET</span>
+            <span style="padding:14px 22px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#FFFFFF;display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>IN PRICELEAP.AI</span>
+          </div>
+          {prcCmp.map((r) => (
+            <div class="pm-cmprow" style={`border-bottom:${r.bb}`}>
+              <span class="pm-cmpkey" style="display:flex;align-items:center;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:#C2410C">{r.no}</span><span style="font-family:Geist,sans-serif;font-size:15.5px;font-weight:600;color:#1C130E">{r.k}</span></span>
+              <span style="padding:18px 22px;font-size:14.5px;line-height:1.55;color:#665A51;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:100% 22px,64px 100%;background-color:#FFFCF9">{r.a}</span>
+              <span data-pm-cmpb style="padding:18px 22px;font-size:14.5px;line-height:1.55;color:#1C130E;display:flex;gap:10px;background:#FFFFFF;transition:background .4s"><span style="flex:none;margin-top:2px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>{r.b}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="pm-split" style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <h2 data-reveal class="pm-sticky" style="top:96px;margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">{faqH1} </span><span style="font-weight:700">FAQs</span></h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((qq) => (
+            <div class="pm-faq" class:list={[{ 'is-open': qq.open }]} data-pm-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-pm-faqbtn aria-expanded={qq.open ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="pm-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px">{qq.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{qq.q}</span>
+                <span class="pm-faq-ic" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="pm-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{qq.a.a1}<a href={qq.a.lh} style={`display:${qq.a.ld};font-weight:600`}>{qq.a.lt}</a>{qq.a.a2}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#1C130E;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-240px;width:680px;height:420px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.32),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:26px">
+          <h2 style="margin:0;max-width:820px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;font-weight:600;color:#FFFFFF;text-wrap:balance">{ctaH}</h2>
+          <a href="/book-a-demo" style="height:52px;padding:0 26px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15.5px;box-shadow:0 14px 30px -12px rgba(247,99,30,.9)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .pm { background: #FFFCF9; overflow-x: clip; }
+  @keyframes rp-spin { to { transform: rotate(360deg); } }
+  @keyframes rp-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .pm-hero { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .pm-hero { grid-template-columns: minmax(0,.95fr) minmax(0,1.05fr); } }
+  .pm-pair { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .pm-pair { grid-template-columns: 1fr 1fr; } }
+  .pm-cmprow { display: grid; grid-template-columns: 1fr 1fr; }
+  .pm-cmpkey { grid-column: 1 / -1; padding: 14px 22px 6px; }
+  .pm-cmphead-key { display: none; }
+  @media (min-width: 720px) { .pm-cmprow { grid-template-columns: minmax(0,.7fr) minmax(0,1fr) minmax(0,1fr); } .pm-cmpkey { grid-column: auto; padding: 18px 22px; } .pm-cmphead-key { display: block; } }
+  .pm-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .pm-split { grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); } }
+  .pm-sticky { position: static; }
+  @media (min-width: 1024px) { .pm-sticky { position: sticky; } }
+
+  .pm-faq-n { color: #B9A99C; }
+  .pm-faq.is-open .pm-faq-n { color: #C2410C; }
+  .pm-faq-ic { background: #FBF3EC; color: #1C130E; transform: rotate(0deg); transition: all .3s; }
+  .pm-faq.is-open .pm-faq-ic { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .pm-faq.is-open { border-color: #FFD8BE; }
+  .pm-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .pm-faq.is-open .pm-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .pm *, .pm *::before, .pm *::after { animation: none !important; transition: none !important; } [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.pm') as HTMLElement | null;
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+    const prev = q('[data-pm-prev]'), spin = q('[data-pm-spin]'), done = q('[data-pm-done]');
+    const cpToggle = q('[data-pm-cptoggle]'), cpKnob = q('[data-pm-cpknob]'), cpSub = q('[data-pm-cpsub]'), cpGrid = q('[data-pm-cpgrid]');
+    const cmpB = qa('[data-pm-cmpb]');
+    let tk = 0;
+    function paint() {
+      const p = tk % 10, isSpin = p >= 1 && p < 3, isDone = p >= 3 && p < 9;
+      if (spin) spin.style.display = isSpin ? 'inline-block' : 'none';
+      if (done) done.style.display = isDone ? 'flex' : 'none';
+      if (prev) { prev.style.background = isSpin ? '#1C130E' : '#FFFFFF'; prev.style.borderColor = isSpin ? '#1C130E' : '#EFE3DA'; prev.style.color = isSpin ? '#FFFFFF' : '#1C130E'; }
+      const cp = Math.floor(tk / 6) % 2 === 1;
+      if (cpToggle) cpToggle.style.background = cp ? '#1C130E' : '#E2D3C8';
+      if (cpKnob) cpKnob.style.left = cp ? '20px' : '2px';
+      if (cpSub) cpSub.textContent = cp ? 'Your own percentages decide Competitive and Premium' : 'Standard rank-based rules (default PriceLeap behavior)';
+      if (cpGrid) cpGrid.style.display = cp ? 'grid' : 'none';
+      const hot = Math.floor(tk / 3) % 4;
+      cmpB.forEach((el, i) => (el.style.background = i === hot ? '#FFF4EC' : '#FFFFFF'));
+    }
+    paint();
+    setInterval(() => { tk++; paint(); }, 1000);
+
+    qa('[data-pm-faqbtn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-pm-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-pm-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-pm-faqbtn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>

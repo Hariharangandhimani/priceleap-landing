@@ -52,7 +52,7 @@ export const SOL: SolGroup[] = [
     { t: 'For Retailers', href: L.ret }, { t: 'For Ecommerce', href: L.ecom }, { t: 'For Brands & Manufacturers', href: L.solBrands },
     { t: 'For Marketplace Sellers', href: '#' }, { t: 'For Electronics Retail', href: L.solElectronics }, { t: 'Automotive Parts & Accessories', href: L.solAuto }, { t: 'For Drop Shippers', href: L.solDrop } ] },
   { t: 'By Role', d: 'Built for your team', items: [
-    { t: 'Category Managers', href: L.roleCategory }, { t: 'Pricing Managers', href: '#' }, { t: 'Product Managers', href: '#' },
+    { t: 'Category Managers', href: L.roleCategory }, { t: 'Pricing Managers', href: L.rolePricing }, { t: 'Product Managers', href: '#' },
     { t: 'Marketing Managers', href: '#' }, { t: 'Ecommerce Managers', href: '#' }, { t: 'Revenue Managers', href: L.roleRevenue }, { t: 'Merchandising Managers', href: '#' } ] },
   { t: 'By Need', d: 'Built for your goal', items: [
     { t: 'Price Tracking', href: L.ecom }, { t: 'MAP Monitoring', href: '#' }, { t: 'Price Intelligence', href: L.pie } ] },
