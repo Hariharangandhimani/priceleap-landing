@@ -1,0 +1,231 @@
+---
+// Native Astro port of the design package's "For Revenue Managers" role page.
+// Static initial render + the 1s loop reimplemented in vanilla JS: the two follow/hold
+// charts that draw on scroll, and the revenue-picture cards that cycle their highlight;
+// FAQ accordion; scroll-reveal. One shared header + footer via layout.
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+
+const H: Record<string, string> = { pie: '/price-intelligence-engine', dps: '/dynamic-pricing-software', no: '#' };
+const P = (s: string) => { const m = s.match(/^([\s\S]*?)\[\[(.+?)\|(\w+)\]\]([\s\S]*)$/); return m ? { a1: m[1], lt: m[2], lh: H[m[3]], a2: m[4], ld: 'inline' } : { a1: s, lt: '', lh: '#', a2: '', ld: 'none' }; };
+
+const eyebrow = 'For Revenue Managers';
+const chips = ['Gross margin on every product', 'Floor on total cost', 'Products priced below market'];
+const faqH1 = 'Revenue manager';
+const ctaH = 'See your margin and market rank in a demo';
+
+const revCards = [['1', 'SMART PRICE', '₹32,009.03', 'Beat cheapest by 5%', true], ['2', 'MARKET RANK', '1/2', 'Competitive', false], ['3', 'GROSS MARGIN', '0.00%', 'Cost ₹32,999.00 · from price', false]];
+const revCallouts = [['1', 'SmartPrice', 'The price your rule recommends, kept inside your floor and ceiling. [[How recommendations work.|dps]]'], ['2', 'Market rank', 'Where you sit among the sellers you track.'], ['3', 'Gross margin', "Your margin at today's price, based on the product cost you enter."]];
+const revCols = revCards.map(([n, k, v, s, dot], i) => ({ n, k, v, s, dotD: dot ? 'inline-block' : 'none', t: revCallouts[i][1], d: P(String(revCallouts[i][2])) }));
+
+const faqRaw: [string, string][] = [
+  ['Can I see gross margin next to competitor prices?', "Yes. Enter a product's cost and add-on cost, and the product page shows gross margin next to your price, SmartPrice, market rank and each competitor's price. Enter costs before you rely on the margin figure, so it reflects what the product really costs you."],
+  ['How do I keep recommendations above my margin?', "Set a floor in the group's rule as an amount above total cost. SmartPrice never goes below it, however far competitors drop, and a ceiling caps how high a recommendation can go. Both limits apply to every product in the group."],
+  ['Can I find products priced well below the market?', 'Yes. Each product shows your price against the market average and as a marker on a bar from the lowest to the highest tracked price. Products sitting well below the average are worth a second look for a price rise.'],
+  ['Can I tell a short promotion from a lasting price cut?', "[[Price history|pie]] shows how long a competitor's lower price lasted in the past, from 14 days up to the full record. A cut that reverted within days last time is a reason to hold; one that stuck is a reason to review the rule."],
+];
+const faqs = faqRaw.map(([q, a], i) => ({ q, a: P(a), n: String(i + 1).padStart(2, '0'), open: i === 0 }));
+
+const site = 'https://priceleap.ai';
+const faqText = (a: string) => a.replace(/\[\[(.+?)\|\w+\]\]/g, '$1');
+const jsonLd = [
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqRaw.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: faqText(a) } })) },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: site + '/' },
+    { '@type': 'ListItem', position: 2, name: 'Solutions', item: site + '/solutions/' },
+    { '@type': 'ListItem', position: 3, name: 'Revenue Managers', item: site + '/solutions/revenue-managers' },
+  ] },
+];
+---
+<PriceLeapLayout
+  title="Pricing Intelligence for Revenue Managers | priceleap.ai"
+  description="See competitor prices, your gross margin and a recommended price side by side, so you can weigh the volume-vs-margin trade-off before every pricing decision."
+  jsonLd={jsonLd}
+>
+  <div class="rv" style="min-height:100vh;background:#FFFCF9;overflow-x:clip">
+
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 70% 80% at 50% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 70% 80% at 50% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-12%;top:-30%;width:720px;height:620px;background:radial-gradient(closest-side,rgba(247,99,30,.09),transparent);pointer-events:none"></div>
+      <div style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(48px,7vw,96px) clamp(16px,4vw,40px) clamp(56px,7vw,96px);display:grid;grid-template-columns:1fr;gap:clamp(36px,4.5vw,64px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px;align-items:center;text-align:center">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>{eyebrow}</span>
+          <h1 style="margin:0;max-width:900px;font-family:Geist,sans-serif;font-size:clamp(38px,5.6vw,72px);line-height:1.02;letter-spacing:-.045em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Pricing intelligence</span><span style="font-weight:400"> for revenue managers</span></h1>
+          <p style="margin:0;max-width:640px;font-size:18px;line-height:1.65;color:#3A302A;text-wrap:pretty">Every price cut buys volume and costs margin. priceleap.ai puts competitor prices, your gross margin and a recommended price side by side, so you can see the trade-off before you decide.</p>
+          <a href="/book-a-demo" style="height:48px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+            {chips.map((c) => (<span style="height:34px;padding:0 13px 0 9px;display:inline-flex;align-items:center;gap:9px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:13.5px;font-weight:500;color:#1C130E;box-shadow:0 6px 14px -12px rgba(60,30,15,.5)"><span style="width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>{c}</span>))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 FOLLOW OR HOLD -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;text-align:center;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Follow the market</span><span style="font-weight:400"> or hold your price?</span></h2>
+        <div data-reveal data-rv-charts class="rv-pair" style="position:relative;margin-top:44px;display:grid;gap:14px">
+          <span class="rv-vsbadge" aria-hidden="true" style="position:absolute;left:50%;top:132px;z-index:2;width:46px;height:46px;margin-left:-23px;border-radius:50%;background:#FFFFFF;border:1px solid #EFE3DA;box-shadow:0 10px 24px -12px rgba(60,30,15,.4);font-family:'Geist Mono',monospace;font-size:11px;color:#1C130E;align-items:center;justify-content:center">OR</span>
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;display:flex;flex-direction:column">
+            <div style="padding:20px 22px 8px;background:#FFFCF9;border-bottom:1px solid #F5ECE5">
+              <svg viewBox="0 0 400 150" style="display:block;width:100%;height:auto;overflow:visible">
+                <line x1="0" y1="120" x2="400" y2="120" stroke="#F5ECE5"></line>
+                <polyline points="0,40 80,42 160,70 240,96 320,100 400,98" fill="none" stroke="#D7C6BA" stroke-width="2" stroke-dasharray="5 5"></polyline>
+                <polyline data-rv-draw points="0,46 80,48 160,76 240,102 320,106 400,104" fill="none" stroke="#1C130E" stroke-width="2.4" stroke-linecap="round" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.6s ease"></polyline>
+                <circle data-rv-dot cx="400" cy="104" r="5" fill="#F7631E" style="opacity:0;transition:opacity .4s"></circle>
+                <g font-family="Geist Mono" font-size="10"><text x="2" y="30" fill="#7F7066">CHEAPEST COMPETITOR</text><text x="2" y="142" fill="#1C130E">YOU · RANK HELD</text></g>
+              </svg>
+            </div>
+            <div style="padding:22px;display:flex;flex-direction:column;gap:14px">
+              <h3 style="margin:0;font-family:Geist,sans-serif;font-size:22px;font-weight:600;letter-spacing:-.02em;color:#1C130E">Follow the market</h3>
+              <div><div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#C2410C">HOW YOU SET IT</div><p style="margin:6px 0 0;font-size:15px;line-height:1.6;color:#3A302A">Set the rule to match or sit just below a benchmark, such as the cheapest competitor.</p></div>
+              <div style="padding-top:14px;border-top:1px dashed #EFE3DA"><div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#7F7066">BEST FOR</div><p style="margin:6px 0 0;font-size:15px;line-height:1.6;color:#1C130E">Products shoppers compare closely, where losing rank costs more than the margin.</p></div>
+            </div>
+          </div>
+          <div style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;display:flex;flex-direction:column">
+            <div style="padding:20px 22px 8px;background:#FFFCF9;border-bottom:1px solid #F5ECE5">
+              <svg viewBox="0 0 400 150" style="display:block;width:100%;height:auto;overflow:visible">
+                <rect x="0" y="80" width="400" height="40" fill="#FFF4EC"></rect>
+                <line x1="0" y1="80" x2="400" y2="80" stroke="#F7631E" stroke-width="1.5" stroke-dasharray="4 4"></line>
+                <polyline points="0,40 80,42 160,70 240,108 320,110 400,104" fill="none" stroke="#D7C6BA" stroke-width="2" stroke-dasharray="5 5"></polyline>
+                <polyline data-rv-draw points="0,46 80,48 160,74 240,80 320,80 400,80" fill="none" stroke="#1C130E" stroke-width="2.4" stroke-linecap="round" pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset 1.6s ease"></polyline>
+                <circle data-rv-dot cx="240" cy="80" r="5" fill="#F7631E" style="opacity:0;transition:opacity .4s"></circle>
+                <g font-family="Geist Mono" font-size="10"><text x="2" y="30" fill="#7F7066">CHEAPEST COMPETITOR</text><text x="2" y="74" fill="#C2410C">FLOOR ON TOTAL COST</text><text x="2" y="142" fill="#1C130E">YOU · MARGIN HELD</text></g>
+              </svg>
+            </div>
+            <div style="padding:22px;display:flex;flex-direction:column;gap:14px">
+              <h3 style="margin:0;font-family:Geist,sans-serif;font-size:22px;font-weight:600;letter-spacing:-.02em;color:#1C130E">Hold your price</h3>
+              <div><div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#C2410C">HOW YOU SET IT</div><p style="margin:6px 0 0;font-size:15px;line-height:1.6;color:#3A302A">Keep the rule, and let the <a href="#" style="font-weight:600">floor on total cost</a> stop SmartPrice where the margin runs out.</p></div>
+              <div style="padding-top:14px;border-top:1px dashed #EFE3DA"><div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#7F7066">BEST FOR</div><p style="margin:6px 0 0;font-size:15px;line-height:1.6;color:#1C130E">Products where margin matters more than rank, and short competitor promotions.</p></div>
+            </div>
+          </div>
+        </div>
+        <p data-reveal style="margin:20px auto 0;text-align:center;font-size:15px;color:#665A51">Price history shows which one you are facing.</p>
+      </div>
+    </section>
+
+    <!-- 03 REVENUE PICTURE -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Reading one product's </span><span style="font-weight:700">revenue picture</span></h2>
+        <div data-reveal style="margin-top:40px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#FFFFFF;box-shadow:0 40px 80px -56px rgba(60,30,15,.35)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 22px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066"><span style="display:flex;align-items:center;gap:8px;color:#1C130E"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>SMARTPRICE, MARKET RANK AND GROSS MARGIN FOR ONE PRODUCT</span></div>
+          <div class="rv-grid" style="display:grid;gap:1px;background:#F5ECE5">
+            {revCols.map((c, i) => (
+              <div data-rv-card={i} style={`background:${i === 0 ? '#FFF9F4' : '#FFFFFF'};display:flex;flex-direction:column;transition:background .4s`}>
+                <div style="padding:22px">
+                  <div data-rv-box style={`position:relative;background:#FFFFFF;border:1.5px solid ${i === 0 ? '#F7631E' : '#EFE3DA'};border-radius:16px;padding:18px 20px;box-shadow:${i === 0 ? '0 20px 40px -26px rgba(247,99,30,.6)' : 'none'};transition:all .4s`}>
+                    <span data-rv-badge style={`position:absolute;top:-12px;right:14px;width:26px;height:26px;border-radius:50%;background:${i === 0 ? '#F7631E' : '#1C130E'};color:#FFFFFF;border:2px solid #FFFFFF;box-shadow:0 4px 10px -4px rgba(60,30,15,.5);font-family:'Geist Mono',monospace;font-size:11.5px;display:flex;align-items:center;justify-content:center;animation:${i === 0 ? 'rp-pulse 1.6s infinite' : 'none'}`}>{c.n}</span>
+                    <div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:#7F7066">{c.k}</div>
+                    <div style="margin-top:8px;font-family:'Geist Mono',monospace;font-size:24px;font-weight:500;color:#1C130E">{c.v}</div>
+                    <div style="margin-top:4px;display:flex;align-items:center;gap:6px;font-size:13px;color:#3A302A"><span style={`display:${c.dotD};width:6px;height:6px;border-radius:50%;background:#1E7A3D`}></span>{c.s}</div>
+                  </div>
+                </div>
+                <div data-rv-line style={`margin:0 22px;height:22px;border-left:1.5px dashed ${i === 0 ? '#F7631E' : '#E2D3C8'};transition:border-color .4s`}></div>
+                <div style="padding:6px 22px 24px;flex:1">
+                  <div style="font-family:Geist,sans-serif;font-size:17px;font-weight:600;color:#1C130E">{c.t}</div>
+                  <p style="margin:6px 0 0;font-size:14.5px;line-height:1.6;color:#3A302A">{c.d.a1}<a href={c.d.lh} style={`display:${c.d.ld};font-weight:600`}>{c.d.lt}</a>{c.d.a2}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div class="rv-split" style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);gap:clamp(28px,5vw,72px);align-items:start">
+        <h2 data-reveal class="rv-sticky" style="top:96px;margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">{faqH1} </span><span style="font-weight:700">FAQs</span></h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((qq) => (
+            <div class="rv-faq" class:list={[{ 'is-open': qq.open }]} data-rv-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-rv-faqbtn aria-expanded={qq.open ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="rv-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px">{qq.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{qq.q}</span>
+                <span class="rv-faq-ic" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="rv-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{qq.a.a1}<a href={qq.a.lh} style={`display:${qq.a.ld};font-weight:600`}>{qq.a.lt}</a>{qq.a.a2}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#1C130E;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-240px;width:680px;height:420px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.32),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:26px">
+          <h2 style="margin:0;max-width:820px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;font-weight:600;color:#FFFFFF;text-wrap:balance">{ctaH}</h2>
+          <a href="/book-a-demo" style="height:52px;padding:0 26px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15.5px;box-shadow:0 14px 30px -12px rgba(247,99,30,.9)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .rv { background: #FFFCF9; overflow-x: clip; }
+  @keyframes rp-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.5); } 100% { box-shadow: 0 0 0 9px rgba(247,99,30,0); } }
+
+  .rv-pair { grid-template-columns: 1fr; }
+  .rv-vsbadge { display: none; }
+  @media (min-width: 720px) { .rv-pair { grid-template-columns: 1fr 1fr; } .rv-vsbadge { display: flex; } }
+  .rv-grid { grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .rv-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+  .rv-split { display: grid; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .rv-split { grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); } }
+  .rv-sticky { position: static; }
+  @media (min-width: 1024px) { .rv-sticky { position: sticky; } }
+
+  .rv-faq-n { color: #B9A99C; }
+  .rv-faq.is-open .rv-faq-n { color: #C2410C; }
+  .rv-faq-ic { background: #FBF3EC; color: #1C130E; transform: rotate(0deg); transition: all .3s; }
+  .rv-faq.is-open .rv-faq-ic { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .rv-faq.is-open { border-color: #FFD8BE; }
+  .rv-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .rv-faq.is-open .rv-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .rv *, .rv *::before, .rv *::after { animation: none !important; transition: none !important; } [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.rv') as HTMLElement | null;
+  if (root) {
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+    const cards = qa('[data-rv-card]');
+    let tk = 0;
+    function paint() {
+      const hot = Math.floor(tk / 3) % 3;
+      cards.forEach((el, i) => {
+        const on = i === hot;
+        el.style.background = on ? '#FFF9F4' : '#FFFFFF';
+        const box = el.querySelector('[data-rv-box]') as HTMLElement; box.style.borderColor = on ? '#F7631E' : '#EFE3DA'; box.style.boxShadow = on ? '0 20px 40px -26px rgba(247,99,30,.6)' : 'none';
+        const badge = el.querySelector('[data-rv-badge]') as HTMLElement; badge.style.background = on ? '#F7631E' : '#1C130E'; badge.style.animation = on ? 'rp-pulse 1.6s infinite' : 'none';
+        (el.querySelector('[data-rv-line]') as HTMLElement).style.borderLeftColor = on ? '#F7631E' : '#E2D3C8';
+      });
+    }
+    paint();
+    setInterval(() => { tk++; paint(); }, 1000);
+
+    // faq
+    qa('[data-rv-faqbtn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-rv-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-rv-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-rv-faqbtn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    // reveal (+ draw follow/hold charts when seen)
+    function drawCharts() { qa('[data-rv-draw]').forEach((el) => el.setAttribute('stroke-dashoffset', '0')); qa('[data-rv-dot]').forEach((el) => (el.style.opacity = '1')); }
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); if ((e.target as HTMLElement).hasAttribute('data-rv-charts')) drawCharts(); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); drawCharts(); }
+  }
+</script>
