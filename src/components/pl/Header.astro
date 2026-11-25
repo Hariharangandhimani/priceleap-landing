@@ -229,11 +229,14 @@ const PROD_ICONS = ['intelligence', 'decision', 'shield', 'data', 'scrape', 'mat
   .pl-sol-title { font-family: Geist, sans-serif; font-size: 17px; font-weight: 600; color: var(--pl-ink); }
   .pl-sol-desc { font-size: 12.5px; color: var(--pl-muted); }
   .pl-grid-2 { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
-  .pl-sol-item { min-height: 48px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid var(--pl-line-soft); border-radius: 12px; font-size: 14px; font-weight: 500; color: var(--pl-ink); transition: all .2s; }
-  .pl-sol-item:hover { border-color: var(--pl-accent-line); background: var(--pl-cream); color: var(--pl-ink); }
-  .pl-dot-row { display: flex; align-items: center; gap: 10px; }
+  .pl-sol-item { position: relative; min-height: 46px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-radius: 11px; font-size: 14px; font-weight: 500; color: var(--pl-ink); transition: background .18s ease, box-shadow .18s ease; }
+  .pl-sol-item:hover { background: var(--pl-cream); box-shadow: inset 0 0 0 1px var(--pl-line-soft); }
+  .pl-dot-row { display: flex; align-items: center; gap: 11px; min-width: 0; }
   .pl-diamond { width: 7px; height: 7px; flex: none; border-radius: 2px; background: var(--pl-accent); transform: rotate(45deg); }
-  .pl-arrow { color: var(--pl-accent-ink); font-size: 13px; }
+  .pl-sol-item .pl-diamond { width: 6px; height: 6px; background: var(--pl-faint-2); transition: background .18s ease, transform .18s ease; }
+  .pl-sol-item:hover .pl-diamond { background: var(--pl-accent); transform: rotate(45deg) scale(1.25); }
+  .pl-arrow { flex: none; color: var(--pl-accent-ink); font-size: 13px; opacity: 0; transform: translateX(-6px); transition: opacity .18s ease, transform .18s ease; }
+  .pl-sol-item:hover .pl-arrow { opacity: 1; transform: translateX(0); }
 
   .pl-feat { background: var(--pl-surface); display: grid; grid-template-columns: minmax(0,1.7fr) minmax(0,1fr); }
   .pl-feat-left { display: flex; flex-direction: column; border-right: 1px solid var(--pl-line-soft); }
