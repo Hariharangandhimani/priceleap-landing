@@ -1,0 +1,334 @@
+---
+// Native Astro port of the delivered "Competitor Tracking" feature page.
+// Static initial render (tick 0) + the 1.4s loop reimplemented in vanilla JS:
+// the 3-step setup cycle + progress line + screenshot mode highlight, the
+// price-history chart (range cycle + redraw), group-history + velocity + stock
+// grids, the by-hand-vs comparison highlight; FAQ accordion; scroll-reveal.
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+
+// Internal links mapped to this site's real routes.
+const R = { rtm: '/real-time-price-monitoring', dps: '/dynamic-pricing-software', demo: '/book-a-demo' };
+
+const chips = ['AI competitor discovery', 'Or your own competitor list', 'Price history for every seller'];
+const orbit = [['Amazon', '#F59E0B'], ['Best Buy', '#3B82F6'], ['Walmart', '#2563EB'], ['Target', '#EF4444'], ['Newegg', '#8B5CF6'], ['Your list', '#1C130E']];
+const orbitDots = orbit.map(([t, c], i) => { const a = i / orbit.length * Math.PI * 2 - Math.PI / 2; return { t, c, x: (50 + Math.cos(a) * 50).toFixed(2), y: (50 + Math.sin(a) * 50).toFixed(2) }; });
+
+const stepData = [
+  ['Add your products', 'Paste product URLs, one per line, or use Upload file or Connect catalog. Each batch goes into a product group.'],
+  ['Choose how competitors are found', 'Pick Find & monitor competitors and AI finds competing products for the group. Or pick Track prices for your product URLs and assign competitor domains or URLs yourself, which saves credits.'],
+  ['Check who is tracked', 'Open Manage competitors on the group menu to review its competitor set with AI help. Add a listing AI missed with + Add URL on the product page, or + add on the dashboard.'],
+];
+// tick 0 => step 0
+const steps = stepData.map(([t, d], i) => { const on = i === 0, dn = i < 0; return { t, d, n: dn ? '✓' : String(i + 1), bg: on ? '#FFF9F4' : '#FFFFFF', bc: on ? '#FFD8BE' : '#EFE3DA', nb: on || dn ? '#1C130E' : '#FFFFFF', nbc: on || dn ? '#1C130E' : '#EFE3DA', nc: on || dn ? '#FFFFFF' : '#7F7066', sh: on ? '0 0 0 6px rgba(247,99,30,.14)' : 'none' }; });
+
+const mk = (seed: number, amp: number, rIdx: number) => Array.from({ length: 21 }, (_, i) => { const y = 55 + Math.sin((i + seed) * (0.5 + rIdx * 0.12)) * amp + Math.cos(i * 0.9 + seed) * amp * 0.4 - (i > 12 ? (rIdx + 1) * 2 : 0); return (i * 20) + ',' + Math.max(8, Math.min(102, y)).toFixed(1); }).join(' ');
+const rangeLbl = ['14d', '30d', '90d', '1y', 'All'];
+const ranges = rangeLbl.map((t, i) => ({ t, bg: i === 0 ? '#1C130E' : '#FFFFFF', c: i === 0 ? '#FFFFFF' : '#665A51', bc: i === 0 ? '#1C130E' : '#EFE3DA' }));
+const lineA = mk(0, 14, 0), lineB = mk(2.4, 18, 0), lineC = mk(5.1, 10, 0);
+
+const groupRows = [['Kitchen_Appliances', '−2.4%', '#C2410C', '0,6 20,8 40,7 60,12 80,14 100,15'], ['TV_Weekly_Promo', '−6.1%', '#C2410C', '0,4 20,6 40,12 60,10 80,16 100,18'], ['Laptops_BackToSchool', '+1.2%', '#1E7A3D', '0,14 20,13 40,12 60,10 80,9 100,7']].map(([n, d, dc, sp], i) => ({ n, d, dc, sp, sc: i === 0 ? '#F7631E' : '#1C130E', bg: i === 0 ? '#FFFFFF' : 'transparent', bc: i === 0 ? '#FFD8BE' : '#F5ECE5' }));
+
+const velRanges = ['7d', '30d', '90d'].map((t, i) => ({ t, bg: i === 0 ? '#1C130E' : '#FFFFFF', c: i === 0 ? '#FFFFFF' : '#665A51', bc: i === 0 ? '#1C130E' : '#EFE3DA' }));
+const vel0 = [38, 52, 9]; const vMax0 = Math.max(...vel0);
+const velocity = [['UP', '#1E7A3D'], ['DOWN', '#C2410C'], ['BOTH', '#7F7066']].map(([k, c], i) => ({ k, c, n: vel0[i], w: Math.round(vel0[i] / vMax0 * 100) }));
+
+const stockSellers = ['Amazon', 'Best Buy', 'Walmart'];
+const stockRow = stockSellers.map((n, r) => ({ n, cells: Array.from({ length: 8 }, (_, c) => { const off = ((c + 0 + r * 3) % 9 === 0) || (r === 1 && (c + 0) % 7 === 0); return { bg: off ? '#FFD8BE' : '#1C130E' }; }) }));
+const oosN = stockRow.reduce((a, r) => a + r.cells.filter((c) => c.bg === '#FFD8BE').length, 0) + 9;
+
+const cmpRaw: [string, string, string, string, boolean][] = [
+  ['Finding competitors', 'Whoever the team already knows about', 'AI suggests competing products for each group, or you add your own', '', false],
+  ['How often', 'When someone has time to open each site', 'On a ', ' you set per product group, plus Fetch now', true],
+  ['History', 'Overwritten cells in a spreadsheet', 'Kept per product and per group from the day tracking starts', '', false],
+  ['Location', 'Whatever the site shows the person checking', 'Auto, or a ZIP code per product group for location-specific prices', '', false],
+];
+const cmpRows = cmpRaw.map(([k, a, b1, b2, l], i) => ({ k, a, b1, b2, ld: l ? 'inline' : 'none', no: '0' + (i + 1), bb: i < 3 ? '1px solid #F5ECE5' : 'none', bg: i === 0 ? '#FFF4EC' : '#FFFFFF' }));
+
+// FAQ — exact copy; only Q3 carries the Dynamic Repricing link.
+const fq: [string, string, string, boolean][] = [
+  ['How does priceleap.ai find competitors?', 'Choose Find & monitor competitors when you add products, and AI looks for competing products for the product group as a whole. Group similar products together for sharper results. If you already know your competitors, choose Track prices for your product URLs and assign them yourself.', '', false],
+  ['Can I add a competitor that AI missed?', 'Yes. Paste the listing with + Add URL on the product page, or use + add in the Competitors column of the dashboard. For a whole group, open Manage competitors from the group menu. New listings are checked from the next scheduled run, or straight away with Fetch now.', '', false],
+  ['Can a premium range follow different competitors from a value range?', 'Yes. Put each range in its own product group. Every group keeps its own competitor set, schedule and location, so the two ranges follow different sellers. Pricing rules then choose which of those competitors count, as set out on the ', ' page.', true],
+  ['Can I switch a product from AI discovery to my own list later?', 'Yes. You pick the tracking mode once for each group when you add products, and individual products can be switched later from the dashboard. That suits a group where AI finds most competitors but a few products need sellers you choose yourself.', '', false],
+];
+const faqs = fq.map(([q, a1, a2, l], i) => { const open = i === 0; return { q, a1, a2: a2 || '', ld: l ? 'inline' : 'none', open, n: '0' + (i + 1), rows: open ? '1fr' : '0fr', rot: open ? 45 : 0, bc: open ? '#FFD8BE' : '#EFE3DA', nc: open ? '#C2410C' : '#B9A99C', ib: open ? '#1C130E' : '#FBF3EC', ic: open ? '#FFFFFF' : '#1C130E' }; });
+
+const site = 'https://priceleap.ai';
+const jsonLd = [
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: fq.map(([q, a1, a2]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: (a1 + (a2 ? 'Dynamic Repricing' + a2 : '')).trim() } })) },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: site + '/' },
+    { '@type': 'ListItem', position: 2, name: 'Features', item: site + '/features/' },
+    { '@type': 'ListItem', position: 3, name: 'Competitor Tracking', item: site + '/features/competitor-tracking' },
+  ] },
+];
+---
+<PriceLeapLayout
+  title="Competitor Tracking Software | priceleap.ai"
+  description="Find the competitors selling your products, with AI or your own list, then follow their prices, stock and price history check after check. Book a Demo."
+  jsonLd={jsonLd}
+>
+  <div class="ct" style="min-height:100vh;background:#FFFCF9;overflow-x:clip">
+
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 60% 80% at 50% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 60% 80% at 50% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;left:50%;top:-30%;width:820px;height:620px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.09),transparent);pointer-events:none"></div>
+      <div class="ct-orbit-wrap" aria-hidden="true" style="position:absolute;left:50%;top:50%;width:980px;height:980px;margin:-490px 0 0 -490px;pointer-events:none">
+        <div style="position:absolute;inset:0;border-radius:50%;border:1px dashed #EFE3DA;animation:ct-orbit 90s linear infinite">
+          {orbitDots.map((o) => (<span style={`position:absolute;left:${o.x}%;top:${o.y}%;height:28px;padding:0 10px;margin:-14px 0 0 -40px;display:flex;align-items:center;gap:6px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;box-shadow:0 10px 20px -14px rgba(60,30,15,.4);font-family:'Geist Mono',monospace;font-size:10.5px;color:#3A302A;white-space:nowrap`}><span style={`width:6px;height:6px;border-radius:50%;background:${o.c}`}></span>{o.t}</span>))}
+        </div>
+      </div>
+      <div style="position:relative;max-width:880px;margin:0 auto;padding:clamp(56px,9vw,128px) clamp(16px,4vw,40px) clamp(56px,8vw,112px);display:flex;flex-direction:column;align-items:center;text-align:center;gap:22px">
+        <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>Features · Competitor Tracking</span>
+        <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(40px,6vw,76px);line-height:1;letter-spacing:-.05em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Competitor tracking</span><span style="font-weight:400"> software</span></h1>
+        <p style="margin:0;max-width:660px;font-size:18px;line-height:1.65;color:#3A302A;text-wrap:pretty">Tell priceleap.ai what you sell and it finds the competitors selling the same products, or tracks the ones you name. Their prices, stock and price history then build up on every product, check after check.</p>
+        <a href={R.demo} style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:4px">
+          {chips.map((c) => (<span style="height:34px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:13.5px;color:#1C130E"><span style="width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>{c}</span>))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 SET UP IN THREE STEPS -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Set up competitor tracking in </span><span style="font-weight:700">three steps</span></h2>
+        <div data-reveal class="ct-steps" style="position:relative;margin-top:40px;display:grid;gap:12px">
+          <span aria-hidden="true" class="ct-stepline" style="position:absolute;left:calc(16.66% + 18px);right:calc(16.66% + 18px);top:40px;height:2px;background:#F5ECE5"><span data-ct-stepfill style="display:block;height:100%;width:0%;background:#1C130E;transition:width .6s ease"></span></span>
+          {steps.map((s) => (
+            <div data-ct-step style={`position:relative;background:${s.bg};border:1px solid ${s.bc};border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:12px;transition:all .4s`}>
+              <span data-ct-stepn style={`position:relative;width:38px;height:38px;border-radius:50%;background:${s.nb};border:1.5px solid ${s.nbc};color:${s.nc};font-family:'Geist Mono',monospace;font-size:13px;display:flex;align-items:center;justify-content:center;box-shadow:${s.sh};transition:all .4s`}>{s.n}</span>
+              <h3 style="margin:0;font-family:Geist,sans-serif;font-size:19px;font-weight:600;letter-spacing:-.015em;color:#1C130E">{s.t}</h3>
+              <p style="margin:0;font-size:15px;line-height:1.6;color:#3A302A">{s.d}</p>
+            </div>
+          ))}
+        </div>
+        <div data-reveal style="margin-top:14px;padding:14px 18px;border-radius:14px;background:#FFF9F4;border:1px solid #F5ECE5;display:flex;align-items:center;gap:12px;font-size:14.5px;line-height:1.55;color:#1C130E"><span style="flex:none;height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.06em;color:#FFFFFF">TIP</span>Competitors are found for the group as a whole, so similar products in one group give sharper results.</div>
+        <figure data-reveal style="margin:28px 0 0">
+          <div style="position:relative;border:1px solid #EFE3DA;border-radius:20px;overflow:hidden;background:#FFFFFF;box-shadow:0 44px 84px -52px rgba(60,30,15,.42)">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #F5ECE5;background:#FFF9F4"><span style="display:flex;gap:5px"><span style="width:9px;height:9px;border-radius:50%;background:#EFE3DA"></span><span style="width:9px;height:9px;border-radius:50%;background:#EFE3DA"></span><span style="width:9px;height:9px;border-radius:50%;background:#EFE3DA"></span></span><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:#7F7066">Add Products · tracking mode</span></div>
+            <div style="position:relative;overflow-x:auto">
+              <div style="position:relative;min-width:640px">
+                <img src="/assets/ct-01-tracking-modes.png" alt="priceleap.ai Add Products screen with two tracking modes: AI-powered Find and monitor competitors, or Track prices for your product URLs" width="1100" height="164" style="display:block;width:100%;height:auto" />
+                <span aria-hidden="true" data-ct-mode style="position:absolute;top:40%;bottom:6%;left:1.4%;width:48.6%;border-radius:12px;border:2px solid #F7631E;box-shadow:0 0 0 6px rgba(247,99,30,.12);transition:left .6s cubic-bezier(.2,.7,.2,1);pointer-events:none"></span>
+              </div>
+            </div>
+          </div>
+          <figcaption style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:13.5px;color:#665A51"><span style="width:6px;height:6px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>Pick AI discovery or your own competitor list for each product group</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 03 WHAT BUILDS UP -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">What builds up on each competitor </span><span style="font-weight:700">over time</span></h2>
+        <div data-reveal class="ct-grid2" style="margin-top:40px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#EFE3DA;display:grid;gap:1px">
+
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:190px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;padding:18px 20px;display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;gap:4px">{ranges.map((r) => (<span data-ct-range style={`height:24px;padding:0 9px;display:flex;align-items:center;border-radius:7px;background:${r.bg};color:${r.c};border:1px solid ${r.bc};font-family:'Geist Mono',monospace;font-size:10.5px;transition:all .3s`}>{r.t}</span>))}</div>
+              <svg viewBox="0 0 400 110" preserveAspectRatio="none" style="flex:1;width:100%;overflow:visible">
+                <line x1="0" y1="30" x2="400" y2="30" stroke="#F5ECE5"></line><line x1="0" y1="70" x2="400" y2="70" stroke="#F5ECE5"></line>
+                <polyline data-ct-lineA points={lineA} fill="none" stroke="#1C130E" stroke-width="2" stroke-linejoin="round" pathLength="1" style="stroke-dasharray:1;animation:ct-draw 1s ease both"></polyline>
+                <polyline data-ct-lineB points={lineB} fill="none" stroke="#F7631E" stroke-width="2" stroke-linejoin="round" pathLength="1" style="stroke-dasharray:1;animation:ct-draw 1s ease .15s both"></polyline>
+                <polyline data-ct-lineC points={lineC} fill="none" stroke="#D7C6BA" stroke-width="2" stroke-linejoin="round" pathLength="1" style="stroke-dasharray:1;animation:ct-draw 1s ease .3s both"></polyline>
+              </svg>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><h3 style="margin:0;font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:#1C130E">Price history</h3><p style="margin:0;font-size:15px;line-height:1.6;color:#3A302A">Every check adds to the product's price history, which you can view over 14 days, 30 days, 90 days, a year or the full record. Each seller's line can be shown or hidden on the chart.</p></div>
+          </div>
+
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:190px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;padding:18px 20px;display:flex;flex-direction:column;gap:8px;justify-content:center">
+              {groupRows.map((g) => (
+                <div data-ct-group style={`display:grid;grid-template-columns:minmax(0,1fr) 100px 54px;gap:10px;align-items:center;padding:8px 12px;border-radius:10px;background:${g.bg};border:1px solid ${g.bc};transition:all .4s`}>
+                  <span style="font-family:'Geist Mono',monospace;font-size:11px;color:#1C130E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{g.n}</span>
+                  <svg viewBox="0 0 100 20" preserveAspectRatio="none" style="width:100px;height:20px"><polyline data-ct-groupsp points={g.sp} fill="none" stroke={g.sc} stroke-width="1.6"></polyline></svg>
+                  <span style={`font-family:'Geist Mono',monospace;font-size:11px;text-align:right;color:${g.dc}`}>{g.d}</span>
+                </div>
+              ))}
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><h3 style="margin:0;font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:#1C130E">Group price history</h3><p style="margin:0;font-size:15px;line-height:1.6;color:#3A302A">See how prices moved across a whole product group from the group menu, not one product at a time.</p></div>
+          </div>
+
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:190px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;padding:18px 20px;display:flex;flex-direction:column;gap:12px;justify-content:center">
+              <div style="display:flex;gap:4px">{velRanges.map((r) => (<span data-ct-velrange style={`height:24px;padding:0 9px;display:flex;align-items:center;border-radius:7px;background:${r.bg};color:${r.c};border:1px solid ${r.bc};font-family:'Geist Mono',monospace;font-size:10.5px;transition:all .3s`}>{r.t}</span>))}</div>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+                {velocity.map((v) => (
+                  <div style="padding:10px 12px;border-radius:12px;background:#FFFFFF;border:1px solid #F5ECE5"><div style={`font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:${v.c}`}>{v.k}</div><div data-ct-veln style="margin-top:4px;font-family:Geist,sans-serif;font-size:24px;font-weight:600;letter-spacing:-.03em;color:#1C130E">{v.n}</div><div style="margin-top:6px;height:4px;border-radius:4px;background:#F5ECE5"><div data-ct-velw style={`height:100%;width:${v.w}%;border-radius:4px;background:${v.c};transition:width .6s ease`}></div></div></div>
+                ))}
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><h3 style="margin:0;font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:#1C130E">Price Velocity</h3><p style="margin:0;font-size:15px;line-height:1.6;color:#3A302A">Count how many products went up, down or both over the last 7, 30 or 90 days.</p></div>
+          </div>
+
+          <div style="background:#FFFFFF;display:flex;flex-direction:column">
+            <div style="height:190px;border-bottom:1px solid #F5ECE5;background:#FFFCF9;padding:18px 20px;display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;align-items:center">
+              <div style="padding:14px;border-radius:14px;background:#FFFFFF;border:1px solid #F5ECE5"><div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">OUT OF STOCK</div><div data-ct-oos style="margin-top:4px;font-family:Geist,sans-serif;font-size:30px;font-weight:600;letter-spacing:-.03em;color:#1C130E">{oosN}</div><div style="font-size:11.5px;color:#665A51">competitor products</div></div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                {stockRow.map((r) => (
+                  <div style="display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:center"><span style="font-family:'Geist Mono',monospace;font-size:10px;color:#665A51">{r.n}</span><span data-ct-stockrow style="display:grid;grid-template-columns:repeat(8,1fr);gap:3px">{r.cells.map((c) => (<span data-ct-cell style={`height:14px;border-radius:3px;background:${c.bg};transition:background .4s`}></span>))}</span></div>
+                ))}
+                <span style="display:flex;gap:12px;margin-top:2px;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066"><span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:#1C130E"></span>in stock</span><span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:#FFD8BE"></span>out of stock</span><span>· each check</span></span>
+              </div>
+            </div>
+            <div style="padding:24px;display:flex;flex-direction:column;gap:8px"><h3 style="margin:0;font-family:Geist,sans-serif;font-size:19px;font-weight:600;color:#1C130E">Stock-outs</h3><p style="margin:0;font-size:15px;line-height:1.6;color:#3A302A">The Out of Stock card counts competitor products that are out of stock, and each competitor row records stock at every check.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 BY HAND VS PRICELEAP.AI -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:820px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Checking competitor sites by hand vs </span><span style="font-weight:700">tracking them in priceleap.ai</span></h2>
+        <div data-reveal style="margin-top:40px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#FFFFFF;box-shadow:0 40px 80px -56px rgba(60,30,15,.35)">
+          <div class="ct-cmp" style="display:grid;border-bottom:1px solid #EFE3DA">
+            <span class="ct-cmp-emptyhdr" style="padding:14px 22px;background:#FFF9F4"></span>
+            <span style="padding:14px 22px;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066;display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:3px;border:1.5px solid #D7C6BA"></span>BY HAND</span>
+            <span style="padding:14px 22px;background:#1C130E;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#FFFFFF;display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>IN PRICELEAP.AI</span>
+          </div>
+          {cmpRows.map((r) => (
+            <div class="ct-cmp" style={`display:grid;border-bottom:${r.bb}`}>
+              <span class="ct-cmp-key" style="display:flex;align-items:center;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:#C2410C">{r.no}</span><span style="font-family:Geist,sans-serif;font-size:15.5px;font-weight:600;color:#1C130E">{r.k}</span></span>
+              <span style="padding:18px 22px;font-size:14.5px;line-height:1.55;color:#665A51;background:#FFFCF9">{r.a}</span>
+              <span data-ct-cmp style={`padding:18px 22px;font-size:14.5px;line-height:1.55;color:#1C130E;display:flex;gap:10px;background:${r.bg};transition:background .4s`}><span style="flex:none;margin-top:2px;width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span><span>{r.b1}<a href={R.rtm} style={`display:${r.ld};font-weight:600`}>schedule</a>{r.b2}</span></span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div class="ct-faqgrid" style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);display:grid;gap:clamp(28px,5vw,72px);align-items:start">
+        <h2 data-reveal class="ct-sticky" style="top:96px;margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Competitor tracking </span><span style="font-weight:700">FAQs</span></h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((q) => (
+            <div class="ct-faq" class:list={[{ 'is-open': q.open }]} data-ct-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-ct-faqbtn aria-expanded={q.open ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="ct-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px">{q.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{q.q}</span>
+                <span class="ct-faq-ic" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="ct-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{q.a1}<a href={R.dps} style={`display:${q.ld};font-weight:600`}>Dynamic Repricing</a>{q.a2}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#1C130E;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-240px;width:700px;height:420px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.32),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:24px">
+          <h2 style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;color:#FFFFFF;text-wrap:balance"><span style="font-weight:400">See who sells your products </span><span style="font-weight:700">in a demo</span></h2>
+          <a href={R.demo} style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .ct { background: #FFFCF9; overflow-x: clip; }
+  @keyframes ct-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes ct-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  @keyframes ct-orbit { to { transform: rotate(360deg); } }
+
+  .ct-orbit-wrap { display: none; }
+  @media (min-width: 1100px) { .ct-orbit-wrap { display: block; } }
+  .ct-steps { grid-template-columns: 1fr; }
+  .ct-stepline { display: none; }
+  @media (min-width: 1000px) { .ct-steps { grid-template-columns: repeat(3,minmax(0,1fr)); } .ct-stepline { display: block; } }
+  .ct-grid2 { grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .ct-grid2 { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  .ct-cmp { grid-template-columns: 1fr 1fr; }
+  .ct-cmp-key { grid-column: 1 / -1; padding: 14px 22px 6px; }
+  .ct-cmp-emptyhdr { display: none; }
+  @media (min-width: 720px) { .ct-cmp { grid-template-columns: minmax(0,.8fr) minmax(0,1fr) minmax(0,1.2fr); } .ct-cmp-key { grid-column: auto; padding: 18px 22px; } .ct-cmp-emptyhdr { display: block; } }
+  .ct-faqgrid { grid-template-columns: 1fr; }
+  .ct-sticky { position: static; }
+  @media (min-width: 1000px) { .ct-faqgrid { grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); } .ct-sticky { position: sticky; } }
+
+  .ct-faq-n { color: #B9A99C; }
+  .ct-faq.is-open .ct-faq-n { color: #C2410C; }
+  .ct-faq-ic { background: #FBF3EC; color: #1C130E; transform: rotate(0deg); transition: all .3s; }
+  .ct-faq.is-open .ct-faq-ic { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .ct-faq.is-open { border-color: #FFD8BE; }
+  .ct-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .ct-faq.is-open .ct-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .ct *, .ct *::before, .ct *::after { animation: none !important; transition: none !important; } [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.ct') as HTMLElement | null;
+  if (root) {
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+    const stepEls = qa('[data-ct-step]'), stepFill = root.querySelector('[data-ct-stepfill]') as HTMLElement | null;
+    const mode = root.querySelector('[data-ct-mode]') as HTMLElement | null;
+    const rangeEls = qa('[data-ct-range]'), lineA = root.querySelector('[data-ct-lineA]') as SVGElement | null, lineB = root.querySelector('[data-ct-lineB]') as SVGElement | null, lineC = root.querySelector('[data-ct-lineC]') as SVGElement | null;
+    const groupEls = qa('[data-ct-group]'), velRangeEls = qa('[data-ct-velrange]'), velN = qa('[data-ct-veln]'), velW = qa('[data-ct-velw]');
+    const oos = root.querySelector('[data-ct-oos]') as HTMLElement | null, cells = qa('[data-ct-cell]'), cmpEls = qa('[data-ct-cmp]');
+
+    const mk = (seed: number, amp: number, rIdx: number) => Array.from({ length: 21 }, (_, i) => { const y = 55 + Math.sin((i + seed) * (0.5 + rIdx * 0.12)) * amp + Math.cos(i * 0.9 + seed) * amp * 0.4 - (i > 12 ? (rIdx + 1) * 2 : 0); return (i * 20) + ',' + Math.max(8, Math.min(102, y)).toFixed(1); }).join(' ');
+    const velSets = [[38, 52, 9], [71, 96, 24], [140, 182, 61]];
+    let tk = 0, prevR = -1;
+
+    function paint() {
+      const step = tk % 4;
+      stepEls.forEach((el, i) => {
+        const on = i === step, dn = i < step;
+        el.style.background = on ? '#FFF9F4' : '#FFFFFF'; el.style.borderColor = on ? '#FFD8BE' : '#EFE3DA';
+        const n = el.querySelector('[data-ct-stepn]') as HTMLElement;
+        n.style.background = on || dn ? '#1C130E' : '#FFFFFF'; n.style.borderColor = on || dn ? '#1C130E' : '#EFE3DA'; n.style.color = on || dn ? '#FFFFFF' : '#7F7066'; n.style.boxShadow = on ? '0 0 0 6px rgba(247,99,30,.14)' : 'none'; n.textContent = dn ? '✓' : String(i + 1);
+      });
+      if (stepFill) stepFill.style.width = Math.min(100, step * 50) + '%';
+      if (mode) mode.style.left = (Math.floor(tk / 3) % 2 ? 50.4 : 1.4) + '%';
+
+      const rIdx = Math.floor(tk / 3) % 5;
+      rangeEls.forEach((el, i) => { const on = i === rIdx; el.style.background = on ? '#1C130E' : '#FFFFFF'; el.style.color = on ? '#FFFFFF' : '#665A51'; el.style.borderColor = on ? '#1C130E' : '#EFE3DA'; });
+      if (rIdx !== prevR) {
+        prevR = rIdx;
+        const set: [SVGElement | null, number, number][] = [[lineA, 0, 14], [lineB, 2.4, 18], [lineC, 5.1, 10]];
+        set.forEach(([el, seed, amp]) => { if (!el) return; el.setAttribute('points', mk(seed, amp, rIdx)); (el as any).style.animation = 'none'; void (el as any).getBBox(); (el as any).style.animation = ''; });
+      }
+
+      const gHot = tk % 3;
+      groupEls.forEach((el, i) => { const on = i === gHot; el.style.background = on ? '#FFFFFF' : 'transparent'; el.style.borderColor = on ? '#FFD8BE' : '#F5ECE5'; const sp = el.querySelector('[data-ct-groupsp]') as SVGElement; if (sp) sp.setAttribute('stroke', on ? '#F7631E' : '#1C130E'); });
+
+      const vIdx = Math.floor(tk / 3) % 3, vel = velSets[vIdx], vMax = Math.max(...vel);
+      velRangeEls.forEach((el, i) => { const on = i === vIdx; el.style.background = on ? '#1C130E' : '#FFFFFF'; el.style.color = on ? '#FFFFFF' : '#665A51'; el.style.borderColor = on ? '#1C130E' : '#EFE3DA'; });
+      velN.forEach((el, i) => { el.textContent = String(vel[i]); });
+      velW.forEach((el, i) => { el.style.width = Math.round(vel[i] / vMax * 100) + '%'; });
+
+      let off = 0;
+      cells.forEach((el, idx) => { const r = Math.floor(idx / 8), c = idx % 8; const isOff = ((c + tk + r * 3) % 9 === 0) || (r === 1 && (c + tk) % 7 === 0); el.style.background = isOff ? '#FFD8BE' : '#1C130E'; if (isOff) off++; });
+      if (oos) oos.textContent = String(off + 9);
+
+      const cHot = Math.floor(tk / 2) % 4;
+      cmpEls.forEach((el, i) => { el.style.background = i === cHot ? '#FFF4EC' : '#FFFFFF'; });
+    }
+    paint();
+    setInterval(() => { tk++; paint(); }, 1400);
+
+    qa('[data-ct-faqbtn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-ct-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-ct-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-ct-faqbtn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>

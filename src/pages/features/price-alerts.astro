@@ -1,0 +1,295 @@
+---
+// Native Astro port of the delivered "Price Alerts" feature page.
+// Static initial render (tick 0) + the 1.5s loop reimplemented in vanilla JS:
+// the hero screenshot highlight cycle + ringing toast, the alert-types table
+// highlight + Price-increase toggle, the alert-anatomy outline/pin/dest cycle,
+// the setup checklist fill; FAQ accordion; scroll-reveal.
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+
+const R = { rrp: '/features/recommended-retail-price', dps: '/dynamic-pricing-software', rtm: '/real-time-price-monitoring', demo: '/book-a-demo' };
+const IC: Record<string, string> = { down: 'M12 5v14M19 12l-7 7-7-7', up: 'M12 19V5M5 12l7-7 7 7', box: 'M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10', boxes: 'M2 9l6-3 6 3v6l-6 3-6-3zM10 6l6-3 6 3v6l-4 2', shield: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3zM12 9v4M12 16h.01', tag: 'M3 12V3h9l9 9-9 9-9-9zM7.5 7.5h.01', spark: 'M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6', cal: 'M4 5h16v16H4zM4 10h16M9 3v4M15 3v4' };
+
+const chips = ['Price, stock, MAP and MSRP alerts', "A threshold on your price or a rival's", 'A channel for each alert'];
+const hl = [[6.1, 15.6], [22.8, 15.6], [39.3, 10.5], [50.7, 10.5], [62.2, 14.9], [77.6, 13.7], [92, 8]];
+const toasts = [['PRICE DROP', 'Email', 'A competitor price dropped by 10% on [Product name].'], ['PRICE INCREASE', 'Email', 'A price rose by 15% on [Product name].'], ['OUT OF STOCK', 'Slack', 'A competitor went out of stock for [Product name].'], ['WEEKLY DIGEST', 'Email', 'Summary of price movements for [Product group].'], ['MAP VIOLATION', 'Email', 'Your price dropped below MAP on [Product name].'], ['MSRP VIOLATION', 'Email', 'Your price went above MSRP on [Product name].'], ['ALL OUT OF STOCK', 'Email', 'Every competitor in the rule is unavailable.']];
+
+// [title, icon, firesPre, linkText, linkHref, firesPost, watches, defaultOn]
+const typeRaw: [string, string, string, string, string, string, string, boolean][] = [
+  ['Price drop', IC.down, 'A price drops by more than the percentage you set', '', '', '', "Your price or a competitor's", true],
+  ['Price increase', IC.up, 'A price rises by more than the percentage you set', '', '', '', "Your price or a competitor's", false],
+  ['Competitor out of stock', IC.box, "A competitor's product goes out of stock", '', '', '', 'Competitors', true],
+  ['All competitors out of stock', IC.boxes, 'Every competitor in the rule is unavailable', '', '', '', 'Competitors', true],
+  ['MAP violation', IC.shield, "Your price drops below the product's MAP", '', '', '', 'Your price', true],
+  ['MSRP violation', IC.tag, "Your price goes above the product's ", 'MSRP', R.rrp, '', 'Your price', true],
+  ['SmartPrice MAP warning', IC.spark, 'A ', 'recommended SmartPrice', R.dps, ' would fall below MAP', 'Recommendations', true],
+  ['Weekly digest', IC.cal, 'Once a week, with a summary of price movements for the group', '', '', '', 'The whole group', true],
+];
+// tick 0 => tHot 0
+const types = typeRaw.map(([t, ico, f1, lt, lh, f2, wch, on], i) => { const h = i === 0; const isOn = on !== (h && i === 1); return { t, ico, f1, lt, lh, f2, ld: lt ? 'inline' : 'none', w: wch, bb: i < 7 ? '1px solid #F5ECE5' : 'none', bg: h ? '#FFF9F4' : '#FFFFFF', ib: h ? '#1C130E' : '#FFF4EC', ibc: h ? '#1C130E' : '#FFD8BE', ic: h ? '#FFFFFF' : '#C2410C', tog: isOn ? '#1C130E' : '#E2D3C8', togX: isOn ? '16px' : '2px', wb: wch.startsWith('Your price') ? '#FFFFFF' : '#FBF3EC', wbc: '#EFE3DA', wc: '#3A302A' }; });
+
+const partData = [['Type badge', 'Which alert fired, so stock and price alerts are easy to tell apart.'], ['Title and description', 'What changed, and on which product.'], ['Footer', 'The product group it came from, when it arrived and the channel it went out on.']];
+const parts = partData.map(([t, d], i) => { const on = i === 0; return { t, d, n: String(i + 1), bg: on ? '#FFFFFF' : 'transparent', bc: on ? '#FFD8BE' : '#EFE3DA', nb: on ? '#1C130E' : '#FFFFFF', nbc: on ? '#1C130E' : '#E2D3C8', nc: on ? '#FFFFFF' : '#7F7066' }; });
+const dests = ['Slack', 'Email'].map((t, i) => ({ t, bg: i === 0 ? '#1C130E' : '#FFFFFF', bc: i === 0 ? '#1C130E' : '#EFE3DA', c: i === 0 ? '#FFFFFF' : '#665A51' }));
+
+const checkText = ['Set a threshold that matters, such as 10%, so small moves stay quiet.', "Include only the competitors you really price against in the group's rule.", 'Send urgent alerts to Slack and the rest to email.', 'Turn on the weekly digest for movement you only need to review once a week.', "Switch off the alerts a group doesn't need. Each one has its own toggle.", 'Set workspace defaults, so every teammate starts with price drop and competitor price change alerts on.'];
+// tick 0 => done 0
+const checks = checkText.map((t, i) => { const d = i < 0, cur = i === 0; return { t, no: String(i + 1).padStart(2, '0'), mk: d ? '✓' : '', bg: cur ? '#FFF9F4' : '#FFFFFF', ck: d ? '#1C130E' : '#FFFFFF', ckb: d ? '#1C130E' : cur ? '#F7631E' : '#E2D3C8', nc: cur ? '#C2410C' : '#7F7066', tc: d ? '#665A51' : '#1C130E' }; });
+
+const fq: [string, string, string, boolean][] = [
+  ['Where can alerts be delivered?', 'By email or Slack, chosen for each alert, and every alert also lands in the in-app notification center. Webhook alerts can pass alerts into your own systems. Starter includes email alerts; Slack and webhook alerts come with the Growth and Scale plans.', '', false],
+  ['Can I get alerts about my own price, not only competitors?', "Yes. Price drop and price increase alerts can watch your price or a competitor's. MAP and MSRP violation alerts always watch your own price, so you hear as soon as a check finds it crossing a limit you have set for that product.", '', false],
+  ['When does an alert fire?', "When a check finds a change that matches the rule. Checks run on each product group's schedule, one to three times a day depending on your plan, and Fetch now runs an extra one. The ", ' page explains how schedules work.', true],
+  ['Are alerts set for each product or for each group?', 'For each product group, as part of its pricing rule. Every product page lists the alerts that apply to it under Alerts for this product, marked Group level, so anyone opening a product can see what will trigger a notification.', '', false],
+];
+const faqs = fq.map(([q, a1, a2, l], i) => { const open = i === 0; return { q, a1, a2: a2 || '', ld: l ? 'inline' : 'none', open, n: '0' + (i + 1), rows: open ? '1fr' : '0fr', rot: open ? 45 : 0, bc: open ? '#FFD8BE' : '#EFE3DA', nc: open ? '#C2410C' : '#B9A99C', ib: open ? '#1C130E' : '#FBF3EC', ic: open ? '#FFFFFF' : '#1C130E' }; });
+
+const site = 'https://priceleap.ai';
+const jsonLd = [
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: fq.map(([q, a1, a2]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: (a1 + (a2 ? 'price monitoring' + a2 : '')).trim() } })) },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: site + '/' },
+    { '@type': 'ListItem', position: 2, name: 'Features', item: site + '/features/' },
+    { '@type': 'ListItem', position: 3, name: 'Price Alerts', item: site + '/features/price-alerts' },
+  ] },
+];
+---
+<PriceLeapLayout
+  title="Competitor Price Alerts Software | priceleap.ai"
+  description="Get alerts when a competitor's price drops or rises, a rival runs out of stock, or your price breaks MAP or MSRP, by email or Slack. Book a Demo."
+  jsonLd={jsonLd}
+>
+  <div class="pa" style="min-height:100vh;background:#FFFCF9;overflow-x:clip">
+
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 60% 80% at 75% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 60% 80% at 75% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-8%;top:-20%;width:700px;height:640px;background:radial-gradient(closest-side,rgba(247,99,30,.10),transparent);pointer-events:none"></div>
+      <div class="pa-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(40px,6vw,80px) clamp(16px,4vw,40px) clamp(48px,6vw,88px);display:grid;gap:clamp(36px,5vw,72px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>Features · Price Alerts</span>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(40px,5.6vw,72px);line-height:1;letter-spacing:-.05em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Competitor </span><span style="font-weight:700">price alerts</span></h1>
+          <p style="margin:0;max-width:560px;font-size:18px;line-height:1.65;color:#3A302A;text-wrap:pretty">Choose the changes your team needs to hear about, once for each product group. When a check finds one, priceleap.ai sends the alert by email or Slack and keeps a copy in the in-app notification center.</p>
+          <a href={R.demo} style="align-self:flex-start;height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            {chips.map((c) => (<span style="height:34px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:13.5px;color:#1C130E"><span style="width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>{c}</span>))}
+          </div>
+        </div>
+        <figure class="pa-herofig" style="margin:0;min-width:0;position:relative">
+          <div style="position:relative;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#FFFFFF;box-shadow:0 48px 90px -52px rgba(60,30,15,.45),0 0 0 6px rgba(255,255,255,.7)">
+            <img src="/assets/pa-01-alert-rules.png" alt="priceleap.ai Notifications and Alerts settings with price drop, price increase, competitor out of stock, weekly digest, MAP and MSRP violation alerts" width="720" height="931" style="display:block;width:100%;height:auto" />
+            <span aria-hidden="true" data-pa-hl style="position:absolute;left:2.3%;right:2.3%;top:6.1%;height:15.6%;border-radius:12px;border:2px solid #F7631E;box-shadow:0 0 0 6px rgba(247,99,30,.12);transition:top .6s cubic-bezier(.2,.7,.2,1),height .6s;pointer-events:none"></span>
+            <div aria-hidden="true" style="position:absolute;left:0;right:0;bottom:0;height:80px;background:linear-gradient(180deg,rgba(255,255,255,0),#FFFFFF)"></div>
+          </div>
+          <div class="pa-toast" data-pa-toast style="position:absolute;left:-28px;bottom:42px;width:260px;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:14px;padding:12px 14px;box-shadow:0 24px 44px -24px rgba(60,30,15,.45)">
+            <div style="display:flex;align-items:center;gap:8px"><span style="width:26px;height:26px;border-radius:8px;background:#1C130E;color:#FFFFFF;display:flex;align-items:center;justify-content:center;animation:pa-ring 2.4s ease infinite"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"></path></svg></span><span data-pa-toastk style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#C2410C">PRICE DROP</span><span data-pa-toastch style="margin-left:auto;font-family:'Geist Mono',monospace;font-size:9.5px;color:#7F7066">Email</span></div>
+            <div data-pa-toastt style="margin-top:6px;font-size:12.5px;line-height:1.45;color:#1C130E">A competitor price dropped by 10% on [Product name].</div>
+          </div>
+          <figcaption style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:13.5px;color:#665A51"><span style="width:6px;height:6px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>Each alert has its own switch, threshold and channel</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 02 ALERT TYPES -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;gap:14px">
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Alert types </span><span style="font-weight:700">you can set</span></h2>
+          <p style="margin:0;max-width:640px;font-size:16.5px;line-height:1.65;color:#3A302A">Alerts sit inside a product group's rule. Each one has its own on/off switch and delivery channel.</p>
+        </div>
+        <div data-reveal style="margin-top:36px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#FFFFFF;box-shadow:0 40px 80px -56px rgba(60,30,15,.35)">
+          <div class="pa-thead pa-trow" style="padding:14px 22px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066"><span>ALERT</span><span>FIRES WHEN</span><span>WATCHES</span></div>
+          {types.map((r) => (
+            <div data-pa-type class="pa-trow" style={`align-items:center;padding:16px 22px;border-bottom:${r.bb};background:${r.bg};transition:background .4s`}>
+              <span style="display:flex;align-items:center;gap:12px;min-width:0"><span data-pa-typeico style={`width:34px;height:34px;flex:none;border-radius:10px;background:${r.ib};border:1px solid ${r.ibc};color:${r.ic};display:flex;align-items:center;justify-content:center;transition:all .4s`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d={r.ico}></path></svg></span><span style="font-family:Geist,sans-serif;font-size:15.5px;font-weight:600;color:#1C130E">{r.t}</span><span class="pa-tog" data-pa-tog style={`margin-left:auto;width:34px;height:20px;border-radius:999px;background:${r.tog};position:relative;transition:background .3s`}><span data-pa-togknob style={`position:absolute;top:2px;left:${r.togX};width:16px;height:16px;border-radius:50%;background:#FFFFFF;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .3s`}></span></span></span>
+              <span style="font-size:14.5px;line-height:1.55;color:#3A302A">{r.f1}<a href={r.lh || '#'} style={`display:${r.ld};font-weight:600`}>{r.lt}</a>{r.f2}</span>
+              <span style={`justify-self:start;height:26px;padding:0 10px;display:inline-flex;align-items:center;border-radius:7px;background:${r.wb};border:1px solid ${r.wbc};font-family:'Geist Mono',monospace;font-size:11px;color:${r.wc};white-space:nowrap`}>{r.w}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 ALERT ANATOMY -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">What an alert looks like </span><span style="font-weight:700">when it arrives</span></h2>
+        <div data-reveal class="pa-anat" style="margin-top:40px;display:grid;gap:clamp(24px,4vw,48px);align-items:center">
+          <div style="position:relative;padding:clamp(22px,4vw,44px);border-radius:24px;background:#FFFFFF;border:1px solid #EFE3DA;overflow:hidden">
+            <div aria-hidden="true" style="position:absolute;inset:0;background-image:radial-gradient(#EFE3DA 1px,transparent 1px);background-size:16px 16px;-webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 30%,transparent 80%);mask-image:radial-gradient(ellipse at 50% 50%,#000 30%,transparent 80%)"></div>
+            <span style="position:absolute;top:14px;right:14px;height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;border:1px dashed #E2D3C8;background:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#7F7066">EXAMPLE LAYOUT</span>
+            <div style="position:relative;max-width:420px;margin:24px auto 0;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:18px;box-shadow:0 30px 60px -36px rgba(60,30,15,.45);overflow:hidden">
+              <div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px;border-left:3px solid #F7631E">
+                <div data-pa-ol="0" style="position:relative;align-self:flex-start;border-radius:8px;outline:2px solid #F7631E;outline-offset:4px;transition:outline-color .3s"><span style="height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:#FFF4EC;border:1px solid #FFD8BE;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;color:#C2410C">OUT OF STOCK</span><span data-pa-pin="0" style="position:absolute;right:-30px;top:50%;margin-top:-10px;width:20px;height:20px;border-radius:50%;background:#F7631E;color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10px;display:flex;align-items:center;justify-content:center;transition:background .3s">1</span></div>
+                <div data-pa-ol="1" style="position:relative;border-radius:8px;outline:2px solid transparent;outline-offset:4px;transition:outline-color .3s"><div style="font-family:Geist,sans-serif;font-size:16px;font-weight:600;color:#1C130E">Out of stock: [Product name]</div><div style="margin-top:4px;font-size:14px;color:#3A302A">A competitor went out of stock for [Product name].</div><span data-pa-pin="1" style="position:absolute;right:-6px;top:-6px;width:20px;height:20px;border-radius:50%;background:#D7C6BA;color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10px;display:flex;align-items:center;justify-content:center;transition:background .3s">2</span></div>
+                <div data-pa-ol="2" style="position:relative;border-radius:8px;outline:2px solid transparent;outline-offset:4px;transition:outline-color .3s;padding-top:8px;border-top:1px dashed #F5ECE5;font-family:'Geist Mono',monospace;font-size:11px;color:#665A51">[Product group] · [3 hr ago] · Slack<span data-pa-pin="2" style="position:absolute;right:-6px;top:2px;width:20px;height:20px;border-radius:50%;background:#D7C6BA;color:#FFFFFF;font-family:'Geist Mono',monospace;font-size:10px;display:flex;align-items:center;justify-content:center;transition:background .3s">3</span></div>
+              </div>
+            </div>
+            <div style="position:relative;margin:18px auto 0;max-width:420px;display:flex;align-items:center;gap:10px">
+              <span style="flex:1;height:1px;background:repeating-linear-gradient(90deg,#E2D3C8 0 4px,transparent 4px 8px)"></span>
+              {dests.map((d) => (<span data-pa-dest style={`height:28px;padding:0 10px;display:flex;align-items:center;gap:6px;border-radius:8px;background:${d.bg};border:1px solid ${d.bc};font-family:'Geist Mono',monospace;font-size:10.5px;color:${d.c};transition:all .3s`}>{d.t}</span>))}
+              <span style="flex:1;height:1px;background:repeating-linear-gradient(90deg,#E2D3C8 0 4px,transparent 4px 8px)"></span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            {parts.map((p) => (
+              <div data-pa-part style={`display:grid;grid-template-columns:32px minmax(0,1fr);gap:14px;padding:16px 18px;border-radius:16px;background:${p.bg};border:1px solid ${p.bc};transition:all .35s`}>
+                <span data-pa-partn style={`width:28px;height:28px;border-radius:50%;background:${p.nb};color:${p.nc};border:1.5px solid ${p.nbc};font-family:'Geist Mono',monospace;font-size:11.5px;display:flex;align-items:center;justify-content:center;transition:all .35s`}>{p.n}</span>
+                <span><span style="display:block;font-family:Geist,sans-serif;font-size:16.5px;font-weight:600;color:#1C130E">{p.t}</span><span style="display:block;margin-top:4px;font-size:14.5px;line-height:1.55;color:#3A302A">{p.d}</span></span>
+              </div>
+            ))}
+            <p style="margin:6px 0 0;display:flex;gap:10px;font-size:14.5px;line-height:1.55;color:#665A51"><span style="flex:none;margin-top:6px;width:6px;height:6px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>The same alert stays in the notification center after it reaches Slack or email.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 CHECKLIST -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Checklist</span><span style="font-weight:400"> for alerts your team will not mute</span></h2>
+        <div data-reveal style="margin-top:40px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#FFFFFF;box-shadow:0 40px 80px -56px rgba(60,30,15,.35)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 22px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066"><span style="display:flex;align-items:center;gap:8px;color:#1C130E"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>ALERT SETUP</span><span style="display:flex;align-items:center;gap:12px"><span data-pa-chkn>0</span> OF 6<span style="width:120px;height:5px;border-radius:5px;background:#F5ECE5;overflow:hidden"><span data-pa-chkpct style="display:block;height:100%;width:0%;border-radius:5px;background:#1C130E;transition:width .5s ease"></span></span></span></div>
+          <ol class="pa-checks" style="margin:0;padding:0;list-style:none;display:grid;gap:1px;background:#F5ECE5">
+            {checks.map((c) => (
+              <li data-pa-check style={`background:${c.bg};padding:20px 22px;display:grid;grid-template-columns:28px minmax(0,1fr);gap:16px;align-items:start;transition:background .4s`}>
+                <span data-pa-checkmk style={`width:28px;height:28px;border-radius:8px;background:${c.ck};border:1.5px solid ${c.ckb};color:#FFFFFF;font-size:12px;display:flex;align-items:center;justify-content:center;transition:all .35s`}>{c.mk}</span>
+                <span><span data-pa-checkno style={`display:block;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:${c.nc}`}>{c.no}</span><span data-pa-checkt style={`display:block;margin-top:6px;font-size:15.5px;line-height:1.55;color:${c.tc};transition:color .4s`}>{c.t}</span></span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div class="pa-faqgrid" style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);display:grid;gap:clamp(28px,5vw,72px);align-items:start">
+        <h2 data-reveal class="pa-sticky" style="top:96px;margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Price alert </span><span style="font-weight:700">FAQs</span></h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((q) => (
+            <div class="pa-faq" class:list={[{ 'is-open': q.open }]} data-pa-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-pa-faqbtn aria-expanded={q.open ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="pa-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px">{q.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{q.q}</span>
+                <span class="pa-faq-ic" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="pa-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{q.a1}<a href={R.rtm} style={`display:${q.ld};font-weight:600`}>price monitoring</a>{q.a2}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#1C130E;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-240px;width:700px;height:420px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.32),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:24px">
+          <h2 style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;color:#FFFFFF;text-wrap:balance"><span style="font-weight:400">Set up your first alerts </span><span style="font-weight:700">in a demo</span></h2>
+          <a href={R.demo} style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .pa { background: #FFFCF9; overflow-x: clip; }
+  @keyframes pa-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes pa-ring { 0%,100% { transform: rotate(0); } 10% { transform: rotate(14deg); } 20% { transform: rotate(-12deg); } 30% { transform: rotate(8deg); } 40% { transform: rotate(0); } }
+
+  .pa-hero { grid-template-columns: 1fr; }
+  @media (min-width: 1000px) { .pa-hero { grid-template-columns: minmax(0,1fr) minmax(0,.9fr); } }
+  .pa-toast { display: none; }
+  @media (min-width: 1100px) { .pa-toast { display: block; } }
+  .pa-trow { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .pa-thead { display: none; }
+  .pa-tog { display: none; }
+  @media (min-width: 720px) { .pa-trow { grid-template-columns: minmax(0,1.1fr) minmax(0,1.4fr) minmax(0,.8fr); gap: 16px; } .pa-thead { display: grid; } .pa-tog { display: block; } }
+  .pa-anat { grid-template-columns: 1fr; }
+  @media (min-width: 1000px) { .pa-anat { grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr); } }
+  .pa-checks { grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .pa-checks { grid-template-columns: 1fr 1fr; } }
+  .pa-faqgrid { grid-template-columns: 1fr; }
+  .pa-sticky { position: static; }
+  @media (min-width: 1000px) { .pa-faqgrid { grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); } .pa-sticky { position: sticky; } }
+
+  .pa-faq-n { color: #B9A99C; }
+  .pa-faq.is-open .pa-faq-n { color: #C2410C; }
+  .pa-faq-ic { background: #FBF3EC; color: #1C130E; transform: rotate(0deg); transition: all .3s; }
+  .pa-faq.is-open .pa-faq-ic { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .pa-faq.is-open { border-color: #FFD8BE; }
+  .pa-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .pa-faq.is-open .pa-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .pa *, .pa *::before, .pa *::after { animation: none !important; transition: none !important; } [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.pa') as HTMLElement | null;
+  if (root) {
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+    const hlEl = root.querySelector('[data-pa-hl]') as HTMLElement | null;
+    const toast = root.querySelector('[data-pa-toast]') as HTMLElement | null;
+    const tk_k = root.querySelector('[data-pa-toastk]') as HTMLElement | null, tk_ch = root.querySelector('[data-pa-toastch]') as HTMLElement | null, tk_t = root.querySelector('[data-pa-toastt]') as HTMLElement | null;
+    const typeEls = qa('[data-pa-type]'), partEls = qa('[data-pa-part]'), olEls = qa('[data-pa-ol]'), pinEls = qa('[data-pa-pin]'), destEls = qa('[data-pa-dest]');
+    const chkn = root.querySelector('[data-pa-chkn]') as HTMLElement | null, chkpct = root.querySelector('[data-pa-chkpct]') as HTMLElement | null, checkEls = qa('[data-pa-check]');
+
+    const hl = [[6.1, 15.6], [22.8, 15.6], [39.3, 10.5], [50.7, 10.5], [62.2, 14.9], [77.6, 13.7], [92, 8]];
+    const toasts = [['PRICE DROP', 'Email', 'A competitor price dropped by 10% on [Product name].'], ['PRICE INCREASE', 'Email', 'A price rose by 15% on [Product name].'], ['OUT OF STOCK', 'Slack', 'A competitor went out of stock for [Product name].'], ['WEEKLY DIGEST', 'Email', 'Summary of price movements for [Product group].'], ['MAP VIOLATION', 'Email', 'Your price dropped below MAP on [Product name].'], ['MSRP VIOLATION', 'Email', 'Your price went above MSRP on [Product name].'], ['ALL OUT OF STOCK', 'Email', 'Every competitor in the rule is unavailable.']];
+    const defOn = [true, false, true, true, true, true, true, true];
+    let tk = 0, prevHi = -1;
+
+    function paint() {
+      const hi = Math.floor(tk / 2) % 7;
+      if (hi !== prevHi) {
+        prevHi = hi;
+        if (hlEl) { hlEl.style.top = hl[hi][0] + '%'; hlEl.style.height = hl[hi][1] + '%'; }
+        const t = toasts[hi];
+        if (tk_k) tk_k.textContent = t[0]; if (tk_ch) tk_ch.textContent = t[1]; if (tk_t) tk_t.textContent = t[2];
+        if (toast) { toast.style.animation = 'none'; void toast.offsetWidth; toast.style.animation = 'pa-in .45s cubic-bezier(.2,.7,.2,1)'; }
+      }
+      const tHot = tk % 8;
+      typeEls.forEach((el, i) => {
+        const h = i === tHot; el.style.background = h ? '#FFF9F4' : '#FFFFFF';
+        const ico = el.querySelector('[data-pa-typeico]') as HTMLElement; if (ico) { ico.style.background = h ? '#1C130E' : '#FFF4EC'; ico.style.borderColor = h ? '#1C130E' : '#FFD8BE'; ico.style.color = h ? '#FFFFFF' : '#C2410C'; }
+        const isOn = defOn[i] !== (h && i === 1);
+        const tog = el.querySelector('[data-pa-tog]') as HTMLElement, knob = el.querySelector('[data-pa-togknob]') as HTMLElement;
+        if (tog) tog.style.background = isOn ? '#1C130E' : '#E2D3C8'; if (knob) knob.style.left = isOn ? '16px' : '2px';
+      });
+      const part = Math.floor(tk / 2) % 3;
+      olEls.forEach((el, i) => { el.style.outlineColor = part === i ? '#F7631E' : 'transparent'; });
+      pinEls.forEach((el, i) => { el.style.background = part === i ? '#F7631E' : '#D7C6BA'; });
+      partEls.forEach((el, i) => { const on = i === part; el.style.background = on ? '#FFFFFF' : 'transparent'; el.style.borderColor = on ? '#FFD8BE' : '#EFE3DA'; const n = el.querySelector('[data-pa-partn]') as HTMLElement; if (n) { n.style.background = on ? '#1C130E' : '#FFFFFF'; n.style.color = on ? '#FFFFFF' : '#7F7066'; n.style.borderColor = on ? '#1C130E' : '#E2D3C8'; } });
+      const dIdx = Math.floor(tk / 2) % 2;
+      destEls.forEach((el, i) => { const on = i === dIdx; el.style.background = on ? '#1C130E' : '#FFFFFF'; el.style.borderColor = on ? '#1C130E' : '#EFE3DA'; el.style.color = on ? '#FFFFFF' : '#665A51'; });
+
+      const done = tk % 7, shown = Math.min(6, done);
+      if (chkn) chkn.textContent = String(shown); if (chkpct) chkpct.style.width = Math.round(shown / 6 * 100) + '%';
+      checkEls.forEach((el, i) => {
+        const d = i < done, cur = i === done;
+        el.style.background = cur ? '#FFF9F4' : '#FFFFFF';
+        const mk = el.querySelector('[data-pa-checkmk]') as HTMLElement; if (mk) { mk.style.background = d ? '#1C130E' : '#FFFFFF'; mk.style.borderColor = d ? '#1C130E' : cur ? '#F7631E' : '#E2D3C8'; mk.textContent = d ? '✓' : ''; }
+        (el.querySelector('[data-pa-checkno]') as HTMLElement).style.color = cur ? '#C2410C' : '#7F7066';
+        (el.querySelector('[data-pa-checkt]') as HTMLElement).style.color = d ? '#665A51' : '#1C130E';
+      });
+    }
+    paint();
+    setInterval(() => { tk++; paint(); }, 1500);
+
+    qa('[data-pa-faqbtn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-pa-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-pa-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-pa-faqbtn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>

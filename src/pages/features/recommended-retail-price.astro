@@ -1,0 +1,297 @@
+---
+// Native Astro port of the delivered "Recommended Retail Price (RRP)" feature page.
+// Static initial render (tick 0) + the 1.9s loop reimplemented in vanilla JS:
+// the hero product-info field highlight + typed value, the RRP-definition alias
+// chips + MAP/RRP dot, the "where RRP shows up" Q&A highlight, the worked-example
+// price-limit bar with auto-advancing rows (stop on click); FAQ accordion; reveal.
+import PriceLeapLayout from '../../layouts/PriceLeapLayout.astro';
+
+// NOTE: /solutions/by-need/map-monitoring has no page on this site yet -> points to '#'.
+const R = { alerts: '/features/price-alerts', map: '#', demo: '/book-a-demo' };
+const IC: Record<string, string> = { info: 'M4 4h16v16H4zM8 9h8M8 13h8M8 17h5', table: 'M3 4h18v16H3zM3 10h18M9 4v16', bell: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0', cols: 'M4 4h6v16H4zM14 4h6v16h-6z' };
+
+const chips = ['RRP per product, with validity dates', 'RRP and MAP in one column', 'An alert when you go above RRP'];
+const aliases = ['RRP', 'MSRP', 'List price'].map((t, i) => ({ t, bg: i === 0 ? '#1C130E' : '#FFFFFF', bc: i === 0 ? '#1C130E' : '#EFE3DA', c: i === 0 ? '#FFFFFF' : '#3A302A' }));
+
+const whereRaw: [string, string, string, string, boolean][] = [
+  ["What is this product's RRP, and from when?", 'Product Info: enter it as MSRP, and use Set validity for the dates it applies.', '', IC.info, false],
+  ['Which products carry an RRP or a MAP?', 'The MAP / MSRP column on the dashboard shows both for every product, and a MAP filter narrows the table.', '', IC.table, false],
+  ['Am I selling above RRP?', 'The MSRP violation ', ', by email or Slack.', IC.bell, true],
+  ['How do competitors price against it?', "The product page shows each competitor's price and its gap to yours, with MSRP in Product Info on the same screen.", '', IC.cols, false],
+];
+const where = whereRaw.map(([q, a1, a2, ico, l], i) => { const on = i === 0; return { q, a1, a2, ico, ld: l ? 'inline' : 'none', no: '0' + (i + 1), bb: i < 3 ? '1px solid #F5ECE5' : 'none', bg: on ? '#FFFCF9' : '#FFFFFF', ab: on ? '#1C130E' : '#FBF3EC', ac: on ? '#FFFFFF' : '#B9A99C', rbc: on ? '#FFD8BE' : '#F5ECE5', ib: on ? '#1C130E' : '#FFF4EC', ibc: on ? '#1C130E' : '#FFD8BE', ic: on ? '#FFFFFF' : '#C2410C' }; });
+
+const col = (k: string) => k === 'hi' ? '#C2410C' : k === 'lo' ? '#B42318' : k === 'warn' ? '#B45309' : '#1E7A3D';
+const exRaw: [string, string, string, string, string, number][] = [
+  ['Your price goes above RRP', '[$259.00]', 'The MSRP violation alert fires.', 'MSRP ALERT', 'hi', 92],
+  ['Your price sits at RRP', '[$249.00]', 'No RRP or MAP alert.', 'NO ALERT', 'ok', 80],
+  ['Your price sits between MAP and RRP', '[$229.00]', 'No RRP or MAP alert.', 'NO ALERT', 'ok', 46],
+  ['Your price drops below MAP', '[$209.00]', 'The MAP violation alert fires.', 'MAP ALERT', 'lo', 8],
+  ['A rule recommends a price below MAP', '[$215.00]', 'The SmartPrice MAP warning flags it before anyone acts on it.', 'SMARTPRICE WARNING', 'warn', 14],
+];
+const example = exRaw.map(([sit, p, d, tag, k], i) => { const on = i === 0; const alert = k !== 'ok'; return { s: sit, p, d, tag, fw: on ? 600 : 500, bb: i < 4 ? '1px solid #F5ECE5' : 'none', bg: on ? '#FFF9F4' : '#FFFFFF', dot: on ? col(k) : '#E2D3C8', tb: alert ? (k === 'lo' ? '#FDECEB' : '#FFF4EC') : '#EAF6EE', tbc: alert ? (k === 'lo' ? '#F5C6C3' : '#FFD8BE') : '#BFE5CC', tc: col(k) }; });
+
+const fq: [string, string][] = [
+  ['Are RRP, MSRP and list price the same thing?', "They usually mean the same figure: the price the brand suggests. RRP is the common term in the UK, Europe and Australia, MSRP in the US, and list price in many B2B catalogs. In priceleap.ai you enter it once, in the product's MSRP field."],
+  ['Can I see how retailers price against my RRP?', 'Retailer listings can be tracked as competitors on your product, so their prices show beside yours with your MSRP on the same page. The gap is worked out against your price, not the RRP, so if you sell at RRP the gaps read as distance from it.'],
+  ['Can an RRP change over time?', "Yes. MAP and MSRP each have a Set validity option, so you can record the period a value applies, such as a new season's RRP or a price change agreed with a brand. Keep the dates current, since violation alerts compare your price with these values."],
+];
+const faqs = fq.map(([q, a], i) => { const open = i === 0; return { q, a, open, n: '0' + (i + 1), rows: open ? '1fr' : '0fr', rot: open ? 45 : 0, bc: open ? '#FFD8BE' : '#EFE3DA', nc: open ? '#C2410C' : '#B9A99C', ib: open ? '#1C130E' : '#FBF3EC', ic: open ? '#FFFFFF' : '#1C130E' }; });
+
+const site = 'https://priceleap.ai';
+const jsonLd = [
+  { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: fq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
+  { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: site + '/' },
+    { '@type': 'ListItem', position: 2, name: 'Features', item: site + '/features/' },
+    { '@type': 'ListItem', position: 3, name: 'Recommended Retail Price', item: site + '/features/recommended-retail-price' },
+  ] },
+];
+---
+<PriceLeapLayout
+  title="Recommended Retail Price (RRP) Tracking | priceleap.ai"
+  description="Record the recommended retail price for each product, see it beside your price and competitor prices, and get an alert when you go above it. Book a Demo."
+  jsonLd={jsonLd}
+>
+  <div class="rr" style="min-height:100vh;background:#FFFCF9;overflow-x:clip">
+
+    <!-- 01 HERO -->
+    <section style="position:relative;border-bottom:1px solid #EFE3DA;overflow:hidden">
+      <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(#F5ECE5 1px,transparent 1px),linear-gradient(90deg,#F5ECE5 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 60% 80% at 75% 40%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 60% 80% at 75% 40%,#000 10%,transparent 72%);pointer-events:none"></div>
+      <div aria-hidden="true" style="position:absolute;right:-8%;top:-20%;width:700px;height:640px;background:radial-gradient(closest-side,rgba(247,99,30,.10),transparent);pointer-events:none"></div>
+      <div class="rr-hero" style="position:relative;max-width:1280px;margin:0 auto;padding:clamp(40px,6vw,80px) clamp(16px,4vw,40px) clamp(48px,6vw,88px);display:grid;gap:clamp(36px,5vw,72px);align-items:center">
+        <div style="min-width:0;display:flex;flex-direction:column;gap:22px">
+          <span style="display:inline-flex;align-items:center;gap:8px;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#C2410C"><span style="width:7px;height:7px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>Features · Recommended Retail Price</span>
+          <h1 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(38px,5.2vw,66px);line-height:1.02;letter-spacing:-.05em;color:#1C130E;text-wrap:balance"><span style="font-weight:700">Recommended retail price</span><span style="font-weight:400"> (RRP) tracking</span></h1>
+          <p style="margin:0;max-width:560px;font-size:18px;line-height:1.65;color:#3A302A;text-wrap:pretty">Record each product's recommended retail price, with the dates it applies. priceleap.ai shows it beside your price and your competitors', and alerts you when your own price goes above it.</p>
+          <a href={R.demo} style="align-self:flex-start;height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            {chips.map((c) => (<span style="height:34px;padding:0 14px;display:flex;align-items:center;gap:8px;border-radius:999px;background:#FFFFFF;border:1px solid #EFE3DA;font-size:13.5px;color:#1C130E"><span style="width:18px;height:18px;border-radius:50%;background:#1C130E;color:#FFFFFF;font-size:9px;display:flex;align-items:center;justify-content:center">✓</span>{c}</span>))}
+          </div>
+        </div>
+        <figure style="margin:0;min-width:0;position:relative;justify-self:center;width:min(100%,520px)">
+          <div style="position:relative;border:1px solid #EFE3DA;border-radius:22px;overflow:hidden;background:#FFFFFF;box-shadow:0 48px 90px -52px rgba(60,30,15,.45),0 0 0 6px rgba(255,255,255,.7)">
+            <img src="/assets/rrp-01-product-info.png" alt="priceleap.ai Product Info panel with SKU, UPC, GTIN, MPN, MAP and MSRP fields, each price field with a Set validity option" width="640" height="686" style="display:block;width:100%;height:auto" />
+            <span aria-hidden="true" data-rr-fl style="position:absolute;left:2.3%;top:44.5%;width:47%;height:13.2%;border-radius:10px;border:2px solid #F7631E;box-shadow:0 0 0 6px rgba(247,99,30,.12);transition:left .6s cubic-bezier(.2,.7,.2,1);pointer-events:none"></span>
+            <span aria-hidden="true" data-rr-val style="position:absolute;left:2.8%;top:49.2%;height:22px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:#FFFFFF;border:1px solid #EFE3DA;font-family:'Geist Mono',monospace;font-size:12px;font-weight:500;color:#1C130E;animation:rr-type .7s steps(8) both;pointer-events:none">[$219.00]</span>
+          </div>
+          <div class="rr-tag" style="position:absolute;right:-26px;top:58%;background:#FFFFFF;border:1px solid #EFE3DA;border-radius:14px;padding:10px 14px;box-shadow:0 24px 44px -24px rgba(60,30,15,.45)">
+            <div style="font-family:'Geist Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:#7F7066">SET VALIDITY</div>
+            <div style="margin-top:3px;font-family:'Geist Mono',monospace;font-size:12px;color:#1C130E">[Start] → [End]</div>
+          </div>
+          <figcaption style="margin-top:12px;display:flex;align-items:center;gap:8px;font-size:13.5px;color:#665A51"><span style="width:6px;height:6px;border-radius:2px;background:#F7631E;transform:rotate(45deg)"></span>MAP and MSRP sit in Product Info, each with its own validity setting</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 02 DIRECT ANSWERS -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal class="rr-pair" style="border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#EFE3DA;display:grid;gap:1px">
+          <div style="background:#FFFFFF;padding:clamp(24px,3.4vw,40px);display:flex;flex-direction:column;gap:16px">
+            <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#C2410C">Q · 01</span>
+            <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(24px,2.6vw,32px);font-weight:600;line-height:1.15;letter-spacing:-.03em;color:#1C130E">What is a recommended retail price?</h2>
+            <p style="margin:0;font-size:16px;line-height:1.7;color:#3A302A">The price a brand or manufacturer suggests a product should sell for. It is a suggestion, so sellers can price above or below it. The same figure is often called MSRP, and priceleap.ai stores it in each product's MSRP field.</p>
+            <div aria-hidden="true" style="margin-top:auto;padding-top:14px;display:flex;flex-wrap:wrap;gap:6px">
+              {aliases.map((a) => (<span data-rr-alias style={`height:28px;padding:0 11px;display:flex;align-items:center;gap:6px;border-radius:8px;background:${a.bg};border:1px solid ${a.bc};font-family:'Geist Mono',monospace;font-size:11px;color:${a.c};transition:all .3s`}>{a.t}</span>))}
+              <span style="height:28px;padding:0 4px;display:flex;align-items:center;font-family:'Geist Mono',monospace;font-size:11px;color:#7F7066">→ one MSRP field</span>
+            </div>
+          </div>
+          <div style="background:#FFFFFF;padding:clamp(24px,3.4vw,40px);display:flex;flex-direction:column;gap:16px">
+            <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#C2410C">Q · 02</span>
+            <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(24px,2.6vw,32px);font-weight:600;line-height:1.15;letter-spacing:-.03em;color:#1C130E">How is RRP different from MAP?</h2>
+            <p style="margin:0;font-size:16px;line-height:1.7;color:#3A302A">MAP, the minimum advertised price, is the lowest price a seller may advertise under a brand's policy. RRP is the price the brand suggests. Track both on one product: MAP flags prices that go too low and RRP flags prices that go too high. <a href={R.map} style="font-weight:600">MAP Monitoring</a> covers MAP policy.</p>
+            <div aria-hidden="true" style="margin-top:auto;padding-top:14px">
+              <div style="position:relative;height:40px">
+                <span style="position:absolute;left:0;right:0;top:18px;height:4px;border-radius:4px;background:linear-gradient(90deg,#FDECEB 0 22%,#F5ECE5 22% 78%,#FFF4EC 78%)"></span>
+                <span style="position:absolute;left:22%;top:6px;width:2px;height:28px;background:#1C130E"></span><span style="position:absolute;left:22%;top:-12px;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:10px;color:#1C130E">MAP</span>
+                <span style="position:absolute;left:78%;top:6px;width:2px;height:28px;background:#1C130E"></span><span style="position:absolute;left:78%;top:-12px;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:10px;color:#1C130E">RRP</span>
+                <span data-rr-dot style="position:absolute;left:10%;top:12px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#B42318;border:2.5px solid #FFFFFF;box-shadow:0 0 0 1px #B42318;transition:left 1s cubic-bezier(.2,.7,.2,1),background .3s"></span>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:8px;font-family:'Geist Mono',monospace;font-size:10px"><span style="color:#B42318">too low</span><span style="color:#7F7066">in range</span><span style="color:#C2410C">too high</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 WHERE RRP SHOWS UP -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <h2 data-reveal style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E;text-wrap:balance"><span style="font-weight:400">Where RRP shows up </span><span style="font-weight:700">in priceleap.ai</span></h2>
+        <div data-reveal style="margin-top:40px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#FFFFFF;box-shadow:0 40px 80px -56px rgba(60,30,15,.35)">
+          <div class="rr-qrow rr-qhead" style="padding:14px 22px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066"><span>THE QUESTION</span><span></span><span style="color:#C2410C">WHERE TO LOOK</span></div>
+          {where.map((r) => (
+            <div data-rr-where class="rr-qrow" style={`align-items:center;padding:18px 22px;border-bottom:${r.bb};background:${r.bg};transition:background .4s`}>
+              <span style="display:flex;gap:14px;align-items:flex-start"><span style="flex:none;font-family:'Geist Mono',monospace;font-size:11px;color:#C2410C;padding-top:4px">{r.no}</span><span style="font-family:Geist,sans-serif;font-size:16.5px;font-weight:600;line-height:1.45;color:#1C130E">{r.q}</span></span>
+              <span class="rr-qarrow" data-rr-wharrow style={`width:32px;height:32px;border-radius:50%;background:${r.ab};color:${r.ac};font-size:13px;align-items:center;justify-content:center;transition:all .4s`}>→</span>
+              <span data-rr-whcell style={`display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:#FFFFFF;border:1px solid ${r.rbc};transition:border-color .4s`}>
+                <span data-rr-whico style={`flex:none;width:34px;height:34px;border-radius:10px;background:${r.ib};border:1px solid ${r.ibc};color:${r.ic};display:flex;align-items:center;justify-content:center;transition:all .4s`}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d={r.ico}></path></svg></span>
+                <span style="font-size:14.5px;line-height:1.55;color:#1C130E">{r.a1}<a href={R.alerts} style={`display:${r.ld};font-weight:600`}>alert</a>{r.a2}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 WORKED EXAMPLE -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFFFFF">
+      <div style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px)">
+        <div data-reveal style="display:flex;flex-direction:column;gap:14px">
+          <span style="align-self:flex-start;height:24px;padding:0 9px;display:flex;align-items:center;border-radius:6px;border:1px dashed #E2D3C8;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.08em;color:#7F7066">EXAMPLE</span>
+          <h2 style="margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Example: one product, </span><span style="font-weight:700">two price limits</span></h2>
+          <p style="margin:0;font-size:16.5px;line-height:1.65;color:#3A302A">A product with an RRP of [$249.00] and a MAP of [$219.00].</p>
+        </div>
+        <div data-reveal style="margin-top:36px;border:1px solid #EFE3DA;border-radius:24px;overflow:hidden;background:#FFFFFF;box-shadow:0 40px 80px -56px rgba(60,30,15,.35)">
+          <div style="padding:26px 22px 18px;border-bottom:1px solid #F5ECE5;background:#FFFCF9">
+            <div style="position:relative;height:64px">
+              <span style="position:absolute;left:0;right:0;top:30px;height:6px;border-radius:6px;background:linear-gradient(90deg,#FDECEB 0 20%,#F5ECE5 20% 80%,#FFF4EC 80%)"></span>
+              <span style="position:absolute;left:20%;top:18px;width:2px;height:30px;background:#1C130E"></span><span style="position:absolute;left:20%;top:-2px;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:10.5px;color:#1C130E;white-space:nowrap">MAP [$219.00]</span>
+              <span style="position:absolute;left:80%;top:18px;width:2px;height:30px;background:#1C130E"></span><span style="position:absolute;left:80%;top:-2px;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:10.5px;color:#1C130E;white-space:nowrap">RRP [$249.00]</span>
+              <span data-rr-exdot style="position:absolute;left:92%;top:22px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:#C2410C;border:3px solid #FFFFFF;box-shadow:0 0 0 1px #C2410C,0 8px 18px -8px rgba(60,30,15,.5);animation:rr-pulse 1.8s infinite;transition:left .9s cubic-bezier(.2,.7,.2,1),background .3s"></span>
+              <span data-rr-exp style="position:absolute;left:92%;top:50px;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:11px;font-weight:500;color:#C2410C;white-space:nowrap;transition:left .9s cubic-bezier(.2,.7,.2,1)">[$259.00]</span>
+            </div>
+          </div>
+          <div class="rr-exrow rr-exhead" style="padding:12px 22px;border-bottom:1px solid #F5ECE5;background:#FFF9F4;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#7F7066"><span>SITUATION</span><span>PRICE</span><span>WHAT PRICELEAP.AI DOES</span></div>
+          {example.map((r) => (
+            <button type="button" data-rr-ex class="rr-exrow" style={`width:100%;text-align:left;cursor:pointer;border:none;align-items:center;padding:16px 22px;border-bottom:${r.bb};background:${r.bg};transition:background .35s`}>
+              <span style="display:flex;align-items:center;gap:12px"><span data-rr-exdotmini style={`width:10px;height:10px;flex:none;border-radius:50%;background:${r.dot}`}></span><span data-rr-exs style={`font-size:15px;font-weight:${r.fw};color:#1C130E`}>{r.s}</span></span>
+              <span style="font-family:'Geist Mono',monospace;font-size:14px;font-weight:500;color:#1C130E">{r.p}</span>
+              <span style="display:flex;align-items:center;gap:10px"><span style={`flex:none;height:24px;padding:0 8px;display:flex;align-items:center;border-radius:6px;background:${r.tb};border:1px solid ${r.tbc};font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.06em;color:${r.tc}`}>{r.tag}</span><span style="font-size:14.5px;line-height:1.5;color:#3A302A">{r.d}</span></span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 FAQ -->
+    <section style="border-bottom:1px solid #EFE3DA;background:#FFF9F4">
+      <div class="rr-faqgrid" style="max-width:1180px;margin:0 auto;padding:clamp(64px,8vw,112px) clamp(16px,4vw,40px);display:grid;gap:clamp(28px,5vw,72px);align-items:start">
+        <h2 data-reveal class="rr-sticky" style="top:96px;margin:0;font-family:Geist,sans-serif;font-size:clamp(30px,3.8vw,46px);line-height:1.06;letter-spacing:-.035em;color:#1C130E"><span style="font-weight:400">Recommended retail price </span><span style="font-weight:700">FAQs</span></h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          {faqs.map((q) => (
+            <div class="rr-faq" class:list={[{ 'is-open': q.open }]} data-rr-faq style="background:#FFFFFF;border:1px solid #EFE3DA;border-radius:16px;overflow:hidden;transition:border-color .25s">
+              <button type="button" data-rr-faqbtn aria-expanded={q.open ? 'true' : 'false'} style="width:100%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;gap:14px;padding:18px 20px;text-align:left">
+                <span class="rr-faq-n" style="font-family:'Geist Mono',monospace;font-size:11px">{q.n}</span>
+                <span style="flex:1;font-family:Geist,sans-serif;font-size:16.5px;font-weight:500;color:#1C130E">{q.q}</span>
+                <span class="rr-faq-ic" style="flex:none;width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M12 5v14M5 12h14"></path></svg></span>
+              </button>
+              <div class="rr-faq-panel"><div style="overflow:hidden"><p style="margin:0;padding:0 20px 20px 52px;font-size:15px;line-height:1.65;color:#3A302A">{q.a}</p></div></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 CTA -->
+    <section style="padding:clamp(16px,3vw,28px)">
+      <div style="position:relative;max-width:1280px;margin:0 auto;overflow:hidden;background:#1C130E;border-radius:28px;padding:clamp(56px,8vw,96px) clamp(20px,4vw,48px);text-align:center">
+        <div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%);mask-image:radial-gradient(ellipse 60% 70% at 50% 50%,#000 10%,transparent 75%)"></div>
+        <div aria-hidden="true" style="position:absolute;left:50%;bottom:-240px;width:700px;height:420px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(247,99,30,.32),transparent)"></div>
+        <div data-reveal style="position:relative;display:flex;flex-direction:column;align-items:center;gap:24px">
+          <h2 style="margin:0;max-width:760px;font-family:Geist,sans-serif;font-size:clamp(30px,4.4vw,54px);line-height:1.05;letter-spacing:-.045em;color:#FFFFFF;text-wrap:balance"><span style="font-weight:400">See your RRPs next to your prices </span><span style="font-weight:700">in a demo</span></h2>
+          <a href={R.demo} style="height:50px;padding:0 24px;display:inline-flex;align-items:center;border-radius:12px;background:linear-gradient(135deg,#F2421B 0%,#F7631E 50%,#FB8A2E 100%);color:#FFFFFF;font-family:Geist,sans-serif;font-weight:500;font-size:15px;box-shadow:0 12px 26px -12px rgba(247,99,30,.85)">Book a Demo</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</PriceLeapLayout>
+
+<style>
+  .rr { background: #FFFCF9; overflow-x: clip; }
+  @keyframes rr-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes rr-pulse { 0% { box-shadow: 0 0 0 0 rgba(247,99,30,.55); } 100% { box-shadow: 0 0 0 10px rgba(247,99,30,0); } }
+  @keyframes rr-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+  .rr-hero { grid-template-columns: 1fr; }
+  @media (min-width: 1000px) { .rr-hero { grid-template-columns: minmax(0,1.05fr) minmax(0,.95fr); } }
+  .rr-tag { display: none; }
+  @media (min-width: 1100px) { .rr-tag { display: block; } }
+  .rr-pair { grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .rr-pair { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+  .rr-qrow { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .rr-qhead { display: none; }
+  .rr-qarrow { display: none; }
+  @media (min-width: 720px) { .rr-qrow { grid-template-columns: minmax(0,1fr) 32px minmax(0,1.25fr); } .rr-qhead { display: grid; } .rr-qarrow { display: flex; } }
+  .rr-exrow { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  .rr-exhead { display: none; }
+  @media (min-width: 720px) { .rr-exrow { grid-template-columns: minmax(0,1.1fr) 110px minmax(0,1.3fr); gap: 16px; } .rr-exhead { display: grid; } }
+  .rr-faqgrid { grid-template-columns: 1fr; }
+  .rr-sticky { position: static; }
+  @media (min-width: 1000px) { .rr-faqgrid { grid-template-columns: minmax(0,.8fr) minmax(0,1.2fr); } .rr-sticky { position: sticky; } }
+
+  .rr-faq-n { color: #B9A99C; }
+  .rr-faq.is-open .rr-faq-n { color: #C2410C; }
+  .rr-faq-ic { background: #FBF3EC; color: #1C130E; transform: rotate(0deg); transition: all .3s; }
+  .rr-faq.is-open .rr-faq-ic { background: #1C130E; color: #FFFFFF; transform: rotate(45deg); }
+  .rr-faq.is-open { border-color: #FFD8BE; }
+  .rr-faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .rr-faq.is-open .rr-faq-panel { grid-template-rows: 1fr; }
+
+  [data-reveal] { opacity: 0; transform: translateY(18px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  [data-reveal].is-in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .rr *, .rr *::before, .rr *::after { animation: none !important; transition: none !important; } [data-reveal] { opacity: 1 !important; transform: none !important; } }
+</style>
+
+<script>
+  const root = document.querySelector('.rr') as HTMLElement | null;
+  if (root) {
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+    const fl = root.querySelector('[data-rr-fl]') as HTMLElement | null, val = root.querySelector('[data-rr-val]') as HTMLElement | null;
+    const aliasEls = qa('[data-rr-alias]'), dot = root.querySelector('[data-rr-dot]') as HTMLElement | null;
+    const whereEls = qa('[data-rr-where]');
+    const exdot = root.querySelector('[data-rr-exdot]') as HTMLElement | null, exp = root.querySelector('[data-rr-exp]') as HTMLElement | null, exEls = qa('[data-rr-ex]');
+
+    const col = (k: string) => k === 'hi' ? '#C2410C' : k === 'lo' ? '#B42318' : k === 'warn' ? '#B45309' : '#1E7A3D';
+    const exK = ['hi', 'ok', 'ok', 'lo', 'warn'], exX = [92, 80, 46, 8, 14], exP = ['[$259.00]', '[$249.00]', '[$229.00]', '[$209.00]', '[$215.00]'];
+    const dotXs = [10, 50, 90], dotCs = ['#B42318', '#1E7A3D', '#C2410C'];
+    let tk = 0, ex = 0, exAuto = true, prevF = -1;
+
+    function paintEx() {
+      exEls.forEach((el, i) => {
+        const on = i === ex; el.style.background = on ? '#FFF9F4' : '#FFFFFF';
+        const mini = el.querySelector('[data-rr-exdotmini]') as HTMLElement; if (mini) mini.style.background = on ? col(exK[i]) : '#E2D3C8';
+        (el.querySelector('[data-rr-exs]') as HTMLElement).style.fontWeight = on ? '600' : '500';
+      });
+      const k = exK[ex];
+      if (exdot) { exdot.style.left = exX[ex] + '%'; exdot.style.background = col(k); exdot.style.animation = k !== 'ok' ? 'rr-pulse 1.8s infinite' : 'none'; }
+      if (exp) { exp.style.left = exX[ex] + '%'; exp.style.color = col(k); exp.textContent = exP[ex]; }
+    }
+    function paint() {
+      const fPh = Math.floor(tk / 2) % 2;
+      if (fPh !== prevF) {
+        prevF = fPh;
+        if (fl) fl.style.left = (fPh ? 50.5 : 2.3) + '%';
+        if (val) { val.style.left = (fPh ? 51.8 : 2.8) + '%'; val.textContent = fPh ? '[$249.00]' : '[$219.00]'; val.style.animation = 'none'; void val.offsetWidth; val.style.animation = 'rr-type .7s steps(8) both'; }
+      }
+      const aIdx = tk % 3;
+      aliasEls.forEach((el, i) => { const on = i === aIdx; el.style.background = on ? '#1C130E' : '#FFFFFF'; el.style.borderColor = on ? '#1C130E' : '#EFE3DA'; el.style.color = on ? '#FFFFFF' : '#3A302A'; });
+      const dPh = Math.floor(tk / 2) % 3;
+      if (dot) { dot.style.left = dotXs[dPh] + '%'; dot.style.background = dotCs[dPh]; dot.style.boxShadow = '0 0 0 1px ' + dotCs[dPh]; }
+      const wHot = Math.floor(tk / 2) % 4;
+      whereEls.forEach((el, i) => {
+        const on = i === wHot; el.style.background = on ? '#FFFCF9' : '#FFFFFF';
+        const ar = el.querySelector('[data-rr-wharrow]') as HTMLElement; if (ar) { ar.style.background = on ? '#1C130E' : '#FBF3EC'; ar.style.color = on ? '#FFFFFF' : '#B9A99C'; }
+        (el.querySelector('[data-rr-whcell]') as HTMLElement).style.borderColor = on ? '#FFD8BE' : '#F5ECE5';
+        const ic = el.querySelector('[data-rr-whico]') as HTMLElement; if (ic) { ic.style.background = on ? '#1C130E' : '#FFF4EC'; ic.style.borderColor = on ? '#1C130E' : '#FFD8BE'; ic.style.color = on ? '#FFFFFF' : '#C2410C'; }
+      });
+    }
+    paintEx(); paint();
+    setInterval(() => { tk++; if (exAuto) ex = (ex + 1) % 5; paintEx(); paint(); }, 1900);
+
+    exEls.forEach((el, i) => el.addEventListener('click', () => { ex = i; exAuto = false; paintEx(); }));
+
+    qa('[data-rr-faqbtn]').forEach((b) => b.addEventListener('click', () => {
+      const item = b.closest('[data-rr-faq]');
+      const was = item?.classList.contains('is-open');
+      qa('[data-rr-faq]').forEach((el) => { el.classList.remove('is-open'); el.querySelector('[data-rr-faqbtn]')?.setAttribute('aria-expanded', 'false'); });
+      if (!was && item) { item.classList.add('is-open'); b.setAttribute('aria-expanded', 'true'); }
+    }));
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+      qa('[data-reveal]').forEach((el) => io.observe(el));
+    } else { qa('[data-reveal]').forEach((el) => el.classList.add('is-in')); }
+  }
+</script>

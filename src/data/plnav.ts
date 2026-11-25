@@ -30,6 +30,10 @@ export const L = {
   roleEcom: '/solutions/ecommerce-managers',
   roleRevenue: '/solutions/revenue-managers',
   roleMerch: '/solutions/merchandising-managers',
+  featCompetitor: '/features/competitor-tracking',
+  featAlerts: '/features/price-alerts',
+  featCompare: '/features/price-comparison',
+  featRrp: '/features/recommended-retail-price',
 };
 
 export type MenuItem = { t: string; d?: string; href: string };
@@ -65,11 +69,11 @@ export const SOL: SolGroup[] = [
 export const FEAT: MenuItem[] = [
   { t: 'Real Time Price Monitoring', d: 'Priority SKUs refreshed through the day.', href: L.rtm },
   { t: 'Dynamic Repricing', d: 'Automatic price moves inside your rules.', href: L.dps },
-  { t: 'Price Comparison', d: 'Side-by-side view against every rival.', href: '#' },
-  { t: 'Competitor Tracking', d: 'Follow assortment, promos and stock.', href: '#' },
-  { t: 'Price Alerts', d: 'Email, Slack and SMS when markets move.', href: '#' },
+  { t: 'Price Comparison', d: 'Side-by-side view against every rival.', href: L.featCompare },
+  { t: 'Competitor Tracking', d: 'Follow assortment, promos and stock.', href: L.featCompetitor },
+  { t: 'Price Alerts', d: 'Email, Slack and SMS when markets move.', href: L.featAlerts },
   { t: 'Integrations', d: 'API, ERP, Shopify, Snowflake and more.', href: '#' },
-  { t: 'Recommended Retail Price', d: 'Set and monitor RRP across channels.', href: '#' },
+  { t: 'Recommended Retail Price', d: 'Set and monitor RRP across channels.', href: L.featRrp },
 ];
 
 export const PLAT = [
